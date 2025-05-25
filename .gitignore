@@ -1,0 +1,14 @@
+# Root .gitignore
+
+# Ignore node_modules from all subprojects
+**/node_modules/
+
+# Common build outputs
+dist/
+build/
+.cache/
+*.log
+
+# Ignore environment files
+.env
+.env.local
