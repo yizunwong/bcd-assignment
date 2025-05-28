@@ -1,8 +1,7 @@
 // src/app.controller.ts
 import { Controller, Get } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
-
-@ApiTags('app') // Group endpoints under "app"
+import { ApiExcludeController, ApiOperation } from '@nestjs/swagger';
+@ApiExcludeController()
 @Controller()
 export class AppController {
   @Get()
