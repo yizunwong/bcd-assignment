@@ -25,14 +25,14 @@ Ensure you have the following installed:
 
 2. **Install Dependencies**
     - Install all required packages defined in package.json:
-
-    ```npm install
-
+    ```
+    npm install
     ```
 
 3. **Set Up Environment Variables**
     - Create a .env file in the root directory of the project and configure your environment variables. Example:
     ```
+    SUPABASE_URL=your_supabase_project_url
     SUPABASE_PROJECT_ID=your_supabase_project_id
     SUPABASE_API_KEY=your_supabase_api_key
     ```
