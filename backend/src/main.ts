@@ -1,13 +1,13 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { exec } from 'child_process';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 import { AppModule } from './app.module';
 import { SupabaseExceptionFilter } from './common/supabase-exception.filter';
-// other imports...
+import * as dotenv from 'dotenv';
 
+dotenv.config();
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
@@ -44,17 +44,17 @@ async function bootstrap() {
   writeFileSync(outputPath, JSON.stringify(document, null, 2));
   logger.log('Swagger spec saved to swagger-spec.json');
 
-  // Generate API client silently
-  exec(
-    `openapi-generator-cli generate -i ${outputPath} -g typescript-fetch -o ../dashboard/src/api-client > nul 2>&1`,
-    (error) => {
-      if (error) {
-        logger.error('Failed to generate API client: ' + error.message);
-      } else {
-        logger.log('Frontend API client generated!');
-      }
-    },
-  );
+  // // Generate API client silently
+  // exec(
+  //   `openapi-generator-cli generate -i ${outputPath} -g typescript-fetch -o ../dashboard/src/api-client > nul 2>&1`,
+  //   (error) => {
+  //     if (error) {
+  //       logger.error('Failed to generate API client: ' + error.message);
+  //     } else {
+  //       logger.log('Frontend API client generated!');
+  //     }
+  //   },
+  // );
 
   await app.listen(3000);
   logger.log(

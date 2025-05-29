@@ -15,18 +15,21 @@
 
 import * as runtime from '../runtime';
 import type {
+  LoginDto,
+  LoginResponseDto,
   RegisterDto,
-  SignInDto,
 } from '../models/index';
 import {
+    LoginDtoFromJSON,
+    LoginDtoToJSON,
+    LoginResponseDtoFromJSON,
+    LoginResponseDtoToJSON,
     RegisterDtoFromJSON,
     RegisterDtoToJSON,
-    SignInDtoFromJSON,
-    SignInDtoToJSON,
 } from '../models/index';
 
 export interface AuthControllerLoginRequest {
-    signInDto: SignInDto;
+    loginDto: LoginDto;
 }
 
 export interface AuthControllerRegisterRequest {
@@ -40,11 +43,11 @@ export class AuthApi extends runtime.BaseAPI {
 
     /**
      */
-    async authControllerLoginRaw(requestParameters: AuthControllerLoginRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters['signInDto'] == null) {
+    async authControllerLoginRaw(requestParameters: AuthControllerLoginRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<LoginResponseDto>> {
+        if (requestParameters['loginDto'] == null) {
             throw new runtime.RequiredError(
-                'signInDto',
-                'Required parameter "signInDto" was null or undefined when calling authControllerLogin().'
+                'loginDto',
+                'Required parameter "loginDto" was null or undefined when calling authControllerLogin().'
             );
         }
 
@@ -59,16 +62,17 @@ export class AuthApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: SignInDtoToJSON(requestParameters['signInDto']),
+            body: LoginDtoToJSON(requestParameters['loginDto']),
         }, initOverrides);
 
-        return new runtime.VoidApiResponse(response);
+        return new runtime.JSONApiResponse(response, (jsonValue) => LoginResponseDtoFromJSON(jsonValue));
     }
 
     /**
      */
-    async authControllerLogin(requestParameters: AuthControllerLoginRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.authControllerLoginRaw(requestParameters, initOverrides);
+    async authControllerLogin(requestParameters: AuthControllerLoginRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<LoginResponseDto> {
+        const response = await this.authControllerLoginRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
     /**

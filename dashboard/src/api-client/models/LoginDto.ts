@@ -16,37 +16,37 @@ import { mapValues } from '../runtime';
 /**
  * 
  * @export
- * @interface SignInDto
+ * @interface LoginDto
  */
-export interface SignInDto {
+export interface LoginDto {
     /**
      * User email address
      * @type {string}
-     * @memberof SignInDto
+     * @memberof LoginDto
      */
     email: string;
     /**
      * Password for the user
      * @type {string}
-     * @memberof SignInDto
+     * @memberof LoginDto
      */
     password: string;
 }
 
 /**
- * Check if a given object implements the SignInDto interface.
+ * Check if a given object implements the LoginDto interface.
  */
-export function instanceOfSignInDto(value: object): value is SignInDto {
+export function instanceOfLoginDto(value: object): value is LoginDto {
     if (!('email' in value) || value['email'] === undefined) return false;
     if (!('password' in value) || value['password'] === undefined) return false;
     return true;
 }
 
-export function SignInDtoFromJSON(json: any): SignInDto {
-    return SignInDtoFromJSONTyped(json, false);
+export function LoginDtoFromJSON(json: any): LoginDto {
+    return LoginDtoFromJSONTyped(json, false);
 }
 
-export function SignInDtoFromJSONTyped(json: any, ignoreDiscriminator: boolean): SignInDto {
+export function LoginDtoFromJSONTyped(json: any, ignoreDiscriminator: boolean): LoginDto {
     if (json == null) {
         return json;
     }
@@ -57,11 +57,11 @@ export function SignInDtoFromJSONTyped(json: any, ignoreDiscriminator: boolean):
     };
 }
 
-export function SignInDtoToJSON(json: any): SignInDto {
-    return SignInDtoToJSONTyped(json, false);
+export function LoginDtoToJSON(json: any): LoginDto {
+    return LoginDtoToJSONTyped(json, false);
 }
 
-export function SignInDtoToJSONTyped(value?: SignInDto | null, ignoreDiscriminator: boolean = false): any {
+export function LoginDtoToJSONTyped(value?: LoginDto | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

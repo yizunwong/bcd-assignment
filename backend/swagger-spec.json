@@ -10,14 +10,21 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SignInDto"
+                "$ref": "#/components/schemas/LoginDto"
               }
             }
           }
         },
         "responses": {
-          "201": {
-            "description": ""
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -144,7 +151,7 @@
       }
     },
     "schemas": {
-      "SignInDto": {
+      "LoginDto": {
         "type": "object",
         "properties": {
           "email": {
@@ -161,6 +168,21 @@
         "required": [
           "email",
           "password"
+        ]
+      },
+      "LoginResponseDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "user": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "accessToken",
+          "user"
         ]
       },
       "RegisterDto": {

@@ -1,16 +1,16 @@
-import { AuthApi } from '@/api-client';
-import { config } from '../services';
+import { useMutation } from "@tanstack/react-query";
+import { LoginDto, LoginResponseDto } from "@/api-client/types";
+import { authControllerLogin } from '@/api-client/endpoints';
 
-export const authApi = new AuthApi(config);
-
-export async function login(email: string, password: string) {
-  const result = await authApi.authControllerLogin({
-    signInDto: {
-      email,
-      password,
+export const useLogin = () => {
+  return useMutation({
+    mutationFn: (credentials: LoginDto) => authControllerLogin(credentials),
+    onSuccess: (data : LoginResponseDto) => {
+      localStorage.setItem("access_token", data.accessToken);
+      console.log("Login success:", data);
+    },
+    onError: (error: Error) => {
+      console.error("Login failed:", error.message);
     },
   });
-
-
-  return result;
-}
+};

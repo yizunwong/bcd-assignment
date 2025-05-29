@@ -5,13 +5,14 @@ import {
 } from '@nestjs/common';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { RegisterDto } from './requests/register.dto';
-import { SignInDto } from './requests/signin.dto';
+import { LoginDto } from './requests/login.dto';
+import { LoginResponseDto } from './responses/login.dto';
 
 @Injectable()
 export class AuthService {
   constructor(private readonly supabaseService: SupabaseService) {}
 
-  async signInWithEmail(body: SignInDto) {
+  async signInWithEmail(body: LoginDto) {
     // ✅ Anonymous client, no token needed for login
     const supabase = this.supabaseService.createClientWithToken();
 
@@ -24,10 +25,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    return {
-      access_token: data.session.access_token,
+    return new LoginResponseDto({
+      accessToken: data.session.access_token,
       user: data.user,
-    };
+    });
   }
 
   async register(dto: RegisterDto) {
