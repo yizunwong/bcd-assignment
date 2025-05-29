@@ -10,21 +10,23 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './requests/create.dto';
-import { AuthenticatedRequest, SupabaseAuthGuard } from '../auth/auth.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from '../auth/auth.guard';
+import { AuthenticatedRequest } from 'src/supabase/express';
 
 @ApiTags('Users')
 @Controller('users')
 @ApiBearerAuth('supabase-auth')
 export class UserController {
   constructor(private readonly userService: UserService) {}
-  @UseGuards(SupabaseAuthGuard)
+  @UseGuards(AuthGuard)
   @Get()
   async findAll(@Request() req: AuthenticatedRequest): Promise<any> {
     return this.userService.getAllUsers(req);
   }
 
   @Get(':id')
+  @UseGuards(AuthGuard)
   async findOne(
     @Request() req: AuthenticatedRequest,
     @Param('id', ParseIntPipe) id: number,
@@ -33,6 +35,7 @@ export class UserController {
   }
 
   @Post()
+  @UseGuards(AuthGuard)
   async create(
     @Request() req: AuthenticatedRequest,
     @Body() body: CreateUserDto,

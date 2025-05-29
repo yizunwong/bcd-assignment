@@ -4,36 +4,33 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { User } from '@supabase/supabase-js';
 import { Request } from 'express';
+import { AuthenticatedRequest } from 'src/supabase/express';
 import { SupabaseService } from 'src/supabase/supabase.service';
 
 @Injectable()
-export class SupabaseAuthGuard implements CanActivate {
+export class AuthGuard implements CanActivate {
   constructor(private readonly supabaseService: SupabaseService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-
-    const authHeader = request.headers['authorization'];
-    const token = authHeader?.replace('Bearer ', '');
+    const token = request.headers['authorization']?.split(' ')[1];
 
     if (!token) {
-      throw new UnauthorizedException('Missing or invalid Authorization token');
+      throw new UnauthorizedException('Missing bearer token');
     }
 
-    const supabase = this.supabaseService.getServiceRoleClient();
+    // ✅ Inject supabase client with token into the request
+    request.supabase = this.supabaseService.createClientWithToken(token);
 
-    const { data, error } = await supabase.auth.getUser(token);
+    // Optionally: verify user identity
+    const { data, error } = await request.supabase.auth.getUser();
 
-    if (error || !data?.user) {
-      throw new UnauthorizedException('Invalid Supabase session');
+    if (error || !data.user) {
+      throw new UnauthorizedException('Invalid or expired token');
     }
 
-    request.user = data.user; // ✅ Attach user to request
+    request.userId = data.user.id; // Optional, for convenience
     return true;
   }
-}
-export interface AuthenticatedRequest extends Request {
-  user?: User;
 }
