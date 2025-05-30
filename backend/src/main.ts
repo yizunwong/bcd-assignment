@@ -44,18 +44,6 @@ async function bootstrap() {
   writeFileSync(outputPath, JSON.stringify(document, null, 2));
   logger.log('Swagger spec saved to swagger-spec.json');
 
-  // // Generate API client silently
-  // exec(
-  //   `openapi-generator-cli generate -i ${outputPath} -g typescript-fetch -o ../dashboard/src/api-client > nul 2>&1`,
-  //   (error) => {
-  //     if (error) {
-  //       logger.error('Failed to generate API client: ' + error.message);
-  //     } else {
-  //       logger.log('Frontend API client generated!');
-  //     }
-  //   },
-  // );
-
   await app.listen(3000);
   logger.log(
     '🚀 Nest application successfully started on http://localhost:3000',
