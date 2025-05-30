@@ -39,4 +39,17 @@ export class RegisterDto {
     message: 'Password must include uppercase, lowercase, and a number',
   })
   password!: string;
+
+  @ApiProperty({
+    example: 'StrongPass123!',
+    description: 'Confirm password (at least 6 characters)',
+  })
+  @IsString({ message: 'Password must be a string' })
+  @IsNotEmpty({ message: 'Password is required' })
+  @MinLength(6, { message: 'Password must be at least 6 characters long' })
+  @MaxLength(32, { message: 'Password must be at most 32 characters long' })
+  @Matches(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).+$/, {
+    message: 'Password must include uppercase, lowercase, and a number',
+  })
+  confirmPassword!: string;
 }

@@ -145,9 +145,7 @@
         "scheme": "bearer",
         "bearerFormat": "JWT",
         "type": "http",
-        "name": "Authorization",
-        "description": "Enter your Supabase access token",
-        "in": "header"
+        "description": "Enter your Supabase access token"
       }
     },
     "schemas": {
@@ -202,12 +200,18 @@
             "type": "string",
             "example": "StrongPass123!",
             "description": "Password (at least 6 characters)"
+          },
+          "confirmPassword": {
+            "type": "string",
+            "example": "StrongPass123!",
+            "description": "Confirm password (at least 6 characters)"
           }
         },
         "required": [
           "email",
           "username",
-          "password"
+          "password",
+          "confirmPassword"
         ]
       },
       "CreateUserDto": {

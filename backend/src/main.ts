@@ -29,9 +29,8 @@ async function bootstrap() {
       {
         type: 'http',
         scheme: 'bearer',
-        name: 'Authorization',
+        bearerFormat: 'JWT', // Optional, for clarity
         description: 'Enter your Supabase access token',
-        in: 'header',
       },
       'supabase-auth',
     )

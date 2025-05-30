@@ -13,4 +13,6 @@ export interface RegisterDto {
   username: string;
   /** Password (at least 6 characters) */
   password: string;
+  /** Confirm password (at least 6 characters) */
+  confirmPassword: string;
 }
