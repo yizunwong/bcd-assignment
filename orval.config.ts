@@ -2,8 +2,7 @@ const config = {
   dashboard: {
     input: "../bcd-assignment/backend/swagger-spec.json",
     output: {
-      target: "./dashboard/src/api-client/endpoints.ts", 
-      schemas: "./dashboard/src/api-client/types", 
+      target: "./dashboard/src/api-client/api.ts", 
       client: "react-query",
       mode: "single",
       override: {

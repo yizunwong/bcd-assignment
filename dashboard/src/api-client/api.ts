@@ -19,14 +19,39 @@ import type {
   UseQueryResult
 } from '@tanstack/react-query';
 
-import type {
-  CreateUserDto,
-  LoginDto,
-  LoginResponseDto,
-  RegisterDto
-} from './types';
-
 import { customFetcher } from './fetch';
+export interface LoginDto {
+  /** User email address */
+  email: string;
+  /** Password for the user */
+  password: string;
+}
+
+export type LoginResponseDtoUser = { [key: string]: unknown };
+
+export interface LoginResponseDto {
+  accessToken: string;
+  user: LoginResponseDtoUser;
+}
+
+export interface RegisterDto {
+  /** User email address */
+  email: string;
+  /** Unique username for the user */
+  username: string;
+  /** Password (at least 6 characters) */
+  password: string;
+  /** Confirm password (at least 6 characters) */
+  confirmPassword: string;
+}
+
+export interface CreateUserDto {
+  /** User email address */
+  email: string;
+  /** Username for the user */
+  username: string;
+}
+
 type AwaitedInput<T> = PromiseLike<T> | T;
 
       type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;

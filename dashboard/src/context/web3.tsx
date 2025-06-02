@@ -4,8 +4,8 @@ import { wagmiAdapter, projectId } from "@/utils/web3config";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createAppKit } from "@reown/appkit/react";
 import { mainnet, arbitrum, hardhat } from "@reown/appkit/networks";
-import React, { type ReactNode } from "react";
-import { cookieToInitialState, WagmiProvider, type Config } from "wagmi";
+import React, { useEffect, useState, type ReactNode } from "react";
+import { cookieToInitialState, State, WagmiProvider, type Config } from "wagmi";
 
 // Set up queryClient
 const queryClient = new QueryClient();
@@ -14,7 +14,7 @@ if (!projectId) {
   throw new Error("Project ID is not defined");
 }
 
-// Create the modal
+// Create modal
 const modal = createAppKit({
   adapters: [wagmiAdapter],
   projectId,
@@ -25,17 +25,21 @@ const modal = createAppKit({
   },
 });
 
-function Web3ContextProvider({
-  children,
-  cookies,
-}: {
-  children: ReactNode;
-  cookies: string | null;
-}) {
-  const initialState = cookieToInitialState(
-    wagmiAdapter.wagmiConfig as Config,
-    cookies
+function Web3ContextProvider({ children }: { children: ReactNode }) {
+  const [initialState, setInitialState] = useState<State | undefined>(
+    undefined
   );
+
+  useEffect(() => {
+    const cookies = document.cookie;
+    const state = cookieToInitialState(
+      wagmiAdapter.wagmiConfig as Config,
+      cookies
+    );
+    setInitialState(state);
+  }, []);
+
+  if (!initialState) return null; // or loading spinner
 
   return (
     <WagmiProvider

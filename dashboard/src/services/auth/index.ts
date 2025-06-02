@@ -1,13 +1,5 @@
-import { useMutation } from "@tanstack/react-query";
-import {
-  LoginDto,
-  LoginResponseDto,
-  RegisterDto,
-} from "@/api-client/types";
-import {
-  authControllerLogin,
-  authControllerRegister,
-} from "@/api-client/endpoints";
+import { LoginDto, authControllerLogin, LoginResponseDto, RegisterDto, authControllerRegister } from '@/api-client/api';
+import { useMutation } from '@tanstack/react-query';
 
 // Login Mutation
 export const useLogin = () => {
