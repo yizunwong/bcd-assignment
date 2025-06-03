@@ -129,6 +129,76 @@
           "Users"
         ]
       }
+    },
+    "/loan/create": {
+      "post": {
+        "operationId": "LoanController_createLoan",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLoanDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Loan"
+        ]
+      }
+    },
+    "/loan/repay/{id}": {
+      "post": {
+        "operationId": "LoanController_repayLoan",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Loan"
+        ]
+      }
+    },
+    "/loan/{id}": {
+      "get": {
+        "operationId": "LoanController_getLoan",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Loan"
+        ]
+      }
     }
   },
   "info": {
@@ -231,6 +301,18 @@
         "required": [
           "email",
           "username"
+        ]
+      },
+      "CreateLoanDto": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "description": "Amount of the loan"
+          }
+        },
+        "required": [
+          "amount"
         ]
       }
     }

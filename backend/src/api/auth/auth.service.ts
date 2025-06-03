@@ -22,6 +22,7 @@ export class AuthService {
     });
 
     if (error || !data.session) {
+      console.log(error);
       throw new UnauthorizedException('Invalid email or password');
     }
 

@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "deploy": "npx hardhat ignition deploy ./ignition/modules/Deployment.ts --reset --network localhost",
+    "deploy": "npx hardhat ignition deploy ./ignition/modules/LoanModule.ts --reset --network localhost",
     "test": "npx hardhat test",
     "compile": "npx hardhat compile",
-    "dev": "hardhat node"
+    "dev": "concurrently \"npx hardhat node\" \"wait-on http://127.0.0.1:8545 && npx hardhat run scripts/deploy.ts --network localhost\""
   },
   "keywords": [],
   "author": "",
@@ -16,8 +16,11 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@openzeppelin/contracts": "^5.3.0",
-    "ethers": "^6.14.1",
-    "hardhat": "^2.24.0"
+    "ethers": "^6.14.3",
+    "hardhat": "^2.24.1",
+    "ts-node": "^10.9.2",
+    "typechain": "^8.3.2",
+    "wait-on": "^8.0.3"
   },
   "dependencies": {
     "prettier": "^3.5.3"
