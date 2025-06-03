@@ -4,9 +4,9 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useAuthMutations } from "@/services/auth";
 import { print } from "@/utils/toast";
-import { LoginDto } from '@/api-client/types';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { LoginDto } from '@/api-client/api';
 
 
 const LoginPage = () => {
