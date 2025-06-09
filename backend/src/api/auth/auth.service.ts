@@ -4,9 +4,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { SupabaseService } from 'src/supabase/supabase.service';
-import { RegisterDto } from './requests/register.dto';
-import { LoginDto } from './requests/login.dto';
-import { LoginResponseDto } from './responses/login.dto';
+import { RegisterDto } from './dto/requests/register.dto';
+import { LoginDto } from './dto/requests/login.dto';
+import { LoginResponseDto } from './dto/responses/login.dto';
 
 @Injectable()
 export class AuthService {
