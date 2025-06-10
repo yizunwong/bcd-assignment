@@ -1,8 +1,8 @@
-const hre = require("hardhat");
+import { ethers } from "hardhat";
 
 async function main() {
   // Get the network provider
-  const network = await hre.ethers.provider.getNetwork();
+  const network = await ethers.provider.getNetwork();
 
   // Log the chain ID
   console.log(`Connected to network: ${network.name}`);
