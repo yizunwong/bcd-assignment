@@ -1,172 +1,113 @@
-'use client'
+"use client";
+import { BuyToken } from '@/components/BuyToken';
+import { Connect } from "@/components/Connect";
+import Image from "next/image";
 import React from "react";
-import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
-import { useAuthMutations } from "@/services/auth";
-import { print } from "@/utils/toast";
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import { LoginDto } from '@/api-client/api';
 
+const MetaConnect = () => {
+  const isMetaMaskInstalled = () => {
+    return typeof window.ethereum !== "undefined" && window.ethereum.isMetaMask;
+  };
 
-const LoginPage = () => {
-  const { login } = useAuthMutations();
-  const router = useRouter();
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginDto>();
-
-  const onSubmit = (data: LoginDto) => {
-    login.mutate(data, {
-      onSuccess: (res) => {
-        print(`Welcome, ${res.user.email}`, "success");
-        // router.push("/dashboard");
-      },
-      onError: (err) => {
-        print("Login failed: " + (err?.message || "Unknown error"), "error");
-      },
-    });
+  const connectWallet = () => {
+    if (!isMetaMaskInstalled()) {
+      alert("MetaMask is not installed. Please install MetaMask to continue.");
+      window.open("https://metamask.io/download.html", "_blank");
+    }
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 to-blue-700 font-[Inter]">
+      <div className="container mx-auto px-4 py-12">
+        <header className="flex justify-between items-center mb-16 text-white">
+          <div className="flex items-center">
+            <Image
+              src="https://raw.githubusercontent.com/MetaMask/brand-resources/master/SVG/metamask-fox.svg"
+              alt="MetaMask"
+              className="w-10 h-10 mr-3"
+              width={40}
+              height={40}
+            />
+            <h1 className="text-2xl font-bold">MetaConnect</h1>
+          </div>
+          <nav>
+            <ul className="flex space-x-6">
+              <li>
+                <a href="#" className="hover:text-orange-300 transition">
+                  Home
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-orange-300 transition">
+                  Features
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-orange-300 transition">
+                  About
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-orange-300 transition">
+                  Support
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </header>
 
-      <main className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          <div className="rounded-2xl overflow-hidden shadow-lg bg-gradient-to-br from-white to-gray-100">
-            <div className="px-8 py-6 text-white bg-gradient-to-r from-indigo-600 to-indigo-400">
-              <h2 className="text-2xl font-bold">Welcome back</h2>
-              <p className="text-indigo-100 mt-1">Sign in to your account</p>
+        <div className="flex flex-col md:flex-row items-center justify-between mb-20">
+          <div className="md:w-1/2 mb-10 md:mb-0 text-white">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+              Connect Your <span className="text-orange-400">MetaMask</span>{" "}
+              Wallet
+            </h2>
+            <p className="text-blue-100 text-lg mb-8 max-w-lg">
+              Access the decentralized web with a single click. Securely connect
+              your MetaMask wallet to explore blockchain applications.
+            </p>
+            <div className="flex space-x-4">
+              <div onClick={connectWallet} role="button">
+                <Connect />
+              </div>
+              <a
+                href="#learn-more"
+                className="px-6 py-3 border-2 border-white text-white rounded-lg hover:bg-white hover:text-blue-900 transition"
+              >
+                Learn More
+              </a>
             </div>
-            <form
-              onSubmit={handleSubmit(onSubmit)}
-              className="bg-white px-8 py-6"
-            >
-              <div className="mb-5">
-                <label
-                  htmlFor="email"
-                  className="block text-gray-700 text-sm font-medium mb-2"
-                >
-                  Email address
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  className="form-input w-full px-4 py-3 rounded-lg border border-gray-300"
-                  {...register("email", { required: "Email is required" })}
+          </div>
+          <div className="md:w-1/2 flex justify-center">
+            <div className="metamask-card p-8 w-full max-w-md bg-white bg-opacity-90 rounded-2xl shadow-lg backdrop-blur">
+              <div className="flex justify-center mb-6">
+                <Image
+                  src="https://raw.githubusercontent.com/MetaMask/brand-resources/master/SVG/metamask-fox.svg"
+                  alt="MetaMask"
+                  className="w-24 h-24"
+                  width={96}
+                  height={96}
                 />
-                {errors.email && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.email.message}
-                  </p>
-                )}
               </div>
-
-              <div className="mb-6">
-                <div className="flex justify-between items-center mb-2">
-                  <label
-                    htmlFor="password"
-                    className="block text-gray-700 text-sm font-medium"
-                  >
-                    Password
-                  </label>
-                  <a
-                    href="#"
-                    className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
-                  >
-                    Forgot password?
-                  </a>
-                </div>
-                <input
-                  type="password"
-                  id="password"
-                  className="form-input w-full px-4 py-3 rounded-lg border border-gray-300"
-                  {...register("password", {
-                    required: "Password is required",
-                    minLength: { value: 6, message: "Minimum 6 characters" },
-                  })}
-                />
-                {errors.password && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.password.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="mb-6 flex items-center">
-                <input
-                  type="checkbox"
-                  id="remember"
-                  className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                />
-                <label
-                  htmlFor="remember"
-                  className="ml-2 text-sm text-gray-700"
-                >
-                  Remember me
-                </label>
-              </div>
-
-              <div className="mb-6">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-lg"
-                >
-                  {isSubmitting ? "Signing in..." : "Sign in"}
-                </button>
-              </div>
-
-              <div className="relative mb-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">
-                    Or continue with
-                  </span>
+              <h3 className="text-2xl font-bold text-center text-gray-800 mb-4">
+                Connect to MetaMask
+              </h3>
+              <p className="text-gray-600 text-center mb-8">
+                Link your wallet to access decentralized applications and manage
+                your digital assets.
+              </p>
+              <div className="flex justify-center">
+                <div onClick={connectWallet} role="button">
+                  <Connect />
+                  <BuyToken />
                 </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                <button
-                  type="button"
-                  className="flex justify-center items-center py-2.5 border rounded-lg hover:bg-gray-50"
-                >
-                  <span className="mr-2">🔵</span> Google
-                </button>
-                <button
-                  type="button"
-                  className="flex justify-center items-center py-2.5 border rounded-lg hover:bg-gray-50"
-                >
-                  <span className="mr-2">🔵</span> Facebook
-                </button>
-              </div>
-
-              <div className="text-center mt-4">
-                <span className="text-sm text-gray-600">
-                  Haven’t registered yet?{" "}
-                  <button
-                    type="button"
-                    onClick={() => router.push("/register")}
-                    className="text-blue-600 hover:underline font-semibold"
-                  >
-                    Create an account
-                  </button>
-                </span>
-              </div>
-            </form>
+            </div>
           </div>
         </div>
-      </main>
-
-      <Footer />
+      </div>
     </div>
   );
 };
 
-export default LoginPage;
+export default MetaConnect;

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { SupabaseException } from 'src/common/supabase.exception';
-import { AuthenticatedRequest } from 'src/supabase/express';
-import { Tables } from 'src/supabase/supabase.types';
+import { SupabaseException } from 'src/supabase/types/supabase.exception';
+import { AuthenticatedRequest } from 'src/supabase/types/express';
+import { Tables } from 'src/supabase/types/supabase.types';
 
 export type User = Tables<'users'>;
 

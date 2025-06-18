@@ -44,7 +44,6 @@ export class LoanService {
     const contract = this.getContract();
     const loan = await contract.getLoan(id);
 
-    // Convert all BigInts to strings
     const parsedLoan = {
       id: loan.id.toString(),
       amount: loan.amount.toString(),

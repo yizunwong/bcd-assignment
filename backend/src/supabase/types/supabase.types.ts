@@ -9,6 +9,24 @@
 export type Database = {
   public: {
     Tables: {
+      Testing: {
+        Row: {
+          created_at: string;
+          id: number;
+          test: Json | null;
+        };
+        Insert: {
+          created_at?: string;
+          id?: number;
+          test?: Json | null;
+        };
+        Update: {
+          created_at?: string;
+          id?: number;
+          test?: Json | null;
+        };
+        Relationships: [];
+      };
       users: {
         Row: {
           created_at: string;

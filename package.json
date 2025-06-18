@@ -7,7 +7,7 @@
     "dashboard"
   ],
   "scripts": {
-    "dev:backend": "npm --prefix backend run start:dev",
+    "dev:backend": "npm --prefix backend run dev",
     "dev:dashboard": "npm --prefix dashboard run dev",
     "dev:blockchain": "npm --prefix blockchain run dev",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:dashboard\" \"npm run dev:blockchain\"",

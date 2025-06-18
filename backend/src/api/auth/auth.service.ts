@@ -7,6 +7,7 @@ import { SupabaseService } from 'src/supabase/supabase.service';
 import { RegisterDto } from './dto/requests/register.dto';
 import { LoginDto } from './dto/requests/login.dto';
 import { LoginResponseDto } from './dto/responses/login.dto';
+import { CommonResponseDto } from '../../common/common.dto';
 
 @Injectable()
 export class AuthService {
@@ -26,21 +27,34 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    return new LoginResponseDto({
-      accessToken: data.session.access_token,
-      user: data.user,
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Login successful',
+      data: new LoginResponseDto({
+        accessToken: data.session.access_token,
+        user: {
+          id: data.user.id,
+          email: data.user.email!,
+          email_verified: data.user.user_metadata?.email_verified as boolean,
+          username: data.user.user_metadata?.username as string,
+          role: data.user.user_metadata?.role as string,
+          lastSignInAt: data.user.last_sign_in_at as string,
+          provider: data.user.app_metadata?.provider as string,
+        },
+      }),
     });
   }
 
   async register(dto: RegisterDto) {
     const supabase = this.supabaseService.createClientWithToken();
 
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email: dto.email,
       password: dto.password,
       options: {
         data: {
           username: dto.username,
+          role: 'tester',
         },
       },
     });
@@ -49,9 +63,9 @@ export class AuthService {
       throw new ConflictException(error.message);
     }
 
-    return {
-      message: 'User registered. Please check your email to confirm.',
-      data,
-    };
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Registration successful',
+    });
   }
 }
