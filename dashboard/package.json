@@ -23,7 +23,12 @@
     "react-toastify": "^11.0.5",
     "scheduler": "^0.26.0",
     "viem": "^2.30.1",
-    "wagmi": "^2.15.4"
+    "wagmi": "^2.15.4",
+    "three": "^0.164.0",
+    "@react-three/fiber": "^8.13.4",
+    "@react-three/drei": "^9.107.3",
+    "leva": "^0.9.41",
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
