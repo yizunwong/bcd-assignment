@@ -12,8 +12,8 @@ import { RegisterDto } from './dto/requests/register.dto';
 import { LoginDto } from './dto/requests/login.dto';
 import { LoginResponseDto } from './dto/responses/login.dto';
 import { AuthGuard } from './auth.guard';
-import { AuthenticatedRequest } from 'src/supabase/express';
 import { CommonResponseDto } from '../../common/common.dto';
+import { AuthenticatedRequest } from 'src/supabase/types/express';
 
 @ApiTags('Auth')
 @Controller('auth')
