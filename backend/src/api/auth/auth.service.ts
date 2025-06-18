@@ -9,6 +9,7 @@ import { LoginDto } from './dto/requests/login.dto';
 import { LoginResponseDto } from './dto/responses/login.dto';
 import { CommonResponseDto } from '../../common/common.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
+import { UserResponseDto } from './dto/responses/user.dto';
 
 @Injectable()
 export class AuthService {
@@ -77,6 +78,18 @@ export class AuthService {
       throw new UnauthorizedException('Invalid or expired token');
     }
 
-    return data.user;
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Authenticated User retrieved successfully',
+      data: new UserResponseDto({
+        id: data.user.id,
+        email: data.user.email!,
+        email_verified: data.user.user_metadata?.email_verified as boolean,
+        username: data.user.user_metadata?.username as string,
+        role: data.user.user_metadata?.role as string,
+        lastSignInAt: data.user.last_sign_in_at as string,
+        provider: data.user.app_metadata?.provider as string,
+      }),
+    });
   }
 }

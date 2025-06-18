@@ -39,13 +39,13 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  const outputPath = join(__dirname, '..', 'swagger-spec.json');
-  writeFileSync(outputPath, JSON.stringify(document, null, 2));
-  logger.log('Swagger spec saved to swagger-spec.json');
-
   await app.listen(3000);
   logger.log(
     '🚀 Nest application successfully started on http://localhost:3000',
   );
+
+  const outputPath = join(process.cwd(), 'swagger-spec.json');
+  writeFileSync(outputPath, JSON.stringify(document, null, 2));
+  logger.log('Swagger spec saved to swagger-spec.json');
 }
 void bootstrap();

@@ -10,9 +10,7 @@
     "dev:backend": "npm --prefix backend run dev",
     "dev:dashboard": "npm --prefix dashboard run dev",
     "dev:blockchain": "npm --prefix blockchain run dev",
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:dashboard\" \"npm run dev:blockchain\"",
-    "format:orval": "prettier --write dashboard/src/api-client/**/api.ts",
-    "orval:gen": "npx orval && npm run format:orval"
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:dashboard\" \"npm run dev:blockchain\""
   },
   "devDependencies": {
     "concurrently": "^8.0.1",

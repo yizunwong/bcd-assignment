@@ -21,7 +21,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LoginResponseDto"
+                  "$ref": "#/components/schemas/CommonResponseDto"
                 }
               }
             }
@@ -51,6 +51,32 @@
             "description": ""
           }
         },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "operationId": "AuthController_getMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommonResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
         "tags": [
           "Auth"
         ]
@@ -238,19 +264,22 @@
           "password"
         ]
       },
-      "LoginResponseDto": {
+      "CommonResponseDto": {
         "type": "object",
         "properties": {
-          "accessToken": {
+          "statusCode": {
+            "type": "number"
+          },
+          "message": {
             "type": "string"
           },
-          "user": {
+          "data": {
             "type": "object"
           }
         },
         "required": [
-          "accessToken",
-          "user"
+          "statusCode",
+          "message"
         ]
       },
       "RegisterDto": {
