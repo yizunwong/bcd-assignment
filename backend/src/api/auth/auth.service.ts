@@ -4,6 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { SupabaseService } from 'src/supabase/supabase.service';
+import { AuthenticatedRequest } from 'src/supabase/express';
 import { RegisterDto } from './dto/requests/register.dto';
 import { LoginDto } from './dto/requests/login.dto';
 import { LoginResponseDto } from './dto/responses/login.dto';
@@ -67,5 +68,15 @@ export class AuthService {
       statusCode: 200,
       message: 'Registration successful',
     });
+  }
+
+  async getMe(req: AuthenticatedRequest) {
+    const { data, error } = await req.supabase.auth.getUser();
+
+    if (error || !data.user) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    return data.user;
   }
 }

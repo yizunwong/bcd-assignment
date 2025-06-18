@@ -1,9 +1,18 @@
-import { Body, Controller, Post, Request } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { RegisterDto } from './dto/requests/register.dto';
 import { LoginDto } from './dto/requests/login.dto';
 import { LoginResponseDto } from './dto/responses/login.dto';
+import { AuthGuard } from './auth.guard';
+import { AuthenticatedRequest } from 'src/supabase/express';
 import { CommonResponseDto } from '../../common/common.dto';
 
 @ApiTags('Auth')
@@ -22,5 +31,12 @@ export class AuthController {
   @Post('register')
   async register(@Body() dto: RegisterDto): Promise<CommonResponseDto> {
     return this.authService.register(dto);
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('me')
+  @ApiBearerAuth('supabase-auth')
+  async getMe(@Request() req: AuthenticatedRequest) {
+    return this.authService.getMe(req);
   }
 }
