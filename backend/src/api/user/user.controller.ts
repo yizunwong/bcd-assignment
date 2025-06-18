@@ -12,14 +12,17 @@ import { UserService } from './user.service';
 import { CreateUserDto } from './dto/requests/create.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
-import { AuthenticatedRequest } from 'src/supabase/express';
+import { AuthenticatedRequest } from 'src/supabase/types/express';
+import { Role } from '../auth/role.decorator';
+import { RolesGuard } from '../auth/role.guard';
 
 @ApiTags('Users')
 @Controller('users')
 @ApiBearerAuth('supabase-auth')
 export class UserController {
   constructor(private readonly userService: UserService) {}
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Role('tester')
   @Get()
   async findAll(@Request() req: AuthenticatedRequest): Promise<any> {
     return this.userService.getAllUsers(req);

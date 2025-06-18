@@ -13,6 +13,7 @@ import { LoginDto } from './dto/requests/login.dto';
 import { LoginResponseDto } from './dto/responses/login.dto';
 import { AuthGuard } from './auth.guard';
 import { AuthenticatedRequest } from 'src/supabase/express';
+import { CommonResponseDto } from '../../common/common.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -21,12 +22,14 @@ export class AuthController {
 
   @Post('login')
   @ApiOkResponse({ type: LoginResponseDto })
-  async login(@Body() body: LoginDto): Promise<LoginResponseDto> {
+  async login(
+    @Body() body: LoginDto,
+  ): Promise<CommonResponseDto<LoginResponseDto>> {
     return this.authService.signInWithEmail(body);
   }
 
   @Post('register')
-  async register(@Body() dto: RegisterDto) {
+  async register(@Body() dto: RegisterDto): Promise<CommonResponseDto> {
     return this.authService.register(dto);
   }
 

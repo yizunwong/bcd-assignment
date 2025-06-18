@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "deploy": "npx hardhat ignition deploy ./ignition/modules/LoanModule.ts --reset --network localhost",
+    "deploy": "npx hardhat ignition deploy ./ignition/modules/Deployment.ts --reset --network localhost",
     "test": "npx hardhat test",
     "compile": "npx hardhat compile",
     "dev": "concurrently \"npx hardhat node\" \"wait-on http://127.0.0.1:8545 && npx hardhat run scripts/deploy.ts --network localhost\""

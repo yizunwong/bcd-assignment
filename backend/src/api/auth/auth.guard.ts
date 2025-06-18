@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { AuthenticatedRequest } from 'src/supabase/express';
+import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { SupabaseService } from 'src/supabase/supabase.service';
 
 @Injectable()
@@ -20,17 +20,16 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('Missing bearer token');
     }
 
-    // ✅ Inject supabase client with token into the request
     request.supabase = this.supabaseService.createClientWithToken(token);
 
-    // Optionally: verify user identity
     const { data, error } = await request.supabase.auth.getUser();
 
     if (error || !data.user) {
       throw new UnauthorizedException('Invalid or expired token');
     }
 
-    request.userId = data.user.id; // Optional, for convenience
+    request.user = data.user;
+
     return true;
   }
 }

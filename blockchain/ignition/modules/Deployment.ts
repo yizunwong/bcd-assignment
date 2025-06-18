@@ -1,16 +1,16 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
 const DeploymentModule = buildModule("DeploymentModule", (m) => {
-  const TestToken = m.contract("TestToken");
-  const ICO = m.contract("ICO", [TestToken]);
+  const CoverlyToken = m.contract("CoverlyToken");
+  const ICO = m.contract("ICO", [CoverlyToken]);
 
   const owner = m.getAccount(0);
-  const totalSupply = m.staticCall(TestToken, "totalSupply");
-  m.call(TestToken, "approve", [ICO, totalSupply], {
+  const totalSupply = m.staticCall(CoverlyToken, "totalSupply");
+  m.call(CoverlyToken, "approve", [ICO, totalSupply], {
     from: owner,
   });
 
-  return { TestToken, ICO };
+  return { CoverlyToken, ICO };
 });
 
 export default DeploymentModule;

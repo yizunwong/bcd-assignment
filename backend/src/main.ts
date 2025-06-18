@@ -4,7 +4,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 import { AppModule } from './app.module';
-import { SupabaseExceptionFilter } from './common/supabase-exception.filter';
+import { SupabaseExceptionFilter } from './supabase/types/supabase-exception.filter';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
