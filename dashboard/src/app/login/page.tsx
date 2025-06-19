@@ -1,13 +1,12 @@
-'use client'
+"use client";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import { useAuthMutations } from "@/services/auth";
+import { useAuthMutations } from "@/hooks/auth";
 import { print } from "@/utils/toast";
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import { LoginDto } from '@/api-client/api';
-
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { LoginDto } from "@/api-client/api";
 
 const LoginPage = () => {
   const { login } = useAuthMutations();
@@ -22,7 +21,7 @@ const LoginPage = () => {
   const onSubmit = (data: LoginDto) => {
     login.mutate(data, {
       onSuccess: (res) => {
-        print(`Welcome, ${res.user.email}`, "success");
+        print(`Welcome, ${res.data?.user.email}`, "success");
         // router.push("/dashboard");
       },
       onError: (err) => {

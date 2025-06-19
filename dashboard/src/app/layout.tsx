@@ -11,8 +11,8 @@ import "react-toastify/dist/ReactToastify.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Liang ICO Program",
-  description: "Sell Token",
+  title: "Coverly",
+  description: "Decentralized Insurance Platform",
 };
 
 export default function RootLayout({

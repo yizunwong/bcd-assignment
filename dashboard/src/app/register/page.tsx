@@ -3,11 +3,11 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import { useAuthMutations } from "@/services/auth";
+import { useAuthMutations } from "@/hooks/auth";
 import { print } from "@/utils/toast";
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import { RegisterDto } from '@/api-client/api';
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { RegisterDto } from "@/api-client/api";
 
 const RegisterPage = () => {
   const { register: registerMutation } = useAuthMutations();

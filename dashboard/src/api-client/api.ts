@@ -22,19 +22,34 @@ import type {
 } from "@tanstack/react-query";
 
 import { customFetcher } from "./fetch";
-export interface LoginDto {
-  /** User email address */
-  email: string;
-  /** Password for the user */
-  password: string;
-}
-
 export type CommonResponseDtoData = { [key: string]: unknown };
 
 export interface CommonResponseDto {
   statusCode: number;
   message: string;
   data?: CommonResponseDtoData;
+}
+
+export interface UserResponseDto {
+  id: string;
+  email: string;
+  email_verified: boolean;
+  username: string;
+  role: string;
+  lastSignInAt: string;
+  provider: string;
+}
+
+export interface LoginResponseDto {
+  accessToken: string;
+  user: UserResponseDto;
+}
+
+export interface LoginDto {
+  /** User email address */
+  email: string;
+  /** Password for the user */
+  password: string;
 }
 
 export interface RegisterDto {
@@ -60,11 +75,25 @@ export interface CreateLoanDto {
   amount: number;
 }
 
+export type AuthControllerLogin200AllOf = {
+  data?: LoginResponseDto;
+};
+
+export type AuthControllerLogin200 = CommonResponseDto &
+  AuthControllerLogin200AllOf;
+
+export type AuthControllerGetMe200AllOf = {
+  data?: UserResponseDto;
+};
+
+export type AuthControllerGetMe200 = CommonResponseDto &
+  AuthControllerGetMe200AllOf;
+
 export const authControllerLogin = (
   loginDto: LoginDto,
   signal?: AbortSignal,
 ) => {
-  return customFetcher<CommonResponseDto>({
+  return customFetcher<AuthControllerLogin200>({
     url: `/auth/login`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -215,7 +244,7 @@ export const useAuthControllerRegister = <TError = unknown, TContext = unknown>(
 };
 
 export const authControllerGetMe = (signal?: AbortSignal) => {
-  return customFetcher<CommonResponseDto>({
+  return customFetcher<AuthControllerGetMe200>({
     url: `/auth/me`,
     method: "GET",
     signal,

@@ -7,7 +7,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiExtraModels,
+  ApiOkResponse,
+  ApiTags,
+  getSchemaPath,
+} from '@nestjs/swagger';
 import { RegisterDto } from './dto/requests/register.dto';
 import { LoginDto } from './dto/requests/login.dto';
 import { LoginResponseDto } from './dto/responses/login.dto';
@@ -18,11 +24,23 @@ import { UserResponseDto } from './dto/responses/user.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
+@ApiExtraModels(CommonResponseDto, LoginResponseDto, UserResponseDto)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
-  @ApiOkResponse({ type: CommonResponseDto<LoginResponseDto> })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(CommonResponseDto) },
+        {
+          properties: {
+            data: { $ref: getSchemaPath(LoginResponseDto) },
+          },
+        },
+      ],
+    },
+  })
   async login(
     @Body() body: LoginDto,
   ): Promise<CommonResponseDto<LoginResponseDto>> {
@@ -36,7 +54,18 @@ export class AuthController {
 
   @UseGuards(AuthGuard)
   @Get('me')
-  @ApiOkResponse({ type: CommonResponseDto<UserResponseDto> })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(CommonResponseDto) },
+        {
+          properties: {
+            data: { $ref: getSchemaPath(UserResponseDto) },
+          },
+        },
+      ],
+    },
+  })
   @ApiBearerAuth('supabase-auth')
   async getMe(
     @Request() req: AuthenticatedRequest,

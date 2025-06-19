@@ -1,13 +1,13 @@
-import { LoginDto, authControllerLogin, LoginResponseDto, RegisterDto, authControllerRegister } from '@/api-client/api';
+import { LoginDto, authControllerLogin, RegisterDto, authControllerRegister, AuthControllerLogin200AllOf } from '@/api-client/api';
 import { useMutation } from '@tanstack/react-query';
 
 // Login Mutation
 export const useLogin = () => {
   return useMutation({
     mutationFn: (credentials: LoginDto) => authControllerLogin(credentials),
-    onSuccess: (data: LoginResponseDto) => {
-      localStorage.setItem("access_token", data.accessToken);
-      console.log("Login success:", data);
+    onSuccess: (res: AuthControllerLogin200AllOf) => {
+      localStorage.setItem("access_token", res.data!.accessToken);
+      console.log("Login success:", res);
     },
     onError: (error: Error) => {
       console.error("Login failed:", error.message);
