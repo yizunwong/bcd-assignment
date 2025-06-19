@@ -11,24 +11,24 @@
     "orval:gen": "npx orval && npm run format:orval"
   },
   "dependencies": {
+    "@react-three/drei": "^10.3.0",
+    "@react-three/fiber": "^9.0.0-alpha.8",
     "@reown/appkit": "^1.7.6",
     "@reown/appkit-adapter-wagmi": "^1.7.6",
     "@swc/helpers": "^0.5.17",
     "@tanstack/react-query": "^5.77.1",
     "ethers": "^6.14.1",
+    "leva": "^0.10.0",
     "next": "15.3.2",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "react-hook-form": "^7.56.4",
     "react-toastify": "^11.0.5",
     "scheduler": "^0.26.0",
+    "three": "^0.164.1",
     "viem": "^2.30.1",
     "wagmi": "^2.15.4",
-    "three": "^0.164.0",
-    "@react-three/fiber": "^8.13.4",
-    "@react-three/drei": "^9.107.3",
-    "leva": "^0.9.41",
-    "zustand": "^4.5.2"
+    "zustand": "^4.5.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
