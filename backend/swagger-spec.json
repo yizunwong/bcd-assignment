@@ -178,16 +178,16 @@
         ]
       }
     },
-    "/loan/create": {
+    "/policy": {
       "post": {
-        "operationId": "LoanController_createLoan",
+        "operationId": "PolicyController_create",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateLoanDto"
+                "$ref": "#/components/schemas/CreatePolicyDto"
               }
             }
           }
@@ -198,36 +198,25 @@
           }
         },
         "tags": [
-          "Loan"
+          "Policy"
         ]
-      }
-    },
-    "/loan/repay/{id}": {
-      "post": {
-        "operationId": "LoanController_repayLoan",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+      },
+      "get": {
+        "operationId": "PolicyController_findAll",
+        "parameters": [],
         "responses": {
-          "201": {
+          "200": {
             "description": ""
           }
         },
         "tags": [
-          "Loan"
+          "Policy"
         ]
       }
     },
-    "/loan/{id}": {
+    "/policy/{id}": {
       "get": {
-        "operationId": "LoanController_getLoan",
+        "operationId": "PolicyController_findOne",
         "parameters": [
           {
             "name": "id",
@@ -244,7 +233,59 @@
           }
         },
         "tags": [
-          "Loan"
+          "Policy"
+        ]
+      },
+      "patch": {
+        "operationId": "PolicyController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePolicyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Policy"
+        ]
+      },
+      "delete": {
+        "operationId": "PolicyController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Policy"
         ]
       }
     }
@@ -404,17 +445,13 @@
           "username"
         ]
       },
-      "CreateLoanDto": {
+      "CreatePolicyDto": {
         "type": "object",
-        "properties": {
-          "amount": {
-            "type": "number",
-            "description": "Amount of the loan"
-          }
-        },
-        "required": [
-          "amount"
-        ]
+        "properties": {}
+      },
+      "UpdatePolicyDto": {
+        "type": "object",
+        "properties": {}
       }
     }
   }
