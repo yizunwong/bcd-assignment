@@ -5,9 +5,10 @@ import { SupabaseModule } from './supabase/supabase.module';
 import { UserModule } from './api/user/user.module';
 import { AuthModule } from './api/auth/auth.module';
 // import { LoanModule } from './api/loan/loan.module';
+import { CoverageModule } from './api/coverage/coverage.module';
 
 @Module({
-  imports: [AuthModule, SupabaseModule, UserModule],
+  imports: [AuthModule, SupabaseModule, UserModule, CoverageModule],
   controllers: [AppController],
   providers: [AppService],
 })
