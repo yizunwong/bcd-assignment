@@ -6,37 +6,53 @@ import {
   Patch,
   Param,
   Delete,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { PolicyService } from './policy.service';
 import { CreatePolicyDto } from './dto/requests/create-policy.dto';
 import { UpdatePolicyDto } from './dto/requests/update-policy.dto';
+import { AuthenticatedRequest } from 'src/supabase/types/express'; // adjust path if needed
+import { AuthGuard } from '../auth/auth.guard';
 
 @Controller('policy')
 export class PolicyController {
   constructor(private readonly policyService: PolicyService) {}
 
   @Post()
-  create(@Body() createPolicyDto: CreatePolicyDto) {
-    return this.policyService.create(createPolicyDto);
+  @UseGuards(AuthGuard)
+  create(
+    @Body() createPolicyDto: CreatePolicyDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.policyService.create(createPolicyDto, req);
   }
 
   @Get()
-  findAll() {
-    return this.policyService.findAll();
+  @UseGuards(AuthGuard)
+  findAll(@Req() req: AuthenticatedRequest) {
+    return this.policyService.findAll(req);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.policyService.findOne(+id);
+  @UseGuards(AuthGuard)
+  findOne(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    return this.policyService.findOne(+id, req);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePolicyDto: UpdatePolicyDto) {
-    return this.policyService.update(+id, updatePolicyDto);
+  @UseGuards(AuthGuard)
+  update(
+    @Param('id') id: string,
+    @Body() updatePolicyDto: UpdatePolicyDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.policyService.update(+id, updatePolicyDto, req);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.policyService.remove(+id);
+  @UseGuards(AuthGuard)
+  remove(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    return this.policyService.remove(+id, req);
   }
 }
