@@ -197,6 +197,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
         "tags": [
           "Policy"
         ]
@@ -209,6 +214,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
         "tags": [
           "Policy"
         ]
@@ -232,6 +242,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
         "tags": [
           "Policy"
         ]
@@ -263,6 +278,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
         "tags": [
           "Policy"
         ]
@@ -284,6 +304,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
         "tags": [
           "Policy"
         ]

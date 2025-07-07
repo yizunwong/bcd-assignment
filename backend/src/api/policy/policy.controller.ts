@@ -14,18 +14,20 @@ import { CreatePolicyDto } from './dto/requests/create-policy.dto';
 import { UpdatePolicyDto } from './dto/requests/update-policy.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express'; // adjust path if needed
 import { AuthGuard } from '../auth/auth.guard';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('policy')
+@ApiBearerAuth('supabase-auth')
 export class PolicyController {
   constructor(private readonly policyService: PolicyService) {}
 
   @Post()
   @UseGuards(AuthGuard)
-  create(
+  async create(
     @Body() createPolicyDto: CreatePolicyDto,
     @Req() req: AuthenticatedRequest,
   ) {
-    return this.policyService.create(createPolicyDto, req);
+    return await this.policyService.create(createPolicyDto, req);
   }
 
   @Get()
