@@ -1,7 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { ClaimService } from './claim.service';
-import { CreateClaimDto } from './dto/create-claim.dto';
 import { UpdateClaimDto } from './dto/requests/update-claim.dto';
+import { CreateClaimDto } from './dto/requests/create-claim.dto';
 
 @Controller('claim')
 export class ClaimController {
@@ -9,7 +17,7 @@ export class ClaimController {
 
   @Post()
   create(@Body() createClaimDto: CreateClaimDto) {
-    return this.claimService.create(createClaimDto);
+    return this.claimService.createClaim(createClaimDto);
   }
 
   @Get()

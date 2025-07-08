@@ -13,6 +13,7 @@
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:dashboard\" \"npm run dev:blockchain\""
   },
   "devDependencies": {
+    "@types/multer": "^2.0.0",
     "concurrently": "^8.0.1",
     "eslint": "^9.28.0",
     "eslint-plugin-react": "^7.37.5",

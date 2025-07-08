@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { UpdateClaimDto } from './dto/requests/update-claim.dto';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { CreateClaimDto } from './dto/requests/create-claim.dto';
+import { UploadClaimDocDto } from './dto/requests/upload-claim-doc.dto';
 
 @Injectable()
 export class ClaimService {
@@ -101,6 +102,95 @@ export class ClaimService {
     if (error || !data) {
       throw new Error(
         'Failed to remove claim: ' + (error.message || 'Unknown error'),
+      );
+    }
+    return data;
+  }
+
+  async createClaimDocument(
+    uploadClaimDocDto: UploadClaimDocDto,
+  ): Promise<any> {
+    const supabase = this.supabaseService.createClientWithToken();
+    const { data, error } = await supabase
+      .from('claim_documents')
+      .insert([
+        {
+          claim_id: uploadClaimDocDto.claim_id,
+          name: uploadClaimDocDto.name,
+          url: uploadClaimDocDto.url,
+        },
+      ])
+      .select()
+      .single();
+    if (error || !data) {
+      throw new Error(
+        'Failed to create claim document: ' +
+          (error?.message || 'Unknown error'),
+      );
+    }
+    return data;
+  }
+  async findAllClaimDocuments(): Promise<any[]> {
+    const supabase = this.supabaseService.createClientWithToken();
+    const { data, error } = await supabase.from('claim_documents').select('*');
+    if (error) {
+      throw new Error(
+        'Failed to fetch claim documents: ' +
+          (error.message || 'Unknown error'),
+      );
+    }
+    return data;
+  }
+  async findClaimDocumentById(id: number): Promise<any> {
+    const supabase = this.supabaseService.createClientWithToken();
+    const { data, error } = await supabase
+      .from('claim_documents')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (error || !data) {
+      throw new Error(
+        'Failed to fetch claim document: ' +
+          (error?.message || 'Unknown error'),
+      );
+    }
+    return data;
+  }
+  async updateClaimDocument(
+    id: number,
+    uploadClaimDocDto: UploadClaimDocDto,
+  ): Promise<any> {
+    const supabase = this.supabaseService.createClientWithToken();
+    const { data, error } = await supabase
+      .from('claim_documents')
+      .update({
+        claim_id: uploadClaimDocDto.claim_id,
+        name: uploadClaimDocDto.name,
+        url: uploadClaimDocDto.url,
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error || !data) {
+      throw new Error(
+        'Failed to update claim document: ' +
+          (error?.message || 'Unknown error'),
+      );
+    }
+    return data;
+  }
+  async removeClaimDocument(id: number): Promise<any> {
+    const supabase = this.supabaseService.createClientWithToken();
+    const { data, error } = await supabase
+      .from('claim_documents')
+      .delete()
+      .eq('id', id)
+      .select()
+      .single();
+    if (error || !data) {
+      throw new Error(
+        'Failed to remove claim document: ' +
+          (error?.message || 'Unknown error'),
       );
     }
     return data;
