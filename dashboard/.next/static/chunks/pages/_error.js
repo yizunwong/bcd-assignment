@@ -1,0 +1,10 @@
+__turbopack_load_page_chunks__("/_error", [
+  "static/chunks/[root-of-the-server]__8df7605f._.js",
+  "static/chunks/515ac_react_78540bbe._.js",
+  "static/chunks/515ac_react-dom_cjs_react-dom_development_7f43b6eb.js",
+  "static/chunks/515ac_react-dom_cf76e16a._.js",
+  "static/chunks/node_modules_534bceb7._.js",
+  "static/chunks/[root-of-the-server]__85adf81d._.js",
+  "static/chunks/dashboard_pages__error_5771e187._.js",
+  "static/chunks/dashboard_pages__error_b5d096b0._.js"
+])

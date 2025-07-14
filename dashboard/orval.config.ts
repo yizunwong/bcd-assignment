@@ -2,12 +2,12 @@ const config = {
   dashboard: {
     input: "../backend/swagger-spec.json",
     output: {
-      target: "./src/api-client/api.ts", 
+      target: "./app/api/index.ts",
       client: "react-query",
       mode: "single",
       override: {
         mutator: {
-          path: "./src/api-client/fetch.ts",
+          path: "./app/api/fetch.ts",
           name: "customFetcher",
         },
       },
