@@ -1,30 +1,29 @@
-// app/layout.tsx or app/RootLayout.tsx
+import './globals.css';
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import { ThemeProvider } from '@/src/components/shared/ThemeProvider';
 
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-
-import Web3ContextProvider from "@/context/web3";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "Coverly",
-  description: "Decentralized Insurance Platform",
+  title: 'BlockSecure Insurance - Decentralized Insurance Platform',
+  description: 'Secure, transparent insurance powered by blockchain technology',
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <Web3ContextProvider>{children}</Web3ContextProvider>
-        <ToastContainer />
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className} suppressHydrationWarning>
+        <ThemeProvider
+          defaultTheme="light"
+          storageKey="blocksecure-ui-theme"
+        >
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
