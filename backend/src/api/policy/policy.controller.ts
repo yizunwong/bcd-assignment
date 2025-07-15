@@ -8,6 +8,7 @@ import {
   Delete,
   Req,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { PolicyService } from './policy.service';
 import { CreatePolicyDto } from './dto/requests/create-policy.dto';
@@ -32,8 +33,24 @@ export class PolicyController {
 
   @Get()
   @UseGuards(AuthGuard)
-  findAll(@Req() req: AuthenticatedRequest) {
-    return this.policyService.findAll(req);
+  findAll(
+    @Req() req: AuthenticatedRequest, // ✅ required goes first
+    @Query('page') page = '1',
+    @Query('limit') limit = '5',
+    @Query('category') category?: string,
+    @Query('search') search?: string,
+    @Query('sortBy') sortBy = 'id',
+    @Query('sortOrder') sortOrder: 'asc' | 'desc' = 'asc',
+  ) {
+    return this.policyService.findAll(
+      req,
+      +page,
+      +limit,
+      category,
+      search,
+      sortBy,
+      sortOrder,
+    );
   }
 
   @Get(':id')

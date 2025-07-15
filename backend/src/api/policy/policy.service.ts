@@ -97,22 +97,55 @@ export class PolicyService {
     };
   }
 
-  async findAll(req: AuthenticatedRequest) {
-    // const supabase = this.supabaseService.createClientWithToken();
+  async findAll(
+    req: AuthenticatedRequest, // ✅ required first
+    page = 1,
+    limit = 5,
+    category?: string,
+    search?: string,
+    sortBy: string = 'id',
+    sortOrder: 'asc' | 'desc' = 'asc',
+  ) {
+    const supabase = req.supabase;
+    const offset = (page - 1) * limit;
 
-    const { data, error } = await req.supabase
+    let query = supabase
       .from('policies')
-      .select('*')
-      .order('id', { ascending: true });
+      .select('*', { count: 'exact' })
+      .range(offset, offset + limit - 1);
+
+    if (category) {
+      query = query.eq('category', category);
+    }
+
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+    }
+
+    const sortableFields = ['id', 'name', 'rating', 'premium', 'popularity'];
+    if (sortableFields.includes(sortBy)) {
+      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+    }
+
+    const { data, error, count } = await query;
 
     if (error) {
       console.error(error);
       throw new InternalServerErrorException('Failed to fetch policies');
     }
 
+    const totalItems = count || 0;
+    const totalPages = Math.ceil(totalItems / limit);
+
     return {
       statusCode: 200,
       message: 'Policies retrieved successfully',
+      metadata: {
+        totalItems,
+        totalPages,
+        currentPage: page,
+        pageSize: limit,
+      },
       data,
     };
   }
@@ -164,17 +197,13 @@ export class PolicyService {
       },
     };
   }
-  async update(
-    id: number,
-    updatePolicyDto: UpdatePolicyDto,
-    req: AuthenticatedRequest,
-  ) {
-    // const supabase = this.supabaseService.createClientWithToken();
+  async update(id: number, dto: UpdatePolicyDto, req: AuthenticatedRequest) {
+    const supabase = req.supabase;
 
-    // Step 1: Ensure policy exists
-    const { data: existing, error: fetchError } = await req.supabase
+    // Step 1: Fetch the existing policy
+    const { data: existing, error: fetchError } = await supabase
       .from('policies')
-      .select('id')
+      .select('*')
       .eq('id', id)
       .single();
 
@@ -182,13 +211,24 @@ export class PolicyService {
       throw new NotFoundException(`Policy with ID ${id} not found`);
     }
 
-    // Step 2: Update the policy
-    const { data: updated, error: updateError } = await req.supabase
+    // Step 2: Prepare the allowed fields ONLY
+    const updateFields: Partial<typeof existing> = {};
+
+    if (dto.name !== undefined) updateFields.name = dto.name;
+    if (dto.category !== undefined) updateFields.category = dto.category;
+    if (dto.provider !== undefined) updateFields.provider = dto.provider;
+    if (dto.coverage !== undefined) updateFields.coverage = dto.coverage;
+    if (dto.premium !== undefined) updateFields.premium = dto.premium;
+    if (dto.rating !== undefined) updateFields.rating = dto.rating;
+    if (dto.popular !== undefined) updateFields.popular = dto.popular;
+    if (dto.description !== undefined)
+      updateFields.description = dto.description;
+    if (dto.features !== undefined) updateFields.features = dto.features;
+
+    // Step 3: Perform the update
+    const { data: updated, error: updateError } = await supabase
       .from('policies')
-      .update({
-        ...updatePolicyDto,
-        updated_at: new Date().toISOString(), // optional if you track timestamps
-      })
+      .update(updateFields)
       .eq('id', id)
       .select()
       .single();
