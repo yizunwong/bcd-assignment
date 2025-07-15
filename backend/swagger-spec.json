@@ -177,6 +177,117 @@
           "Users"
         ]
       }
+    },
+    "/claim": {
+      "post": {
+        "operationId": "ClaimController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateClaimDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Claim"
+        ]
+      },
+      "get": {
+        "operationId": "ClaimController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Claim"
+        ]
+      }
+    },
+    "/claim/{id}": {
+      "get": {
+        "operationId": "ClaimController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Claim"
+        ]
+      },
+      "patch": {
+        "operationId": "ClaimController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateClaimDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Claim"
+        ]
+      },
+      "delete": {
+        "operationId": "ClaimController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Claim"
+        ]
+      }
     }
   },
   "info": {
@@ -332,6 +443,122 @@
         "required": [
           "email",
           "username"
+        ]
+      },
+      "CreateClaimDto": {
+        "type": "object",
+        "properties": {
+          "policy_id": {
+            "type": "number",
+            "example": 1,
+            "description": "ID of the policy associated with the claim"
+          },
+          "user_id": {
+            "type": "string",
+            "example": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+            "description": "User ID (UUID) of the claimant"
+          },
+          "claim_type": {
+            "type": "string",
+            "example": "accident",
+            "description": "Type of the claim"
+          },
+          "amount": {
+            "type": "number",
+            "example": 1000,
+            "description": "Amount claimed"
+          },
+          "status": {
+            "type": "string",
+            "example": "pending",
+            "description": "Status of the claim"
+          },
+          "submitted_date": {
+            "type": "string",
+            "example": "2025-07-06",
+            "description": "Date when the claim was submitted"
+          },
+          "processed_date": {
+            "type": "string",
+            "example": "2025-07-07",
+            "description": "Date when the claim was processed"
+          },
+          "claimed_date": {
+            "type": "string",
+            "example": "2025-07-08",
+            "description": "Date when the claim was claimed"
+          },
+          "description": {
+            "type": "string",
+            "example": "Accident on highway, car damaged.",
+            "description": "Description of the claim"
+          }
+        },
+        "required": [
+          "policy_id",
+          "user_id",
+          "claim_type",
+          "amount",
+          "status",
+          "submitted_date"
+        ]
+      },
+      "UpdateClaimDto": {
+        "type": "object",
+        "properties": {
+          "policy_id": {
+            "type": "number",
+            "example": 1,
+            "description": "ID of the policy associated with the claim"
+          },
+          "user_id": {
+            "type": "string",
+            "example": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+            "description": "User ID (UUID) of the claimant"
+          },
+          "claim_type": {
+            "type": "string",
+            "example": "accident",
+            "description": "Type of the claim"
+          },
+          "amount": {
+            "type": "number",
+            "example": 1000,
+            "description": "Amount claimed"
+          },
+          "status": {
+            "type": "string",
+            "example": "pending",
+            "description": "Status of the claim"
+          },
+          "submitted_date": {
+            "type": "string",
+            "example": "2025-07-06",
+            "description": "Date when the claim was submitted"
+          },
+          "processed_date": {
+            "type": "string",
+            "example": "2025-07-07",
+            "description": "Date when the claim was processed"
+          },
+          "claimed_date": {
+            "type": "string",
+            "example": "2025-07-08",
+            "description": "Date when the claim was claimed"
+          },
+          "description": {
+            "type": "string",
+            "example": "Accident on highway, car damaged.",
+            "description": "Description of the claim"
+          },
+          "id": {
+            "type": "number",
+            "example": 1,
+            "description": "ID of the claim to update"
+          }
+        },
+        "required": [
+          "id"
         ]
       }
     }
