@@ -2,11 +2,16 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsInt,
   IsUUID,
-  IsString,
   IsNumber,
   IsDateString,
   IsNotEmpty,
+  IsEnum,
 } from 'class-validator';
+
+export enum CoverageStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+}
 
 export class CreateCoverageDto {
   @ApiProperty({
@@ -29,9 +34,9 @@ export class CreateCoverageDto {
     example: 'active',
     description: 'Status of the coverage',
   })
-  @IsString({ message: 'status must be a string' })
+  @IsEnum(CoverageStatus)
   @IsNotEmpty({ message: 'status is required' })
-  status!: string;
+  status!: CoverageStatus;
 
   @ApiProperty({
     example: 0.75,
