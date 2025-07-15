@@ -9,7 +9,6 @@ import {
 import { UploadClaimDocDto } from './upload-claim-doc.dto';
 import { Type } from 'class-transformer';
 
-
 export class CreateClaimDto {
   @ApiProperty({
     example: 1,
