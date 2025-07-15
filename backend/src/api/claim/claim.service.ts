@@ -1,8 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UpdateClaimDto } from './dto/requests/update-claim.dto';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { CreateClaimDto } from './dto/requests/create-claim.dto';
 import { UploadClaimDocDto } from './dto/requests/upload-claim-doc.dto';
+import { AuthenticatedRequest } from 'src/supabase/types/express';
 
 @Injectable()
 export class ClaimService {
@@ -12,20 +17,31 @@ export class ClaimService {
   //   return 'This action adds a new claim';
   // }
 
-  async createClaim(createClaimDto: CreateClaimDto): Promise<any> {
-    const supabase = this.supabaseService.createClientWithToken();
-    const { data, error } = await supabase
+  async createClaim(
+    createClaimDto: CreateClaimDto,
+    req: AuthenticatedRequest,
+  ): Promise<any> {
+    // ✅ Get user from request (from Bearer token)
+    const { data: userData, error: userError } =
+      await req.supabase.auth.getUser();
+
+    if (userError || !userData?.user) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    const user_id = userData.user.id;
+    const { data, error } = await req.supabase
       .from('claims')
       .insert([
         {
           policy_id: createClaimDto.policy_id,
-          user_id: createClaimDto.user_id,
+          user_id: user_id,
           claim_type: createClaimDto.claim_type,
           amount: createClaimDto.amount,
-          status: createClaimDto.status as 'pending',
-          submitted_date: createClaimDto.submitted_date,
-          processed_date: createClaimDto.processed_date ?? null,
-          claimed_date: createClaimDto.claimed_date ?? null,
+          status: 'pending',
+          submitted_date: new Date().toISOString(),
+          processed_date: null,
+          claimed_date: null,
           description: createClaimDto.description ?? null, // Assuming documents is an array of strings
         },
       ])
@@ -36,7 +52,32 @@ export class ClaimService {
         'Failed to create claim: ' + (error?.message || 'Unknown error'),
       );
     }
-    return data;
+
+    const claimId = data.id;
+
+    // Step 2: Insert documents if provided
+    if (createClaimDto.documents?.length) {
+      const docInserts = createClaimDto.documents.map((doc) => ({
+        claim_id: claimId,
+        name: doc.name,
+        url: doc.url,
+      }));
+
+      const { error: docError } = await req.supabase
+        .from('claim_documents')
+        .insert(docInserts);
+
+      if (docError) {
+        console.error(docError);
+        throw new InternalServerErrorException('Failed to create documents');
+      }
+    }
+    // Return the created claim data
+    return {
+      statusCode: 201,
+      message: 'Policy created successfully',
+      data: data,
+    };
   }
 
   async findAll(): Promise<any[]> {
@@ -65,19 +106,26 @@ export class ClaimService {
     return data;
   }
 
-  async update(id: number, updateClaimDto: UpdateClaimDto): Promise<any> {
-    const supabase = this.supabaseService.createClientWithToken();
-    const { data, error } = await supabase
+  async update(
+    id: number,
+    updateClaimDto: UpdateClaimDto,
+    req: AuthenticatedRequest,
+  ): Promise<any> {
+    const { data: userData, error: userError } =
+      await req.supabase.auth.getUser();
+
+    if (userError || !userData?.user) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+    const user_id = userData.user.id;
+    const { data, error } = await req.supabase
       .from('claims')
       .update({
         policy_id: updateClaimDto.policy_id,
-        user_id: updateClaimDto.user_id,
+        user_id: user_id,
         claim_type: updateClaimDto.claim_type,
         amount: updateClaimDto.amount,
         status: updateClaimDto.status as 'pending' | 'approved' | 'rejected',
-        submitted_date: updateClaimDto.submitted_date,
-        processed_date: updateClaimDto.processed_date ?? null,
-        claimed_date: updateClaimDto.claimed_date ?? null,
         description: updateClaimDto.description ?? null, // Assuming documents is an array of strings
       })
       .eq('id', id)

@@ -197,6 +197,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
         "tags": [
           "Claim"
         ]
@@ -209,6 +214,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
         "tags": [
           "Claim"
         ]
@@ -232,6 +242,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
         "tags": [
           "Claim"
         ]
@@ -263,6 +278,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
         "tags": [
           "Claim"
         ]
@@ -284,6 +304,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
         "tags": [
           "Claim"
         ]
@@ -445,6 +470,31 @@
           "username"
         ]
       },
+      "UploadClaimDocDto": {
+        "type": "object",
+        "properties": {
+          "claim_id": {
+            "type": "number",
+            "example": 1,
+            "description": "ID of the claim to which the document belongs"
+          },
+          "name": {
+            "type": "string",
+            "example": "accident_report.pdf",
+            "description": "Name of the uploaded document"
+          },
+          "url": {
+            "type": "string",
+            "example": "https://example.com/uploads/accident_report.pdf",
+            "description": "URL of the uploaded document"
+          }
+        },
+        "required": [
+          "claim_id",
+          "name",
+          "url"
+        ]
+      },
       "CreateClaimDto": {
         "type": "object",
         "properties": {
@@ -452,11 +502,6 @@
             "type": "number",
             "example": 1,
             "description": "ID of the policy associated with the claim"
-          },
-          "user_id": {
-            "type": "string",
-            "example": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
-            "description": "User ID (UUID) of the claimant"
           },
           "claim_type": {
             "type": "string",
@@ -473,34 +518,24 @@
             "example": "pending",
             "description": "Status of the claim"
           },
-          "submitted_date": {
-            "type": "string",
-            "example": "2025-07-06",
-            "description": "Date when the claim was submitted"
-          },
-          "processed_date": {
-            "type": "string",
-            "example": "2025-07-07",
-            "description": "Date when the claim was processed"
-          },
-          "claimed_date": {
-            "type": "string",
-            "example": "2025-07-08",
-            "description": "Date when the claim was claimed"
-          },
           "description": {
             "type": "string",
             "example": "Accident on highway, car damaged.",
             "description": "Description of the claim"
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UploadClaimDocDto"
+            }
           }
         },
         "required": [
           "policy_id",
-          "user_id",
           "claim_type",
           "amount",
           "status",
-          "submitted_date"
+          "documents"
         ]
       },
       "UpdateClaimDto": {
@@ -511,11 +546,6 @@
             "example": 1,
             "description": "ID of the policy associated with the claim"
           },
-          "user_id": {
-            "type": "string",
-            "example": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
-            "description": "User ID (UUID) of the claimant"
-          },
           "claim_type": {
             "type": "string",
             "example": "accident",
@@ -531,25 +561,16 @@
             "example": "pending",
             "description": "Status of the claim"
           },
-          "submitted_date": {
-            "type": "string",
-            "example": "2025-07-06",
-            "description": "Date when the claim was submitted"
-          },
-          "processed_date": {
-            "type": "string",
-            "example": "2025-07-07",
-            "description": "Date when the claim was processed"
-          },
-          "claimed_date": {
-            "type": "string",
-            "example": "2025-07-08",
-            "description": "Date when the claim was claimed"
-          },
           "description": {
             "type": "string",
             "example": "Accident on highway, car damaged.",
             "description": "Description of the claim"
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UploadClaimDocDto"
+            }
           },
           "id": {
             "type": "number",
