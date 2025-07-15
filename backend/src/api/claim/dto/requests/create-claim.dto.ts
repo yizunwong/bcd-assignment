@@ -3,18 +3,12 @@ import {
   IsNotEmpty,
   IsString,
   IsNumber,
-  IsEnum,
   IsOptional,
   ValidateNested,
 } from 'class-validator';
 import { UploadClaimDocDto } from './upload-claim-doc.dto';
 import { Type } from 'class-transformer';
 
-export enum ClaimStatus {
-  Pending = 'pending',
-  Approved = 'approved',
-  Rejected = 'rejected',
-}
 
 export class CreateClaimDto {
   @ApiProperty({
@@ -39,14 +33,6 @@ export class CreateClaimDto {
   @IsNumber({}, { message: 'Amount must be a number' })
   @IsNotEmpty({ message: 'Amount is required' })
   amount!: number;
-
-  @ApiProperty({
-    example: 'pending',
-    description: 'Status of the claim',
-  })
-  @IsEnum(ClaimStatus)
-  @IsNotEmpty()
-  status?: ClaimStatus;
 
   @ApiProperty({
     example: 'Accident on highway, car damaged.',

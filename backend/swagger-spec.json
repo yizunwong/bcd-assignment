@@ -513,11 +513,6 @@
             "example": 1000,
             "description": "Amount claimed"
           },
-          "status": {
-            "type": "string",
-            "example": "pending",
-            "description": "Status of the claim"
-          },
           "description": {
             "type": "string",
             "example": "Accident on highway, car damaged.",
@@ -534,7 +529,6 @@
           "policy_id",
           "claim_type",
           "amount",
-          "status",
           "documents"
         ]
       },
@@ -556,11 +550,6 @@
             "example": 1000,
             "description": "Amount claimed"
           },
-          "status": {
-            "type": "string",
-            "example": "pending",
-            "description": "Status of the claim"
-          },
           "description": {
             "type": "string",
             "example": "Accident on highway, car damaged.",
@@ -576,10 +565,16 @@
             "type": "number",
             "example": 1,
             "description": "ID of the claim to update"
+          },
+          "status": {
+            "type": "string",
+            "example": "pending",
+            "description": "Status of the claim"
           }
         },
         "required": [
-          "id"
+          "id",
+          "status"
         ]
       }
     }
