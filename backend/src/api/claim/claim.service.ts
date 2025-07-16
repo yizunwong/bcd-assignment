@@ -24,9 +24,12 @@ export class ClaimService {
       const urls: string[] = [];
 
       for (const file of fileArray) {
+        const timestamp = Date.now();
+        const uniqueName = `${timestamp}-${file.originalname}`;
+        const filePath = `claim_documents/${uniqueName}`;
         const { error: uploadError } = await req.supabase.storage
           .from('supastorage')
-          .upload(`claim_documents/${file.originalname}`, file.buffer, {
+          .upload(filePath, file.buffer, {
             contentType: file.mimetype,
           });
 
@@ -36,7 +39,7 @@ export class ClaimService {
 
         const { data } = req.supabase.storage
           .from('supastorage')
-          .getPublicUrl(`claim_documents/${file.originalname}`);
+          .getPublicUrl(filePath);
         const url = data.publicUrl;
         urls.push(url);
       }
@@ -117,13 +120,33 @@ export class ClaimService {
 
   async findAll(): Promise<any[]> {
     const supabase = this.supabaseService.createClientWithToken();
-    const { data, error } = await supabase.from('claims').select('*');
-    if (error) {
+    const { data: claims, error: claimsError } = await supabase
+      .from('claims')
+      .select('*');
+    if (claimsError) {
       throw new Error(
-        'Failed to fetch claims: ' + (error.message || 'Unknown error'),
+        'Failed to fetch claims: ' + (claimsError.message || 'Unknown error'),
       );
     }
-    return data;
+
+    // Fetch all claim documents
+    const { data: documents, error: docsError } = await supabase
+      .from('claim_documents')
+      .select('*');
+    if (docsError) {
+      throw new Error(
+        'Failed to fetch claim documents: ' +
+          (docsError.message || 'Unknown error'),
+      );
+    }
+
+    // Attach documents to their respective claims
+    const claimsWithDocs = claims.map((claim) => ({
+      ...claim,
+      documents: documents.filter((doc) => doc.claim_id === claim.id),
+    }));
+
+    return claimsWithDocs;
   }
 
   async findOne(id: number): Promise<any> {
@@ -138,7 +161,19 @@ export class ClaimService {
         'Failed to fetch claims: ' + (error.message || 'Unknown error'),
       );
     }
-    return data;
+
+    const { data: docData, error: docError } = await supabase
+      .from('claim_documents')
+      .select('*')
+      .eq('claim_id', id);
+
+    if (docError || !docData) {
+      throw new Error(
+        'Failed to fetch claim documents: ' +
+          (docError.message || 'Unknown error'),
+      );
+    }
+    return { ...data, documents: docData }; // Include documents in the response data;
   }
 
   async update(
@@ -176,15 +211,31 @@ export class ClaimService {
 
   async remove(id: number): Promise<any> {
     const supabase = this.supabaseService.createClientWithToken();
+
+    // Remove related claim documents first
+    const { error: docError } = await supabase
+      .from('claim_documents')
+      .delete()
+      .eq('claim_id', id);
+
+    if (docError) {
+      throw new Error(
+        'Failed to remove claim documents: ' +
+          (docError?.message || 'Unknown error'),
+      );
+    }
+
+    // Then remove the claim itself
     const { data, error } = await supabase
       .from('claims')
       .delete()
       .eq('id', id)
       .select()
       .single();
+
     if (error || !data) {
       throw new Error(
-        'Failed to remove claim: ' + (error.message || 'Unknown error'),
+        'Failed to remove claim: ' + (error?.message || 'Unknown error'),
       );
     }
     return data;
