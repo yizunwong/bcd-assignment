@@ -11,6 +11,8 @@ create table claims (
   description TEXT
 );
 
+//pending: add approved date, before claimed_date.
+
 create table claim_documents (
   id serial primary key,
   claim_id integer not null references policies(id) on delete cascade,

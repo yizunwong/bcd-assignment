@@ -1,13 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsNotEmpty,
-  IsString,
-  IsNumber,
-  IsOptional,
-  ValidateNested,
-} from 'class-validator';
-import { UploadClaimDocDto } from './upload-claim-doc.dto';
-import { Type } from 'class-transformer';
+import { IsNotEmpty, IsString, IsNumber, IsOptional } from 'class-validator';
 
 export class CreateClaimDto {
   @ApiProperty({
@@ -41,9 +33,4 @@ export class CreateClaimDto {
   @IsOptional()
   @IsString({ message: 'Description must be a string' })
   description?: string;
-
-  @ValidateNested({ each: true })
-  @Type(() => UploadClaimDocDto)
-  @ApiProperty({ type: UploadClaimDocDto, isArray: true })
-  documents!: UploadClaimDocDto[];
 }

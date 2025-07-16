@@ -8,7 +8,6 @@ import { SupabaseService } from 'src/supabase/supabase.service';
 import { CreateClaimDto } from './dto/requests/create-claim.dto';
 import { UploadClaimDocDto } from './dto/requests/upload-claim-doc.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
-
 @Injectable()
 export class ClaimService {
   constructor(private readonly supabaseService: SupabaseService) {}
@@ -16,10 +15,42 @@ export class ClaimService {
   //   const supabase = this.supabaseService.createClientWithToken();
   //   return 'This action adds a new claim';
   // }
+  async uploadClaimDocument(
+    files: Array<Express.Multer.File>,
+    req: AuthenticatedRequest,
+  ) {
+    try {
+      const fileArray = Array.isArray(files) ? files : [files];
+      const urls: string[] = [];
+
+      for (const file of fileArray) {
+        await req.supabase.storage
+          .from('claim_documents')
+          .upload(file.originalname, file.buffer, {
+            contentType: file.mimetype,
+            upsert: false,
+          });
+
+        const { data } = req.supabase.storage
+          .from('claim_documents')
+          .getPublicUrl(file.originalname);
+        const url = data.publicUrl;
+        urls.push(url);
+      }
+      return urls;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new InternalServerErrorException(error.message);
+      } else {
+        throw new InternalServerErrorException('An unknown error occurred');
+      }
+    }
+  }
 
   async createClaim(
     createClaimDto: CreateClaimDto,
     req: AuthenticatedRequest,
+    files: Array<Express.Multer.File>,
   ): Promise<any> {
     // ✅ Get user from request (from Bearer token)
     const { data: userData, error: userError } =
@@ -56,11 +87,12 @@ export class ClaimService {
     const claimId = data.id;
 
     // Step 2: Insert documents if provided
-    if (createClaimDto.documents?.length) {
-      const docInserts = createClaimDto.documents.map((doc) => ({
+    if (files && files.length > 0) {
+      const urls = await this.uploadClaimDocument(files, req);
+      const docInserts = files.map((file, index) => ({
         claim_id: claimId,
-        name: doc.name,
-        url: doc.url,
+        name: file.originalname,
+        url: urls[index],
       }));
 
       const { error: docError } = await req.supabase
