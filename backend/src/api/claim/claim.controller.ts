@@ -16,7 +16,7 @@ import { UpdateClaimDto } from './dto/requests/update-claim.dto';
 import { CreateClaimDto } from './dto/requests/create-claim.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { AuthGuard } from '../auth/auth.guard';
-import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('claim')
@@ -26,27 +26,6 @@ export class ClaimController {
 
   @Post()
   @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        policy_id: { type: 'number', example: 1 },
-        claim_type: { type: 'string', example: 'accident' },
-        amount: { type: 'number', example: 1 },
-        description: {
-          type: 'string',
-          example: 'Accident on highway, car damaged.',
-        },
-        documents: {
-          type: 'array',
-          items: {
-            type: 'string',
-            format: 'binary',
-          },
-        },
-      },
-    },
-  })
   @UseInterceptors(FilesInterceptor('documents'))
   @UseGuards(AuthGuard)
   create(
