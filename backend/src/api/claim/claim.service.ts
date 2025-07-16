@@ -24,16 +24,19 @@ export class ClaimService {
       const urls: string[] = [];
 
       for (const file of fileArray) {
-        await req.supabase.storage
-          .from('claim_documents')
-          .upload(file.originalname, file.buffer, {
+        const { error: uploadError } = await req.supabase.storage
+          .from('supastorage')
+          .upload(`claim_documents/${file.originalname}`, file.buffer, {
             contentType: file.mimetype,
-            upsert: false,
           });
 
+        if (uploadError) {
+          throw new InternalServerErrorException(uploadError.message);
+        }
+
         const { data } = req.supabase.storage
-          .from('claim_documents')
-          .getPublicUrl(file.originalname);
+          .from('supastorage')
+          .getPublicUrl(`claim_documents/${file.originalname}`);
         const url = data.publicUrl;
         urls.push(url);
       }

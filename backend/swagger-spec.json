@@ -185,9 +185,34 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/CreateClaimDto"
+                "type": "object",
+                "properties": {
+                  "policy_id": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "claim_type": {
+                    "type": "string",
+                    "example": "accident"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Accident on highway, car damaged."
+                  },
+                  "documents": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                }
               }
             }
           }
@@ -468,36 +493,6 @@
         "required": [
           "email",
           "username"
-        ]
-      },
-      "CreateClaimDto": {
-        "type": "object",
-        "properties": {
-          "policy_id": {
-            "type": "number",
-            "example": 1,
-            "description": "ID of the policy associated with the claim"
-          },
-          "claim_type": {
-            "type": "string",
-            "example": "accident",
-            "description": "Type of the claim"
-          },
-          "amount": {
-            "type": "number",
-            "example": 1000,
-            "description": "Amount claimed"
-          },
-          "description": {
-            "type": "string",
-            "example": "Accident on highway, car damaged.",
-            "description": "Description of the claim"
-          }
-        },
-        "required": [
-          "policy_id",
-          "claim_type",
-          "amount"
         ]
       },
       "UpdateClaimDto": {

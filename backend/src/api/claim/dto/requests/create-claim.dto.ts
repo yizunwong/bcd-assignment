@@ -18,10 +18,10 @@ export class CreateClaimDto {
   claim_type!: string;
 
   @ApiProperty({
-    example: 1000.0,
+    example: 1000,
     description: 'Amount claimed',
   })
-  @IsNumber({}, { message: 'Amount must be a number' })
+  // @IsNumber({}, { message: 'Amount must be a number' })
   @IsNotEmpty({ message: 'Amount is required' })
   amount!: number;
 
