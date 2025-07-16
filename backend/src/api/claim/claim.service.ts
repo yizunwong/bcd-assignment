@@ -118,26 +118,66 @@ export class ClaimService {
     };
   }
 
-  async findAll(): Promise<any[]> {
+  async findAll(
+    req: any, // Replace with AuthenticatedRequest if applicable
+    page: number = 1,
+    limit: number = 5,
+    category?: string,
+    search?: string,
+    sortBy: string = 'id',
+    sortOrder: 'asc' | 'desc' = 'asc',
+  ): Promise<any> {
     const supabase = this.supabaseService.createClientWithToken();
-    const { data: claims, error: claimsError } = await supabase
+    const offset = (page - 1) * limit;
+
+    // Build the base query for claims
+    let query = supabase
       .from('claims')
-      .select('*');
-    if (claimsError) {
-      throw new Error(
-        'Failed to fetch claims: ' + (claimsError.message || 'Unknown error'),
+      .select('*', { count: 'exact' })
+      .range(offset, offset + limit - 1);
+
+    // Apply filtering by category if provided
+    if (category) {
+      query = query.eq('category', category); // Adjust 'category' to a valid claims column if it exists
+    }
+
+    // Apply search across relevant fields (e.g., claim_type, description)
+    if (search) {
+      query = query.or(
+        `claim_type.ilike.%${search}%,description.ilike.%${search}%`,
       );
     }
 
-    // Fetch all claim documents
+    // Define sortable fields for claims
+    const sortableFields = [
+      'id',
+      'claim_type',
+      'amount',
+      'status',
+      'submitted_date',
+    ]; // Adjust based on your schema
+    if (sortableFields.includes(sortBy)) {
+      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+    }
+
+    // Execute the claims query
+    const { data: claims, error: claimsError, count } = await query;
+    if (claimsError) {
+      console.error('Claims fetch error:', claimsError.message);
+      throw new InternalServerErrorException('Failed to fetch claims');
+    }
+
+    // Fetch documents with pagination and filtering by claim_id
     const { data: documents, error: docsError } = await supabase
       .from('claim_documents')
-      .select('*');
+      .select('*')
+      .in(
+        'claim_id',
+        claims.map((claim) => claim.id),
+      ); // Only fetch documents for the retrieved claims
     if (docsError) {
-      throw new Error(
-        'Failed to fetch claim documents: ' +
-          (docsError.message || 'Unknown error'),
-      );
+      console.error('Documents fetch error:', docsError.message);
+      throw new InternalServerErrorException('Failed to fetch claim documents');
     }
 
     // Attach documents to their respective claims
@@ -146,7 +186,21 @@ export class ClaimService {
       documents: documents.filter((doc) => doc.claim_id === claim.id),
     }));
 
-    return claimsWithDocs;
+    // Calculate pagination metadata
+    const totalItems = count || 0;
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return {
+      statusCode: 200,
+      message: 'Claims retrieved successfully',
+      metadata: {
+        totalItems,
+        totalPages,
+        currentPage: page,
+        pageSize: limit,
+      },
+      data: claimsWithDocs,
+    };
   }
 
   async findOne(id: number): Promise<any> {

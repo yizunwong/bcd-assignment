@@ -10,6 +10,7 @@ import {
   UseGuards,
   UploadedFiles,
   UseInterceptors,
+  Query,
 } from '@nestjs/common';
 import { ClaimService } from './claim.service';
 import { UpdateClaimDto } from './dto/requests/update-claim.dto';
@@ -38,8 +39,24 @@ export class ClaimController {
 
   @Get()
   @UseGuards(AuthGuard)
-  findAll() {
-    return this.claimService.findAll();
+  findAll(
+    @Req() req: AuthenticatedRequest,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 5,
+    @Query('category') category?: string,
+    @Query('search') search?: string,
+    @Query('sortBy') sortBy: string = 'id',
+    @Query('sortOrder') sortOrder: 'asc' | 'desc' = 'asc',
+  ) {
+    return this.claimService.findAll(
+      req,
+      page,
+      limit,
+      category,
+      search,
+      sortBy,
+      sortOrder,
+    );
   }
 
   @Get(':id')
