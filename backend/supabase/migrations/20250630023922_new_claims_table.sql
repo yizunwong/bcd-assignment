@@ -15,7 +15,7 @@ create table claims (
 
 create table claim_documents (
   id serial primary key,
-  claim_id integer not null references policies(id) on delete cascade,
+  claim_id integer not null references claims(id) on delete cascade,
   name text not null,
   url text not null
 );

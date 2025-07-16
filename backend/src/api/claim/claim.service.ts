@@ -113,7 +113,7 @@ export class ClaimService {
     // Return the created claim data
     return {
       statusCode: 201,
-      message: 'Policy created successfully',
+      message: 'Claim created successfully',
       data: data,
     };
   }
@@ -266,7 +266,31 @@ export class ClaimService {
   async remove(id: number): Promise<any> {
     const supabase = this.supabaseService.createClientWithToken();
 
-    // Remove related claim documents first
+    // Fetch claim documents before deleting claim
+    const { data: documents, error: fetchDocError } = await supabase
+      .from('claim_documents')
+      .select('*')
+      .eq('claim_id', id);
+
+    if (fetchDocError) {
+      throw new Error(
+        'Failed to fetch claim documents: ' +
+          (fetchDocError?.message || 'Unknown error'),
+      );
+    }
+
+    if (documents && documents.length > 0) {
+      const req = { supabase } as AuthenticatedRequest;
+      for (const doc of documents) {
+        const urlPaths = doc.url.split('/');
+        const filePath = urlPaths.slice(-2).join('/'); // Assuming the last two segments are the path and filename
+        console.log('Url path to remove:', urlPaths);
+        console.log('Removing file:', filePath);
+        await this.removeFile(filePath, req);
+      }
+    }
+
+    // Remove related claim documents from the database
     const { error: docError } = await supabase
       .from('claim_documents')
       .delete()
@@ -278,7 +302,6 @@ export class ClaimService {
           (docError?.message || 'Unknown error'),
       );
     }
-
     // Then remove the claim itself
     const { data, error } = await supabase
       .from('claims')
@@ -382,5 +405,35 @@ export class ClaimService {
       );
     }
     return data;
+  }
+
+  async removeFile(filePath: string, req: AuthenticatedRequest): Promise<void> {
+    try {
+      console.log('Auth session:', await req.supabase.auth.getSession());
+      console.log('Attempting to remove file at path:', filePath);
+      const { data, error } = await req.supabase.storage
+        .from('supastorage')
+        .remove([filePath]);
+
+      if (error) {
+        console.error('File removal error details:', {
+          message: error.message,
+        });
+        throw new InternalServerErrorException(
+          'Failed to remove file from storage: ' + error.message,
+        );
+      }
+      console.log('File removal successful, data:', data);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('Caught error during file removal:', error.message);
+        throw new InternalServerErrorException(error.message);
+      } else {
+        console.error('Unknown error during file removal:', error);
+        throw new InternalServerErrorException(
+          'An unknown error occurred while removing the file',
+        );
+      }
+    }
   }
 }
