@@ -36,7 +36,7 @@ export class UserService {
       const auth = authUsers.users.find((u) => u.id === profile.user_id);
 
       return {
-        id: profile.id,
+        id: profile.user_id,
         name: auth?.user_metadata?.username ?? 'Unknown',
         email: auth?.email ?? '—',
         role: profile.role,

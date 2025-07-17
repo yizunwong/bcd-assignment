@@ -505,18 +505,57 @@
         "properties": {
           "email": {
             "type": "string",
-            "example": "johndoe@example.com",
-            "description": "User email address"
+            "example": "alex.johnson@example.com"
           },
-          "username": {
+          "password": {
             "type": "string",
-            "example": "johndoe",
-            "description": "Username for the user"
+            "example": "StrongPass123!"
+          },
+          "role": {
+            "type": "string",
+            "example": "policyholder",
+            "enum": [
+              "policyholder",
+              "insurance_admin"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "example": "active"
+          },
+          "kyc_status": {
+            "type": "string",
+            "example": "verified"
+          },
+          "location": {
+            "type": "string",
+            "example": "New York, USA"
+          },
+          "login_attempts": {
+            "type": "number",
+            "example": 0
+          },
+          "notes": {
+            "type": "string",
+            "example": "Test user"
+          },
+          "company": {
+            "type": "string",
+            "example": "Farm Corp Ltd"
+          },
+          "policies": {
+            "type": "number",
+            "example": 3
+          },
+          "claims": {
+            "type": "number",
+            "example": 2
           }
         },
         "required": [
           "email",
-          "username"
+          "password",
+          "role"
         ]
       },
       "CreateClaimDto": {
