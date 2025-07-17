@@ -362,6 +362,35 @@
           "Claim"
         ]
       }
+    },
+    "/claim/file": {
+      "delete": {
+        "operationId": "ClaimController_removeFile",
+        "parameters": [
+          {
+            "name": "filePath",
+            "required": true,
+            "in": "query",
+            "description": "Path of the file to delete in the bucket (e.g. claim_documents/filename.pdf)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Claim"
+        ]
+      }
     }
   },
   "info": {

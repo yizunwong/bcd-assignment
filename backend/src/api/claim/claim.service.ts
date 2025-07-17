@@ -263,7 +263,7 @@ export class ClaimService {
     return data;
   }
 
-  async remove(id: number): Promise<any> {
+  async remove(id: number, req: AuthenticatedRequest): Promise<any> {
     const supabase = this.supabaseService.createClientWithToken();
 
     // Fetch claim documents before deleting claim
@@ -280,10 +280,10 @@ export class ClaimService {
     }
 
     if (documents && documents.length > 0) {
-      const req = { supabase } as AuthenticatedRequest;
+      // const req = { supabase } as AuthenticatedRequest;
       for (const doc of documents) {
         const urlPaths = doc.url.split('/');
-        const filePath = urlPaths.slice(-2).join('/'); // Assuming the last two segments are the path and filename
+        const filePath = decodeURIComponent(urlPaths.slice(-2).join('/'));
         console.log('Url path to remove:', urlPaths);
         console.log('Removing file:', filePath);
         await this.removeFile(filePath, req);
