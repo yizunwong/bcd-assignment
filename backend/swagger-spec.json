@@ -177,6 +177,191 @@
           "Users"
         ]
       }
+    },
+    "/claim": {
+      "post": {
+        "operationId": "ClaimController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateClaimDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Claim"
+        ]
+      },
+      "get": {
+        "operationId": "ClaimController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "category",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Claim"
+        ]
+      }
+    },
+    "/claim/{id}": {
+      "get": {
+        "operationId": "ClaimController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Claim"
+        ]
+      },
+      "patch": {
+        "operationId": "ClaimController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateClaimDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Claim"
+        ]
+      },
+      "delete": {
+        "operationId": "ClaimController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Claim"
+        ]
+      }
     }
   },
   "info": {
@@ -320,57 +505,103 @@
         "properties": {
           "email": {
             "type": "string",
-            "example": "alex.johnson@example.com"
+            "example": "johndoe@example.com",
+            "description": "User email address"
           },
-          "password": {
+          "username": {
             "type": "string",
-            "example": "StrongPass123!"
-          },
-          "role": {
-            "type": "string",
-            "example": "policyholder",
-            "enum": [
-              "policyholder",
-              "insurance_admin"
-            ]
-          },
-          "status": {
-            "type": "string",
-            "example": "active"
-          },
-          "kyc_status": {
-            "type": "string",
-            "example": "verified"
-          },
-          "location": {
-            "type": "string",
-            "example": "New York, USA"
-          },
-          "login_attempts": {
-            "type": "number",
-            "example": 0
-          },
-          "notes": {
-            "type": "string",
-            "example": "Test user"
-          },
-          "company": {
-            "type": "string",
-            "example": "Farm Corp Ltd"
-          },
-          "policies": {
-            "type": "number",
-            "example": 3
-          },
-          "claims": {
-            "type": "number",
-            "example": 2
+            "example": "johndoe",
+            "description": "Username for the user"
           }
         },
         "required": [
           "email",
-          "password",
-          "role"
+          "username"
+        ]
+      },
+      "CreateClaimDto": {
+        "type": "object",
+        "properties": {
+          "policy_id": {
+            "type": "number",
+            "example": 1,
+            "description": "ID of the policy associated with the claim"
+          },
+          "claim_type": {
+            "type": "string",
+            "example": "accident",
+            "description": "Type of the claim"
+          },
+          "amount": {
+            "type": "number",
+            "example": 1000,
+            "description": "Amount claimed"
+          },
+          "description": {
+            "type": "string",
+            "example": "Accident on highway, car damaged.",
+            "description": "Description of the claim"
+          },
+          "documents": {
+            "description": "Documents to upload",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        },
+        "required": [
+          "policy_id",
+          "claim_type",
+          "amount"
+        ]
+      },
+      "UpdateClaimDto": {
+        "type": "object",
+        "properties": {
+          "policy_id": {
+            "type": "number",
+            "example": 1,
+            "description": "ID of the policy associated with the claim"
+          },
+          "claim_type": {
+            "type": "string",
+            "example": "accident",
+            "description": "Type of the claim"
+          },
+          "amount": {
+            "type": "number",
+            "example": 1000,
+            "description": "Amount claimed"
+          },
+          "description": {
+            "type": "string",
+            "example": "Accident on highway, car damaged.",
+            "description": "Description of the claim"
+          },
+          "documents": {
+            "description": "Documents to upload",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "id": {
+            "type": "number",
+            "example": 1,
+            "description": "ID of the claim to update"
+          },
+          "status": {
+            "type": "string",
+            "example": "pending",
+            "description": "Status of the claim"
+          }
+        },
+        "required": [
+          "id",
+          "status"
         ]
       }
     }

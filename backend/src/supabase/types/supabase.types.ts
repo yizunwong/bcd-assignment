@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -71,7 +71,7 @@ export type Database = {
           id: number;
           policy_id: number | null;
           processed_date: string | null;
-          status: string;
+          status: Database['public']['Enums']['claim_status'];
           submitted_date: string;
           user_id: string | null;
         };
@@ -83,7 +83,7 @@ export type Database = {
           id?: number;
           policy_id?: number | null;
           processed_date?: string | null;
-          status: string;
+          status?: Database['public']['Enums']['claim_status'];
           submitted_date: string;
           user_id?: string | null;
         };
@@ -95,7 +95,7 @@ export type Database = {
           id?: number;
           policy_id?: number | null;
           processed_date?: string | null;
-          status?: string;
+          status?: Database['public']['Enums']['claim_status'];
           submitted_date?: string;
           user_id?: string | null;
         };
@@ -116,7 +116,7 @@ export type Database = {
           next_payment_date: string;
           policy_id: number | null;
           start_date: string;
-          status: string;
+          status: Database['public']['Enums']['coverage_status'];
           user_id: string | null;
           utilization_rate: number;
         };
@@ -126,9 +126,9 @@ export type Database = {
           next_payment_date: string;
           policy_id?: number | null;
           start_date: string;
-          status: string;
+          status?: Database['public']['Enums']['coverage_status'];
           user_id?: string | null;
-          utilization_rate: number;
+          utilization_rate?: number;
         };
         Update: {
           end_date?: string;
@@ -136,7 +136,7 @@ export type Database = {
           next_payment_date?: string;
           policy_id?: number | null;
           start_date?: string;
-          status?: string;
+          status?: Database['public']['Enums']['coverage_status'];
           user_id?: string | null;
           utilization_rate?: number;
         };
@@ -385,6 +385,8 @@ export type Database = {
       [_ in never]: never;
     };
     Enums: {
+      claim_status: 'pending' | 'approved' | 'rejected';
+      coverage_status: 'active' | 'inactive';
       role: 'admin' | 'user';
     };
     CompositeTypes: {
@@ -501,6 +503,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      claim_status: ['pending', 'approved', 'rejected'],
+      coverage_status: ['active', 'inactive'],
       role: ['admin', 'user'],
     },
   },
