@@ -3,15 +3,16 @@ import {
   Get,
   Post,
   Body,
-  // Patch,
+  Patch,
   Param,
   Delete,
   Req,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { CoverageService } from './coverage.service';
 import { CreateCoverageDto } from './dto/requests/create-coverage.dto';
-// import { UpdateCoverageDto } from './dto/requests/update-coverage.dto';
+import { UpdateCoverageDto } from './dto/requests/update-coverage.dto';
 import { AuthGuard } from '../auth/auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
@@ -31,25 +32,51 @@ export class CoverageController {
   }
 
   @Get()
-  findAll() {
-    return this.coverageService.findAll();
+  @UseGuards(AuthGuard)
+  findAll(
+    @Req() req: AuthenticatedRequest, // Authenticated request to access Supabase
+    @Query('page') page = '1',
+    @Query('limit') limit = '5',
+    @Query('category') category?: string,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+    @Query('sortBy') sortBy = 'id',
+    @Query('sortOrder') sortOrder: 'asc' | 'desc' = 'asc',
+  ) {
+    const coverageStatus =
+      status === 'active' || status === 'inactive' ? status : 'active';
+    return this.coverageService.findAll(
+      req,
+      +page,
+      +limit,
+      category,
+      search,
+      coverageStatus,
+      sortBy,
+      sortOrder,
+    );
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.coverageService.findOne(+id);
+  @UseGuards(AuthGuard)
+  @Get(':id')
+  findOne(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    return this.coverageService.findOne(+id, req);
   }
 
-  // @Patch(':id')
-  // update(
-  //   @Param('id') id: string,
-  //   @Body() updateCoverageDto: UpdateCoverageDto,
-  // ) {
-  //   return this.coverageService.update(+id, updateCoverageDto);
-  // }
+  @Patch(':id')
+  @UseGuards(AuthGuard)
+  update(
+    @Param('id') id: string,
+    @Body() updateCoverageDto: UpdateCoverageDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.coverageService.update(+id, updateCoverageDto, req);
+  }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.coverageService.remove(+id);
+  @UseGuards(AuthGuard)
+  remove(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    return this.coverageService.remove(+id, req);
   }
 }

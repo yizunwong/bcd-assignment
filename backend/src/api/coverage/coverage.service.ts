@@ -1,21 +1,18 @@
 import {
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { CreateCoverageDto } from './dto/requests/create-coverage.dto';
 // import { SupabaseService } from 'src/supabase/supabase.service';
-// import { UpdateCoverageDto } from './dto/requests/update-coverage.dto';
+import { UpdateCoverageDto } from './dto/requests/update-coverage.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 
 @Injectable()
 export class CoverageService {
-  // constructor(private readonly supabaseService: SupabaseService) {}
   async create(dto: CreateCoverageDto, req: AuthenticatedRequest) {
-    // const supabase = this.supabaseService.createClientWithToken();
-    // return 'This action adds a new coverage';
-
-    // ✅ Get user from request (from Bearer token)
+    //Get user from request (from Bearer token)
     const { data: userData, error: userError } =
       await req.supabase.auth.getUser();
 
@@ -25,7 +22,7 @@ export class CoverageService {
 
     const user_id = userData.user.id;
 
-    // Step 1: Insert into `coverage`
+    //Insert into coverage table
     const { data: coverage, error: coverageError } = await req.supabase
       .from('coverage')
       .insert({
@@ -44,25 +41,165 @@ export class CoverageService {
       console.error(coverageError);
       throw new InternalServerErrorException('Failed to create coverage');
     }
+
+    return {
+      statusCode: 201,
+      message: 'Coverage created successfully',
+      data: coverage,
+    };
   }
 
-  findAll() {
-    // const supabase = this.supabaseService.createClientWithToken();
-    return `This action returns all coverage`;
+  async findAll(
+    req: AuthenticatedRequest,
+    page = 1,
+    limit = 5,
+    category?: string,
+    search?: string,
+    status: 'active' | 'inactive' = 'active',
+    sortBy: string = 'id',
+    sortOrder: 'asc' | 'desc' = 'asc',
+  ) {
+    const supabase = req.supabase;
+    const offset = (page - 1) * limit;
+
+    let query = supabase
+      .from('coverage')
+      .select('*', { count: 'exact' })
+      .range(offset, offset + limit - 1);
+
+    if (category) {
+      query = query.eq('category', category);
+    }
+
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+    }
+
+    if (status) {
+      query = query.eq('status', status);
+    }
+
+    //Sort by startDate, coverage amount, utilizationRate, or name
+    const sortableFields = ['start_date', 'utilization_rate'];
+    if (sortableFields.includes(sortBy)) {
+      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+    }
+
+    const { data, error: findAllError, count } = await query;
+
+    if (findAllError) {
+      console.error(findAllError);
+      throw new InternalServerErrorException('Failed to fetch coverage data');
+    }
+
+    const totalItems = count || 0;
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return {
+      statusCode: 200,
+      message: 'Coverage data retrieved successfully',
+      metadata: {
+        totalItems,
+        totalPages,
+        currentPage: page,
+        pageSize: limit,
+      },
+      data,
+    };
   }
 
-  findOne(id: number) {
-    // const supabase = this.supabaseService.createClientWithToken();
-    return `This action returns a #${id} coverage`;
+  async findOne(id: number, req: AuthenticatedRequest) {
+    const { data: coverage, error: findOneError } = await req.supabase
+      .from('coverage')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (findOneError || !coverage) {
+      console.error(findOneError);
+      throw new NotFoundException(`Coverage with ID ${id} not found`);
+    }
+
+    return {
+      statusCode: 200,
+      message: 'Coverage data retrieved successfully',
+      data: coverage,
+    };
   }
 
-  // update(id: number, updateCoverageDto: UpdateCoverageDto) {
-  //   // const supabase = this.supabaseService.createClientWithToken();
-  //   return `This action updates a #${id} coverage`;
-  // }
+  async update(
+    id: number,
+    updateCoverageDto: UpdateCoverageDto,
+    req: AuthenticatedRequest,
+  ) {
+    const { data: existingCoverage, error: fetchError } = await req.supabase
+      .from('coverage')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-  remove(id: number) {
-    // const supabase = this.supabaseService.createClientWithToken();
-    return `This action removes a #${id} coverage`;
+    if (fetchError || !existingCoverage) {
+      console.error(fetchError);
+      throw new NotFoundException(`Coverage with ID ${id} not found`);
+    }
+
+    const updateFields: Partial<typeof existingCoverage> = {};
+
+    if (updateCoverageDto.status !== undefined)
+      updateFields.status = updateCoverageDto.status;
+    if (updateCoverageDto.utilization_rate !== undefined)
+      updateFields.utilization_rate = updateCoverageDto.utilization_rate;
+    if (updateCoverageDto.start_date !== undefined)
+      updateFields.start_date = updateCoverageDto.start_date;
+    if (updateCoverageDto.end_date !== undefined)
+      updateFields.end_date = updateCoverageDto.end_date;
+    if (updateCoverageDto.next_payment_date !== undefined)
+      updateFields.next_payment_date = updateCoverageDto.next_payment_date;
+
+    const { data: updatedCoverage, error: updateError } = await req.supabase
+      .from('coverage')
+      .update(updateFields)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (updateError || !updatedCoverage) {
+      console.error(updateError);
+      throw new InternalServerErrorException('Failed to update coverage');
+    }
+
+    return {
+      statusCode: 200,
+      message: `Coverage with ID ${id} updated successfully`,
+      data: updatedCoverage,
+    };
+  }
+
+  async remove(id: number, req: AuthenticatedRequest) {
+    const { data: existingCoverage, error: fetchError } = await req.supabase
+      .from('coverage')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !existingCoverage) {
+      console.error(fetchError);
+      throw new NotFoundException(`Coverage with ID ${id} not found`);
+    }
+
+    const { error: deleteError } = await req.supabase
+      .from('coverage')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) {
+      console.error(deleteError);
+      throw new InternalServerErrorException('Failed to delete coverage');
+    }
+
+    return {
+      statusCode: 200,
+      message: `Coverage with ID ${id} deleted successfully`,
+    };
   }
 }
