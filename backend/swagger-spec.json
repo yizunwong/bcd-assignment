@@ -363,147 +363,15 @@
         ]
       }
     },
-    "/policy": {
-      "post": {
-        "operationId": "PolicyController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreatePolicyDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "supabase-auth": []
-          }
-        ],
-        "tags": [
-          "Policy"
-        ]
-      },
-      "get": {
-        "operationId": "PolicyController_findAll",
-        "parameters": [
-          {
-            "name": "category",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "search",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "sortOrder",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "supabase-auth": []
-          }
-        ],
-        "tags": [
-          "Policy"
-        ]
-      }
-    },
-    "/policy/{id}": {
-      "get": {
-        "operationId": "PolicyController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "supabase-auth": []
-          }
-        ],
-        "tags": [
-          "Policy"
-        ]
-      },
-      "patch": {
-        "operationId": "PolicyController_update",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdatePolicyDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "supabase-auth": []
-          }
-        ],
-        "tags": [
-          "Policy"
-        ]
-      },
+    "/claim/file": {
       "delete": {
-        "operationId": "PolicyController_remove",
+        "operationId": "ClaimController_removeFile",
         "parameters": [
           {
-            "name": "id",
+            "name": "filePath",
             "required": true,
-            "in": "path",
+            "in": "query",
+            "description": "Path of the file to delete in the bucket (e.g. claim_documents/filename.pdf)",
             "schema": {
               "type": "string"
             }
@@ -520,7 +388,7 @@
           }
         ],
         "tags": [
-          "Policy"
+          "Claim"
         ]
       }
     }
