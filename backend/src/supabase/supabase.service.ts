@@ -6,7 +6,7 @@ import { Database } from './types/supabase.types';
 @Injectable()
 export class SupabaseService {
   private supabaseUrl = process.env.SUPABASE_URL!;
-  private anonKey = process.env.SUPABASE_ANON_KEY!;
+  private anonKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
   createClientWithToken(token?: string) {
     if (token) {

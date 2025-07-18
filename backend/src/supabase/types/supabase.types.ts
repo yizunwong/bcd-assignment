@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -242,7 +242,6 @@ export type Database = {
         Row: {
           comment: string | null;
           id: number;
-          policy_id: number | null;
           rating: number;
           user_id: string | null;
           user_name: string;
@@ -250,7 +249,6 @@ export type Database = {
         Insert: {
           comment?: string | null;
           id?: number;
-          policy_id?: number | null;
           rating: number;
           user_id?: string | null;
           user_name: string;
@@ -258,20 +256,11 @@ export type Database = {
         Update: {
           comment?: string | null;
           id?: number;
-          policy_id?: number | null;
           rating?: number;
           user_id?: string | null;
           user_name?: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: 'reviews_policy_id_fkey';
-            columns: ['policy_id'];
-            isOneToOne: false;
-            referencedRelation: 'policies';
-            referencedColumns: ['id'];
-          },
-        ];
+        Relationships: [];
       };
       role_permissions: {
         Row: {

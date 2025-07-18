@@ -21,15 +21,15 @@ import { RolesGuard } from '../auth/role.guard';
 @ApiBearerAuth('supabase-auth')
 export class UserController {
   constructor(private readonly userService: UserService) {}
-  @UseGuards(AuthGuard, RolesGuard)
-  @Role('tester')
+  // @UseGuards(AuthGuard, RolesGuard)
+  // @Role('tester')
   @Get()
   async findAll(@Request() req: AuthenticatedRequest): Promise<any> {
     return this.userService.getAllUsers(req);
   }
 
   @Get(':id')
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   async findOne(
     @Request() req: AuthenticatedRequest,
     @Param('id', ParseIntPipe) id: number,
@@ -38,7 +38,7 @@ export class UserController {
   }
 
   @Post()
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   async create(
     @Request() req: AuthenticatedRequest,
     @Body() body: CreateUserDto,
