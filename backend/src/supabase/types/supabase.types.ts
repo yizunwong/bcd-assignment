@@ -402,7 +402,7 @@ export type Database = {
     };
     Enums: {
       claim_status: 'pending' | 'approved' | 'rejected' | 'claimed';
-      coverage_status: 'active' | 'inactive';
+      coverage_status: 'active' | 'limitExceeded' | 'expired' | 'suspended';
       role: 'admin' | 'user';
     };
     CompositeTypes: {
@@ -535,7 +535,7 @@ export const Constants = {
   public: {
     Enums: {
       claim_status: ['pending', 'approved', 'rejected', 'claimed'],
-      coverage_status: ['active', 'inactive'],
+      coverage_status: ['active', 'limitExceeded', 'expired', 'suspended'],
       role: ['admin', 'user'],
     },
   },

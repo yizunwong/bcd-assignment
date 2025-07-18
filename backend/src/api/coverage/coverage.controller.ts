@@ -11,7 +11,10 @@ import {
   Query,
 } from '@nestjs/common';
 import { CoverageService } from './coverage.service';
-import { CreateCoverageDto } from './dto/requests/create-coverage.dto';
+import {
+  CoverageStatus,
+  CreateCoverageDto,
+} from './dto/requests/create-coverage.dto';
 import { UpdateCoverageDto } from './dto/requests/update-coverage.dto';
 import { AuthGuard } from '../auth/auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
@@ -39,19 +42,17 @@ export class CoverageController {
     @Query('limit') limit = '5',
     @Query('category') category?: string,
     @Query('search') search?: string,
-    @Query('status') status?: string,
+    @Query('status') status?: CoverageStatus,
     @Query('sortBy') sortBy = 'id',
     @Query('sortOrder') sortOrder: 'asc' | 'desc' = 'asc',
   ) {
-    const coverageStatus =
-      status === 'active' || status === 'inactive' ? status : 'active';
     return this.coverageService.findAll(
       req,
       +page,
       +limit,
       category,
       search,
-      coverageStatus,
+      status,
       sortBy,
       sortOrder,
     );

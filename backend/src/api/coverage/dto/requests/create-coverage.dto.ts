@@ -10,7 +10,9 @@ import {
 
 export enum CoverageStatus {
   ACTIVE = 'active',
-  INACTIVE = 'inactive',
+  LIMIT_EXCEEDED = 'limitExceeded',
+  EXPIRED = 'expired',
+  SUSPENDED = 'suspended',
 }
 
 export class CreateCoverageDto {
@@ -39,7 +41,7 @@ export class CreateCoverageDto {
   status!: CoverageStatus;
 
   @ApiProperty({
-    example: 0.75,
+    example: 0,
     description: 'Utilization rate of the coverage',
   })
   @IsNumber({}, { message: 'utilization_rate must be a number' })

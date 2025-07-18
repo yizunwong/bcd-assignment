@@ -4,7 +4,10 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { CreateCoverageDto } from './dto/requests/create-coverage.dto';
+import {
+  CoverageStatus,
+  CreateCoverageDto,
+} from './dto/requests/create-coverage.dto';
 // import { SupabaseService } from 'src/supabase/supabase.service';
 import { UpdateCoverageDto } from './dto/requests/update-coverage.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
@@ -55,7 +58,7 @@ export class CoverageService {
     limit = 5,
     category?: string,
     search?: string,
-    status: 'active' | 'inactive' = 'active',
+    status?: CoverageStatus,
     sortBy: string = 'id',
     sortOrder: 'asc' | 'desc' = 'asc',
   ) {
@@ -64,22 +67,28 @@ export class CoverageService {
 
     let query = supabase
       .from('coverage')
-      .select('*', { count: 'exact' })
+      .select(
+        `
+      *,
+      policies (
+        name,
+        description,
+        category
+      )
+    `,
+        { count: 'exact' },
+      )
       .range(offset, offset + limit - 1);
 
-    if (category) {
-      query = query.eq('category', category);
-    }
-
-    if (search) {
-      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
-    }
+    // Remove this block, since it causes the error:
+    // if (category) {
+    //   query = query.eq('category', category);
+    // }
 
     if (status) {
       query = query.eq('status', status);
     }
 
-    //Sort by startDate, coverage amount, utilizationRate, or name
     const sortableFields = ['start_date', 'utilization_rate'];
     if (sortableFields.includes(sortBy)) {
       query = query.order(sortBy, { ascending: sortOrder === 'asc' });
@@ -92,19 +101,35 @@ export class CoverageService {
       throw new InternalServerErrorException('Failed to fetch coverage data');
     }
 
-    const totalItems = count || 0;
-    const totalPages = Math.ceil(totalItems / limit);
+    // Filter in JS if category or search is provided
+    let filteredData = data;
+    if (category) {
+      filteredData = filteredData.filter(
+        (item) => item.policies && item.policies.category === category,
+      );
+    }
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filteredData = filteredData.filter(
+        (item) =>
+          item.policies &&
+          ((item.policies.name &&
+            item.policies.name.toLowerCase().includes(searchLower)) ||
+            (item.policies.description &&
+              item.policies.description.toLowerCase().includes(searchLower))),
+      );
+    }
 
     return {
       statusCode: 200,
       message: 'Coverage data retrieved successfully',
       metadata: {
-        totalItems,
-        totalPages,
+        totalItems: count || 0,
+        totalPages: Math.ceil((count || 0) / limit),
         currentPage: page,
         pageSize: limit,
       },
-      data,
+      data: filteredData,
     };
   }
 

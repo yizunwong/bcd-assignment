@@ -177,6 +177,175 @@
           "Users"
         ]
       }
+    },
+    "/coverage": {
+      "post": {
+        "operationId": "CoverageController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCoverageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Coverage"
+        ]
+      },
+      "get": {
+        "operationId": "CoverageController_findAll",
+        "parameters": [
+          {
+            "name": "category",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Coverage"
+        ]
+      }
+    },
+    "/coverage/{id}": {
+      "get": {
+        "operationId": "CoverageController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Coverage"
+        ]
+      },
+      "patch": {
+        "operationId": "CoverageController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCoverageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Coverage"
+        ]
+      },
+      "delete": {
+        "operationId": "CoverageController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Coverage"
+        ]
+      }
     }
   },
   "info": {
@@ -333,6 +502,95 @@
           "email",
           "username"
         ]
+      },
+      "CreateCoverageDto": {
+        "type": "object",
+        "properties": {
+          "policy_id": {
+            "type": "number",
+            "example": 1,
+            "description": "ID of the policy this coverage is linked to"
+          },
+          "user_id": {
+            "type": "string",
+            "example": "a3e1f2b4-1234-4c56-8e7d-123456789abc",
+            "description": "UUID of the user who owns this coverage"
+          },
+          "status": {
+            "type": "string",
+            "example": "active",
+            "description": "Status of the coverage"
+          },
+          "utilization_rate": {
+            "type": "number",
+            "example": 0,
+            "description": "Utilization rate of the coverage"
+          },
+          "start_date": {
+            "type": "string",
+            "example": "2025-07-01",
+            "description": "Start date of the coverage (YYYY-MM-DD)"
+          },
+          "end_date": {
+            "type": "string",
+            "example": "2026-07-01",
+            "description": "End date of the coverage (YYYY-MM-DD)"
+          },
+          "next_payment_date": {
+            "type": "string",
+            "example": "2025-08-01",
+            "description": "Next payment date for the coverage (YYYY-MM-DD)"
+          }
+        },
+        "required": [
+          "policy_id",
+          "user_id",
+          "status",
+          "utilization_rate",
+          "start_date",
+          "end_date",
+          "next_payment_date"
+        ]
+      },
+      "UpdateCoverageDto": {
+        "type": "object",
+        "properties": {
+          "policy_id": {
+            "type": "number",
+            "example": 1,
+            "description": "ID of the policy this coverage is linked to"
+          },
+          "user_id": {
+            "type": "string",
+            "example": "a3e1f2b4-1234-4c56-8e7d-123456789abc",
+            "description": "UUID of the user who owns this coverage"
+          },
+          "status": {
+            "type": "string",
+            "example": "active",
+            "description": "Status of the coverage"
+          },
+          "utilization_rate": {
+            "type": "number",
+            "example": 0,
+            "description": "Utilization rate of the coverage"
+          },
+          "start_date": {
+            "type": "string",
+            "example": "2025-07-01",
+            "description": "Start date of the coverage (YYYY-MM-DD)"
+          },
+          "end_date": {
+            "type": "string",
+            "example": "2026-07-01",
+            "description": "End date of the coverage (YYYY-MM-DD)"
+          },
+          "next_payment_date": {
+            "type": "string",
+            "example": "2025-08-01",
+            "description": "Next payment date for the coverage (YYYY-MM-DD)"
+          }
+        }
       }
     }
   }
