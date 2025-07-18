@@ -362,6 +362,167 @@
           "Claim"
         ]
       }
+    },
+    "/policy": {
+      "post": {
+        "operationId": "PolicyController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePolicyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Policy"
+        ]
+      },
+      "get": {
+        "operationId": "PolicyController_findAll",
+        "parameters": [
+          {
+            "name": "category",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Policy"
+        ]
+      }
+    },
+    "/policy/{id}": {
+      "get": {
+        "operationId": "PolicyController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Policy"
+        ]
+      },
+      "patch": {
+        "operationId": "PolicyController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePolicyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Policy"
+        ]
+      },
+      "delete": {
+        "operationId": "PolicyController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Policy"
+        ]
+      }
     }
   },
   "info": {
@@ -642,6 +803,180 @@
           "id",
           "status"
         ]
+      },
+      "CreateDocumentsDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Policy Terms",
+            "description": "Document name"
+          },
+          "url": {
+            "type": "string",
+            "example": "https://example.com/policy-terms.pdf",
+            "description": "Document URL"
+          }
+        },
+        "required": [
+          "name",
+          "url"
+        ]
+      },
+      "CreateReviewsDto": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "example": "4f2a3343-1234-4b2d-9e13-8bbf0e2f748b",
+            "description": "User ID (UUID)"
+          },
+          "rating": {
+            "type": "number",
+            "example": 5,
+            "description": "Rating between 1 and 5"
+          },
+          "comment": {
+            "type": "string",
+            "example": "Excellent coverage and service.",
+            "description": "Optional user comment"
+          }
+        },
+        "required": [
+          "user_id",
+          "rating"
+        ]
+      },
+      "CreatePolicyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Comprehensive Health Coverage"
+          },
+          "category": {
+            "type": "string",
+            "example": "health"
+          },
+          "provider": {
+            "type": "string",
+            "example": "HealthSecure"
+          },
+          "coverage": {
+            "type": "number",
+            "example": 100000
+          },
+          "premium": {
+            "type": "string",
+            "example": "0.8 ETH/month"
+          },
+          "rating": {
+            "type": "number",
+            "example": 4.8
+          },
+          "popular": {
+            "type": "boolean",
+            "example": false
+          },
+          "features": {
+            "example": [
+              "Emergency Care",
+              "Prescription Drugs",
+              "Mental Health"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string",
+            "example": "Complete healthcare coverage with blockchain-verified claims processing"
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateDocumentsDto"
+            }
+          },
+          "reviews": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateReviewsDto"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "category",
+          "provider",
+          "coverage",
+          "premium",
+          "rating",
+          "popular",
+          "features",
+          "documents"
+        ]
+      },
+      "UpdatePolicyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Comprehensive Health Coverage"
+          },
+          "category": {
+            "type": "string",
+            "example": "health"
+          },
+          "provider": {
+            "type": "string",
+            "example": "HealthSecure"
+          },
+          "coverage": {
+            "type": "number",
+            "example": 100000
+          },
+          "premium": {
+            "type": "string",
+            "example": "0.8 ETH/month"
+          },
+          "rating": {
+            "type": "number",
+            "example": 4.8
+          },
+          "popular": {
+            "type": "boolean",
+            "example": false
+          },
+          "features": {
+            "example": [
+              "Emergency Care",
+              "Prescription Drugs",
+              "Mental Health"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string",
+            "example": "Complete healthcare coverage with blockchain-verified claims processing"
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateDocumentsDto"
+            }
+          },
+          "reviews": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateReviewsDto"
+            }
+          }
+        }
       }
     }
   }

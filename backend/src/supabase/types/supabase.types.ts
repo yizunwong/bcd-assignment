@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -62,7 +62,7 @@ export type Database = {
             foreignKeyName: 'claim_documents_claim_id_fkey';
             columns: ['claim_id'];
             isOneToOne: false;
-            referencedRelation: 'policies';
+            referencedRelation: 'claims';
             referencedColumns: ['id'];
           },
         ];
@@ -242,6 +242,7 @@ export type Database = {
         Row: {
           comment: string | null;
           id: number;
+          policy_id: number | null;
           rating: number;
           user_id: string | null;
           user_name: string;
@@ -249,6 +250,7 @@ export type Database = {
         Insert: {
           comment?: string | null;
           id?: number;
+          policy_id?: number | null;
           rating: number;
           user_id?: string | null;
           user_name: string;
@@ -256,11 +258,20 @@ export type Database = {
         Update: {
           comment?: string | null;
           id?: number;
+          policy_id?: number | null;
           rating?: number;
           user_id?: string | null;
           user_name?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: 'reviews_policy_id_fkey';
+            columns: ['policy_id'];
+            isOneToOne: false;
+            referencedRelation: 'policies';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       role_permissions: {
         Row: {
@@ -390,7 +401,7 @@ export type Database = {
       [_ in never]: never;
     };
     Enums: {
-      claim_status: 'pending' | 'approved' | 'rejected';
+      claim_status: 'pending' | 'approved' | 'rejected' | 'claimed';
       coverage_status: 'active' | 'inactive';
       role: 'admin' | 'user';
     };
@@ -523,7 +534,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      claim_status: ['pending', 'approved', 'rejected'],
+      claim_status: ['pending', 'approved', 'rejected', 'claimed'],
       coverage_status: ['active', 'inactive'],
       role: ['admin', 'user'],
     },
