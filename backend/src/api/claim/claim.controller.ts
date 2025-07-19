@@ -19,10 +19,10 @@ import { CreateClaimDto } from './dto/requests/create-claim.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { AuthGuard } from '../auth/auth.guard';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { FindClaimsQueryDto } from './dto/responses/find-claims-query.dto';
+import { FindClaimsQueryDto } from './dto/responses/claims-query.dto';
 import { ClaimResponseDto } from './dto/responses/claim.dto';
 import { ApiCommonResponse, CommonResponseDto } from 'src/common/common.dto';
-import { ApiBearerAuth, ApiConsumes, ApiQuery } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 
 @Controller('claim')
 @ApiBearerAuth('supabase-auth')
@@ -78,7 +78,7 @@ export class ClaimController {
     @Param('id') id: string,
     @Req() req: AuthenticatedRequest,
   ): Promise<CommonResponseDto> {
-    return this.claimService.removeClaimDocument(+id);
+    return this.claimService.removeClaimDocument(req, +id);
   }
 
   @Delete(':id')

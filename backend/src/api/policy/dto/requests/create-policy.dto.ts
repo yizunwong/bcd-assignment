@@ -11,7 +11,7 @@ import {
   IsUUID,
   ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { Express } from 'express';
 
 export class CreateDocumentsDto {
@@ -80,6 +80,7 @@ export class CreatePolicyDto {
   provider!: string;
 
   @ApiProperty({ example: 100000 })
+  @Transform(({ value }: { value: unknown }) => parseInt(value as string, 10))
   @IsNumber()
   @IsNotEmpty()
   coverage!: number;
@@ -89,19 +90,29 @@ export class CreatePolicyDto {
   @IsNotEmpty()
   premium!: string;
 
-  @ApiProperty({ example: 4.8 })
+  @ApiProperty({ example: 0 })
+  @Transform(({ value }: { value: unknown }) => parseInt(value as string, 10))
   @IsNumber()
   @IsNotEmpty()
   rating!: number;
 
   @ApiProperty({ example: false })
+  @Transform(({ value }) => value === 'true' || value === true)
   @IsBoolean()
   @IsNotEmpty()
   popular!: boolean;
 
   @ApiProperty({
     example: ['Emergency Care', 'Prescription Drugs', 'Mental Health'],
-    type: [String],
+  })
+  @Transform(({ value }): string[] => {
+    if (Array.isArray(value)) {
+      return value.filter((v): v is string => typeof v === 'string');
+    }
+    if (typeof value === 'string') {
+      return value.split(',').map((v) => v.trim());
+    }
+    return [];
   })
   @IsArray()
   @IsNotEmpty()
@@ -116,17 +127,21 @@ export class CreatePolicyDto {
   @IsString()
   description?: string;
 
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value) as CreateDocumentsDto[];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return value as CreateDocumentsDto[];
+  })
   @ValidateNested({ each: true })
   @Type(() => CreateDocumentsDto)
-  @ApiProperty({ type: CreateDocumentsDto, isArray: true, required: false })
   @IsOptional()
   documentMetas?: CreateDocumentsDto[];
-
-  @ValidateNested({ each: true })
-  @Type(() => CreateReviewsDto)
-  @ApiProperty({ type: CreateReviewsDto, isArray: true, required: false })
-  @IsOptional()
-  reviews?: CreateReviewsDto[];
 
   @ApiProperty({
     type: 'string',

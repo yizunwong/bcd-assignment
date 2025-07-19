@@ -213,20 +213,20 @@ export type Database = {
         Row: {
           id: number;
           name: string;
+          path: string;
           policy_id: number;
-          url: string;
         };
         Insert: {
           id?: number;
           name: string;
+          path: string;
           policy_id: number;
-          url: string;
         };
         Update: {
           id?: number;
           name?: string;
+          path?: string;
           policy_id?: number;
-          url?: string;
         };
         Relationships: [
           {

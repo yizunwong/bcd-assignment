@@ -4,6 +4,7 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { CreatePolicyDto } from './dto/requests/create-policy.dto';
 import { UpdatePolicyDto } from './dto/requests/update-policy.dto';
@@ -16,6 +17,8 @@ import {
 } from 'src/utils/supabase-storage';
 import { CommonResponseDto } from 'src/common/common.dto';
 import { SupabaseService } from 'src/supabase/supabase.service';
+import { PolicyResponseDto } from './dto/responses/policy.dto';
+import { FindPoliciesQueryDto } from './dto/responses/policy-query.dto';
 
 @Injectable()
 export class PolicyService {
@@ -33,15 +36,13 @@ export class PolicyService {
     req: AuthenticatedRequest,
     files?: Array<Express.Multer.File>,
   ) {
+    console.log(dto);
     const { data: userData, error: userError } =
       await req.supabase.auth.getUser();
 
     if (userError || !userData?.user) {
       throw new UnauthorizedException('Invalid or expired token');
     }
-
-    const user_id = userData.user.id;
-    const user_name = userData.user.user_metadata?.username || 'Anonymous';
 
     // Step 1: Insert policy
     const { data: policy, error: policyError } = await req.supabase
@@ -69,11 +70,11 @@ export class PolicyService {
 
     // Step 2: Upload files to Supabase and insert metadata
     if (files && files.length > 0) {
-      const urls = await this.uploadPolicyDocuments(files, req);
+      const path = await this.uploadPolicyDocuments(files, req);
       const docInserts = files.map((file, index) => ({
         policy_id: policyId,
         name: file.originalname,
-        url: urls[index],
+        path: path[index],
       }));
 
       const { error: docError } = await req.supabase
@@ -86,26 +87,6 @@ export class PolicyService {
       }
     }
 
-    // Step 3: Insert reviews if provided
-    if (dto.reviews?.length) {
-      const reviewInserts = dto.reviews.map((review) => ({
-        policy_id: policyId,
-        user_id: user_id,
-        user_name: user_name,
-        rating: review.rating,
-        comment: review.comment || null,
-      }));
-
-      const { error: reviewError } = await req.supabase
-        .from('reviews')
-        .insert(reviewInserts);
-
-      if (reviewError) {
-        console.error(reviewError);
-        throw new InternalServerErrorException('Failed to create reviews');
-      }
-    }
-
     return new CommonResponseDto({
       statusCode: 201,
       message: 'Policy created successfully',
@@ -114,50 +95,50 @@ export class PolicyService {
   }
 
   async findAll(
-    req: AuthenticatedRequest, // ✅ required first
-    page = 1,
-    limit = 5,
-    category?: string,
-    search?: string,
-    sortBy: string = 'id',
-    sortOrder: 'asc' | 'desc' = 'asc',
-  ) {
-    const supabase = req.supabase;
-    const offset = (page - 1) * limit;
+    req: AuthenticatedRequest,
+    query: FindPoliciesQueryDto,
+  ): Promise<CommonResponseDto<PolicyResponseDto[]>> {
+    const sortableFields = ['id', 'name', 'rating', 'premium', 'popularity'];
+    if (query.sortBy && !sortableFields.includes(query.sortBy)) {
+      throw new BadRequestException(`Invalid sortBy field: ${query.sortBy}`);
+    }
 
-    let query = supabase
+    const offset = ((query.page || 1) - 1) * (query.limit || 5);
+
+    let dbQuery = req.supabase
       .from('policies')
       .select('*, policy_documents(*)', { count: 'exact' })
-      .range(offset, offset + limit - 1);
+      .range(offset, offset + (query.limit || 5) - 1)
+      .order(query.sortBy || 'id', {
+        ascending: (query.sortOrder || 'asc') === 'asc',
+      });
 
-    if (category) {
-      query = query.eq('category', category);
+    if (query.category) {
+      dbQuery = dbQuery.eq('category', query.category);
     }
 
-    if (search) {
-      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+    if (query.search) {
+      dbQuery = dbQuery.or(
+        `name.ilike.%${query.search}%,description.ilike.%${query.search}%`,
+      );
     }
 
-    const sortableFields = ['id', 'name', 'rating', 'premium', 'popularity'];
-    if (sortableFields.includes(sortBy)) {
-      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
-    }
-
-    const { data, error, count } = await query;
+    const { data, error, count } = await dbQuery;
 
     if (error) {
-      console.error(error);
-      throw new InternalServerErrorException('Failed to fetch policies');
+      console.error(
+        '[Supabase] Failed to fetch policies with documents:',
+        error.message,
+      );
+      throw new InternalServerErrorException('Error fetching policy data');
     }
-
-    const totalItems = count || 0;
 
     const allPaths: string[] = [];
     for (const policy of data) {
       if (Array.isArray(policy.policy_documents)) {
         for (const doc of policy.policy_documents) {
-          if (doc.url) {
-            allPaths.push(doc.url);
+          if (doc.path) {
+            allPaths.push(doc.path);
           }
         }
       }
@@ -166,7 +147,7 @@ export class PolicyService {
     const signedUrls = await getSignedUrls(req.supabase, allPaths);
 
     let urlIndex = 0;
-    const enriched = data.map((policy) => ({
+    const enrichedPolicies: PolicyResponseDto[] = data.map((policy) => ({
       ...policy,
       policy_documents: Array.isArray(policy.policy_documents)
         ? policy.policy_documents.map((doc) => ({
@@ -178,11 +159,11 @@ export class PolicyService {
         : [],
     }));
 
-    return new CommonResponseDto({
+    return new CommonResponseDto<PolicyResponseDto[]>({
       statusCode: 200,
       message: 'Policies retrieved successfully',
-      data: enriched,
-      count: totalItems,
+      data: enrichedPolicies,
+      count: count || 0,
     });
   }
 
@@ -212,7 +193,7 @@ export class PolicyService {
       throw new InternalServerErrorException('Failed to fetch documents');
     }
 
-    const paths = (documents || []).map((d) => d.url);
+    const paths = (documents || []).map((d) => d.path);
     const signedUrls = await getSignedUrls(req.supabase, paths);
     const enrichedDocuments = (documents || []).map((doc, idx) => ({
       id: doc.id,
@@ -237,7 +218,7 @@ export class PolicyService {
       message: 'Policy retrieved successfully',
       data: {
         ...policy,
-        documents: enrichedDocuments,
+        policy_documents: enrichedDocuments,
         reviews: reviews || [],
       },
     });
@@ -291,12 +272,10 @@ export class PolicyService {
   }
 
   async remove(id: number, req: AuthenticatedRequest) {
-    const supabase = this.supabaseService.createClientWithToken();
-
     // Step 1: Fetch policy documents
-    const { data: documents, error: docsError } = await supabase
+    const { data: documents, error: docsError } = await req.supabase
       .from('policy_documents')
-      .select('url')
+      .select('path')
       .eq('policy_id', id);
 
     if (docsError) {
@@ -305,15 +284,15 @@ export class PolicyService {
       );
     }
 
-    for (const doc of (documents as { url: string }[])) {
+    for (const doc of documents as { path: string }[]) {
       try {
-        await removeFileFromStorage(supabase, doc.url);
+        await removeFileFromStorage(req.supabase, doc.path);
       } catch {
-        console.warn(`Failed to delete file "${doc.url}":`);
+        console.warn(`Failed to delete file "${doc.path}":`);
       }
     }
 
-    const { error: docDeleteError } = await supabase
+    const { error: docDeleteError } = await req.supabase
       .from('policy_documents')
       .delete()
       .eq('policy_id', id);
@@ -324,7 +303,7 @@ export class PolicyService {
       );
     }
 
-    const { data: deleted, error: deleteError } = await supabase
+    const { data: deleted, error: deleteError } = await req.supabase
       .from('policies')
       .delete()
       .eq('id', id)

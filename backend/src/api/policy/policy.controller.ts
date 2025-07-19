@@ -17,10 +17,11 @@ import { CreatePolicyDto } from './dto/requests/create-policy.dto';
 import { UpdatePolicyDto } from './dto/requests/update-policy.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { AuthGuard } from '../auth/auth.guard';
-import { ApiBearerAuth, ApiConsumes, ApiQuery } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiCommonResponse, CommonResponseDto } from 'src/common/common.dto';
 import { PolicyResponseDto } from './dto/responses/policy.dto';
+import { FindPoliciesQueryDto } from './dto/responses/policy-query.dto';
 
 @Controller('policy')
 @ApiBearerAuth('supabase-auth')
@@ -29,14 +30,18 @@ export class PolicyController {
 
   @Post()
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FilesInterceptor('files')) // "files" = field name in DTO
+  @UseInterceptors(FilesInterceptor('files'))
   @UseGuards(AuthGuard)
   async create(
-    @Body() createPolicyDto: CreatePolicyDto,
+    @Body() dto: CreatePolicyDto,
     @Req() req: AuthenticatedRequest,
     @UploadedFiles() files: Array<Express.Multer.File>,
   ): Promise<CommonResponseDto> {
-    return this.policyService.create(createPolicyDto, req, files);
+    if (typeof dto.features === 'string') {
+      dto.features = (dto.features as string).split(',').map((v) => v.trim());
+    }
+
+    return this.policyService.create(dto, req, files);
   }
 
   @Get()
@@ -44,22 +49,9 @@ export class PolicyController {
   @ApiCommonResponse(PolicyResponseDto, true, 'Get all policies')
   findAll(
     @Req() req: AuthenticatedRequest,
-    @Query('page') page = '1',
-    @Query('limit') limit = '5',
-    @Query('category') category?: string,
-    @Query('search') search?: string,
-    @Query('sortBy') sortBy = 'id',
-    @Query('sortOrder') sortOrder: 'asc' | 'desc' = 'asc',
+    @Query() query: FindPoliciesQueryDto,
   ): Promise<CommonResponseDto<PolicyResponseDto[]>> {
-    return this.policyService.findAll(
-      req,
-      +page,
-      +limit,
-      category,
-      search,
-      sortBy,
-      sortOrder,
-    );
+    return this.policyService.findAll(req, query);
   }
 
   @Get(':id')

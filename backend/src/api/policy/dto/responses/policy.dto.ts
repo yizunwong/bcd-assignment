@@ -48,5 +48,5 @@ export class PolicyResponseDto {
   features!: string[];
 
   @ApiProperty({ type: [PolicyDocumentResponseDto] })
-  documents!: PolicyDocumentResponseDto[];
+  policy_documents!: PolicyDocumentResponseDto[];
 }

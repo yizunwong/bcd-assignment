@@ -10,7 +10,7 @@ import { SupabaseService } from 'src/supabase/supabase.service';
 import { CreateClaimDto } from './dto/requests/create-claim.dto';
 import { UploadClaimDocDto } from './dto/requests/upload-claim-doc.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
-import { FindClaimsQueryDto } from './dto/responses/find-claims-query.dto';
+import { FindClaimsQueryDto } from './dto/responses/claims-query.dto';
 import {
   getSignedUrls,
   removeFileFromStorage,
@@ -21,7 +21,6 @@ import { CommonResponseDto } from 'src/common/common.dto';
 @Injectable()
 export class ClaimService {
   constructor(private readonly supabaseService: SupabaseService) {}
-
 
   async createClaim(
     createClaimDto: CreateClaimDto,
@@ -196,7 +195,7 @@ export class ClaimService {
 
     const enrichedDocuments = documents.map((doc, idx) => ({
       ...doc,
-      signedUrl: signedUrls[idx] || null,
+      signedUrl: signedUrls[idx],
     }));
 
     const claim: ClaimResponseDto = {
@@ -257,10 +256,8 @@ export class ClaimService {
     id: number,
     req: AuthenticatedRequest,
   ): Promise<CommonResponseDto> {
-    const supabase = this.supabaseService.createClientWithToken();
-
     // Step 1: Fetch claim documents
-    const { data: documents, error: fetchDocError } = await supabase
+    const { data: documents, error: fetchDocError } = await req.supabase
       .from('claim_documents')
       .select('path')
       .eq('claim_id', id);
@@ -273,15 +270,11 @@ export class ClaimService {
 
     // Step 2: Remove files from Supabase storage
     for (const doc of documents as { path: string }[]) {
-      try {
-        await removeFileFromStorage(supabase, doc.path);
-      } catch (err) {
-        console.warn(`Failed to delete file "${doc.path}":`);
-      }
+      await removeFileFromStorage(req.supabase, doc.path);
     }
 
     // Step 3: Remove claim_documents from database
-    const { error: docDeleteError } = await supabase
+    const { error: docDeleteError } = await req.supabase
       .from('claim_documents')
       .delete()
       .eq('claim_id', id);
@@ -293,7 +286,7 @@ export class ClaimService {
     }
 
     // Step 4: Remove the claim itself
-    const { data: deletedClaim, error: claimDeleteError } = await supabase
+    const { data: deletedClaim, error: claimDeleteError } = await req.supabase
       .from('claims')
       .delete()
       .eq('id', id)
@@ -317,11 +310,12 @@ export class ClaimService {
     });
   }
 
-  async removeClaimDocument(id: number): Promise<CommonResponseDto> {
-    const supabase = this.supabaseService.createClientWithToken();
-
+  async removeClaimDocument(
+    req: AuthenticatedRequest,
+    id: number,
+  ): Promise<CommonResponseDto> {
     // Step 1: Fetch the document to get its path
-    const { data: document, error: fetchError } = await supabase
+    const { data: document, error: fetchError } = await req.supabase
       .from('claim_documents')
       .select('id, path')
       .eq('id', id)
@@ -334,15 +328,10 @@ export class ClaimService {
     }
 
     // Step 2: Remove the file from Supabase storage
-    try {
-      await removeFileFromStorage(supabase, document.path);
-    } catch (error) {
-      console.warn(`File removal failed for "${document.path}":`);
-      // Optional: decide if you want to proceed with DB delete or not
-    }
+    await removeFileFromStorage(req.supabase, document.path);
 
     // Step 3: Remove the claim document record from the database
-    const { data, error: deleteError } = await supabase
+    const { data, error: deleteError } = await req.supabase
       .from('claim_documents')
       .delete()
       .eq('id', id)
@@ -362,5 +351,4 @@ export class ClaimService {
       data,
     });
   }
-
 }

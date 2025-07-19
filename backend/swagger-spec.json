@@ -328,7 +328,25 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Get claim with signed URLs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/ClaimResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -364,7 +382,25 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Update claim",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/ClaimResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -390,7 +426,25 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Remove claim",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/ClaimResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -418,7 +472,25 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Remove claim document",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/ClaimResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -463,33 +535,97 @@
         "operationId": "PolicyController_findAll",
         "parameters": [
           {
-            "name": "category",
-            "required": true,
+            "name": "page",
+            "required": false,
             "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 5,
+              "type": "number"
+            }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "description": "Filter by policy category",
             "schema": {
               "type": "string"
             }
           },
           {
             "name": "search",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Search keyword for name or description",
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "sortOrder",
-            "required": true,
+            "name": "sortBy",
+            "required": false,
             "in": "query",
             "schema": {
-              "type": "string"
+              "default": "id",
+              "type": "string",
+              "enum": [
+                "id",
+                "name",
+                "rating",
+                "premium",
+                "popularity"
+              ]
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "asc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
             }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Get all policies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/PolicyResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -517,7 +653,25 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Get policy with signed URLs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/PolicyResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -553,7 +707,25 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Update policy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/PolicyResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -579,7 +751,25 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Remove policy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/PolicyResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1107,49 +1297,6 @@
           "status"
         ]
       },
-      "CreateDocumentsDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "Policy Terms",
-            "description": "Document name"
-          },
-          "url": {
-            "type": "string",
-            "example": "https://example.com/policy-terms.pdf",
-            "description": "Document URL"
-          }
-        },
-        "required": [
-          "name",
-          "url"
-        ]
-      },
-      "CreateReviewsDto": {
-        "type": "object",
-        "properties": {
-          "user_id": {
-            "type": "string",
-            "example": "4f2a3343-1234-4b2d-9e13-8bbf0e2f748b",
-            "description": "User ID (UUID)"
-          },
-          "rating": {
-            "type": "number",
-            "example": 5,
-            "description": "Rating between 1 and 5"
-          },
-          "comment": {
-            "type": "string",
-            "example": "Excellent coverage and service.",
-            "description": "Optional user comment"
-          }
-        },
-        "required": [
-          "user_id",
-          "rating"
-        ]
-      },
       "CreatePolicyDto": {
         "type": "object",
         "properties": {
@@ -1175,7 +1322,7 @@
           },
           "rating": {
             "type": "number",
-            "example": 4.8
+            "example": 0
           },
           "popular": {
             "type": "boolean",
@@ -1196,18 +1343,6 @@
             "type": "string",
             "example": "Complete healthcare coverage with blockchain-verified claims processing"
           },
-          "documentMetas": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CreateDocumentsDto"
-            }
-          },
-          "reviews": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CreateReviewsDto"
-            }
-          },
           "files": {
             "description": "Files to upload for the policy",
             "type": "array",
@@ -1226,6 +1361,86 @@
           "rating",
           "popular",
           "features"
+        ]
+      },
+      "PolicyDocumentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "policy_id": {
+            "type": "number"
+          },
+          "signedUrl": {
+            "type": "string",
+            "description": "Signed Supabase URL for accessing this document"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "policy_id",
+          "signedUrl"
+        ]
+      },
+      "PolicyResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "coverage": {
+            "type": "number"
+          },
+          "premium": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "number"
+          },
+          "popular": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "object"
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "policy_documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PolicyDocumentResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "category",
+          "provider",
+          "coverage",
+          "premium",
+          "rating",
+          "popular",
+          "features",
+          "policy_documents"
         ]
       },
       "UpdatePolicyDto": {
@@ -1253,7 +1468,7 @@
           },
           "rating": {
             "type": "number",
-            "example": 4.8
+            "example": 0
           },
           "popular": {
             "type": "boolean",
@@ -1273,18 +1488,6 @@
           "description": {
             "type": "string",
             "example": "Complete healthcare coverage with blockchain-verified claims processing"
-          },
-          "documentMetas": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CreateDocumentsDto"
-            }
-          },
-          "reviews": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CreateReviewsDto"
-            }
           },
           "files": {
             "description": "Files to upload for the policy",
