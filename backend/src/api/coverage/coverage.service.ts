@@ -97,12 +97,12 @@ export class CoverageService {
       throw new InternalServerErrorException('Failed to fetch coverage data');
     }
 
-    return {
+    return new CommonResponseDto({
       statusCode: 200,
-      message: 'Coverage data retrieved successfully',
-      data,
-      count,
-    };
+      message: 'Coverage retrieved successfully',
+      data: data,
+      count: count || 0,
+    });
   }
 
   async findOne(id: number, req: AuthenticatedRequest) {
@@ -117,11 +117,11 @@ export class CoverageService {
       throw new NotFoundException(`Coverage with ID ${id} not found`);
     }
 
-    return {
+    return new CommonResponseDto({
       statusCode: 200,
-      message: 'Coverage data retrieved successfully',
+      message: 'Coverage retrieved successfully',
       data: coverage,
-    };
+    });
   }
 
   async update(
