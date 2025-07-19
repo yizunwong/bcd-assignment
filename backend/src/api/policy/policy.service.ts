@@ -9,49 +9,23 @@ import { CreatePolicyDto } from './dto/requests/create-policy.dto';
 import { UpdatePolicyDto } from './dto/requests/update-policy.dto';
 // import { SupabaseService } from 'src/supabase/supabase.service';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
+import {
+  getSignedUrls,
+  removeFileFromStorage,
+  uploadFiles,
+} from 'src/utils/supabase-storage';
+import { CommonResponseDto } from 'src/common/common.dto';
+import { SupabaseService } from 'src/supabase/supabase.service';
 
 @Injectable()
 export class PolicyService {
-  // constructor(private readonly supabaseService: SupabaseService) {}
+  constructor(private readonly supabaseService: SupabaseService) {}
 
   async uploadPolicyDocuments(
     files: Array<Express.Multer.File>,
     req: AuthenticatedRequest,
   ): Promise<string[]> {
-    try {
-      const fileArray = Array.isArray(files) ? files : [files];
-      const urls: string[] = [];
-
-      for (const file of fileArray) {
-        const timestamp = Date.now();
-        const uniqueName = `${timestamp}-${file.originalname}`;
-        const filePath = `policy_documents/${uniqueName}`;
-
-        const { error: uploadError } = await req.supabase.storage
-          .from('supastorage')
-          .upload(filePath, file.buffer, {
-            contentType: file.mimetype,
-          });
-
-        if (uploadError) {
-          throw new InternalServerErrorException(uploadError.message);
-        }
-
-        const { data } = req.supabase.storage
-          .from('supastorage')
-          .getPublicUrl(filePath);
-        const url = data.publicUrl;
-        urls.push(url);
-      }
-
-      return urls;
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new InternalServerErrorException(error.message);
-      } else {
-        throw new InternalServerErrorException('Unknown error occurred');
-      }
-    }
+    return uploadFiles(req.supabase, files, 'policy_documents');
   }
 
   async create(
@@ -132,11 +106,11 @@ export class PolicyService {
       }
     }
 
-    return {
+    return new CommonResponseDto({
       statusCode: 201,
       message: 'Policy created successfully',
       data: policy,
-    };
+    });
   }
 
   async findAll(
@@ -153,7 +127,7 @@ export class PolicyService {
 
     let query = supabase
       .from('policies')
-      .select('*', { count: 'exact' })
+      .select('*, policy_documents(*)', { count: 'exact' })
       .range(offset, offset + limit - 1);
 
     if (category) {
@@ -177,19 +151,39 @@ export class PolicyService {
     }
 
     const totalItems = count || 0;
-    const totalPages = Math.ceil(totalItems / limit);
 
-    return {
+    const allPaths: string[] = [];
+    for (const policy of data) {
+      if (Array.isArray(policy.policy_documents)) {
+        for (const doc of policy.policy_documents) {
+          if (doc.url) {
+            allPaths.push(doc.url);
+          }
+        }
+      }
+    }
+
+    const signedUrls = await getSignedUrls(req.supabase, allPaths);
+
+    let urlIndex = 0;
+    const enriched = data.map((policy) => ({
+      ...policy,
+      policy_documents: Array.isArray(policy.policy_documents)
+        ? policy.policy_documents.map((doc) => ({
+            id: doc.id,
+            name: doc.name,
+            policy_id: doc.policy_id,
+            signedUrl: signedUrls[urlIndex++] || '',
+          }))
+        : [],
+    }));
+
+    return new CommonResponseDto({
       statusCode: 200,
       message: 'Policies retrieved successfully',
-      metadata: {
-        totalItems,
-        totalPages,
-        currentPage: page,
-        pageSize: limit,
-      },
-      data,
-    };
+      data: enriched,
+      count: totalItems,
+    });
   }
 
   async findOne(id: number, req: AuthenticatedRequest) {
@@ -218,6 +212,15 @@ export class PolicyService {
       throw new InternalServerErrorException('Failed to fetch documents');
     }
 
+    const paths = (documents || []).map((d) => d.url);
+    const signedUrls = await getSignedUrls(req.supabase, paths);
+    const enrichedDocuments = (documents || []).map((doc, idx) => ({
+      id: doc.id,
+      name: doc.name,
+      policy_id: doc.policy_id,
+      signedUrl: signedUrls[idx] || '',
+    }));
+
     // Step 3: Get related reviews
     const { data: reviews, error: reviewError } = await req.supabase
       .from('reviews')
@@ -229,15 +232,15 @@ export class PolicyService {
       throw new InternalServerErrorException('Failed to fetch reviews');
     }
 
-    return {
+    return new CommonResponseDto({
       statusCode: 200,
       message: 'Policy retrieved successfully',
       data: {
         ...policy,
-        documents: documents || [],
+        documents: enrichedDocuments,
         reviews: reviews || [],
       },
-    };
+    });
   }
   async update(id: number, dto: UpdatePolicyDto, req: AuthenticatedRequest) {
     const supabase = req.supabase;
@@ -280,58 +283,71 @@ export class PolicyService {
       throw new InternalServerErrorException('Failed to update policy');
     }
 
-    return {
+    return new CommonResponseDto({
       statusCode: 200,
       message: `Policy #${id} updated successfully`,
       data: updated,
-    };
+    });
   }
 
   async remove(id: number, req: AuthenticatedRequest) {
-    // const supabase = this.supabaseService.createClientWithToken();
+    const supabase = this.supabaseService.createClientWithToken();
 
-    // Step 1: Check if policy exists
-    const { data: existing, error: fetchError } = await req.supabase
+    // Step 1: Fetch policy documents
+    const { data: documents, error: docsError } = await supabase
+      .from('policy_documents')
+      .select('url')
+      .eq('policy_id', id);
+
+    if (docsError) {
+      throw new InternalServerErrorException(
+        'Failed to fetch policy documents: ' + docsError.message,
+      );
+    }
+
+    for (const doc of (documents as { url: string }[])) {
+      try {
+        await removeFileFromStorage(supabase, doc.url);
+      } catch {
+        console.warn(`Failed to delete file "${doc.url}":`);
+      }
+    }
+
+    const { error: docDeleteError } = await supabase
+      .from('policy_documents')
+      .delete()
+      .eq('policy_id', id);
+
+    if (docDeleteError) {
+      throw new InternalServerErrorException(
+        'Failed to remove policy documents: ' + docDeleteError.message,
+      );
+    }
+
+    const { data: deleted, error: deleteError } = await supabase
       .from('policies')
-      .select('id')
+      .delete()
       .eq('id', id)
+      .select()
       .single();
 
-    if (fetchError || !existing) {
+    if (deleteError) {
+      throw new InternalServerErrorException(
+        'Failed to delete policy: ' + deleteError.message,
+      );
+    }
+
+    if (!deleted) {
       throw new NotFoundException(`Policy with ID ${id} not found`);
     }
 
-    // Step 2: Delete the policy
-    const { error: deleteError } = await req.supabase
-      .from('policies')
-      .delete()
-      .eq('id', id);
-
-    if (deleteError) {
-      console.error(deleteError);
-      throw new InternalServerErrorException('Failed to delete policy');
-    }
-
-    return {
+    return new CommonResponseDto({
       statusCode: 200,
       message: `Policy #${id} deleted successfully`,
-    };
+      data: deleted,
+    });
   }
   async removeFile(filePath: string, req: AuthenticatedRequest): Promise<void> {
-    try {
-      const { error } = await req.supabase.storage
-        .from('supastorage')
-        .remove([filePath]);
-
-      if (error) {
-        throw new InternalServerErrorException(
-          'Failed to remove file from storage: ' + error.message,
-        );
-      }
-    } catch (error) {
-      throw new InternalServerErrorException(
-        error instanceof Error ? error.message : 'Unknown error during removal',
-      );
-    }
+    await removeFileFromStorage(req.supabase, filePath);
   }
 }
