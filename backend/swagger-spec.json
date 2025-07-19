@@ -895,7 +895,28 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Get all coverages",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/CoverageResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -923,7 +944,25 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Get coverage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/CoverageResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1593,6 +1632,64 @@
           "start_date",
           "end_date",
           "next_payment_date"
+        ]
+      },
+      "CoveragePolicyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "object"
+          },
+          "category": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "category"
+        ]
+      },
+      "CoverageResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "policy_id": {
+            "type": "object"
+          },
+          "user_id": {
+            "type": "object"
+          },
+          "status": {
+            "type": "object"
+          },
+          "utilization_rate": {
+            "type": "number"
+          },
+          "start_date": {
+            "type": "string"
+          },
+          "end_date": {
+            "type": "string"
+          },
+          "next_payment_date": {
+            "type": "string"
+          },
+          "policies": {
+            "$ref": "#/components/schemas/CoveragePolicyDto"
+          }
+        },
+        "required": [
+          "id",
+          "utilization_rate",
+          "start_date",
+          "end_date",
+          "next_payment_date",
+          "policies"
         ]
       },
       "UpdateCoverageDto": {

@@ -80,8 +80,10 @@ export class CoverageService {
       dbQuery = dbQuery.eq('policies.category', query.category);
     }
     if (query.search) {
+      const searchTerm = `*${query.search}*`;
       dbQuery = dbQuery.or(
-        `policies.name.ilike.%${query.search}%,policies.description.ilike.%${query.search}%`,
+        `name.ilike.${searchTerm},description.ilike.${searchTerm}`,
+        { referencedTable: 'policies' },
       );
     }
 
@@ -101,7 +103,7 @@ export class CoverageService {
       throw new InternalServerErrorException('Failed to fetch coverage data');
     }
 
-    return new CommonResponseDto({
+    return new CommonResponseDto<CoverageResponseDto[]>({
       statusCode: 200,
       message: 'Coverage retrieved successfully',
       data: data,

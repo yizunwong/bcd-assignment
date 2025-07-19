@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { CoverageStatus } from '../../requests/create-coverage.dto';
 
 export class CoveragePolicyDto {
   @ApiProperty()
@@ -22,8 +21,8 @@ export class CoverageResponseDto {
   @ApiProperty({ required: false })
   user_id!: string | null;
 
-  @ApiProperty({ enum: CoverageStatus })
-  status!: CoverageStatus;
+  @ApiProperty({ required: false })
+  status!: string | null;
 
   @ApiProperty()
   utilization_rate!: number;
