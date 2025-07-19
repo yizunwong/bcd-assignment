@@ -8,6 +8,7 @@ import {
   CoverageStatus,
   CreateCoverageDto,
 } from './dto/requests/create-coverage.dto';
+import { FindCoverageQueryDto } from './dto/responses/coverage-query.dto';
 // import { SupabaseService } from 'src/supabase/supabase.service';
 import { UpdateCoverageDto } from './dto/requests/update-coverage.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
@@ -54,23 +55,17 @@ export class CoverageService {
 
   async findAll(
     req: AuthenticatedRequest,
-    page = 1,
-    limit = 5,
-    category?: string,
-    search?: string,
-    status?: CoverageStatus,
-    sortBy: string = 'id',
-    sortOrder: 'asc' | 'desc' = 'asc',
+    query: FindCoverageQueryDto,
   ) {
     const supabase = req.supabase;
-    const offset = (page - 1) * limit;
+    const offset = ((query.page || 1) - 1) * (query.limit || 5);
 
-    let query = supabase
+    let dbQuery = supabase
       .from('coverage')
       .select(
         `
       *,
-      policies (
+      policies!inner(
         name,
         description,
         category
@@ -78,46 +73,34 @@ export class CoverageService {
     `,
         { count: 'exact' },
       )
-      .range(offset, offset + limit - 1);
+      .range(offset, offset + (query.limit || 5) - 1);
 
-    // Remove this block, since it causes the error:
-    // if (category) {
-    //   query = query.eq('category', category);
-    // }
-
-    if (status) {
-      query = query.eq('status', status);
+    if (query.status) {
+      dbQuery = dbQuery.eq('status', query.status);
+    }
+    if (query.category) {
+      dbQuery = dbQuery.eq('policies.category', query.category);
+    }
+    if (query.search) {
+      dbQuery = dbQuery.or(
+        `policies.name.ilike.%${query.search}%,policies.description.ilike.%${query.search}%`,
+      );
     }
 
-    const sortableFields = ['start_date', 'utilization_rate'];
-    if (sortableFields.includes(sortBy)) {
-      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
-    }
+    const sortableFields = ['id', 'start_date', 'utilization_rate'];
+    const sortField =
+      query.sortBy && sortableFields.includes(query.sortBy)
+        ? query.sortBy
+        : 'id';
+    dbQuery = dbQuery.order(sortField, {
+      ascending: (query.sortOrder || 'asc') === 'asc',
+    });
 
-    const { data, error: findAllError, count } = await query;
+    const { data, error, count } = await dbQuery;
 
-    if (findAllError) {
-      console.error(findAllError);
+    if (error) {
+      console.error(error);
       throw new InternalServerErrorException('Failed to fetch coverage data');
-    }
-
-    // Filter in JS if category or search is provided
-    let filteredData = data;
-    if (category) {
-      filteredData = filteredData.filter(
-        (item) => item.policies && item.policies.category === category,
-      );
-    }
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filteredData = filteredData.filter(
-        (item) =>
-          item.policies &&
-          ((item.policies.name &&
-            item.policies.name.toLowerCase().includes(searchLower)) ||
-            (item.policies.description &&
-              item.policies.description.toLowerCase().includes(searchLower))),
-      );
     }
 
     return {
@@ -125,11 +108,11 @@ export class CoverageService {
       message: 'Coverage data retrieved successfully',
       metadata: {
         totalItems: count || 0,
-        totalPages: Math.ceil((count || 0) / limit),
-        currentPage: page,
-        pageSize: limit,
+        totalPages: Math.ceil((count || 0) / (query.limit || 5)),
+        currentPage: query.page || 1,
+        pageSize: query.limit || 5,
       },
-      data: filteredData,
+      data,
     };
   }
 

@@ -15,6 +15,7 @@ import {
   CoverageStatus,
   CreateCoverageDto,
 } from './dto/requests/create-coverage.dto';
+import { FindCoverageQueryDto } from './dto/responses/coverage-query.dto';
 import { UpdateCoverageDto } from './dto/requests/update-coverage.dto';
 import { AuthGuard } from '../auth/auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
@@ -37,25 +38,10 @@ export class CoverageController {
   @Get()
   @UseGuards(AuthGuard)
   findAll(
-    @Req() req: AuthenticatedRequest, // Authenticated request to access Supabase
-    @Query('page') page = '1',
-    @Query('limit') limit = '5',
-    @Query('category') category?: string,
-    @Query('search') search?: string,
-    @Query('status') status?: CoverageStatus,
-    @Query('sortBy') sortBy = 'id',
-    @Query('sortOrder') sortOrder: 'asc' | 'desc' = 'asc',
+    @Req() req: AuthenticatedRequest,
+    @Query() query: FindCoverageQueryDto,
   ) {
-    return this.coverageService.findAll(
-      req,
-      +page,
-      +limit,
-      category,
-      search,
-      status,
-      sortBy,
-      sortOrder,
-    );
+    return this.coverageService.findAll(req, query);
   }
 
   @Get(':id')
