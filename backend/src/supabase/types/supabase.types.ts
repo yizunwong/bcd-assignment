@@ -43,19 +43,19 @@ export type Database = {
           claim_id: number;
           id: number;
           name: string;
-          url: string;
+          path: string;
         };
         Insert: {
           claim_id: number;
           id?: number;
           name: string;
-          url: string;
+          path: string;
         };
         Update: {
           claim_id?: number;
           id?: number;
           name?: string;
-          url?: string;
+          path?: string;
         };
         Relationships: [
           {
@@ -69,7 +69,7 @@ export type Database = {
       };
       claims: {
         Row: {
-          amount: unknown;
+          amount: number;
           claim_type: string;
           claimed_date: string | null;
           description: string | null;
@@ -81,7 +81,7 @@ export type Database = {
           user_id: string | null;
         };
         Insert: {
-          amount: unknown;
+          amount?: number;
           claim_type: string;
           claimed_date?: string | null;
           description?: string | null;
@@ -93,7 +93,7 @@ export type Database = {
           user_id?: string | null;
         };
         Update: {
-          amount?: unknown;
+          amount?: number;
           claim_type?: string;
           claimed_date?: string | null;
           description?: string | null;
@@ -402,7 +402,7 @@ export type Database = {
     };
     Enums: {
       claim_status: 'pending' | 'approved' | 'rejected' | 'claimed';
-      coverage_status: 'active' | 'inactive';
+      coverage_status: 'active' | 'limitExceeded' | 'expired' | 'suspended';
       role: 'admin' | 'user';
     };
     CompositeTypes: {
@@ -535,7 +535,7 @@ export const Constants = {
   public: {
     Enums: {
       claim_status: ['pending', 'approved', 'rejected', 'claimed'],
-      coverage_status: ['active', 'inactive'],
+      coverage_status: ['active', 'limitExceeded', 'expired', 'suspended'],
       role: ['admin', 'user'],
     },
   },

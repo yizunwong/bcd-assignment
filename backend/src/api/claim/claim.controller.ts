@@ -18,8 +18,11 @@ import { UpdateClaimDto } from './dto/requests/update-claim.dto';
 import { CreateClaimDto } from './dto/requests/create-claim.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { AuthGuard } from '../auth/auth.guard';
-import { ApiBearerAuth, ApiConsumes, ApiQuery } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { FindClaimsQueryDto } from './dto/responses/find-claims-query.dto';
+import { ClaimResponseDto } from './dto/responses/claim.dto';
+import { ApiCommonResponse, CommonResponseDto } from 'src/common/common.dto';
+import { ApiBearerAuth, ApiConsumes, ApiQuery } from '@nestjs/swagger';
 
 @Controller('claim')
 @ApiBearerAuth('supabase-auth')
@@ -40,30 +43,18 @@ export class ClaimController {
 
   @Get()
   @UseGuards(AuthGuard)
+  @ApiCommonResponse(ClaimResponseDto, true, 'Get all claims with signed URLs')
   findAll(
     @Req() req: AuthenticatedRequest,
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 5,
-    @Query('category') category?: string,
-    @Query('search') search?: string,
-    @Query('sortBy') sortBy: string = 'id',
-    @Query('sortOrder') sortOrder: 'asc' | 'desc' = 'asc',
-  ) {
-    return this.claimService.findAll(
-      req,
-      page,
-      limit,
-      category,
-      search,
-      sortBy,
-      sortOrder,
-    );
+    @Query() query: FindClaimsQueryDto,
+  ): Promise<CommonResponseDto<ClaimResponseDto[]>> {
+    return this.claimService.findAll(req, query);
   }
 
   @Get(':id')
   @UseGuards(AuthGuard)
-  findOne(@Param('id') id: string) {
-    return this.claimService.findOne(+id);
+  findOne(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
+    return this.claimService.findOne(req, +id);
   }
 
   @Patch(':id')
@@ -75,21 +66,11 @@ export class ClaimController {
   ) {
     return this.claimService.update(+id, updateClaimDto, req);
   }
-  @Delete('file')
+  @Delete(':id/file')
   @UseGuards(AuthGuard)
-  @ApiQuery({
-    name: 'filePath',
-    required: true,
-    type: String,
-    description:
-      'Path of the file to delete in the bucket (e.g. claim_documents/filename.pdf)',
-  })
-  async removeFile(
-    @Query('filePath') filePath: string,
-    @Req() req: AuthenticatedRequest,
-  ) {
-    await this.claimService.removeFile(filePath, req);
-    return { message: `File ${filePath} deleted (if existed)` };
+  async removeFile(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    await this.claimService.removeClaimDocument(+id);
+    return { message: `File ${id} deleted (if existed)` };
   }
 
   @Delete(':id')

@@ -14,10 +14,51 @@ import { AuthenticatedRequest } from 'src/supabase/types/express';
 export class PolicyService {
   // constructor(private readonly supabaseService: SupabaseService) {}
 
-  async create(dto: CreatePolicyDto, req: AuthenticatedRequest) {
-    // const supabase = this.supabaseService.createClientWithToken();
+  async uploadPolicyDocuments(
+    files: Array<Express.Multer.File>,
+    req: AuthenticatedRequest,
+  ): Promise<string[]> {
+    try {
+      const fileArray = Array.isArray(files) ? files : [files];
+      const urls: string[] = [];
 
-    // ✅ Get user from request (from Bearer token)
+      for (const file of fileArray) {
+        const timestamp = Date.now();
+        const uniqueName = `${timestamp}-${file.originalname}`;
+        const filePath = `policy_documents/${uniqueName}`;
+
+        const { error: uploadError } = await req.supabase.storage
+          .from('supastorage')
+          .upload(filePath, file.buffer, {
+            contentType: file.mimetype,
+          });
+
+        if (uploadError) {
+          throw new InternalServerErrorException(uploadError.message);
+        }
+
+        const { data } = req.supabase.storage
+          .from('supastorage')
+          .getPublicUrl(filePath);
+        const url = data.publicUrl;
+        urls.push(url);
+      }
+
+      return urls;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new InternalServerErrorException(error.message);
+      } else {
+        throw new InternalServerErrorException('Unknown error occurred');
+      }
+    }
+  }
+
+  async create(
+    dto: CreatePolicyDto,
+    req: AuthenticatedRequest,
+    files?: Array<Express.Multer.File>,
+  ) {
     const { data: userData, error: userError } =
       await req.supabase.auth.getUser();
 
@@ -28,7 +69,7 @@ export class PolicyService {
     const user_id = userData.user.id;
     const user_name = userData.user.user_metadata?.username || 'Anonymous';
 
-    // Step 1: Insert into `policies`
+    // Step 1: Insert policy
     const { data: policy, error: policyError } = await req.supabase
       .from('policies')
       .insert({
@@ -52,12 +93,13 @@ export class PolicyService {
 
     const policyId = policy.id;
 
-    // Step 2: Insert documents if provided
-    if (dto.documents?.length) {
-      const docInserts = dto.documents.map((doc) => ({
+    // Step 2: Upload files to Supabase and insert metadata
+    if (files && files.length > 0) {
+      const urls = await this.uploadPolicyDocuments(files, req);
+      const docInserts = files.map((file, index) => ({
         policy_id: policyId,
-        name: doc.name,
-        url: doc.url,
+        name: file.originalname,
+        url: urls[index],
       }));
 
       const { error: docError } = await req.supabase
@@ -274,5 +316,22 @@ export class PolicyService {
       statusCode: 200,
       message: `Policy #${id} deleted successfully`,
     };
+  }
+  async removeFile(filePath: string, req: AuthenticatedRequest): Promise<void> {
+    try {
+      const { error } = await req.supabase.storage
+        .from('supastorage')
+        .remove([filePath]);
+
+      if (error) {
+        throw new InternalServerErrorException(
+          'Failed to remove file from storage: ' + error.message,
+        );
+      }
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error instanceof Error ? error.message : 'Unknown error during removal',
+      );
+    }
   }
 }

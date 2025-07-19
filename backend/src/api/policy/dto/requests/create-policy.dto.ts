@@ -12,6 +12,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { Express } from 'express';
 
 export class CreateDocumentsDto {
   @ApiProperty({ example: 'Policy Terms', description: 'Document name' })
@@ -117,14 +118,26 @@ export class CreatePolicyDto {
 
   @ValidateNested({ each: true })
   @Type(() => CreateDocumentsDto)
-  @ApiProperty({ type: CreateDocumentsDto, isArray: true })
-  documents!: CreateDocumentsDto[];
+  @ApiProperty({ type: CreateDocumentsDto, isArray: true, required: false })
+  @IsOptional()
+  documentMetas?: CreateDocumentsDto[];
 
   @ValidateNested({ each: true })
   @Type(() => CreateReviewsDto)
   @ApiProperty({ type: CreateReviewsDto, isArray: true, required: false })
   @IsOptional()
   reviews?: CreateReviewsDto[];
+
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    isArray: true,
+    required: false,
+    description: 'Files to upload for the policy',
+  })
+  @IsOptional()
+  @IsArray()
+  files?: Express.Multer.File[];
 
   constructor(dto: CreatePolicyDto) {
     Object.assign(this, dto);
