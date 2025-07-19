@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { CreateCoverageDto } from './dto/requests/create-coverage.dto';
 import { FindCoverageQueryDto } from './dto/responses/coverage-query.dto';
+import { CoverageResponseDto } from './dto/responses/coverage.dto';
 // import { SupabaseService } from 'src/supabase/supabase.service';
 import { UpdateCoverageDto } from './dto/requests/update-coverage.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
@@ -50,7 +51,10 @@ export class CoverageService {
     });
   }
 
-  async findAll(req: AuthenticatedRequest, query: FindCoverageQueryDto) {
+  async findAll(
+    req: AuthenticatedRequest,
+    query: FindCoverageQueryDto,
+  ): Promise<CommonResponseDto<CoverageResponseDto[]>> {
     const supabase = req.supabase;
     const offset = ((query.page || 1) - 1) * (query.limit || 5);
 
@@ -105,7 +109,10 @@ export class CoverageService {
     });
   }
 
-  async findOne(id: number, req: AuthenticatedRequest) {
+  async findOne(
+    id: number,
+    req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto<CoverageResponseDto>> {
     const { data: coverage, error: findOneError } = await req.supabase
       .from('coverage')
       .select('*')
