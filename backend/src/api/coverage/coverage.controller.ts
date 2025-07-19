@@ -17,6 +17,8 @@ import { UpdateCoverageDto } from './dto/requests/update-coverage.dto';
 import { AuthGuard } from '../auth/auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
+import { ApiCommonResponse, CommonResponseDto } from 'src/common/common.dto';
+import { CoverageResponseDto } from './dto/responses/coverage.dto';
 
 @Controller('coverage')
 @ApiBearerAuth('supabase-auth')
@@ -34,17 +36,21 @@ export class CoverageController {
 
   @Get()
   @UseGuards(AuthGuard)
+  @ApiCommonResponse(CoverageResponseDto, true, 'Get all coverages')
   findAll(
     @Req() req: AuthenticatedRequest,
     @Query() query: FindCoverageQueryDto,
-  ) {
+  ): Promise<CommonResponseDto<CoverageResponseDto[]>> {
     return this.coverageService.findAll(req, query);
   }
 
   @Get(':id')
   @UseGuards(AuthGuard)
-  @Get(':id')
-  findOne(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+  @ApiCommonResponse(CoverageResponseDto, false, 'Get coverage')
+  findOne(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto<CoverageResponseDto>> {
     return this.coverageService.findOne(+id, req);
   }
 
