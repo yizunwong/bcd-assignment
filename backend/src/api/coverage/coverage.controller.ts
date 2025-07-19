@@ -11,10 +11,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { CoverageService } from './coverage.service';
-import {
-  CoverageStatus,
-  CreateCoverageDto,
-} from './dto/requests/create-coverage.dto';
+import { CreateCoverageDto } from './dto/requests/create-coverage.dto';
 import { FindCoverageQueryDto } from './dto/responses/coverage-query.dto';
 import { UpdateCoverageDto } from './dto/requests/update-coverage.dto';
 import { AuthGuard } from '../auth/auth.guard';

@@ -4,14 +4,12 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import {
-  CoverageStatus,
-  CreateCoverageDto,
-} from './dto/requests/create-coverage.dto';
+import { CreateCoverageDto } from './dto/requests/create-coverage.dto';
 import { FindCoverageQueryDto } from './dto/responses/coverage-query.dto';
 // import { SupabaseService } from 'src/supabase/supabase.service';
 import { UpdateCoverageDto } from './dto/requests/update-coverage.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
+import { CommonResponseDto } from 'src/common/common.dto';
 
 @Injectable()
 export class CoverageService {
@@ -46,17 +44,13 @@ export class CoverageService {
       throw new InternalServerErrorException('Failed to create coverage');
     }
 
-    return {
+    return new CommonResponseDto({
       statusCode: 201,
       message: 'Coverage created successfully',
-      data: coverage,
-    };
+    });
   }
 
-  async findAll(
-    req: AuthenticatedRequest,
-    query: FindCoverageQueryDto,
-  ) {
+  async findAll(req: AuthenticatedRequest, query: FindCoverageQueryDto) {
     const supabase = req.supabase;
     const offset = ((query.page || 1) - 1) * (query.limit || 5);
 
@@ -106,13 +100,8 @@ export class CoverageService {
     return {
       statusCode: 200,
       message: 'Coverage data retrieved successfully',
-      metadata: {
-        totalItems: count || 0,
-        totalPages: Math.ceil((count || 0) / (query.limit || 5)),
-        currentPage: query.page || 1,
-        pageSize: query.limit || 5,
-      },
       data,
+      count,
     };
   }
 
