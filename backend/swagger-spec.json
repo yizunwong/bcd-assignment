@@ -391,6 +391,167 @@
           "Claim"
         ]
       }
+    },
+    "/policy": {
+      "post": {
+        "operationId": "PolicyController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePolicyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Policy"
+        ]
+      },
+      "get": {
+        "operationId": "PolicyController_findAll",
+        "parameters": [
+          {
+            "name": "category",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Policy"
+        ]
+      }
+    },
+    "/policy/{id}": {
+      "get": {
+        "operationId": "PolicyController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Policy"
+        ]
+      },
+      "patch": {
+        "operationId": "PolicyController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePolicyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Policy"
+        ]
+      },
+      "delete": {
+        "operationId": "PolicyController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Policy"
+        ]
+      }
     }
   },
   "info": {
@@ -761,7 +922,7 @@
             "type": "string",
             "example": "Complete healthcare coverage with blockchain-verified claims processing"
           },
-          "documents": {
+          "documentMetas": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CreateDocumentsDto"
@@ -771,6 +932,14 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CreateReviewsDto"
+            }
+          },
+          "files": {
+            "description": "Files to upload for the policy",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "binary"
             }
           }
         },
@@ -782,8 +951,7 @@
           "premium",
           "rating",
           "popular",
-          "features",
-          "documents"
+          "features"
         ]
       },
       "UpdatePolicyDto": {
@@ -832,7 +1000,7 @@
             "type": "string",
             "example": "Complete healthcare coverage with blockchain-verified claims processing"
           },
-          "documents": {
+          "documentMetas": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CreateDocumentsDto"
@@ -842,6 +1010,14 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CreateReviewsDto"
+            }
+          },
+          "files": {
+            "description": "Files to upload for the policy",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "binary"
             }
           }
         }
