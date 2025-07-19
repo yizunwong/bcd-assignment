@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, IsString, IsUrl } from 'class-validator';
+import { IsInt, IsNotEmpty, IsString } from 'class-validator';
 
 export class UploadClaimDocDto {
   @ApiProperty({
@@ -19,10 +19,10 @@ export class UploadClaimDocDto {
   name!: string;
 
   @ApiProperty({
-    example: 'https://example.com/uploads/accident_report.pdf',
-    description: 'URL of the uploaded document',
+    example: 'claim_documents/abc123.pdf',
+    description: 'Path of the uploaded file in Supabase storage',
   })
-  @IsUrl({}, { message: 'URL must be a valid URL' })
-  @IsNotEmpty({ message: 'Document URL is required' })
-  url!: string;
+  @IsString({ message: 'Path must be a string' })
+  @IsNotEmpty({ message: 'Path is required' })
+  path!: string;
 }

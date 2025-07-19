@@ -1,6 +1,8 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { UpdateClaimDto } from './dto/requests/update-claim.dto';
@@ -8,65 +10,48 @@ import { SupabaseService } from 'src/supabase/supabase.service';
 import { CreateClaimDto } from './dto/requests/create-claim.dto';
 import { UploadClaimDocDto } from './dto/requests/upload-claim-doc.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
+import { FindClaimsQueryDto } from './dto/responses/find-claims-query.dto';
+import {
+  getSignedUrls,
+  removeFileFromStorage,
+  uploadFiles,
+} from 'src/utils/supabase-storage';
+import { ClaimResponseDto } from './dto/responses/claim.dto';
+import { CommonResponseDto } from 'src/common/common.dto';
 @Injectable()
 export class ClaimService {
   constructor(private readonly supabaseService: SupabaseService) {}
-  // create(createClaimDto: CreateClaimDto) {
-  //   const supabase = this.supabaseService.createClientWithToken();
-  //   return 'This action adds a new claim';
+
+  // async uploadClaimDocument(
+  //   files: Array<Express.Multer.File>,
+  //   req: AuthenticatedRequest,
+  // ): Promise<string[]> {
+  //   try {
+  //     const fileArray = Array.isArray(files) ? files : [files];
+  //     return await uploadFiles(req.supabase, fileArray, 'claim_documents');
+  //   } catch (error) {
+  //     if (error instanceof Error) {
+  //       throw new InternalServerErrorException(error.message);
+  //     }
+  //     throw new InternalServerErrorException(
+  //       'An unknown error occurred during file upload',
+  //     );
+  //   }
   // }
-  async uploadClaimDocument(
-    files: Array<Express.Multer.File>,
-    req: AuthenticatedRequest,
-  ) {
-    try {
-      const fileArray = Array.isArray(files) ? files : [files];
-      const urls: string[] = [];
-
-      for (const file of fileArray) {
-        const timestamp = Date.now();
-        const uniqueName = `${timestamp}-${file.originalname}`;
-        const filePath = `claim_documents/${uniqueName}`;
-        const { error: uploadError } = await req.supabase.storage
-          .from('supastorage')
-          .upload(filePath, file.buffer, {
-            contentType: file.mimetype,
-          });
-
-        if (uploadError) {
-          throw new InternalServerErrorException(uploadError.message);
-        }
-
-        const { data } = req.supabase.storage
-          .from('supastorage')
-          .getPublicUrl(filePath);
-        const url = data.publicUrl;
-        urls.push(url);
-      }
-      return urls;
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new InternalServerErrorException(error.message);
-      } else {
-        throw new InternalServerErrorException('An unknown error occurred');
-      }
-    }
-  }
 
   async createClaim(
     createClaimDto: CreateClaimDto,
     req: AuthenticatedRequest,
     files: Array<Express.Multer.File>,
   ): Promise<any> {
-    // ✅ Get user from request (from Bearer token)
     const { data: userData, error: userError } =
       await req.supabase.auth.getUser();
-
     if (userError || !userData?.user) {
       throw new UnauthorizedException('Invalid or expired token');
     }
 
     const user_id = userData.user.id;
+
     const { data, error } = await req.supabase
       .from('claims')
       .insert([
@@ -79,26 +64,30 @@ export class ClaimService {
           submitted_date: new Date().toISOString(),
           processed_date: null,
           claimed_date: null,
-          description: createClaimDto.description ?? null, // Assuming documents is an array of strings
+          description: createClaimDto.description ?? null,
         },
       ])
       .select()
       .single();
+
     if (error || !data) {
-      throw new Error(
+      throw new InternalServerErrorException(
         'Failed to create claim: ' + (error?.message || 'Unknown error'),
       );
     }
 
     const claimId = data.id;
 
-    // Step 2: Insert documents if provided
-    if (files && files.length > 0) {
-      const urls = await this.uploadClaimDocument(files, req);
+    if (files?.length > 0) {
+      const filePaths = await uploadFiles(
+        req.supabase,
+        files,
+        'claim_documents',
+      );
       const docInserts = files.map((file, index) => ({
         claim_id: claimId,
         name: file.originalname,
-        url: urls[index],
+        path: filePaths[index],
       }));
 
       const { error: docError } = await req.supabase
@@ -110,124 +99,120 @@ export class ClaimService {
         throw new InternalServerErrorException('Failed to create documents');
       }
     }
-    // Return the created claim data
-    return {
+
+    return new CommonResponseDto({
       statusCode: 201,
       message: 'Claim created successfully',
-      data: data,
-    };
+    });
   }
 
-  async findAll(
-    req: any, // Replace with AuthenticatedRequest if applicable
-    page: number = 1,
-    limit: number = 5,
-    category?: string,
-    search?: string,
-    sortBy: string = 'id',
-    sortOrder: 'asc' | 'desc' = 'asc',
-  ): Promise<any> {
-    const supabase = this.supabaseService.createClientWithToken();
-    const offset = (page - 1) * limit;
-
-    // Build the base query for claims
-    let query = supabase
-      .from('claims')
-      .select('*', { count: 'exact' })
-      .range(offset, offset + limit - 1);
-
-    // Apply filtering by category if provided
-    if (category) {
-      query = query.eq('category', category); // Adjust 'category' to a valid claims column if it exists
+  async findAll(req: AuthenticatedRequest, query: FindClaimsQueryDto) {
+    if (
+      query.sortBy &&
+      !['id', 'claim_type', 'amount', 'status', 'submitted_date'].includes(
+        query.sortBy,
+      )
+    ) {
+      throw new BadRequestException(`Invalid sortBy field: ${query.sortBy}`);
     }
 
-    // Apply search across relevant fields (e.g., claim_type, description)
-    if (search) {
-      query = query.or(
-        `claim_type.ilike.%${search}%,description.ilike.%${search}%`,
+    const offset = ((query.page || 1) - 1) * (query.limit || 5);
+
+    let dbQuery = req.supabase
+      .from('claims')
+      .select('*, claim_documents(*)', { count: 'exact' })
+      .range(offset, offset + (query.limit || 5) - 1)
+      .order(query.sortBy || 'id', {
+        ascending: (query.sortOrder || 'asc') === 'asc',
+      });
+
+    if (query.category) {
+      dbQuery = dbQuery.eq('claim_type', query.category);
+    }
+
+    if (query.search) {
+      dbQuery = dbQuery.or(
+        `claim_type.ilike.%${query.search}%,description.ilike.%${query.search}%`,
       );
     }
 
-    // Define sortable fields for claims
-    const sortableFields = [
-      'id',
-      'claim_type',
-      'amount',
-      'status',
-      'submitted_date',
-    ]; // Adjust based on your schema
-    if (sortableFields.includes(sortBy)) {
-      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+    const { data, error, count } = await dbQuery;
+
+    if (error) {
+      console.error(
+        '[Supabase] Failed to fetch claims with documents:',
+        error.message,
+      );
+      throw new InternalServerErrorException('Error fetching claim data');
     }
 
-    // Execute the claims query
-    const { data: claims, error: claimsError, count } = await query;
-    if (claimsError) {
-      console.error('Claims fetch error:', claimsError.message);
-      throw new InternalServerErrorException('Failed to fetch claims');
+    // Step 1: Collect all document paths
+    const allPaths: string[] = [];
+    for (const claim of data) {
+      if (Array.isArray(claim.claim_documents)) {
+        for (const doc of claim.claim_documents) {
+          if (doc.path) {
+            allPaths.push(doc.path);
+          }
+        }
+      }
     }
 
-    // Fetch documents with pagination and filtering by claim_id
-    const { data: documents, error: docsError } = await supabase
-      .from('claim_documents')
-      .select('*')
-      .in(
-        'claim_id',
-        claims.map((claim) => claim.id),
-      ); // Only fetch documents for the retrieved claims
-    if (docsError) {
-      console.error('Documents fetch error:', docsError.message);
-      throw new InternalServerErrorException('Failed to fetch claim documents');
-    }
+    const signedUrls = await getSignedUrls(req.supabase, allPaths);
 
-    // Attach documents to their respective claims
-    const claimsWithDocs = claims.map((claim) => ({
+    let urlIndex = 0;
+    const enrichedClaims: ClaimResponseDto[] = data.map((claim) => ({
       ...claim,
-      documents: documents.filter((doc) => doc.claim_id === claim.id),
+      claim_documents: Array.isArray(claim.claim_documents)
+        ? claim.claim_documents.map((doc) => ({
+            id: doc.id,
+            name: doc.name,
+            claim_id: doc.claim_id,
+            signedUrl: signedUrls[urlIndex++] || '',
+          }))
+        : [],
     }));
 
-    // Calculate pagination metadata
-    const totalItems = count || 0;
-    const totalPages = Math.ceil(totalItems / limit);
-
-    return {
+    return new CommonResponseDto<ClaimResponseDto[]>({
       statusCode: 200,
       message: 'Claims retrieved successfully',
-      metadata: {
-        totalItems,
-        totalPages,
-        currentPage: page,
-        pageSize: limit,
-      },
-      data: claimsWithDocs,
-    };
+      data: enrichedClaims,
+      count: count || 0,
+    });
   }
 
-  async findOne(id: number): Promise<any> {
-    const supabase = this.supabaseService.createClientWithToken();
-    const { data, error } = await supabase
+  async findOne(req: AuthenticatedRequest, id: number): Promise<any> {
+    const { data, error } = await req.supabase
       .from('claims')
-      .select('*')
+      .select('*, claim_documents(*)')
       .eq('id', id)
       .single();
+
     if (error || !data) {
       throw new Error(
-        'Failed to fetch claims: ' + (error.message || 'Unknown error'),
+        'Failed to fetch claim with documents: ' +
+          (error?.message || 'Unknown error'),
       );
     }
 
-    const { data: docData, error: docError } = await supabase
-      .from('claim_documents')
-      .select('*')
-      .eq('claim_id', id);
+    const documents = data.claim_documents || [];
 
-    if (docError || !docData) {
-      throw new Error(
-        'Failed to fetch claim documents: ' +
-          (docError.message || 'Unknown error'),
-      );
-    }
-    return { ...data, documents: docData }; // Include documents in the response data;
+    const filePaths = documents
+      .map((doc: UploadClaimDocDto) => doc.path)
+      .filter(Boolean);
+
+    // Generate signed URLs
+    const signedUrls = await getSignedUrls(req.supabase, filePaths);
+
+    const enrichedDocuments = documents.map((doc, idx) => ({
+      ...doc,
+      signedUrl: signedUrls[idx] || null,
+    }));
+
+    return {
+      ...data,
+      claim_documents: enrichedDocuments,
+    };
   }
 
   async update(
@@ -250,7 +235,7 @@ export class ClaimService {
         claim_type: updateClaimDto.claim_type,
         amount: updateClaimDto.amount,
         status: updateClaimDto.status as 'pending' | 'approved' | 'rejected',
-        description: updateClaimDto.description ?? null, // Assuming documents is an array of strings
+        description: updateClaimDto.description ?? null,
       })
       .eq('id', id)
       .select()
@@ -266,81 +251,60 @@ export class ClaimService {
   async remove(id: number, req: AuthenticatedRequest): Promise<any> {
     const supabase = this.supabaseService.createClientWithToken();
 
-    // Fetch claim documents before deleting claim
+    // Step 1: Fetch claim documents
     const { data: documents, error: fetchDocError } = await supabase
       .from('claim_documents')
-      .select('*')
+      .select('path')
       .eq('claim_id', id);
 
     if (fetchDocError) {
-      throw new Error(
-        'Failed to fetch claim documents: ' +
-          (fetchDocError?.message || 'Unknown error'),
+      throw new InternalServerErrorException(
+        'Failed to fetch claim documents: ' + fetchDocError.message,
       );
     }
 
-    if (documents && documents.length > 0) {
-      // const req = { supabase } as AuthenticatedRequest;
-      for (const doc of documents) {
-        const urlPaths = doc.url.split('/');
-        const filePath = decodeURIComponent(urlPaths.slice(-2).join('/'));
-        console.log('Url path to remove:', urlPaths);
-        console.log('Removing file:', filePath);
-        await this.removeFile(filePath, req);
+    // Step 2: Remove files from Supabase storage
+    for (const doc of documents as { path: string }[]) {
+      try {
+        await removeFileFromStorage(supabase, doc.path);
+      } catch (err) {
+        console.warn(`Failed to delete file "${doc.path}":`);
       }
     }
 
-    // Remove related claim documents from the database
-    const { error: docError } = await supabase
+    // Step 3: Remove claim_documents from database
+    const { error: docDeleteError } = await supabase
       .from('claim_documents')
       .delete()
       .eq('claim_id', id);
 
-    if (docError) {
-      throw new Error(
-        'Failed to remove claim documents: ' +
-          (docError?.message || 'Unknown error'),
+    if (docDeleteError) {
+      throw new InternalServerErrorException(
+        'Failed to remove claim documents: ' + docDeleteError.message,
       );
     }
-    // Then remove the claim itself
-    const { data, error } = await supabase
+
+    // Step 4: Remove the claim itself
+    const { data: deletedClaim, error: claimDeleteError } = await supabase
       .from('claims')
       .delete()
       .eq('id', id)
       .select()
       .single();
 
-    if (error || !data) {
-      throw new Error(
-        'Failed to remove claim: ' + (error?.message || 'Unknown error'),
+    if (claimDeleteError) {
+      throw new InternalServerErrorException(
+        'Failed to remove claim: ' + claimDeleteError.message,
       );
     }
-    return data;
+
+    if (!deletedClaim) {
+      throw new NotFoundException(`Claim with ID ${id} not found`);
+    }
+
+    return deletedClaim;
   }
 
-  async createClaimDocument(
-    uploadClaimDocDto: UploadClaimDocDto,
-  ): Promise<any> {
-    const supabase = this.supabaseService.createClientWithToken();
-    const { data, error } = await supabase
-      .from('claim_documents')
-      .insert([
-        {
-          claim_id: uploadClaimDocDto.claim_id,
-          name: uploadClaimDocDto.name,
-          url: uploadClaimDocDto.url,
-        },
-      ])
-      .select()
-      .single();
-    if (error || !data) {
-      throw new Error(
-        'Failed to create claim document: ' +
-          (error?.message || 'Unknown error'),
-      );
-    }
-    return data;
-  }
   async findAllClaimDocuments(): Promise<any[]> {
     const supabase = this.supabaseService.createClientWithToken();
     const { data, error } = await supabase.from('claim_documents').select('*');
@@ -352,88 +316,84 @@ export class ClaimService {
     }
     return data;
   }
-  async findClaimDocumentById(id: number): Promise<any> {
-    const supabase = this.supabaseService.createClientWithToken();
-    const { data, error } = await supabase
-      .from('claim_documents')
-      .select('*')
-      .eq('id', id)
-      .single();
-    if (error || !data) {
-      throw new Error(
-        'Failed to fetch claim document: ' +
-          (error?.message || 'Unknown error'),
-      );
-    }
-    return data;
-  }
-  async updateClaimDocument(
-    id: number,
-    uploadClaimDocDto: UploadClaimDocDto,
-  ): Promise<any> {
-    const supabase = this.supabaseService.createClientWithToken();
-    const { data, error } = await supabase
-      .from('claim_documents')
-      .update({
-        claim_id: uploadClaimDocDto.claim_id,
-        name: uploadClaimDocDto.name,
-        url: uploadClaimDocDto.url,
-      })
-      .eq('id', id)
-      .select()
-      .single();
-    if (error || !data) {
-      throw new Error(
-        'Failed to update claim document: ' +
-          (error?.message || 'Unknown error'),
-      );
-    }
-    return data;
-  }
   async removeClaimDocument(id: number): Promise<any> {
     const supabase = this.supabaseService.createClientWithToken();
-    const { data, error } = await supabase
+
+    // Step 1: Fetch the document to get its path
+    const { data: document, error: fetchError } = await supabase
+      .from('claim_documents')
+      .select('id, path')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !document) {
+      throw new NotFoundException(
+        'Claim document not found: ' + (fetchError?.message || 'Unknown error'),
+      );
+    }
+
+    // Step 2: Remove the file from Supabase storage
+    try {
+      await removeFileFromStorage(supabase, document.path);
+    } catch (error) {
+      console.warn(`File removal failed for "${document.path}":`);
+      // Optional: decide if you want to proceed with DB delete or not
+    }
+
+    // Step 3: Remove the claim document record from the database
+    const { data, error: deleteError } = await supabase
       .from('claim_documents')
       .delete()
       .eq('id', id)
       .select()
       .single();
-    if (error || !data) {
-      throw new Error(
+
+    if (deleteError || !data) {
+      throw new InternalServerErrorException(
         'Failed to remove claim document: ' +
-          (error?.message || 'Unknown error'),
+          (deleteError?.message || 'Unknown error'),
       );
     }
+
     return data;
   }
 
-  async removeFile(filePath: string, req: AuthenticatedRequest): Promise<void> {
-    try {
-      console.log('Auth session:', await req.supabase.auth.getSession());
-      console.log('Attempting to remove file at path:', filePath);
-      const { data, error } = await req.supabase.storage
-        .from('supastorage')
-        .remove([filePath]);
-
-      if (error) {
-        console.error('File removal error details:', {
-          message: error.message,
-        });
-        throw new InternalServerErrorException(
-          'Failed to remove file from storage: ' + error.message,
-        );
-      }
-      console.log('File removal successful, data:', data);
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error('Caught error during file removal:', error.message);
-        throw new InternalServerErrorException(error.message);
-      } else {
-        console.error('Unknown error during file removal:', error);
-        throw new InternalServerErrorException(
-          'An unknown error occurred while removing the file',
-        );
-      }
-    }
-  }
+  // async findClaimDocumentById(id: number): Promise<any> {
+  //   const supabase = this.supabaseService.createClientWithToken();
+  //   const { data, error } = await supabase
+  //     .from('claim_documents')
+  //     .select('*')
+  //     .eq('id', id)
+  //     .single();
+  //   if (error || !data) {
+  //     throw new Error(
+  //       'Failed to fetch claim document: ' +
+  //         (error?.message || 'Unknown error'),
+  //     );
+  //   }
+  //   return data;
+  // }
+  // async updateClaimDocument(
+  //   id: number,
+  //   uploadClaimDocDto: UploadClaimDocDto,
+  // ): Promise<any> {
+  //   const supabase = this.supabaseService.createClientWithToken();
+  //   const { data, error } = await supabase
+  //     .from('claim_documents')
+  //     .update({
+  //       claim_id: uploadClaimDocDto.claim_id,
+  //       name: uploadClaimDocDto.name,
+  //       path: uploadClaimDocDto.path,
+  //     })
+  //     .eq('id', id)
+  //     .select()
+  //     .single();
+  //   if (error || !data) {
+  //     throw new Error(
+  //       'Failed to update claim document: ' +
+  //         (error?.message || 'Unknown error'),
+  //     );
+  //   }
+  //   return data;
+  // }
 }

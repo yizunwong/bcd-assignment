@@ -211,56 +211,96 @@
         "parameters": [
           {
             "name": "page",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
+              "minimum": 1,
+              "default": 1,
               "type": "number"
             }
           },
           {
             "name": "limit",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
+              "minimum": 1,
+              "default": 5,
               "type": "number"
             }
           },
           {
             "name": "category",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Filter by claim type (category)",
             "schema": {
               "type": "string"
             }
           },
           {
             "name": "search",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Search keyword for claim_type or description",
             "schema": {
               "type": "string"
             }
           },
           {
             "name": "sortBy",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
-              "type": "string"
+              "default": "id",
+              "type": "string",
+              "enum": [
+                "id",
+                "claim_type",
+                "amount",
+                "status",
+                "submitted_date"
+              ]
             }
           },
           {
             "name": "sortOrder",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
-              "type": "string"
+              "default": "asc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
             }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Get all claims with signed URLs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/ClaimResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -363,15 +403,14 @@
         ]
       }
     },
-    "/claim/file": {
+    "/claim/{id}/file": {
       "delete": {
         "operationId": "ClaimController_removeFile",
         "parameters": [
           {
-            "name": "filePath",
+            "name": "id",
             "required": true,
-            "in": "query",
-            "description": "Path of the file to delete in the bucket (e.g. claim_documents/filename.pdf)",
+            "in": "path",
             "schema": {
               "type": "string"
             }
@@ -583,6 +622,9 @@
           },
           "data": {
             "type": "object"
+          },
+          "count": {
+            "type": "number"
           }
         },
         "required": [
@@ -784,6 +826,69 @@
           "policy_id",
           "claim_type",
           "amount"
+        ]
+      },
+      "ClaimDocumentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "claim_id": {
+            "type": "number"
+          },
+          "signedUrl": {
+            "type": "string",
+            "description": "Signed Supabase URL for accessing this document",
+            "example": "https://qydplatgoxvtomjhkqrx.supabase.co/storage/v1/object/sign/..."
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "claim_id",
+          "signedUrl"
+        ]
+      },
+      "ClaimResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "claim_type": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "description": {
+            "type": "object"
+          },
+          "submitted_date": {
+            "type": "string"
+          },
+          "claim_documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClaimDocumentResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "claim_type",
+          "amount",
+          "status",
+          "description",
+          "submitted_date",
+          "claim_documents"
         ]
       },
       "UpdateClaimDto": {
