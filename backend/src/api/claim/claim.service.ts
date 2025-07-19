@@ -22,28 +22,12 @@ import { CommonResponseDto } from 'src/common/common.dto';
 export class ClaimService {
   constructor(private readonly supabaseService: SupabaseService) {}
 
-  // async uploadClaimDocument(
-  //   files: Array<Express.Multer.File>,
-  //   req: AuthenticatedRequest,
-  // ): Promise<string[]> {
-  //   try {
-  //     const fileArray = Array.isArray(files) ? files : [files];
-  //     return await uploadFiles(req.supabase, fileArray, 'claim_documents');
-  //   } catch (error) {
-  //     if (error instanceof Error) {
-  //       throw new InternalServerErrorException(error.message);
-  //     }
-  //     throw new InternalServerErrorException(
-  //       'An unknown error occurred during file upload',
-  //     );
-  //   }
-  // }
 
   async createClaim(
     createClaimDto: CreateClaimDto,
     req: AuthenticatedRequest,
     files: Array<Express.Multer.File>,
-  ): Promise<any> {
+  ): Promise<CommonResponseDto> {
     const { data: userData, error: userError } =
       await req.supabase.auth.getUser();
     if (userError || !userData?.user) {
@@ -106,7 +90,10 @@ export class ClaimService {
     });
   }
 
-  async findAll(req: AuthenticatedRequest, query: FindClaimsQueryDto) {
+  async findAll(
+    req: AuthenticatedRequest,
+    query: FindClaimsQueryDto,
+  ): Promise<CommonResponseDto<ClaimResponseDto[]>> {
     if (
       query.sortBy &&
       !['id', 'claim_type', 'amount', 'status', 'submitted_date'].includes(
@@ -181,7 +168,10 @@ export class ClaimService {
     });
   }
 
-  async findOne(req: AuthenticatedRequest, id: number): Promise<any> {
+  async findOne(
+    req: AuthenticatedRequest,
+    id: number,
+  ): Promise<CommonResponseDto<ClaimResponseDto>> {
     const { data, error } = await req.supabase
       .from('claims')
       .select('*, claim_documents(*)')
@@ -209,17 +199,28 @@ export class ClaimService {
       signedUrl: signedUrls[idx] || null,
     }));
 
-    return {
-      ...data,
+    const claim: ClaimResponseDto = {
+      id: data.id,
+      claim_type: data.claim_type,
+      amount: data.amount,
+      status: data.status,
+      description: data.description,
+      submitted_date: data.submitted_date,
       claim_documents: enrichedDocuments,
     };
+
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Claim retrieved successfully',
+      data: claim,
+    });
   }
 
   async update(
     id: number,
     updateClaimDto: UpdateClaimDto,
     req: AuthenticatedRequest,
-  ): Promise<any> {
+  ): Promise<CommonResponseDto> {
     const { data: userData, error: userError } =
       await req.supabase.auth.getUser();
 
@@ -245,10 +246,17 @@ export class ClaimService {
         'Failed to fetch claims: ' + (error.message || 'Unknown error'),
       );
     }
-    return data;
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Claim updated successfully',
+      data,
+    });
   }
 
-  async remove(id: number, req: AuthenticatedRequest): Promise<any> {
+  async remove(
+    id: number,
+    req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto> {
     const supabase = this.supabaseService.createClientWithToken();
 
     // Step 1: Fetch claim documents
@@ -302,21 +310,14 @@ export class ClaimService {
       throw new NotFoundException(`Claim with ID ${id} not found`);
     }
 
-    return deletedClaim;
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Claim removed successfully',
+      data: deletedClaim,
+    });
   }
 
-  async findAllClaimDocuments(): Promise<any[]> {
-    const supabase = this.supabaseService.createClientWithToken();
-    const { data, error } = await supabase.from('claim_documents').select('*');
-    if (error) {
-      throw new Error(
-        'Failed to fetch claim documents: ' +
-          (error.message || 'Unknown error'),
-      );
-    }
-    return data;
-  }
-  async removeClaimDocument(id: number): Promise<any> {
+  async removeClaimDocument(id: number): Promise<CommonResponseDto> {
     const supabase = this.supabaseService.createClientWithToken();
 
     // Step 1: Fetch the document to get its path
@@ -355,45 +356,11 @@ export class ClaimService {
       );
     }
 
-    return data;
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Claim document removed successfully',
+      data,
+    });
   }
 
-  // async findClaimDocumentById(id: number): Promise<any> {
-  //   const supabase = this.supabaseService.createClientWithToken();
-  //   const { data, error } = await supabase
-  //     .from('claim_documents')
-  //     .select('*')
-  //     .eq('id', id)
-  //     .single();
-  //   if (error || !data) {
-  //     throw new Error(
-  //       'Failed to fetch claim document: ' +
-  //         (error?.message || 'Unknown error'),
-  //     );
-  //   }
-  //   return data;
-  // }
-  // async updateClaimDocument(
-  //   id: number,
-  //   uploadClaimDocDto: UploadClaimDocDto,
-  // ): Promise<any> {
-  //   const supabase = this.supabaseService.createClientWithToken();
-  //   const { data, error } = await supabase
-  //     .from('claim_documents')
-  //     .update({
-  //       claim_id: uploadClaimDocDto.claim_id,
-  //       name: uploadClaimDocDto.name,
-  //       path: uploadClaimDocDto.path,
-  //     })
-  //     .eq('id', id)
-  //     .select()
-  //     .single();
-  //   if (error || !data) {
-  //     throw new Error(
-  //       'Failed to update claim document: ' +
-  //         (error?.message || 'Unknown error'),
-  //     );
-  //   }
-  //   return data;
-  // }
 }
