@@ -37,7 +37,7 @@ export class ClaimController {
     @Body() createClaimDto: CreateClaimDto,
     @Req() req: AuthenticatedRequest,
     @UploadedFiles() files: Array<Express.Multer.File>,
-  ) {
+  ): Promise<CommonResponseDto> {
     return this.claimService.createClaim(createClaimDto, req, files);
   }
 
@@ -53,29 +53,41 @@ export class ClaimController {
 
   @Get(':id')
   @UseGuards(AuthGuard)
-  findOne(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
+  @ApiCommonResponse(ClaimResponseDto, false, 'Get claim with signed URLs')
+  findOne(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+  ): Promise<CommonResponseDto<ClaimResponseDto>> {
     return this.claimService.findOne(req, +id);
   }
 
   @Patch(':id')
   @UseGuards(AuthGuard)
+  @ApiCommonResponse(ClaimResponseDto, false, 'Update claim')
   update(
     @Param('id') id: string,
     @Body() updateClaimDto: UpdateClaimDto,
     @Req() req: AuthenticatedRequest,
-  ) {
+  ): Promise<CommonResponseDto> {
     return this.claimService.update(+id, updateClaimDto, req);
   }
   @Delete(':id/file')
   @UseGuards(AuthGuard)
-  async removeFile(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
-    await this.claimService.removeClaimDocument(+id);
-    return { message: `File ${id} deleted (if existed)` };
+  @ApiCommonResponse(ClaimResponseDto, false, 'Remove claim document')
+  removeFile(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto> {
+    return this.claimService.removeClaimDocument(+id);
   }
 
   @Delete(':id')
   @UseGuards(AuthGuard)
-  remove(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+  @ApiCommonResponse(ClaimResponseDto, false, 'Remove claim')
+  remove(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto> {
     const numId = Number(id);
     if (isNaN(numId)) {
       throw new BadRequestException('Invalid claim id');
