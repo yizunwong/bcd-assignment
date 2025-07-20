@@ -177,6 +177,865 @@
           "Users"
         ]
       }
+    },
+    "/claim": {
+      "post": {
+        "operationId": "ClaimController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateClaimDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Claim"
+        ]
+      },
+      "get": {
+        "operationId": "ClaimController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 5,
+              "type": "number"
+            }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "description": "Filter by claim type (category)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search keyword for claim_type or description",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "id",
+              "type": "string",
+              "enum": [
+                "id",
+                "claim_type",
+                "amount",
+                "status",
+                "submitted_date"
+              ]
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "asc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get all claims with signed URLs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/ClaimResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Claim"
+        ]
+      }
+    },
+    "/claim/{id}": {
+      "get": {
+        "operationId": "ClaimController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get claim with signed URLs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/ClaimResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Claim"
+        ]
+      },
+      "patch": {
+        "operationId": "ClaimController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateClaimDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Update claim",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/ClaimResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Claim"
+        ]
+      },
+      "delete": {
+        "operationId": "ClaimController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Remove claim",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/ClaimResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Claim"
+        ]
+      }
+    },
+    "/claim/{id}/file": {
+      "delete": {
+        "operationId": "ClaimController_removeFile",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Remove claim document",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/ClaimResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Claim"
+        ]
+      }
+    },
+    "/policy": {
+      "post": {
+        "operationId": "PolicyController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePolicyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Policy"
+        ]
+      },
+      "get": {
+        "operationId": "PolicyController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 5,
+              "type": "number"
+            }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "description": "Filter by policy category",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search keyword for name or description",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "id",
+              "type": "string",
+              "enum": [
+                "id",
+                "name",
+                "rating",
+                "premium",
+                "popularity"
+              ]
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "asc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get all policies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/PolicyResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Policy"
+        ]
+      }
+    },
+    "/policy/{id}": {
+      "get": {
+        "operationId": "PolicyController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get policy with signed URLs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/PolicyResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Policy"
+        ]
+      },
+      "patch": {
+        "operationId": "PolicyController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePolicyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Update policy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/PolicyResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Policy"
+        ]
+      },
+      "delete": {
+        "operationId": "PolicyController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Remove policy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/PolicyResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Policy"
+        ]
+      }
+    },
+    "/coverage": {
+      "post": {
+        "operationId": "CoverageController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCoverageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Coverage"
+        ]
+      },
+      "get": {
+        "operationId": "CoverageController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 5,
+              "type": "number"
+            }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "description": "Filter by policy category",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search keyword for policy name or description",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "limitExceeded",
+                "expired",
+                "suspended"
+              ]
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "id",
+              "type": "string",
+              "enum": [
+                "id",
+                "start_date",
+                "utilization_rate"
+              ]
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "asc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get all coverages",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/CoverageResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Coverage"
+        ]
+      }
+    },
+    "/coverage/{id}": {
+      "get": {
+        "operationId": "CoverageController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get coverage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/CoverageResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Coverage"
+        ]
+      },
+      "patch": {
+        "operationId": "CoverageController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCoverageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Coverage"
+        ]
+      },
+      "delete": {
+        "operationId": "CoverageController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Coverage"
+        ]
+      }
     }
   },
   "info": {
@@ -208,6 +1067,9 @@
           },
           "data": {
             "type": "object"
+          },
+          "count": {
+            "type": "number"
           }
         },
         "required": [
@@ -372,6 +1234,503 @@
           "password",
           "role"
         ]
+      },
+      "CreateClaimDto": {
+        "type": "object",
+        "properties": {
+          "policy_id": {
+            "type": "number",
+            "example": 1,
+            "description": "ID of the policy associated with the claim"
+          },
+          "claim_type": {
+            "type": "string",
+            "example": "accident",
+            "description": "Type of the claim"
+          },
+          "amount": {
+            "type": "number",
+            "example": 1000,
+            "description": "Amount claimed"
+          },
+          "description": {
+            "type": "string",
+            "example": "Accident on highway, car damaged.",
+            "description": "Description of the claim"
+          },
+          "documents": {
+            "description": "Documents to upload",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        },
+        "required": [
+          "policy_id",
+          "claim_type",
+          "amount"
+        ]
+      },
+      "ClaimDocumentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "claim_id": {
+            "type": "number"
+          },
+          "signedUrl": {
+            "type": "string",
+            "description": "Signed Supabase URL for accessing this document",
+            "example": "https://qydplatgoxvtomjhkqrx.supabase.co/storage/v1/object/sign/..."
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "claim_id",
+          "signedUrl"
+        ]
+      },
+      "ClaimResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "claim_type": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "description": {
+            "type": "object"
+          },
+          "submitted_date": {
+            "type": "string"
+          },
+          "claim_documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClaimDocumentResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "claim_type",
+          "amount",
+          "status",
+          "description",
+          "submitted_date",
+          "claim_documents"
+        ]
+      },
+      "UpdateClaimDto": {
+        "type": "object",
+        "properties": {
+          "policy_id": {
+            "type": "number",
+            "example": 1,
+            "description": "ID of the policy associated with the claim"
+          },
+          "claim_type": {
+            "type": "string",
+            "example": "accident",
+            "description": "Type of the claim"
+          },
+          "amount": {
+            "type": "number",
+            "example": 1000,
+            "description": "Amount claimed"
+          },
+          "description": {
+            "type": "string",
+            "example": "Accident on highway, car damaged.",
+            "description": "Description of the claim"
+          },
+          "documents": {
+            "description": "Documents to upload",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "id": {
+            "type": "number",
+            "example": 1,
+            "description": "ID of the claim to update"
+          },
+          "status": {
+            "type": "string",
+            "example": "pending",
+            "description": "Status of the claim"
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ]
+      },
+      "CreatePolicyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Comprehensive Health Coverage"
+          },
+          "category": {
+            "type": "string",
+            "example": "health"
+          },
+          "provider": {
+            "type": "string",
+            "example": "HealthSecure"
+          },
+          "coverage": {
+            "type": "number",
+            "example": 100000
+          },
+          "premium": {
+            "type": "string",
+            "example": "0.8 ETH/month"
+          },
+          "rating": {
+            "type": "number",
+            "example": 0
+          },
+          "popular": {
+            "type": "boolean",
+            "example": false
+          },
+          "features": {
+            "example": [
+              "Emergency Care",
+              "Prescription Drugs",
+              "Mental Health"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string",
+            "example": "Complete healthcare coverage with blockchain-verified claims processing"
+          },
+          "files": {
+            "description": "Files to upload for the policy",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "category",
+          "provider",
+          "coverage",
+          "premium",
+          "rating",
+          "popular",
+          "features"
+        ]
+      },
+      "PolicyDocumentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "policy_id": {
+            "type": "number"
+          },
+          "signedUrl": {
+            "type": "string",
+            "description": "Signed Supabase URL for accessing this document"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "policy_id",
+          "signedUrl"
+        ]
+      },
+      "PolicyResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "coverage": {
+            "type": "number"
+          },
+          "premium": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "number"
+          },
+          "popular": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "object"
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "policy_documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PolicyDocumentResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "category",
+          "provider",
+          "coverage",
+          "premium",
+          "rating",
+          "popular",
+          "features",
+          "policy_documents"
+        ]
+      },
+      "UpdatePolicyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Comprehensive Health Coverage"
+          },
+          "category": {
+            "type": "string",
+            "example": "health"
+          },
+          "provider": {
+            "type": "string",
+            "example": "HealthSecure"
+          },
+          "coverage": {
+            "type": "number",
+            "example": 100000
+          },
+          "premium": {
+            "type": "string",
+            "example": "0.8 ETH/month"
+          },
+          "rating": {
+            "type": "number",
+            "example": 0
+          },
+          "popular": {
+            "type": "boolean",
+            "example": false
+          },
+          "features": {
+            "example": [
+              "Emergency Care",
+              "Prescription Drugs",
+              "Mental Health"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string",
+            "example": "Complete healthcare coverage with blockchain-verified claims processing"
+          },
+          "files": {
+            "description": "Files to upload for the policy",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        }
+      },
+      "CreateCoverageDto": {
+        "type": "object",
+        "properties": {
+          "policy_id": {
+            "type": "number",
+            "example": 1,
+            "description": "ID of the policy this coverage is linked to"
+          },
+          "user_id": {
+            "type": "string",
+            "example": "a3e1f2b4-1234-4c56-8e7d-123456789abc",
+            "description": "UUID of the user who owns this coverage"
+          },
+          "status": {
+            "type": "string",
+            "example": "active",
+            "description": "Status of the coverage"
+          },
+          "utilization_rate": {
+            "type": "number",
+            "example": 0,
+            "description": "Utilization rate of the coverage"
+          },
+          "start_date": {
+            "type": "string",
+            "example": "2025-07-01",
+            "description": "Start date of the coverage (YYYY-MM-DD)"
+          },
+          "end_date": {
+            "type": "string",
+            "example": "2026-07-01",
+            "description": "End date of the coverage (YYYY-MM-DD)"
+          },
+          "next_payment_date": {
+            "type": "string",
+            "example": "2025-08-01",
+            "description": "Next payment date for the coverage (YYYY-MM-DD)"
+          }
+        },
+        "required": [
+          "policy_id",
+          "user_id",
+          "status",
+          "utilization_rate",
+          "start_date",
+          "end_date",
+          "next_payment_date"
+        ]
+      },
+      "CoveragePolicyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "object"
+          },
+          "category": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "category"
+        ]
+      },
+      "CoverageResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "policy_id": {
+            "type": "object"
+          },
+          "user_id": {
+            "type": "object"
+          },
+          "status": {
+            "type": "object"
+          },
+          "utilization_rate": {
+            "type": "number"
+          },
+          "start_date": {
+            "type": "string"
+          },
+          "end_date": {
+            "type": "string"
+          },
+          "next_payment_date": {
+            "type": "string"
+          },
+          "policies": {
+            "$ref": "#/components/schemas/CoveragePolicyDto"
+          }
+        },
+        "required": [
+          "id",
+          "utilization_rate",
+          "start_date",
+          "end_date",
+          "next_payment_date",
+          "policies"
+        ]
+      },
+      "UpdateCoverageDto": {
+        "type": "object",
+        "properties": {
+          "policy_id": {
+            "type": "number",
+            "example": 1,
+            "description": "ID of the policy this coverage is linked to"
+          },
+          "user_id": {
+            "type": "string",
+            "example": "a3e1f2b4-1234-4c56-8e7d-123456789abc",
+            "description": "UUID of the user who owns this coverage"
+          },
+          "status": {
+            "type": "string",
+            "example": "active",
+            "description": "Status of the coverage"
+          },
+          "utilization_rate": {
+            "type": "number",
+            "example": 0,
+            "description": "Utilization rate of the coverage"
+          },
+          "start_date": {
+            "type": "string",
+            "example": "2025-07-01",
+            "description": "Start date of the coverage (YYYY-MM-DD)"
+          },
+          "end_date": {
+            "type": "string",
+            "example": "2026-07-01",
+            "description": "End date of the coverage (YYYY-MM-DD)"
+          },
+          "next_payment_date": {
+            "type": "string",
+            "example": "2025-08-01",
+            "description": "Next payment date for the coverage (YYYY-MM-DD)"
+          }
+        }
       }
     }
   }

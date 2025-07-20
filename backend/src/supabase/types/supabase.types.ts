@@ -7,6 +7,11 @@
   | Json[];
 
 export type Database = {
+  // Allows to automatically instanciate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: '12.2.3 (519615d)';
+  };
   public: {
     Tables: {
       activity_logs: {
@@ -38,64 +43,64 @@ export type Database = {
           claim_id: number;
           id: number;
           name: string;
-          url: string;
+          path: string;
         };
         Insert: {
           claim_id: number;
           id?: number;
           name: string;
-          url: string;
+          path: string;
         };
         Update: {
           claim_id?: number;
           id?: number;
           name?: string;
-          url?: string;
+          path?: string;
         };
         Relationships: [
           {
             foreignKeyName: 'claim_documents_claim_id_fkey';
             columns: ['claim_id'];
             isOneToOne: false;
-            referencedRelation: 'policies';
+            referencedRelation: 'claims';
             referencedColumns: ['id'];
           },
         ];
       };
       claims: {
         Row: {
-          amount: unknown;
+          amount: number;
           claim_type: string;
           claimed_date: string | null;
           description: string | null;
           id: number;
           policy_id: number | null;
           processed_date: string | null;
-          status: string;
+          status: Database['public']['Enums']['claim_status'];
           submitted_date: string;
           user_id: string | null;
         };
         Insert: {
-          amount: unknown;
+          amount?: number;
           claim_type: string;
           claimed_date?: string | null;
           description?: string | null;
           id?: number;
           policy_id?: number | null;
           processed_date?: string | null;
-          status: string;
+          status?: Database['public']['Enums']['claim_status'];
           submitted_date: string;
           user_id?: string | null;
         };
         Update: {
-          amount?: unknown;
+          amount?: number;
           claim_type?: string;
           claimed_date?: string | null;
           description?: string | null;
           id?: number;
           policy_id?: number | null;
           processed_date?: string | null;
-          status?: string;
+          status?: Database['public']['Enums']['claim_status'];
           submitted_date?: string;
           user_id?: string | null;
         };
@@ -116,7 +121,7 @@ export type Database = {
           next_payment_date: string;
           policy_id: number | null;
           start_date: string;
-          status: string;
+          status: Database['public']['Enums']['coverage_status'];
           user_id: string | null;
           utilization_rate: number;
         };
@@ -126,9 +131,9 @@ export type Database = {
           next_payment_date: string;
           policy_id?: number | null;
           start_date: string;
-          status: string;
+          status?: Database['public']['Enums']['coverage_status'];
           user_id?: string | null;
-          utilization_rate: number;
+          utilization_rate?: number;
         };
         Update: {
           end_date?: string;
@@ -136,7 +141,7 @@ export type Database = {
           next_payment_date?: string;
           policy_id?: number | null;
           start_date?: string;
-          status?: string;
+          status?: Database['public']['Enums']['coverage_status'];
           user_id?: string | null;
           utilization_rate?: number;
         };
@@ -208,20 +213,20 @@ export type Database = {
         Row: {
           id: number;
           name: string;
+          path: string;
           policy_id: number;
-          url: string;
         };
         Insert: {
           id?: number;
           name: string;
+          path: string;
           policy_id: number;
-          url: string;
         };
         Update: {
           id?: number;
           name?: string;
+          path?: string;
           policy_id?: number;
-          url?: string;
         };
         Relationships: [
           {
@@ -237,6 +242,7 @@ export type Database = {
         Row: {
           comment: string | null;
           id: number;
+          policy_id: number | null;
           rating: number;
           user_id: string | null;
           user_name: string;
@@ -244,6 +250,7 @@ export type Database = {
         Insert: {
           comment?: string | null;
           id?: number;
+          policy_id?: number | null;
           rating: number;
           user_id?: string | null;
           user_name: string;
@@ -251,11 +258,20 @@ export type Database = {
         Update: {
           comment?: string | null;
           id?: number;
+          policy_id?: number | null;
           rating?: number;
           user_id?: string | null;
           user_name?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: 'reviews_policy_id_fkey';
+            columns: ['policy_id'];
+            isOneToOne: false;
+            referencedRelation: 'policies';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       role_permissions: {
         Row: {
@@ -385,6 +401,8 @@ export type Database = {
       [_ in never]: never;
     };
     Enums: {
+      claim_status: 'pending' | 'approved' | 'rejected' | 'claimed';
+      coverage_status: 'active' | 'limitExceeded' | 'expired' | 'suspended';
       role: 'admin' | 'user';
     };
     CompositeTypes: {
@@ -393,21 +411,28 @@ export type Database = {
   };
 };
 
-type DefaultSchema = Database[Extract<keyof Database, 'public'>];
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>;
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<
+  keyof Database,
+  'public'
+>];
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database;
+    schema: keyof DatabaseWithoutInternals;
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        Database[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      Database[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
       Row: infer R;
     }
     ? R
@@ -425,14 +450,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema['Tables']
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database;
+    schema: keyof DatabaseWithoutInternals;
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Insert: infer I;
     }
     ? I
@@ -448,14 +475,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema['Tables']
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database;
+    schema: keyof DatabaseWithoutInternals;
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Update: infer U;
     }
     ? U
@@ -471,14 +500,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema['Enums']
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database;
+    schema: keyof DatabaseWithoutInternals;
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
     ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
     : never;
@@ -486,14 +517,16 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema['CompositeTypes']
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database;
+    schema: keyof DatabaseWithoutInternals;
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
     ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
     : never;
@@ -501,6 +534,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      claim_status: ['pending', 'approved', 'rejected', 'claimed'],
+      coverage_status: ['active', 'limitExceeded', 'expired', 'suspended'],
       role: ['admin', 'user'],
     },
   },
