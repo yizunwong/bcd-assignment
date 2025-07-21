@@ -38,6 +38,38 @@ export type Database = {
         };
         Relationships: [];
       };
+      admin_details: {
+        Row: {
+          company_address: string | null;
+          company_name: string | null;
+          employee_id: string;
+          license_no: string;
+          user_id: string;
+        };
+        Insert: {
+          company_address?: string | null;
+          company_name?: string | null;
+          employee_id: string;
+          license_no: string;
+          user_id: string;
+        };
+        Update: {
+          company_address?: string | null;
+          company_name?: string | null;
+          employee_id?: string;
+          license_no?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'admin_details_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: true;
+            referencedRelation: 'user_details';
+            referencedColumns: ['user_id'];
+          },
+        ];
+      };
       claim_documents: {
         Row: {
           claim_id: number;
@@ -238,6 +270,35 @@ export type Database = {
           },
         ];
       };
+      policyholder_details: {
+        Row: {
+          address: string | null;
+          date_of_birth: string;
+          occupation: string | null;
+          user_id: string;
+        };
+        Insert: {
+          address?: string | null;
+          date_of_birth: string;
+          occupation?: string | null;
+          user_id: string;
+        };
+        Update: {
+          address?: string | null;
+          date_of_birth?: string;
+          occupation?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'policyholder_details_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: true;
+            referencedRelation: 'user_details';
+            referencedColumns: ['user_id'];
+          },
+        ];
+      };
       reviews: {
         Row: {
           comment: string | null;
@@ -330,66 +391,30 @@ export type Database = {
         };
         Relationships: [];
       };
-      user_profiles: {
+      user_details: {
         Row: {
-          claims: number | null;
-          company: string | null;
-          join_date: string | null;
-          kyc_status: string | null;
-          location: string | null;
-          login_attempts: number | null;
-          notes: string | null;
-          policies: number | null;
-          role: string;
-          status: string | null;
+          bio: string | null;
+          first_name: string | null;
+          last_name: string | null;
+          phone: string | null;
+          status: Database['public']['Enums']['user_status'];
           user_id: string;
         };
         Insert: {
-          claims?: number | null;
-          company?: string | null;
-          join_date?: string | null;
-          kyc_status?: string | null;
-          location?: string | null;
-          login_attempts?: number | null;
-          notes?: string | null;
-          policies?: number | null;
-          role: string;
-          status?: string | null;
+          bio?: string | null;
+          first_name?: string | null;
+          last_name?: string | null;
+          phone?: string | null;
+          status?: Database['public']['Enums']['user_status'];
           user_id: string;
         };
         Update: {
-          claims?: number | null;
-          company?: string | null;
-          join_date?: string | null;
-          kyc_status?: string | null;
-          location?: string | null;
-          login_attempts?: number | null;
-          notes?: string | null;
-          policies?: number | null;
-          role?: string;
-          status?: string | null;
+          bio?: string | null;
+          first_name?: string | null;
+          last_name?: string | null;
+          phone?: string | null;
+          status?: Database['public']['Enums']['user_status'];
           user_id?: string;
-        };
-        Relationships: [];
-      };
-      users: {
-        Row: {
-          created_at: string;
-          email: string | null;
-          id: number;
-          username: string | null;
-        };
-        Insert: {
-          created_at?: string;
-          email?: string | null;
-          id?: number;
-          username?: string | null;
-        };
-        Update: {
-          created_at?: string;
-          email?: string | null;
-          id?: number;
-          username?: string | null;
         };
         Relationships: [];
       };
@@ -404,6 +429,7 @@ export type Database = {
       claim_status: 'pending' | 'approved' | 'rejected' | 'claimed';
       coverage_status: 'active' | 'limitExceeded' | 'expired' | 'suspended';
       role: 'admin' | 'user';
+      user_status: 'active' | 'deactivated';
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -537,6 +563,7 @@ export const Constants = {
       claim_status: ['pending', 'approved', 'rejected', 'claimed'],
       coverage_status: ['active', 'limitExceeded', 'expired', 'suspended'],
       role: ['admin', 'user'],
+      user_status: ['active', 'deactivated'],
     },
   },
 } as const;

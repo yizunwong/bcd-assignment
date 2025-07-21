@@ -10,6 +10,7 @@ import { LoginResponseDto } from './dto/responses/login.dto';
 import { CommonResponseDto } from '../../common/common.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { UserResponseDto } from './dto/responses/user.dto';
+import { UserRole } from '../user/dto/requests/create.dto';
 
 @Injectable()
 export class AuthService {
@@ -50,23 +51,82 @@ export class AuthService {
   async register(dto: RegisterDto) {
     const supabase = this.supabaseService.createClientWithToken();
 
-    const { error } = await supabase.auth.signUp({
+    // 1. Create Supabase Auth User
+    const { data: auth, error: signUpError } = await supabase.auth.signUp({
       email: dto.email,
       password: dto.password,
       options: {
-        data: {
-          username: dto.username,
-          role: 'tester',
-        },
+        data: { role: dto.role, username: `${dto.firstName} ${dto.lastName}` },
       },
     });
+    if (signUpError || !auth?.user) {
+      throw new ConflictException(
+        signUpError?.message || 'Failed to register user',
+      );
+    }
 
-    if (error) {
-      throw new ConflictException(error.message);
+    const user_id = auth.user.id;
+
+    // 2. Insert into user_details
+    const { error: profileError } = await supabase.from('user_details').insert([
+      {
+        user_id,
+        first_name: dto.firstName,
+        last_name: dto.lastName,
+        status: 'active',
+        bio: dto.bio ?? null,
+        phone: dto.phone ?? null,
+      },
+    ]);
+
+    if (profileError) {
+      throw new ConflictException(
+        'Failed to insert user profile: ' + profileError.message,
+      );
+    }
+
+    // 3. Insert role-specific details
+    if (dto.role === UserRole.INSURANCE_ADMIN) {
+      const { error: adminError } = await supabase
+        .from('admin_details')
+        .insert([
+          {
+            user_id,
+            employee_id: dto.employeeId ?? '',
+            license_no: dto.licenseNumber ?? '',
+            company_name: dto.companyName ?? '',
+            company_address: dto.companyAddress ?? '',
+          },
+        ]);
+
+      if (adminError) {
+        throw new ConflictException(
+          'Failed to insert admin details: ' + adminError.message,
+        );
+      }
+    }
+
+    if (dto.role === UserRole.POLICYHOLDER) {
+      const { error: holderError } = await supabase
+        .from('policyholder_details')
+        .insert([
+          {
+            user_id,
+            date_of_birth: dto.dateOfBirth ?? '',
+            occupation: dto.occupation ?? '',
+            address: dto.address ?? '',
+          },
+        ]);
+
+      if (holderError) {
+        throw new ConflictException(
+          'Failed to insert policyholder details: ' + holderError.message,
+        );
+      }
     }
 
     return new CommonResponseDto({
-      statusCode: 200,
+      statusCode: 201,
       message: 'Registration successful',
     });
   }

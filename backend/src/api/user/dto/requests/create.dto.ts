@@ -3,14 +3,36 @@ import {
   IsEmail,
   IsString,
   IsOptional,
-  IsIn,
-  IsInt,
-  Min,
   MaxLength,
   IsNotEmpty,
+  IsDateString,
+  IsEnum,
+  ValidateIf,
 } from 'class-validator';
+import { ToPhone } from 'src/common/to-phone';
+
+export enum UserStatus {
+  ACTIVE = 'active',
+  DEACTIVATED = 'deactivated',
+}
+
+export enum UserRole {
+  POLICYHOLDER = 'policyholder',
+  INSURANCE_ADMIN = 'insurance_admin',
+  SYSTEM_ADMIN = 'system_admin',
+}
 
 export class CreateUserDto {
+  @ApiProperty({ example: 'John', required: false })
+  @IsOptional()
+  @IsString()
+  firstName?: string;
+
+  @ApiProperty({ example: 'Doe', required: false })
+  @IsOptional()
+  @IsString()
+  lastName?: string;
+
   @ApiProperty({ example: 'alex.johnson@example.com' })
   @IsEmail()
   @IsNotEmpty()
@@ -22,52 +44,60 @@ export class CreateUserDto {
   @IsNotEmpty()
   password!: string;
 
-  @ApiProperty({
-    example: 'policyholder',
-    enum: ['policyholder', 'insurance_admin'],
-  })
-  @IsIn(['policyholder', 'insurance_admin'])
+  @ApiProperty({ example: 'policyholder', enum: UserRole })
   @IsNotEmpty()
-  role!: 'policyholder' | 'insurance_admin';
+  @IsEnum(UserRole)
+  role!: UserRole;
 
-  @ApiProperty({ example: 'active', required: false })
+  @ApiProperty({ example: '1234567890', required: false })
+  @ToPhone
+  @IsString({ message: 'must be a valid phone number' })
+  phone?: string;
+
+  @ApiProperty({ example: 'I am a policyholder', required: false })
   @IsOptional()
   @IsString()
-  status?: string;
+  bio?: string;
 
-  @ApiProperty({ example: 'verified', required: false })
-  @IsOptional()
+  //Only for insurance_admin
+  @ValidateIf((o: CreateUserDto) => o.role === UserRole.INSURANCE_ADMIN)
+  @ApiProperty({ example: 'EMP123456', required: false })
+  @IsNotEmpty()
   @IsString()
-  kyc_status?: string;
+  employeeId!: string;
 
+  @ValidateIf((o: CreateUserDto) => o.role === UserRole.INSURANCE_ADMIN)
+  @ApiProperty({ example: 'LIC789456', required: false })
+  @IsNotEmpty()
+  @IsString()
+  licenseNumber!: string;
+
+  @ValidateIf((o: CreateUserDto) => o.role === UserRole.INSURANCE_ADMIN)
+  @ApiProperty({ example: 'ABC Company', required: false })
+  @IsNotEmpty()
+  @IsString()
+  companyName!: string;
+
+  @ValidateIf((o: CreateUserDto) => o.role === UserRole.INSURANCE_ADMIN)
   @ApiProperty({ example: 'New York, USA', required: false })
+  @IsNotEmpty()
+  @IsString()
+  companyAddress!: string;
+
+  //Only for policyholder
+  @ValidateIf((o: CreateUserDto) => o.role === UserRole.POLICYHOLDER)
+  @ApiProperty({ example: '1985-06-15', required: false })
+  @IsNotEmpty()
+  @IsDateString()
+  dateOfBirth!: string;
+
+  @ApiProperty({ example: 'Software Engineer', required: false })
   @IsOptional()
   @IsString()
-  location?: string;
+  occupation?: string;
 
-  @ApiProperty({ example: 0, required: false })
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  login_attempts?: number;
-
-  @ApiProperty({ example: 'Test user', required: false })
+  @ApiProperty({ example: '123 Main St', required: false })
   @IsOptional()
   @IsString()
-  notes?: string;
-
-  @ApiProperty({ example: 'Farm Corp Ltd', required: false })
-  @IsOptional()
-  @IsString()
-  company?: string;
-
-  @ApiProperty({ example: 3, required: false })
-  @IsOptional()
-  @IsInt()
-  policies?: number;
-
-  @ApiProperty({ example: 2, required: false })
-  @IsOptional()
-  @IsInt()
-  claims?: number;
+  address?: string;
 }

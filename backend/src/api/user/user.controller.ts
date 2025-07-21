@@ -3,46 +3,43 @@ import {
   Controller,
   Get,
   Param,
-  ParseIntPipe,
   Post,
-  Request,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/requests/create.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '../auth/auth.guard';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
+import { AuthGuard } from '../auth/auth.guard';
 import { Role } from '../auth/role.decorator';
 import { RolesGuard } from '../auth/role.guard';
 
 @ApiTags('Users')
 @Controller('users')
 @ApiBearerAuth('supabase-auth')
+@UseGuards(AuthGuard, RolesGuard)
+@Role('system_admin')
 export class UserController {
   constructor(private readonly userService: UserService) {}
-  // @UseGuards(AuthGuard, RolesGuard)
-  // @Role('tester')
+
   @Get()
-  async findAll(@Request() req: AuthenticatedRequest): Promise<any> {
-    return this.userService.getAllUsers(req);
+  async findAll(): Promise<any> {
+    return this.userService.getAllUsers();
+  }
+
+  @Get('stats')
+  async getStats() {
+    return this.userService.getUserStats();
   }
 
   @Get(':id')
-  // @UseGuards(AuthGuard)
-  async findOne(
-    @Request() req: AuthenticatedRequest,
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<any> {
-    return this.userService.getUserById(req, id);
+  async findOne(@Param('id') id: string): Promise<any> {
+    return this.userService.getUserById(id);
   }
 
   @Post()
-  // @UseGuards(AuthGuard)
-  async create(
-    @Request() req: AuthenticatedRequest,
-    @Body() body: CreateUserDto,
-  ): Promise<any> {
-    return this.userService.createUser(req, body);
+  async create(@Body() body: CreateUserDto): Promise<any> {
+    return this.userService.createUser(body);
   }
 }

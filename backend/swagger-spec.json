@@ -150,6 +150,25 @@
         ]
       }
     },
+    "/users/stats": {
+      "get": {
+        "operationId": "UserController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Users"
+        ]
+      }
+    },
     "/users/{id}": {
       "get": {
         "operationId": "UserController_findOne",
@@ -159,7 +178,7 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "number"
+              "type": "string"
             }
           }
         ],
@@ -1151,35 +1170,91 @@
         "properties": {
           "email": {
             "type": "string",
-            "example": "yizunwong@gmail.com",
+            "example": "alex.johnson@example.com",
             "description": "User email address"
-          },
-          "username": {
-            "type": "string",
-            "example": "johndoe",
-            "description": "Unique username for the user"
           },
           "password": {
             "type": "string",
             "example": "StrongPass123!",
-            "description": "Password (at least 6 characters)"
+            "description": "Password (must include upper, lower, digit)"
           },
           "confirmPassword": {
             "type": "string",
             "example": "StrongPass123!",
-            "description": "Confirm password (at least 6 characters)"
+            "description": "Confirm password (must match password)"
+          },
+          "firstName": {
+            "type": "string",
+            "example": "Alex"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Johnson"
+          },
+          "role": {
+            "type": "string",
+            "example": "policyholder",
+            "enum": [
+              "policyholder",
+              "insurance_admin",
+              "system_admin"
+            ]
+          },
+          "phone": {
+            "type": "string",
+            "example": "+1234567890"
+          },
+          "bio": {
+            "type": "string",
+            "example": "I am a policyholder"
+          },
+          "employeeId": {
+            "type": "string",
+            "example": "EMP123456"
+          },
+          "licenseNumber": {
+            "type": "string",
+            "example": "LIC789456"
+          },
+          "companyName": {
+            "type": "string",
+            "example": "ABC Company"
+          },
+          "companyAddress": {
+            "type": "string",
+            "example": "New York, USA"
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "example": "1990-06-15"
+          },
+          "occupation": {
+            "type": "string",
+            "example": "Engineer"
+          },
+          "address": {
+            "type": "string",
+            "example": "123 Main St"
           }
         },
         "required": [
           "email",
-          "username",
           "password",
-          "confirmPassword"
+          "confirmPassword",
+          "role"
         ]
       },
       "CreateUserDto": {
         "type": "object",
         "properties": {
+          "firstName": {
+            "type": "string",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Doe"
+          },
           "email": {
             "type": "string",
             "example": "alex.johnson@example.com"
@@ -1193,40 +1268,45 @@
             "example": "policyholder",
             "enum": [
               "policyholder",
-              "insurance_admin"
+              "insurance_admin",
+              "system_admin"
             ]
           },
-          "status": {
+          "phone": {
             "type": "string",
-            "example": "active"
+            "example": "1234567890"
           },
-          "kyc_status": {
+          "bio": {
             "type": "string",
-            "example": "verified"
+            "example": "I am a policyholder"
           },
-          "location": {
+          "employeeId": {
+            "type": "string",
+            "example": "EMP123456"
+          },
+          "licenseNumber": {
+            "type": "string",
+            "example": "LIC789456"
+          },
+          "companyName": {
+            "type": "string",
+            "example": "ABC Company"
+          },
+          "companyAddress": {
             "type": "string",
             "example": "New York, USA"
           },
-          "login_attempts": {
-            "type": "number",
-            "example": 0
-          },
-          "notes": {
+          "dateOfBirth": {
             "type": "string",
-            "example": "Test user"
+            "example": "1985-06-15"
           },
-          "company": {
+          "occupation": {
             "type": "string",
-            "example": "Farm Corp Ltd"
+            "example": "Software Engineer"
           },
-          "policies": {
-            "type": "number",
-            "example": 3
-          },
-          "claims": {
-            "type": "number",
-            "example": 2
+          "address": {
+            "type": "string",
+            "example": "123 Main St"
           }
         },
         "required": [

@@ -82,9 +82,6 @@ const users = [
       status: 'active',
       kyc_status: 'verified',
       location: 'New York, USA',
-      policies: 3,
-      claims: 2,
-      notes: 'Premium customer with excellent payment history',
     },
   },
   {
@@ -96,7 +93,6 @@ const users = [
       kyc_status: 'verified',
       location: 'California, USA',
       company: 'HealthSecure Insurance',
-      notes: 'Senior reviewer',
     },
   },
 ];
