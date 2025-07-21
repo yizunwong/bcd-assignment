@@ -29,7 +29,9 @@ export class UserService {
       phone?: string | null;
     };
 
-    const typedProfiles: Profile[] = Array.isArray(profiles) ? profiles as Profile[] : [];
+    const typedProfiles: Profile[] = Array.isArray(profiles)
+      ? (profiles as Profile[])
+      : [];
 
     const { data: authUsers, error: authError } =
       await supabase.auth.admin.listUsers();
