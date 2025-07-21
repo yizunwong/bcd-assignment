@@ -1171,66 +1171,30 @@
           "message"
         ]
       },
-      "UserResponseDto": {
+      "AuthUserResponseDto": {
         "type": "object",
         "properties": {
-          "user_id": {
+          "id": {
             "type": "string"
           },
           "email": {
             "type": "string"
           },
-          "name": {
+          "email_verified": {
+            "type": "boolean"
+          },
+          "username": {
             "type": "string"
           },
           "role": {
-            "type": "string",
-            "enum": [
-              "policyholder",
-              "insurance_admin",
-              "system_admin"
-            ]
+            "type": "string"
           },
-          "phone": {
-            "type": "object",
-            "nullable": true
+          "lastSignInAt": {
+            "type": "string"
           },
-          "bio": {
-            "type": "object",
-            "nullable": true
-          },
-          "status": {
-            "type": "string",
-            "example": "active"
-          },
-          "lastLogin": {
-            "type": "object"
-          },
-          "joinedAt": {
-            "type": "object"
-          },
-          "details": {
-            "type": "object"
+          "provider": {
+            "type": "string"
           }
-        },
-        "required": [
-          "user_id",
-          "email",
-          "name",
-          "role",
-          "status"
-        ]
-      },
-      "AuthUserResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string" },
-          "email": { "type": "string" },
-          "email_verified": { "type": "boolean" },
-          "username": { "type": "string" },
-          "role": { "type": "string" },
-          "lastSignInAt": { "type": "string" },
-          "provider": { "type": "string" }
         },
         "required": [
           "id",
@@ -1353,6 +1317,56 @@
           "password",
           "confirmPassword",
           "role"
+        ]
+      },
+      "UserResponseDto": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "policyholder",
+              "insurance_admin",
+              "system_admin"
+            ]
+          },
+          "phone": {
+            "type": "object",
+            "nullable": true
+          },
+          "bio": {
+            "type": "object",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "example": "active"
+          },
+          "lastLogin": {
+            "type": "object"
+          },
+          "joinedAt": {
+            "type": "object"
+          },
+          "details": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "user_id",
+          "email",
+          "name",
+          "role",
+          "status"
         ]
       },
       "UserStatsResponseDto": {

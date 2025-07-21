@@ -44,7 +44,7 @@ export class AuthService {
           email: data.user.email ?? '',
           email_verified: metadata.email_verified ?? false,
           username: metadata.username ?? '',
-          role: metadata.role ?? '',
+          role: appMeta.role ?? '',
           lastSignInAt: data.user.last_sign_in_at ?? '',
           provider: appMeta.provider ?? '',
         },
@@ -60,7 +60,7 @@ export class AuthService {
       email: dto.email,
       password: dto.password,
       options: {
-        data: { role: dto.role, username: `${dto.firstName} ${dto.lastName}` },
+        data: { username: `${dto.firstName} ${dto.lastName}` },
       },
     });
     if (signUpError || !auth?.user) {
@@ -70,6 +70,17 @@ export class AuthService {
     }
 
     const user_id = auth.user.id;
+
+    const adminClient = this.supabaseService.createClientWithToken();
+
+    const { error: updateError } = await adminClient.auth.admin.updateUserById(
+      user_id,
+      {
+        app_metadata: {
+          role: dto.role,
+        },
+      },
+    );
 
     // 2. Insert into user_details
     const { error: profileError } = await supabase.from('user_details').insert([
@@ -83,9 +94,9 @@ export class AuthService {
       },
     ]);
 
-    if (profileError) {
+    if (profileError || updateError) {
       throw new ConflictException(
-        'Failed to insert user profile: ' + profileError.message,
+        'Failed to insert user profile: ' + profileError?.message,
       );
     }
 

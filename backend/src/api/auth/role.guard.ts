@@ -34,5 +34,5 @@ export class RolesGuard implements CanActivate {
 }
 
 function getUserRole(user: User): string | undefined {
-  return (user.user_metadata as { role?: string })?.role;
+  return (user.app_metadata as { role?: string })?.role;
 }
