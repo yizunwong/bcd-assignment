@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Patch, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/requests/create.dto';
+import { UpdateUserDto } from './dto/requests/update.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { Role } from '../auth/role.decorator';
@@ -43,5 +44,14 @@ export class UserController {
     @Body() body: CreateUserDto,
   ): Promise<CommonResponseDto<UserResponseDto>> {
     return this.userService.createUser(body);
+  }
+
+  @Patch(':id')
+  @ApiCommonResponse(UserResponseDto, false, 'Update user')
+  async update(
+    @Param('id') id: string,
+    @Body() body: UpdateUserDto,
+  ): Promise<CommonResponseDto<UserResponseDto>> {
+    return this.userService.updateUser(id, body);
   }
 }
