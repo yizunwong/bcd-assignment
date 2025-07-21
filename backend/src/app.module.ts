@@ -9,6 +9,7 @@ import { ClaimModule } from './api/claim/claim.module';
 import { MulterConfigModule } from './common/multer.config';
 import { PolicyModule } from './api/policy/policy.module';
 import { CoverageModule } from './api/coverage/coverage.module';
+import { PdfClaimExtractorModule } from './api/pdf-claim-extractor/pdf-claim-extractor.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { CoverageModule } from './api/coverage/coverage.module';
     PolicyModule,
     MulterConfigModule,
     CoverageModule,
+    PdfClaimExtractorModule,
   ],
 
   controllers: [AppController],
