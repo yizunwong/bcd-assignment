@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { SupabaseException } from 'src/supabase/types/supabase.exception';
 import { CreateUserDto, UserRole, UserStatus } from './dto/requests/create.dto';
 import { SupabaseService } from 'src/supabase/supabase.service';
+import { Database } from 'src/supabase/types/supabase.types';
+import { parseAppMetadata } from 'src/utils/auth-metadata';
 
 @Injectable()
 export class UserService {
@@ -21,17 +23,12 @@ export class UserService {
       );
     }
 
-    type Profile = {
-      user_id: string;
-      first_name?: string;
-      last_name?: string;
-      status?: UserStatus;
-      phone?: string | null;
-    };
+    type Profile = Pick<
+      Database['public']['Tables']['user_details']['Row'],
+      'user_id' | 'first_name' | 'last_name' | 'status' | 'phone'
+    >;
 
-    const typedProfiles: Profile[] = Array.isArray(profiles)
-      ? (profiles as Profile[])
-      : [];
+    const typedProfiles: Profile[] = Array.isArray(profiles) ? profiles : [];
 
     const { data: authUsers, error: authError } =
       await supabase.auth.admin.listUsers();
@@ -46,9 +43,9 @@ export class UserService {
         user_id: profile.user_id,
         email: auth?.email ?? '—',
         name: `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim(),
-        role: (auth?.app_metadata as { role?: UserRole })?.role,
+        role: parseAppMetadata(auth?.app_metadata).role,
         phone: profile.phone ?? null,
-        status: (profile.status as UserStatus) ?? UserStatus.ACTIVE,
+        status: profile.status ?? UserStatus.ACTIVE,
         lastLogin: auth?.last_sign_in_at,
         joinedAt: auth?.created_at,
       };
@@ -60,6 +57,11 @@ export class UserService {
   async getUserById(user_id: string) {
     const supabase = this.supabaseService.createClientWithToken();
     // Step 1: Get user_details and joined role details
+    type ProfileWithDetails = Database['public']['Tables']['user_details']['Row'] & {
+      admin_details: Partial<Database['public']['Tables']['admin_details']['Row']> | null;
+      policyholder_details: Partial<Database['public']['Tables']['policyholder_details']['Row']> | null;
+    };
+
     const { data: profile, error: profileError } = await supabase
       .from('user_details')
       .select(
@@ -104,7 +106,9 @@ export class UserService {
       );
     }
 
-    const role = (authUser.user.app_metadata as { role?: UserRole })?.role;
+    const role = parseAppMetadata(authUser.user.app_metadata).role;
+
+    const typedProfile = profile as ProfileWithDetails;
 
     // Step 3: Build return object
     const basicInfo = {
@@ -112,9 +116,9 @@ export class UserService {
       email: authUser.user.email ?? '—',
       name: `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim(),
       role: role ?? UserRole.POLICYHOLDER,
-      phone: (profile as { phone?: string }).phone,
-      bio: (profile as { bio?: string }).bio,
-      status: (profile.status as UserStatus) ?? UserStatus.ACTIVE,
+      phone: typedProfile.phone ?? null,
+      bio: typedProfile.bio ?? null,
+      status: typedProfile.status ?? UserStatus.ACTIVE,
       lastLogin: authUser.user.last_sign_in_at,
       joinedAt: authUser.user.created_at,
     };
@@ -136,37 +140,28 @@ export class UserService {
 
     if (
       role === UserRole.INSURANCE_ADMIN &&
-      profile.admin_details &&
-      typeof profile.admin_details === 'object' &&
-      !('code' in profile.admin_details)
+      typedProfile.admin_details &&
+      typeof typedProfile.admin_details === 'object' &&
+      !('code' in typedProfile.admin_details)
     ) {
       details = {
-        employeeId: (profile.admin_details as { employee_id?: string })
-          .employee_id,
-        licenseNumber: (profile.admin_details as { license_no?: string })
-          .license_no,
-        companyName: (profile.admin_details as { company_name?: string })
-          .company_name,
-        companyAddress: (profile.admin_details as { company_address?: string })
-          .company_address,
+        employeeId: typedProfile.admin_details.employee_id,
+        licenseNumber: typedProfile.admin_details.license_no,
+        companyName: typedProfile.admin_details.company_name,
+        companyAddress: typedProfile.admin_details.company_address,
       };
     }
 
     if (
       role === UserRole.POLICYHOLDER &&
-      profile.policyholder_details &&
-      typeof profile.policyholder_details === 'object' &&
-      !('code' in profile.policyholder_details)
+      typedProfile.policyholder_details &&
+      typeof typedProfile.policyholder_details === 'object' &&
+      !('code' in typedProfile.policyholder_details)
     ) {
-      const policyholderDetails = profile.policyholder_details as {
-        date_of_birth?: string;
-        occupation?: string;
-        address?: string;
-      };
       details = {
-        dateOfBirth: policyholderDetails.date_of_birth,
-        occupation: policyholderDetails.occupation,
-        address: policyholderDetails.address,
+        dateOfBirth: typedProfile.policyholder_details.date_of_birth,
+        occupation: typedProfile.policyholder_details.occupation,
+        address: typedProfile.policyholder_details.address,
       };
     }
 
@@ -177,26 +172,29 @@ export class UserService {
   }
 
   async createUser(dto: CreateUserDto) {
-    const authUser = await this.createAuthUser(dto);
+    const supabase = this.supabaseService.createClientWithToken();
+
+    const authUser = await this.createAuthUser(supabase, dto);
     const user_id = authUser.user.id;
 
-    const profile = await this.createUserProfile(user_id, dto);
-    const details = await this.createRoleSpecificDetails(user_id, dto);
+    const profile = await this.createUserProfile(supabase, user_id, dto);
+    const details = await this.createRoleSpecificDetails(supabase, user_id, dto);
 
     return {
       user_id,
       email: authUser.user.email,
-      role: (authUser.user.app_metadata as { role?: UserRole })?.role,
+      role: parseAppMetadata(authUser.user.app_metadata).role,
       phone: authUser.user.phone,
       profile,
       details,
     };
   }
 
-  private async createAuthUser(dto: CreateUserDto) {
+  private async createAuthUser(
+    supabase: ReturnType<SupabaseService['createClientWithToken']>,
+    dto: CreateUserDto,
+  ) {
     const { email, password, role, firstName, lastName } = dto;
-    const supabase = this.supabaseService.createClientWithToken();
-
     const { data, error } = await supabase.auth.admin.createUser({
       email,
       password,
@@ -212,9 +210,12 @@ export class UserService {
     return data;
   }
 
-  private async createUserProfile(user_id: string, dto: CreateUserDto) {
+  private async createUserProfile(
+    supabase: ReturnType<SupabaseService['createClientWithToken']>,
+    user_id: string,
+    dto: CreateUserDto,
+  ) {
     const { bio, firstName, lastName } = dto;
-    const supabase = this.supabaseService.createClientWithToken();
 
     const { data, error } = await supabase
       .from('user_details')
@@ -238,8 +239,11 @@ export class UserService {
     return data;
   }
 
-  private async createRoleSpecificDetails(user_id: string, dto: CreateUserDto) {
-    const supabase = this.supabaseService.createClientWithToken();
+  private async createRoleSpecificDetails(
+    supabase: ReturnType<SupabaseService['createClientWithToken']>,
+    user_id: string,
+    dto: CreateUserDto,
+  ) {
 
     if (dto.role === UserRole.INSURANCE_ADMIN) {
       const { employeeId, licenseNumber, companyName, companyAddress } = dto;
