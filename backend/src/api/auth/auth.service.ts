@@ -9,7 +9,7 @@ import { LoginDto } from './dto/requests/login.dto';
 import { LoginResponseDto } from './dto/responses/login.dto';
 import { CommonResponseDto } from '../../common/common.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
-import { UserResponseDto } from './dto/responses/user.dto';
+import { AuthUserResponseDto } from './dto/responses/auth-user.dto';
 import { UserRole } from '../user/dto/requests/create.dto';
 import { parseAppMetadata, parseUserMetadata } from 'src/utils/auth-metadata';
 
@@ -148,7 +148,7 @@ export class AuthService {
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Authenticated User retrieved successfully',
-      data: new UserResponseDto({
+      data: new AuthUserResponseDto({
         id: data.user.id,
         email: data.user.email ?? '',
         email_verified: metadata.email_verified ?? false,
