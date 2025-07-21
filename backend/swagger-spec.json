@@ -1130,6 +1130,30 @@
           "Coverage"
         ]
       }
+    },
+    "/claim-type-extractor": {
+      "post": {
+        "operationId": "PdfClaimExtractorController_extract",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtractClaimDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PdfClaimExtractor"
+        ]
+      }
     }
   },
   "info": {
@@ -1957,6 +1981,19 @@
             "type": "string",
             "example": "2025-08-01",
             "description": "Next payment date for the coverage (YYYY-MM-DD)"
+          }
+        }
+      },
+      "ExtractClaimDto": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "description": "Documents to upload",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "binary"
+            }
           }
         }
       }
