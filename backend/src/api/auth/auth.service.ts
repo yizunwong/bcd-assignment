@@ -11,6 +11,7 @@ import { CommonResponseDto } from '../../common/common.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { UserResponseDto } from './dto/responses/user.dto';
 import { UserRole } from '../user/dto/requests/create.dto';
+import { parseAppMetadata, parseUserMetadata } from 'src/utils/auth-metadata';
 
 @Injectable()
 export class AuthService {
@@ -30,6 +31,9 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    const metadata = parseUserMetadata(data.user.user_metadata);
+    const appMeta = parseAppMetadata(data.user.app_metadata);
+
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Login successful',
@@ -37,12 +41,12 @@ export class AuthService {
         accessToken: data.session.access_token,
         user: {
           id: data.user.id,
-          email: data.user.email!,
-          email_verified: data.user.user_metadata?.email_verified as boolean,
-          username: data.user.user_metadata?.username as string,
-          role: data.user.user_metadata?.role as string,
-          lastSignInAt: data.user.last_sign_in_at as string,
-          provider: data.user.app_metadata?.provider as string,
+          email: data.user.email ?? '',
+          email_verified: metadata.email_verified ?? false,
+          username: metadata.username ?? '',
+          role: metadata.role ?? '',
+          lastSignInAt: data.user.last_sign_in_at ?? '',
+          provider: appMeta.provider ?? '',
         },
       }),
     });
@@ -138,17 +142,20 @@ export class AuthService {
       throw new UnauthorizedException('Invalid or expired token');
     }
 
+    const metadata = parseUserMetadata(data.user.user_metadata);
+    const appMeta = parseAppMetadata(data.user.app_metadata);
+
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Authenticated User retrieved successfully',
       data: new UserResponseDto({
         id: data.user.id,
-        email: data.user.email!,
-        email_verified: data.user.user_metadata?.email_verified as boolean,
-        username: data.user.user_metadata?.username as string,
-        role: data.user.user_metadata?.role as string,
-        lastSignInAt: data.user.last_sign_in_at as string,
-        provider: data.user.app_metadata?.provider as string,
+        email: data.user.email ?? '',
+        email_verified: metadata.email_verified ?? false,
+        username: metadata.username ?? '',
+        role: metadata.role ?? '',
+        lastSignInAt: data.user.last_sign_in_at ?? '',
+        provider: appMeta.provider ?? '',
       }),
     });
   }
