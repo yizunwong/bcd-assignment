@@ -7,6 +7,7 @@ import {
   UserRole,
   UserStatus,
 } from './dto/requests/create.dto';
+import { UpdateUserDto } from './dto/requests/update.dto';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { Database } from 'src/supabase/types/supabase.types';
 import { parseAppMetadata } from 'src/utils/auth-metadata';
@@ -316,6 +317,98 @@ export class UserService {
     }
 
     return null;
+  }
+
+  async updateUser(
+    user_id: string,
+    dto: UpdateUserDto,
+  ): Promise<CommonResponseDto<UserResponseDto>> {
+    const supabase = this.supabaseService.createClientWithToken();
+
+    const authUpdates: Record<string, any> = {};
+    if (dto.email !== undefined) authUpdates.email = dto.email;
+    if (dto.password !== undefined) authUpdates.password = dto.password;
+    if (dto.role !== undefined) {
+      authUpdates.app_metadata = { role: dto.role };
+    }
+
+    if (Object.keys(authUpdates).length > 0) {
+      const { error: authError } = await supabase.auth.admin.updateUserById(
+        user_id,
+        authUpdates,
+      );
+      if (authError) {
+        throw new SupabaseException('Failed to update auth user', authError);
+      }
+    }
+
+    const profileUpdates: Database['public']['Tables']['user_details']['Update'] = {};
+    if (dto.firstName !== undefined) profileUpdates.first_name = dto.firstName;
+    if (dto.lastName !== undefined) profileUpdates.last_name = dto.lastName;
+    if (dto.phone !== undefined) profileUpdates.phone = dto.phone;
+    if (dto.bio !== undefined) profileUpdates.bio = dto.bio;
+    if (dto.status !== undefined) profileUpdates.status = dto.status;
+
+    if (Object.keys(profileUpdates).length > 0) {
+      const { error: profileError } = await supabase
+        .from('user_details')
+        .update(profileUpdates)
+        .eq('user_id', user_id);
+
+      if (profileError) {
+        throw new SupabaseException('Failed to update user profile', profileError);
+      }
+    }
+
+    if (dto.role === UserRole.INSURANCE_ADMIN) {
+      const adminUpdates: Database['public']['Tables']['admin_details']['Update'] & {
+        user_id: string;
+      } = { user_id };
+      if (dto.employeeId !== undefined) adminUpdates.employee_id = dto.employeeId;
+      if (dto.licenseNumber !== undefined) adminUpdates.license_no = dto.licenseNumber;
+      if (dto.companyName !== undefined) adminUpdates.company_name = dto.companyName;
+      if (dto.companyAddress !== undefined)
+        adminUpdates.company_address = dto.companyAddress;
+
+      if (Object.keys(adminUpdates).length > 1) {
+        const { error: adminError } = await supabase
+          .from('admin_details')
+          .upsert(adminUpdates, { onConflict: 'user_id' });
+
+        if (adminError) {
+          throw new SupabaseException('Failed to update admin details', adminError);
+        }
+      }
+    }
+
+    if (dto.role === UserRole.POLICYHOLDER) {
+      const holderUpdates: Database['public']['Tables']['policyholder_details']['Update'] & {
+        user_id: string;
+      } = { user_id };
+      if (dto.dateOfBirth !== undefined) holderUpdates.date_of_birth = dto.dateOfBirth;
+      if (dto.occupation !== undefined) holderUpdates.occupation = dto.occupation;
+      if (dto.address !== undefined) holderUpdates.address = dto.address;
+
+      if (Object.keys(holderUpdates).length > 1) {
+        const { error: holderError } = await supabase
+          .from('policyholder_details')
+          .upsert(holderUpdates, { onConflict: 'user_id' });
+
+        if (holderError) {
+          throw new SupabaseException(
+            'Failed to update policyholder details',
+            holderError,
+          );
+        }
+      }
+    }
+
+    const updated = await this.getUserById(user_id);
+    return new CommonResponseDto<UserResponseDto>({
+      statusCode: 200,
+      message: 'User updated successfully',
+      data: updated.data,
+    });
   }
 
   async getUserStats(): Promise<CommonResponseDto<UserStatsResponseDto>> {
