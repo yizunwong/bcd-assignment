@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { SupabaseException } from 'src/supabase/types/supabase.exception';
-import { CreateUserDto, UserRole, UserStatus } from './dto/requests/create.dto';
+import {
+  AdminDetails,
+  CreateUserDto,
+  PolicyholderDetails,
+  UserRole,
+  UserStatus,
+} from './dto/requests/create.dto';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { Database } from 'src/supabase/types/supabase.types';
 import { parseAppMetadata } from 'src/utils/auth-metadata';
@@ -57,10 +63,6 @@ export class UserService {
   async getUserById(user_id: string) {
     const supabase = this.supabaseService.createClientWithToken();
     // Step 1: Get user_details and joined role details
-    type ProfileWithDetails = Database['public']['Tables']['user_details']['Row'] & {
-      admin_details: Partial<Database['public']['Tables']['admin_details']['Row']> | null;
-      policyholder_details: Partial<Database['public']['Tables']['policyholder_details']['Row']> | null;
-    };
 
     const { data: profile, error: profileError } = await supabase
       .from('user_details')
@@ -108,60 +110,45 @@ export class UserService {
 
     const role = parseAppMetadata(authUser.user.app_metadata).role;
 
-    const typedProfile = profile as ProfileWithDetails;
-
     // Step 3: Build return object
     const basicInfo = {
       user_id,
       email: authUser.user.email ?? '—',
       name: `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim(),
-      role: role ?? UserRole.POLICYHOLDER,
-      phone: typedProfile.phone ?? null,
-      bio: typedProfile.bio ?? null,
-      status: typedProfile.status ?? UserStatus.ACTIVE,
+      role:
+        parseAppMetadata(authUser.user.app_metadata).role ??
+        UserRole.POLICYHOLDER,
+      phone: profile.phone ?? null,
+      bio: profile.bio ?? null,
+      status: profile.status ?? UserStatus.ACTIVE,
       lastLogin: authUser.user.last_sign_in_at,
       joinedAt: authUser.user.created_at,
     };
-
-    type AdminDetails = {
-      employeeId?: string;
-      licenseNumber?: string;
-      companyName?: string;
-      companyAddress?: string;
-    };
-
-    type PolicyholderDetails = {
-      dateOfBirth?: string;
-      occupation?: string;
-      address?: string;
-    };
-
     let details: AdminDetails | PolicyholderDetails | null = null;
-
     if (
       role === UserRole.INSURANCE_ADMIN &&
-      typedProfile.admin_details &&
-      typeof typedProfile.admin_details === 'object' &&
-      !('code' in typedProfile.admin_details)
+      profile.admin_details &&
+      typeof profile.admin_details === 'object' &&
+      !('code' in profile.admin_details)
     ) {
       details = {
-        employeeId: typedProfile.admin_details.employee_id,
-        licenseNumber: typedProfile.admin_details.license_no,
-        companyName: typedProfile.admin_details.company_name,
-        companyAddress: typedProfile.admin_details.company_address,
+        employee_id: profile.admin_details.employee_id,
+        license_no: profile.admin_details.license_no,
+        company_name: profile.admin_details.company_name,
+        company_address: profile.admin_details.company_address,
       };
     }
 
     if (
       role === UserRole.POLICYHOLDER &&
-      typedProfile.policyholder_details &&
-      typeof typedProfile.policyholder_details === 'object' &&
-      !('code' in typedProfile.policyholder_details)
+      profile.policyholder_details &&
+      typeof profile.policyholder_details === 'object' &&
+      !('code' in profile.policyholder_details)
     ) {
       details = {
-        dateOfBirth: typedProfile.policyholder_details.date_of_birth,
-        occupation: typedProfile.policyholder_details.occupation,
-        address: typedProfile.policyholder_details.address,
+        date_of_birth: profile.policyholder_details.date_of_birth,
+        occupation: profile.policyholder_details.occupation!,
+        address: profile.policyholder_details.address,
       };
     }
 
@@ -178,7 +165,11 @@ export class UserService {
     const user_id = authUser.user.id;
 
     const profile = await this.createUserProfile(supabase, user_id, dto);
-    const details = await this.createRoleSpecificDetails(supabase, user_id, dto);
+    const details = await this.createRoleSpecificDetails(
+      supabase,
+      user_id,
+      dto,
+    );
 
     return {
       user_id,
@@ -244,7 +235,6 @@ export class UserService {
     user_id: string,
     dto: CreateUserDto,
   ) {
-
     if (dto.role === UserRole.INSURANCE_ADMIN) {
       const { employeeId, licenseNumber, companyName, companyAddress } = dto;
 

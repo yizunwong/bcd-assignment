@@ -14,7 +14,7 @@ export interface ParsedUserMetadata {
 export function parseAppMetadata(meta: unknown): ParsedAppMetadata {
   if (meta && typeof meta === 'object') {
     const obj = meta as Record<string, any>;
-    const roleValue = obj.role;
+    const roleValue = typeof obj.role === 'string' ? obj.role : undefined;
     return {
       provider: typeof obj.provider === 'string' ? obj.provider : undefined,
       role:
@@ -38,4 +38,3 @@ export function parseUserMetadata(meta: unknown): ParsedUserMetadata {
   }
   return {};
 }
-

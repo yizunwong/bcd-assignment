@@ -1,16 +1,7 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Req,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/requests/create.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { AuthGuard } from '../auth/auth.guard';
 import { Role } from '../auth/role.decorator';
 import { RolesGuard } from '../auth/role.guard';

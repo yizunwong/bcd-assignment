@@ -10,6 +10,7 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { ToPhone } from 'src/common/to-phone';
+import { Database } from 'src/supabase/types/supabase.types';
 
 export enum UserStatus {
   ACTIVE = 'active',
@@ -21,6 +22,16 @@ export enum UserRole {
   INSURANCE_ADMIN = 'insurance_admin',
   SYSTEM_ADMIN = 'system_admin',
 }
+
+export type AdminDetails = Partial<
+  Database['public']['Tables']['admin_details']['Row']
+> | null;
+
+export type PolicyholderDetails = Partial<
+  Database['public']['Tables']['policyholder_details']['Row']
+> | null;
+
+export type UserDetails = Database['public']['Tables']['user_details']['Row'];
 
 export class CreateUserDto {
   @ApiProperty({ example: 'John', required: false })
