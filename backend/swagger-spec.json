@@ -270,6 +270,60 @@
         "tags": [
           "Users"
         ]
+      },
+      "patch": {
+        "operationId": "UserController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Update user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/UserResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Users"
+        ]
       }
     },
     "/claim": {
@@ -1486,6 +1540,80 @@
           "password",
           "role"
         ]
+      },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "email": {
+            "type": "string",
+            "example": "alex.johnson@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "StrongPass123!"
+          },
+          "role": {
+            "type": "string",
+            "example": "policyholder",
+            "enum": [
+              "policyholder",
+              "insurance_admin",
+              "system_admin"
+            ]
+          },
+          "phone": {
+            "type": "string",
+            "example": "1234567890"
+          },
+          "bio": {
+            "type": "string",
+            "example": "I am a policyholder"
+          },
+          "employeeId": {
+            "type": "string",
+            "example": "EMP123456"
+          },
+          "licenseNumber": {
+            "type": "string",
+            "example": "LIC789456"
+          },
+          "companyName": {
+            "type": "string",
+            "example": "ABC Company"
+          },
+          "companyAddress": {
+            "type": "string",
+            "example": "New York, USA"
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "example": "1985-06-15"
+          },
+          "occupation": {
+            "type": "string",
+            "example": "Software Engineer"
+          },
+          "address": {
+            "type": "string",
+            "example": "123 Main St"
+          },
+          "status": {
+            "type": "string",
+            "example": "active",
+            "enum": [
+              "active",
+              "deactivated"
+            ]
+          }
+        }
       },
       "CreateClaimDto": {
         "type": "object",

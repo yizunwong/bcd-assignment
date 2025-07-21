@@ -59,9 +59,6 @@ export class AuthService {
     const { data: auth, error: signUpError } = await supabase.auth.signUp({
       email: dto.email,
       password: dto.password,
-      options: {
-        data: { username: `${dto.firstName} ${dto.lastName}` },
-      },
     });
     if (signUpError || !auth?.user) {
       throw new ConflictException(

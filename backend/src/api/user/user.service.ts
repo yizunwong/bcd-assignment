@@ -216,13 +216,12 @@ export class UserService {
     supabase: ReturnType<SupabaseService['createClientWithToken']>,
     dto: CreateUserDto,
   ) {
-    const { email, password, role, firstName, lastName } = dto;
+    const { email, password, role } = dto;
     const { data, error } = await supabase.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
       app_metadata: { role },
-      user_metadata: { username: `${firstName} ${lastName}` },
     });
 
     if (error || !data?.user) {
@@ -342,7 +341,8 @@ export class UserService {
       }
     }
 
-    const profileUpdates: Database['public']['Tables']['user_details']['Update'] = {};
+    const profileUpdates: Database['public']['Tables']['user_details']['Update'] =
+      {};
     if (dto.firstName !== undefined) profileUpdates.first_name = dto.firstName;
     if (dto.lastName !== undefined) profileUpdates.last_name = dto.lastName;
     if (dto.phone !== undefined) profileUpdates.phone = dto.phone;
@@ -356,7 +356,10 @@ export class UserService {
         .eq('user_id', user_id);
 
       if (profileError) {
-        throw new SupabaseException('Failed to update user profile', profileError);
+        throw new SupabaseException(
+          'Failed to update user profile',
+          profileError,
+        );
       }
     }
 
@@ -364,19 +367,25 @@ export class UserService {
       const adminUpdates: Database['public']['Tables']['admin_details']['Update'] & {
         user_id: string;
       } = { user_id };
-      if (dto.employeeId !== undefined) adminUpdates.employee_id = dto.employeeId;
-      if (dto.licenseNumber !== undefined) adminUpdates.license_no = dto.licenseNumber;
-      if (dto.companyName !== undefined) adminUpdates.company_name = dto.companyName;
+      if (dto.employeeId !== undefined)
+        adminUpdates.employee_id = dto.employeeId;
+      if (dto.licenseNumber !== undefined)
+        adminUpdates.license_no = dto.licenseNumber;
+      if (dto.companyName !== undefined)
+        adminUpdates.company_name = dto.companyName;
       if (dto.companyAddress !== undefined)
         adminUpdates.company_address = dto.companyAddress;
 
       if (Object.keys(adminUpdates).length > 1) {
         const { error: adminError } = await supabase
           .from('admin_details')
-          .upsert(adminUpdates, { onConflict: 'user_id' });
+          .update(adminUpdates);
 
         if (adminError) {
-          throw new SupabaseException('Failed to update admin details', adminError);
+          throw new SupabaseException(
+            'Failed to update admin details',
+            adminError,
+          );
         }
       }
     }
@@ -385,14 +394,16 @@ export class UserService {
       const holderUpdates: Database['public']['Tables']['policyholder_details']['Update'] & {
         user_id: string;
       } = { user_id };
-      if (dto.dateOfBirth !== undefined) holderUpdates.date_of_birth = dto.dateOfBirth;
-      if (dto.occupation !== undefined) holderUpdates.occupation = dto.occupation;
+      if (dto.dateOfBirth !== undefined)
+        holderUpdates.date_of_birth = dto.dateOfBirth;
+      if (dto.occupation !== undefined)
+        holderUpdates.occupation = dto.occupation;
       if (dto.address !== undefined) holderUpdates.address = dto.address;
 
       if (Object.keys(holderUpdates).length > 1) {
         const { error: holderError } = await supabase
           .from('policyholder_details')
-          .upsert(holderUpdates, { onConflict: 'user_id' });
+          .update(holderUpdates);
 
         if (holderError) {
           throw new SupabaseException(
