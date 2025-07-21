@@ -10,12 +10,15 @@ import {
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { Database } from 'src/supabase/types/supabase.types';
 import { parseAppMetadata } from 'src/utils/auth-metadata';
+import { CommonResponseDto } from 'src/common/common.dto';
+import { UserResponseDto } from './dto/respond/user.dto';
+import { UserStatsResponseDto } from './dto/respond/user-stats.dto';
 
 @Injectable()
 export class UserService {
   constructor(private readonly supabaseService: SupabaseService) {}
 
-  async getAllUsers() {
+  async getAllUsers(): Promise<CommonResponseDto<UserResponseDto[]>> {
     const supabase = this.supabaseService.createClientWithToken();
 
     const { data: profiles, error: profileError } = await supabase
@@ -45,22 +48,28 @@ export class UserService {
 
     const merged = typedProfiles.map((profile) => {
       const auth = authUsers.users.find((u) => u.id === profile.user_id);
-      return {
+      return new UserResponseDto({
         user_id: profile.user_id,
         email: auth?.email ?? '—',
         name: `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim(),
-        role: parseAppMetadata(auth?.app_metadata).role,
+        role: parseAppMetadata(auth?.app_metadata).role ?? UserRole.POLICYHOLDER,
         phone: profile.phone ?? null,
         status: profile.status ?? UserStatus.ACTIVE,
         lastLogin: auth?.last_sign_in_at,
         joinedAt: auth?.created_at,
-      };
+        bio: null,
+      });
     });
 
-    return merged;
+    return new CommonResponseDto<UserResponseDto[]>({
+      statusCode: 200,
+      message: 'Users retrieved successfully',
+      data: merged,
+      count: merged.length,
+    });
   }
 
-  async getUserById(user_id: string) {
+  async getUserById(user_id: string): Promise<CommonResponseDto<UserResponseDto>> {
     const supabase = this.supabaseService.createClientWithToken();
     // Step 1: Get user_details and joined role details
 
@@ -152,13 +161,17 @@ export class UserService {
       };
     }
 
-    return {
-      ...basicInfo,
-      details: details,
-    };
+    return new CommonResponseDto<UserResponseDto>({
+      statusCode: 200,
+      message: 'User retrieved successfully',
+      data: new UserResponseDto({
+        ...basicInfo,
+        details: details,
+      }),
+    });
   }
 
-  async createUser(dto: CreateUserDto) {
+  async createUser(dto: CreateUserDto): Promise<CommonResponseDto<UserResponseDto>> {
     const supabase = this.supabaseService.createClientWithToken();
 
     const authUser = await this.createAuthUser(supabase, dto);
@@ -171,14 +184,22 @@ export class UserService {
       dto,
     );
 
-    return {
-      user_id,
-      email: authUser.user.email,
-      role: parseAppMetadata(authUser.user.app_metadata).role,
-      phone: authUser.user.phone,
-      profile,
-      details,
-    };
+    return new CommonResponseDto<UserResponseDto>({
+      statusCode: 201,
+      message: 'User created successfully',
+      data: new UserResponseDto({
+        user_id,
+        email: authUser.user.email ?? '',
+        name: `${dto.firstName ?? ''} ${dto.lastName ?? ''}`.trim(),
+        role: parseAppMetadata(authUser.user.app_metadata).role ?? UserRole.POLICYHOLDER,
+        phone: authUser.user.phone ?? null,
+        bio: dto.bio ?? null,
+        status: UserStatus.ACTIVE,
+        lastLogin: authUser.user.last_sign_in_at,
+        joinedAt: authUser.user.created_at,
+        details,
+      }),
+    });
   }
 
   private async createAuthUser(
@@ -288,7 +309,7 @@ export class UserService {
     return null;
   }
 
-  async getUserStats() {
+  async getUserStats(): Promise<CommonResponseDto<UserStatsResponseDto>> {
     // Step 1: Get total users
     const supabase = this.supabaseService.createClientWithToken();
 
@@ -331,11 +352,15 @@ export class UserService {
       );
     }
 
-    return {
-      totalUsers,
-      activeUsers,
-      policyholders,
-      insuranceAdmins: admins,
-    };
+    return new CommonResponseDto<UserStatsResponseDto>({
+      statusCode: 200,
+      message: 'User statistics retrieved successfully',
+      data: new UserStatsResponseDto({
+        totalUsers: totalUsers || 0,
+        activeUsers: activeUsers || 0,
+        policyholders: policyholders || 0,
+        insuranceAdmins: admins || 0,
+      }),
+    });
   }
 }
