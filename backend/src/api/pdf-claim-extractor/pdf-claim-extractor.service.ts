@@ -4,8 +4,8 @@ import {
   ExtractedClaimTypesDto,
   ClaimTypeBenefitDto,
 } from './dto/extracted-claim-types.dto';
-import { promises as fs } from 'fs';
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
+import { CommonResponseDto } from 'src/common/common.dto';
 
 @Injectable()
 export class PdfClaimExtractorService {
@@ -19,19 +19,18 @@ export class PdfClaimExtractorService {
 
   async extractClaimTypes(
     file: Express.Multer.File,
-  ): Promise<ExtractedClaimTypesDto> {
+  ): Promise<CommonResponseDto<ExtractedClaimTypesDto>> {
     const data = await pdfParse(file.buffer);
     const text = data.text || '';
 
-    try {
-      await fs.writeFile('extracted_text.txt', text, 'utf8');
-    } catch (error) {
-      console.error('Error saving extracted text:', error);
-    }
+    const extracted = await this.extractWithGemini(text);
 
-    return this.extractWithGemini(text);
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Extraction successful',
+      data: extracted,
+    });
   }
-
   private async extractWithGemini(
     text: string,
   ): Promise<ExtractedClaimTypesDto> {
@@ -59,9 +58,9 @@ Only return the JSON data, no additional explanations or text.
       const content: string = response.text();
       console.log(
         'Gemini response:',
-        result.response.usageMetadata?.promptTokenCount,
-        result.response.usageMetadata?.candidatesTokenCount,
-        result.response.usageMetadata?.totalTokenCount,
+        ' Input tokens:' + result.response.usageMetadata?.promptTokenCount,
+        ' Output tokens:' + result.response.usageMetadata?.candidatesTokenCount,
+        ' Total tokens:' + result.response.usageMetadata?.totalTokenCount,
       );
 
       const jsonText: string = this.extractJsonBlock(content);

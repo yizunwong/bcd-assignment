@@ -25,12 +25,6 @@ export class PdfClaimExtractorController {
     @Body() body: ExtractClaimDto,
     @UploadedFile() file: Express.Multer.File,
   ): Promise<CommonResponseDto<ExtractedClaimTypesDto>> {
-    const data = await this.service.extractClaimTypes(file);
-    console.log('Extracted data:', data);
-    return new CommonResponseDto({
-      statusCode: 200,
-      message: 'Extraction successful',
-      data,
-    });
+    return await this.service.extractClaimTypes(file);
   }
 }

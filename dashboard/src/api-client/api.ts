@@ -28,6 +28,7 @@ export interface CommonResponseDto {
   statusCode: number;
   message: string;
   data?: CommonResponseDtoData;
+  count?: number;
 }
 
 export interface AuthUserResponseDto {
@@ -52,27 +53,277 @@ export interface LoginDto {
   password: string;
 }
 
+export type RegisterDtoRole =
+  (typeof RegisterDtoRole)[keyof typeof RegisterDtoRole];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const RegisterDtoRole = {
+  policyholder: "policyholder",
+  insurance_admin: "insurance_admin",
+  system_admin: "system_admin",
+} as const;
+
 export interface RegisterDto {
   /** User email address */
   email: string;
-  /** Unique username for the user */
-  username: string;
-  /** Password (at least 6 characters) */
+  /** Password (must include upper, lower, digit) */
   password: string;
-  /** Confirm password (at least 6 characters) */
+  /** Confirm password (must match password) */
   confirmPassword: string;
+  firstName?: string;
+  lastName?: string;
+  role: RegisterDtoRole;
+  phone?: string;
+  bio?: string;
+  employeeId?: string;
+  licenseNumber?: string;
+  companyName?: string;
+  companyAddress?: string;
+  dateOfBirth?: string;
+  occupation?: string;
+  address?: string;
 }
+
+export type UserResponseDtoRole =
+  (typeof UserResponseDtoRole)[keyof typeof UserResponseDtoRole];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserResponseDtoRole = {
+  policyholder: "policyholder",
+  insurance_admin: "insurance_admin",
+  system_admin: "system_admin",
+} as const;
+
+/**
+ * @nullable
+ */
+export type UserResponseDtoPhone = { [key: string]: unknown } | null;
+
+/**
+ * @nullable
+ */
+export type UserResponseDtoBio = { [key: string]: unknown } | null;
+
+export type UserResponseDtoLastLogin = { [key: string]: unknown };
+
+export type UserResponseDtoJoinedAt = { [key: string]: unknown };
+
+export type UserResponseDtoDetails = { [key: string]: unknown };
+
+export interface UserResponseDto {
+  user_id: string;
+  email: string;
+  name: string;
+  role: UserResponseDtoRole;
+  /** @nullable */
+  phone?: UserResponseDtoPhone;
+  /** @nullable */
+  bio?: UserResponseDtoBio;
+  status: string;
+  lastLogin?: UserResponseDtoLastLogin;
+  joinedAt?: UserResponseDtoJoinedAt;
+  details?: UserResponseDtoDetails;
+}
+
+export interface UserStatsResponseDto {
+  totalUsers: number;
+  activeUsers: number;
+  policyholders: number;
+  insuranceAdmins: number;
+}
+
+export type CreateUserDtoRole =
+  (typeof CreateUserDtoRole)[keyof typeof CreateUserDtoRole];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateUserDtoRole = {
+  policyholder: "policyholder",
+  insurance_admin: "insurance_admin",
+  system_admin: "system_admin",
+} as const;
 
 export interface CreateUserDto {
-  /** User email address */
+  firstName?: string;
+  lastName?: string;
   email: string;
-  /** Username for the user */
-  username: string;
+  password: string;
+  role: CreateUserDtoRole;
+  phone?: string;
+  bio?: string;
+  employeeId?: string;
+  licenseNumber?: string;
+  companyName?: string;
+  companyAddress?: string;
+  dateOfBirth?: string;
+  occupation?: string;
+  address?: string;
 }
 
-export interface CreateLoanDto {
-  /** Amount of the loan */
+export interface CreateClaimDto {
+  /** ID of the policy associated with the claim */
+  policy_id: number;
+  /** Type of the claim */
+  claim_type: string;
+  /** Amount claimed */
   amount: number;
+  /** Description of the claim */
+  description?: string;
+  /** Documents to upload */
+  documents?: Blob[];
+}
+
+export interface ClaimDocumentResponseDto {
+  id: number;
+  name: string;
+  claim_id: number;
+  /** Signed Supabase URL for accessing this document */
+  signedUrl: string;
+}
+
+export type ClaimResponseDtoDescription = { [key: string]: unknown };
+
+export interface ClaimResponseDto {
+  id: number;
+  claim_type: string;
+  amount: number;
+  status: string;
+  description: ClaimResponseDtoDescription;
+  submitted_date: string;
+  claim_documents: ClaimDocumentResponseDto[];
+}
+
+export interface UpdateClaimDto {
+  /** ID of the policy associated with the claim */
+  policy_id?: number;
+  /** Type of the claim */
+  claim_type?: string;
+  /** Amount claimed */
+  amount?: number;
+  /** Description of the claim */
+  description?: string;
+  /** Documents to upload */
+  documents?: Blob[];
+  /** ID of the claim to update */
+  id: number;
+  /** Status of the claim */
+  status: string;
+}
+
+export interface CreatePolicyDto {
+  name: string;
+  category: string;
+  provider: string;
+  coverage: number;
+  premium: string;
+  rating: number;
+  popular: boolean;
+  features: string[];
+  description?: string;
+  /** Files to upload for the policy */
+  files?: Blob[];
+}
+
+export interface PolicyDocumentResponseDto {
+  id: number;
+  name: string;
+  policy_id: number;
+  /** Signed Supabase URL for accessing this document */
+  signedUrl: string;
+}
+
+export type PolicyResponseDtoDescription = { [key: string]: unknown };
+
+export interface PolicyResponseDto {
+  id: number;
+  name: string;
+  category: string;
+  provider: string;
+  coverage: number;
+  premium: string;
+  rating: number;
+  popular: boolean;
+  description?: PolicyResponseDtoDescription;
+  features: string[];
+  policy_documents: PolicyDocumentResponseDto[];
+}
+
+export interface UpdatePolicyDto {
+  name?: string;
+  category?: string;
+  provider?: string;
+  coverage?: number;
+  premium?: string;
+  rating?: number;
+  popular?: boolean;
+  features?: string[];
+  description?: string;
+  /** Files to upload for the policy */
+  files?: Blob[];
+}
+
+export interface CreateCoverageDto {
+  /** ID of the policy this coverage is linked to */
+  policy_id: number;
+  /** UUID of the user who owns this coverage */
+  user_id: string;
+  /** Status of the coverage */
+  status: string;
+  /** Utilization rate of the coverage */
+  utilization_rate: number;
+  /** Start date of the coverage (YYYY-MM-DD) */
+  start_date: string;
+  /** End date of the coverage (YYYY-MM-DD) */
+  end_date: string;
+  /** Next payment date for the coverage (YYYY-MM-DD) */
+  next_payment_date: string;
+}
+
+export type CoveragePolicyDtoDescription = { [key: string]: unknown };
+
+export interface CoveragePolicyDto {
+  name: string;
+  description?: CoveragePolicyDtoDescription;
+  category: string;
+}
+
+export type CoverageResponseDtoPolicyId = { [key: string]: unknown };
+
+export type CoverageResponseDtoUserId = { [key: string]: unknown };
+
+export type CoverageResponseDtoStatus = { [key: string]: unknown };
+
+export interface CoverageResponseDto {
+  id: number;
+  policy_id?: CoverageResponseDtoPolicyId;
+  user_id?: CoverageResponseDtoUserId;
+  status?: CoverageResponseDtoStatus;
+  utilization_rate: number;
+  start_date: string;
+  end_date: string;
+  next_payment_date: string;
+  policies: CoveragePolicyDto;
+}
+
+export interface UpdateCoverageDto {
+  /** ID of the policy this coverage is linked to */
+  policy_id?: number;
+  /** UUID of the user who owns this coverage */
+  user_id?: string;
+  /** Status of the coverage */
+  status?: string;
+  /** Utilization rate of the coverage */
+  utilization_rate?: number;
+  /** Start date of the coverage (YYYY-MM-DD) */
+  start_date?: string;
+  /** End date of the coverage (YYYY-MM-DD) */
+  end_date?: string;
+  /** Next payment date for the coverage (YYYY-MM-DD) */
+  next_payment_date?: string;
+}
+
+export interface ExtractClaimDto {
+  /** Documents to upload */
+  file?: Blob[];
 }
 
 export type AuthControllerLogin200AllOf = {
@@ -88,6 +339,229 @@ export type AuthControllerGetMe200AllOf = {
 
 export type AuthControllerGetMe200 = CommonResponseDto &
   AuthControllerGetMe200AllOf;
+
+export type UserControllerFindAll200AllOf = {
+  data?: UserResponseDto[];
+};
+
+export type UserControllerFindAll200 = CommonResponseDto &
+  UserControllerFindAll200AllOf;
+
+export type UserControllerCreate200AllOf = {
+  data?: UserResponseDto;
+};
+
+export type UserControllerCreate200 = CommonResponseDto &
+  UserControllerCreate200AllOf;
+
+export type UserControllerGetStats200AllOf = {
+  data?: UserStatsResponseDto;
+};
+
+export type UserControllerGetStats200 = CommonResponseDto &
+  UserControllerGetStats200AllOf;
+
+export type UserControllerFindOne200AllOf = {
+  data?: UserResponseDto;
+};
+
+export type UserControllerFindOne200 = CommonResponseDto &
+  UserControllerFindOne200AllOf;
+
+export type ClaimControllerFindAllParams = {
+  page?: number;
+  limit?: number;
+  /**
+   * Filter by claim type (category)
+   */
+  category?: string;
+  /**
+   * Search keyword for claim_type or description
+   */
+  search?: string;
+  sortBy?: ClaimControllerFindAllSortBy;
+  sortOrder?: ClaimControllerFindAllSortOrder;
+};
+
+export type ClaimControllerFindAllSortBy =
+  (typeof ClaimControllerFindAllSortBy)[keyof typeof ClaimControllerFindAllSortBy];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ClaimControllerFindAllSortBy = {
+  id: "id",
+  claim_type: "claim_type",
+  amount: "amount",
+  status: "status",
+  submitted_date: "submitted_date",
+} as const;
+
+export type ClaimControllerFindAllSortOrder =
+  (typeof ClaimControllerFindAllSortOrder)[keyof typeof ClaimControllerFindAllSortOrder];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ClaimControllerFindAllSortOrder = {
+  asc: "asc",
+  desc: "desc",
+} as const;
+
+export type ClaimControllerFindAll200AllOf = {
+  data?: ClaimResponseDto[];
+};
+
+export type ClaimControllerFindAll200 = CommonResponseDto &
+  ClaimControllerFindAll200AllOf;
+
+export type ClaimControllerFindOne200AllOf = {
+  data?: ClaimResponseDto;
+};
+
+export type ClaimControllerFindOne200 = CommonResponseDto &
+  ClaimControllerFindOne200AllOf;
+
+export type ClaimControllerUpdate200AllOf = {
+  data?: ClaimResponseDto;
+};
+
+export type ClaimControllerUpdate200 = CommonResponseDto &
+  ClaimControllerUpdate200AllOf;
+
+export type ClaimControllerRemove200AllOf = {
+  data?: ClaimResponseDto;
+};
+
+export type ClaimControllerRemove200 = CommonResponseDto &
+  ClaimControllerRemove200AllOf;
+
+export type ClaimControllerRemoveFile200AllOf = {
+  data?: ClaimResponseDto;
+};
+
+export type ClaimControllerRemoveFile200 = CommonResponseDto &
+  ClaimControllerRemoveFile200AllOf;
+
+export type PolicyControllerFindAllParams = {
+  page?: number;
+  limit?: number;
+  /**
+   * Filter by policy category
+   */
+  category?: string;
+  /**
+   * Search keyword for name or description
+   */
+  search?: string;
+  sortBy?: PolicyControllerFindAllSortBy;
+  sortOrder?: PolicyControllerFindAllSortOrder;
+};
+
+export type PolicyControllerFindAllSortBy =
+  (typeof PolicyControllerFindAllSortBy)[keyof typeof PolicyControllerFindAllSortBy];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PolicyControllerFindAllSortBy = {
+  id: "id",
+  name: "name",
+  rating: "rating",
+  premium: "premium",
+  popularity: "popularity",
+} as const;
+
+export type PolicyControllerFindAllSortOrder =
+  (typeof PolicyControllerFindAllSortOrder)[keyof typeof PolicyControllerFindAllSortOrder];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PolicyControllerFindAllSortOrder = {
+  asc: "asc",
+  desc: "desc",
+} as const;
+
+export type PolicyControllerFindAll200AllOf = {
+  data?: PolicyResponseDto[];
+};
+
+export type PolicyControllerFindAll200 = CommonResponseDto &
+  PolicyControllerFindAll200AllOf;
+
+export type PolicyControllerFindOne200AllOf = {
+  data?: PolicyResponseDto;
+};
+
+export type PolicyControllerFindOne200 = CommonResponseDto &
+  PolicyControllerFindOne200AllOf;
+
+export type PolicyControllerUpdate200AllOf = {
+  data?: PolicyResponseDto;
+};
+
+export type PolicyControllerUpdate200 = CommonResponseDto &
+  PolicyControllerUpdate200AllOf;
+
+export type PolicyControllerRemove200AllOf = {
+  data?: PolicyResponseDto;
+};
+
+export type PolicyControllerRemove200 = CommonResponseDto &
+  PolicyControllerRemove200AllOf;
+
+export type CoverageControllerFindAllParams = {
+  page?: number;
+  limit?: number;
+  /**
+   * Filter by policy category
+   */
+  category?: string;
+  /**
+   * Search keyword for policy name or description
+   */
+  search?: string;
+  status?: CoverageControllerFindAllStatus;
+  sortBy?: CoverageControllerFindAllSortBy;
+  sortOrder?: CoverageControllerFindAllSortOrder;
+};
+
+export type CoverageControllerFindAllStatus =
+  (typeof CoverageControllerFindAllStatus)[keyof typeof CoverageControllerFindAllStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CoverageControllerFindAllStatus = {
+  active: "active",
+  limitExceeded: "limitExceeded",
+  expired: "expired",
+  suspended: "suspended",
+} as const;
+
+export type CoverageControllerFindAllSortBy =
+  (typeof CoverageControllerFindAllSortBy)[keyof typeof CoverageControllerFindAllSortBy];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CoverageControllerFindAllSortBy = {
+  id: "id",
+  start_date: "start_date",
+  utilization_rate: "utilization_rate",
+} as const;
+
+export type CoverageControllerFindAllSortOrder =
+  (typeof CoverageControllerFindAllSortOrder)[keyof typeof CoverageControllerFindAllSortOrder];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CoverageControllerFindAllSortOrder = {
+  asc: "asc",
+  desc: "desc",
+} as const;
+
+export type CoverageControllerFindAll200AllOf = {
+  data?: CoverageResponseDto[];
+};
+
+export type CoverageControllerFindAll200 = CommonResponseDto &
+  CoverageControllerFindAll200AllOf;
+
+export type CoverageControllerFindOne200AllOf = {
+  data?: CoverageResponseDto;
+};
+
+export type CoverageControllerFindOne200 = CommonResponseDto &
+  CoverageControllerFindOne200AllOf;
 
 export const authControllerLogin = (
   loginDto: LoginDto,
@@ -385,7 +859,11 @@ export function useAuthControllerGetMe<
 }
 
 export const userControllerFindAll = (signal?: AbortSignal) => {
-  return customFetcher<void>({ url: `/users`, method: "GET", signal });
+  return customFetcher<UserControllerFindAll200>({
+    url: `/users`,
+    method: "GET",
+    signal,
+  });
 };
 
 export const getUserControllerFindAllQueryKey = () => {
@@ -525,7 +1003,7 @@ export const userControllerCreate = (
   createUserDto: CreateUserDto,
   signal?: AbortSignal,
 ) => {
-  return customFetcher<void>({
+  return customFetcher<UserControllerCreate200>({
     url: `/users`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -598,11 +1076,157 @@ export const useUserControllerCreate = <TError = unknown, TContext = unknown>(
   return useMutation(mutationOptions, queryClient);
 };
 
-export const userControllerFindOne = (id: number, signal?: AbortSignal) => {
-  return customFetcher<void>({ url: `/users/${id}`, method: "GET", signal });
+export const userControllerGetStats = (signal?: AbortSignal) => {
+  return customFetcher<UserControllerGetStats200>({
+    url: `/users/stats`,
+    method: "GET",
+    signal,
+  });
 };
 
-export const getUserControllerFindOneQueryKey = (id: number) => {
+export const getUserControllerGetStatsQueryKey = () => {
+  return [`/users/stats`] as const;
+};
+
+export const getUserControllerGetStatsQueryOptions = <
+  TData = Awaited<ReturnType<typeof userControllerGetStats>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof userControllerGetStats>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getUserControllerGetStatsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof userControllerGetStats>>
+  > = ({ signal }) => userControllerGetStats(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof userControllerGetStats>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type UserControllerGetStatsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof userControllerGetStats>>
+>;
+export type UserControllerGetStatsQueryError = unknown;
+
+export function useUserControllerGetStats<
+  TData = Awaited<ReturnType<typeof userControllerGetStats>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userControllerGetStats>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userControllerGetStats>>,
+          TError,
+          Awaited<ReturnType<typeof userControllerGetStats>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useUserControllerGetStats<
+  TData = Awaited<ReturnType<typeof userControllerGetStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userControllerGetStats>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userControllerGetStats>>,
+          TError,
+          Awaited<ReturnType<typeof userControllerGetStats>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useUserControllerGetStats<
+  TData = Awaited<ReturnType<typeof userControllerGetStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userControllerGetStats>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useUserControllerGetStats<
+  TData = Awaited<ReturnType<typeof userControllerGetStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userControllerGetStats>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getUserControllerGetStatsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const userControllerFindOne = (id: string, signal?: AbortSignal) => {
+  return customFetcher<UserControllerFindOne200>({
+    url: `/users/${id}`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getUserControllerFindOneQueryKey = (id: string) => {
   return [`/users/${id}`] as const;
 };
 
@@ -610,7 +1234,7 @@ export const getUserControllerFindOneQueryOptions = <
   TData = Awaited<ReturnType<typeof userControllerFindOne>>,
   TError = unknown,
 >(
-  id: number,
+  id: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -651,7 +1275,7 @@ export function useUserControllerFindOne<
   TData = Awaited<ReturnType<typeof userControllerFindOne>>,
   TError = unknown,
 >(
-  id: number,
+  id: string,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -677,7 +1301,7 @@ export function useUserControllerFindOne<
   TData = Awaited<ReturnType<typeof userControllerFindOne>>,
   TError = unknown,
 >(
-  id: number,
+  id: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -703,7 +1327,7 @@ export function useUserControllerFindOne<
   TData = Awaited<ReturnType<typeof userControllerFindOne>>,
   TError = unknown,
 >(
-  id: number,
+  id: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -722,7 +1346,7 @@ export function useUserControllerFindOne<
   TData = Awaited<ReturnType<typeof userControllerFindOne>>,
   TError = unknown,
 >(
-  id: number,
+  id: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -748,36 +1372,49 @@ export function useUserControllerFindOne<
   return query;
 }
 
-export const loanControllerCreateLoan = (
-  createLoanDto: CreateLoanDto,
+export const claimControllerCreate = (
+  createClaimDto: CreateClaimDto,
   signal?: AbortSignal,
 ) => {
+  const formData = new FormData();
+  formData.append(`policy_id`, createClaimDto.policy_id.toString());
+  formData.append(`claim_type`, createClaimDto.claim_type);
+  formData.append(`amount`, createClaimDto.amount.toString());
+  if (createClaimDto.description !== undefined) {
+    formData.append(`description`, createClaimDto.description);
+  }
+  if (createClaimDto.documents !== undefined) {
+    createClaimDto.documents.forEach((value) =>
+      formData.append(`documents`, value),
+    );
+  }
+
   return customFetcher<void>({
-    url: `/loan/create`,
+    url: `/claim`,
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    data: createLoanDto,
+    headers: { "Content-Type": "multipart/form-data" },
+    data: formData,
     signal,
   });
 };
 
-export const getLoanControllerCreateLoanMutationOptions = <
+export const getClaimControllerCreateMutationOptions = <
   TError = unknown,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof loanControllerCreateLoan>>,
+    Awaited<ReturnType<typeof claimControllerCreate>>,
     TError,
-    { data: CreateLoanDto },
+    { data: CreateClaimDto },
     TContext
   >;
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof loanControllerCreateLoan>>,
+  Awaited<ReturnType<typeof claimControllerCreate>>,
   TError,
-  { data: CreateLoanDto },
+  { data: CreateClaimDto },
   TContext
 > => {
-  const mutationKey = ["loanControllerCreateLoan"];
+  const mutationKey = ["claimControllerCreate"];
   const { mutation: mutationOptions } = options
     ? options.mutation &&
       "mutationKey" in options.mutation &&
@@ -787,139 +1424,71 @@ export const getLoanControllerCreateLoanMutationOptions = <
     : { mutation: { mutationKey } };
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof loanControllerCreateLoan>>,
-    { data: CreateLoanDto }
+    Awaited<ReturnType<typeof claimControllerCreate>>,
+    { data: CreateClaimDto }
   > = (props) => {
     const { data } = props ?? {};
 
-    return loanControllerCreateLoan(data);
+    return claimControllerCreate(data);
   };
 
   return { mutationFn, ...mutationOptions };
 };
 
-export type LoanControllerCreateLoanMutationResult = NonNullable<
-  Awaited<ReturnType<typeof loanControllerCreateLoan>>
+export type ClaimControllerCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof claimControllerCreate>>
 >;
-export type LoanControllerCreateLoanMutationBody = CreateLoanDto;
-export type LoanControllerCreateLoanMutationError = unknown;
+export type ClaimControllerCreateMutationBody = CreateClaimDto;
+export type ClaimControllerCreateMutationError = unknown;
 
-export const useLoanControllerCreateLoan = <
-  TError = unknown,
-  TContext = unknown,
->(
+export const useClaimControllerCreate = <TError = unknown, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof loanControllerCreateLoan>>,
+      Awaited<ReturnType<typeof claimControllerCreate>>,
       TError,
-      { data: CreateLoanDto },
+      { data: CreateClaimDto },
       TContext
     >;
   },
   queryClient?: QueryClient,
 ): UseMutationResult<
-  Awaited<ReturnType<typeof loanControllerCreateLoan>>,
+  Awaited<ReturnType<typeof claimControllerCreate>>,
   TError,
-  { data: CreateLoanDto },
+  { data: CreateClaimDto },
   TContext
 > => {
-  const mutationOptions = getLoanControllerCreateLoanMutationOptions(options);
+  const mutationOptions = getClaimControllerCreateMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };
 
-export const loanControllerRepayLoan = (id: string, signal?: AbortSignal) => {
-  return customFetcher<void>({
-    url: `/loan/repay/${id}`,
-    method: "POST",
+export const claimControllerFindAll = (
+  params?: ClaimControllerFindAllParams,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<ClaimControllerFindAll200>({
+    url: `/claim`,
+    method: "GET",
+    params,
     signal,
   });
 };
 
-export const getLoanControllerRepayLoanMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof loanControllerRepayLoan>>,
-    TError,
-    { id: string },
-    TContext
-  >;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof loanControllerRepayLoan>>,
-  TError,
-  { id: string },
-  TContext
-> => {
-  const mutationKey = ["loanControllerRepayLoan"];
-  const { mutation: mutationOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey } };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof loanControllerRepayLoan>>,
-    { id: string }
-  > = (props) => {
-    const { id } = props ?? {};
-
-    return loanControllerRepayLoan(id);
-  };
-
-  return { mutationFn, ...mutationOptions };
+export const getClaimControllerFindAllQueryKey = (
+  params?: ClaimControllerFindAllParams,
+) => {
+  return [`/claim`, ...(params ? [params] : [])] as const;
 };
 
-export type LoanControllerRepayLoanMutationResult = NonNullable<
-  Awaited<ReturnType<typeof loanControllerRepayLoan>>
->;
-
-export type LoanControllerRepayLoanMutationError = unknown;
-
-export const useLoanControllerRepayLoan = <
-  TError = unknown,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof loanControllerRepayLoan>>,
-      TError,
-      { id: string },
-      TContext
-    >;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof loanControllerRepayLoan>>,
-  TError,
-  { id: string },
-  TContext
-> => {
-  const mutationOptions = getLoanControllerRepayLoanMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};
-
-export const loanControllerGetLoan = (id: string, signal?: AbortSignal) => {
-  return customFetcher<void>({ url: `/loan/${id}`, method: "GET", signal });
-};
-
-export const getLoanControllerGetLoanQueryKey = (id: string) => {
-  return [`/loan/${id}`] as const;
-};
-
-export const getLoanControllerGetLoanQueryOptions = <
-  TData = Awaited<ReturnType<typeof loanControllerGetLoan>>,
+export const getClaimControllerFindAllQueryOptions = <
+  TData = Awaited<ReturnType<typeof claimControllerFindAll>>,
   TError = unknown,
 >(
-  id: string,
+  params?: ClaimControllerFindAllParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof loanControllerGetLoan>>,
+        Awaited<ReturnType<typeof claimControllerFindAll>>,
         TError,
         TData
       >
@@ -929,47 +1498,42 @@ export const getLoanControllerGetLoanQueryOptions = <
   const { query: queryOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ?? getLoanControllerGetLoanQueryKey(id);
+    queryOptions?.queryKey ?? getClaimControllerFindAllQueryKey(params);
 
   const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof loanControllerGetLoan>>
-  > = ({ signal }) => loanControllerGetLoan(id, signal);
+    Awaited<ReturnType<typeof claimControllerFindAll>>
+  > = ({ signal }) => claimControllerFindAll(params, signal);
 
-  return {
-    queryKey,
-    queryFn,
-    enabled: !!id,
-    ...queryOptions,
-  } as UseQueryOptions<
-    Awaited<ReturnType<typeof loanControllerGetLoan>>,
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof claimControllerFindAll>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type LoanControllerGetLoanQueryResult = NonNullable<
-  Awaited<ReturnType<typeof loanControllerGetLoan>>
+export type ClaimControllerFindAllQueryResult = NonNullable<
+  Awaited<ReturnType<typeof claimControllerFindAll>>
 >;
-export type LoanControllerGetLoanQueryError = unknown;
+export type ClaimControllerFindAllQueryError = unknown;
 
-export function useLoanControllerGetLoan<
-  TData = Awaited<ReturnType<typeof loanControllerGetLoan>>,
+export function useClaimControllerFindAll<
+  TData = Awaited<ReturnType<typeof claimControllerFindAll>>,
   TError = unknown,
 >(
-  id: string,
+  params: undefined | ClaimControllerFindAllParams,
   options: {
     query: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof loanControllerGetLoan>>,
+        Awaited<ReturnType<typeof claimControllerFindAll>>,
         TError,
         TData
       >
     > &
       Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof loanControllerGetLoan>>,
+          Awaited<ReturnType<typeof claimControllerFindAll>>,
           TError,
-          Awaited<ReturnType<typeof loanControllerGetLoan>>
+          Awaited<ReturnType<typeof claimControllerFindAll>>
         >,
         "initialData"
       >;
@@ -978,24 +1542,24 @@ export function useLoanControllerGetLoan<
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
-export function useLoanControllerGetLoan<
-  TData = Awaited<ReturnType<typeof loanControllerGetLoan>>,
+export function useClaimControllerFindAll<
+  TData = Awaited<ReturnType<typeof claimControllerFindAll>>,
   TError = unknown,
 >(
-  id: string,
+  params?: ClaimControllerFindAllParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof loanControllerGetLoan>>,
+        Awaited<ReturnType<typeof claimControllerFindAll>>,
         TError,
         TData
       >
     > &
       Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof loanControllerGetLoan>>,
+          Awaited<ReturnType<typeof claimControllerFindAll>>,
           TError,
-          Awaited<ReturnType<typeof loanControllerGetLoan>>
+          Awaited<ReturnType<typeof claimControllerFindAll>>
         >,
         "initialData"
       >;
@@ -1004,15 +1568,15 @@ export function useLoanControllerGetLoan<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
-export function useLoanControllerGetLoan<
-  TData = Awaited<ReturnType<typeof loanControllerGetLoan>>,
+export function useClaimControllerFindAll<
+  TData = Awaited<ReturnType<typeof claimControllerFindAll>>,
   TError = unknown,
 >(
-  id: string,
+  params?: ClaimControllerFindAllParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof loanControllerGetLoan>>,
+        Awaited<ReturnType<typeof claimControllerFindAll>>,
         TError,
         TData
       >
@@ -1023,15 +1587,15 @@ export function useLoanControllerGetLoan<
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
-export function useLoanControllerGetLoan<
-  TData = Awaited<ReturnType<typeof loanControllerGetLoan>>,
+export function useClaimControllerFindAll<
+  TData = Awaited<ReturnType<typeof claimControllerFindAll>>,
   TError = unknown,
 >(
-  id: string,
+  params?: ClaimControllerFindAllParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof loanControllerGetLoan>>,
+        Awaited<ReturnType<typeof claimControllerFindAll>>,
         TError,
         TData
       >
@@ -1041,7 +1605,7 @@ export function useLoanControllerGetLoan<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getLoanControllerGetLoanQueryOptions(id, options);
+  const queryOptions = getClaimControllerFindAllQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,
@@ -1052,3 +1616,1557 @@ export function useLoanControllerGetLoan<
 
   return query;
 }
+
+export const claimControllerFindOne = (id: string, signal?: AbortSignal) => {
+  return customFetcher<ClaimControllerFindOne200>({
+    url: `/claim/${id}`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getClaimControllerFindOneQueryKey = (id: string) => {
+  return [`/claim/${id}`] as const;
+};
+
+export const getClaimControllerFindOneQueryOptions = <
+  TData = Awaited<ReturnType<typeof claimControllerFindOne>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof claimControllerFindOne>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getClaimControllerFindOneQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof claimControllerFindOne>>
+  > = ({ signal }) => claimControllerFindOne(id, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof claimControllerFindOne>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ClaimControllerFindOneQueryResult = NonNullable<
+  Awaited<ReturnType<typeof claimControllerFindOne>>
+>;
+export type ClaimControllerFindOneQueryError = unknown;
+
+export function useClaimControllerFindOne<
+  TData = Awaited<ReturnType<typeof claimControllerFindOne>>,
+  TError = unknown,
+>(
+  id: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof claimControllerFindOne>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof claimControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof claimControllerFindOne>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useClaimControllerFindOne<
+  TData = Awaited<ReturnType<typeof claimControllerFindOne>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof claimControllerFindOne>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof claimControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof claimControllerFindOne>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useClaimControllerFindOne<
+  TData = Awaited<ReturnType<typeof claimControllerFindOne>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof claimControllerFindOne>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useClaimControllerFindOne<
+  TData = Awaited<ReturnType<typeof claimControllerFindOne>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof claimControllerFindOne>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getClaimControllerFindOneQueryOptions(id, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const claimControllerUpdate = (
+  id: string,
+  updateClaimDto: UpdateClaimDto,
+) => {
+  return customFetcher<ClaimControllerUpdate200>({
+    url: `/claim/${id}`,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    data: updateClaimDto,
+  });
+};
+
+export const getClaimControllerUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof claimControllerUpdate>>,
+    TError,
+    { id: string; data: UpdateClaimDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof claimControllerUpdate>>,
+  TError,
+  { id: string; data: UpdateClaimDto },
+  TContext
+> => {
+  const mutationKey = ["claimControllerUpdate"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof claimControllerUpdate>>,
+    { id: string; data: UpdateClaimDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return claimControllerUpdate(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ClaimControllerUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof claimControllerUpdate>>
+>;
+export type ClaimControllerUpdateMutationBody = UpdateClaimDto;
+export type ClaimControllerUpdateMutationError = unknown;
+
+export const useClaimControllerUpdate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof claimControllerUpdate>>,
+      TError,
+      { id: string; data: UpdateClaimDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof claimControllerUpdate>>,
+  TError,
+  { id: string; data: UpdateClaimDto },
+  TContext
+> => {
+  const mutationOptions = getClaimControllerUpdateMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const claimControllerRemove = (id: string) => {
+  return customFetcher<ClaimControllerRemove200>({
+    url: `/claim/${id}`,
+    method: "DELETE",
+  });
+};
+
+export const getClaimControllerRemoveMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof claimControllerRemove>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof claimControllerRemove>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["claimControllerRemove"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof claimControllerRemove>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return claimControllerRemove(id);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ClaimControllerRemoveMutationResult = NonNullable<
+  Awaited<ReturnType<typeof claimControllerRemove>>
+>;
+
+export type ClaimControllerRemoveMutationError = unknown;
+
+export const useClaimControllerRemove = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof claimControllerRemove>>,
+      TError,
+      { id: string },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof claimControllerRemove>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationOptions = getClaimControllerRemoveMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const claimControllerRemoveFile = (id: string) => {
+  return customFetcher<ClaimControllerRemoveFile200>({
+    url: `/claim/${id}/file`,
+    method: "DELETE",
+  });
+};
+
+export const getClaimControllerRemoveFileMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof claimControllerRemoveFile>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof claimControllerRemoveFile>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["claimControllerRemoveFile"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof claimControllerRemoveFile>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return claimControllerRemoveFile(id);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ClaimControllerRemoveFileMutationResult = NonNullable<
+  Awaited<ReturnType<typeof claimControllerRemoveFile>>
+>;
+
+export type ClaimControllerRemoveFileMutationError = unknown;
+
+export const useClaimControllerRemoveFile = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof claimControllerRemoveFile>>,
+      TError,
+      { id: string },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof claimControllerRemoveFile>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationOptions = getClaimControllerRemoveFileMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const policyControllerCreate = (
+  createPolicyDto: CreatePolicyDto,
+  signal?: AbortSignal,
+) => {
+  const formData = new FormData();
+  formData.append(`name`, createPolicyDto.name);
+  formData.append(`category`, createPolicyDto.category);
+  formData.append(`provider`, createPolicyDto.provider);
+  formData.append(`coverage`, createPolicyDto.coverage.toString());
+  formData.append(`premium`, createPolicyDto.premium);
+  formData.append(`rating`, createPolicyDto.rating.toString());
+  formData.append(`popular`, createPolicyDto.popular.toString());
+  createPolicyDto.features.forEach((value) =>
+    formData.append(`features`, value),
+  );
+  if (createPolicyDto.description !== undefined) {
+    formData.append(`description`, createPolicyDto.description);
+  }
+  if (createPolicyDto.files !== undefined) {
+    createPolicyDto.files.forEach((value) => formData.append(`files`, value));
+  }
+
+  return customFetcher<void>({
+    url: `/policy`,
+    method: "POST",
+    headers: { "Content-Type": "multipart/form-data" },
+    data: formData,
+    signal,
+  });
+};
+
+export const getPolicyControllerCreateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof policyControllerCreate>>,
+    TError,
+    { data: CreatePolicyDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof policyControllerCreate>>,
+  TError,
+  { data: CreatePolicyDto },
+  TContext
+> => {
+  const mutationKey = ["policyControllerCreate"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof policyControllerCreate>>,
+    { data: CreatePolicyDto }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return policyControllerCreate(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PolicyControllerCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof policyControllerCreate>>
+>;
+export type PolicyControllerCreateMutationBody = CreatePolicyDto;
+export type PolicyControllerCreateMutationError = unknown;
+
+export const usePolicyControllerCreate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof policyControllerCreate>>,
+      TError,
+      { data: CreatePolicyDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof policyControllerCreate>>,
+  TError,
+  { data: CreatePolicyDto },
+  TContext
+> => {
+  const mutationOptions = getPolicyControllerCreateMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const policyControllerFindAll = (
+  params?: PolicyControllerFindAllParams,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<PolicyControllerFindAll200>({
+    url: `/policy`,
+    method: "GET",
+    params,
+    signal,
+  });
+};
+
+export const getPolicyControllerFindAllQueryKey = (
+  params?: PolicyControllerFindAllParams,
+) => {
+  return [`/policy`, ...(params ? [params] : [])] as const;
+};
+
+export const getPolicyControllerFindAllQueryOptions = <
+  TData = Awaited<ReturnType<typeof policyControllerFindAll>>,
+  TError = unknown,
+>(
+  params?: PolicyControllerFindAllParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerFindAll>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getPolicyControllerFindAllQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof policyControllerFindAll>>
+  > = ({ signal }) => policyControllerFindAll(params, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof policyControllerFindAll>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type PolicyControllerFindAllQueryResult = NonNullable<
+  Awaited<ReturnType<typeof policyControllerFindAll>>
+>;
+export type PolicyControllerFindAllQueryError = unknown;
+
+export function usePolicyControllerFindAll<
+  TData = Awaited<ReturnType<typeof policyControllerFindAll>>,
+  TError = unknown,
+>(
+  params: undefined | PolicyControllerFindAllParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerFindAll>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof policyControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof policyControllerFindAll>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePolicyControllerFindAll<
+  TData = Awaited<ReturnType<typeof policyControllerFindAll>>,
+  TError = unknown,
+>(
+  params?: PolicyControllerFindAllParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerFindAll>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof policyControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof policyControllerFindAll>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePolicyControllerFindAll<
+  TData = Awaited<ReturnType<typeof policyControllerFindAll>>,
+  TError = unknown,
+>(
+  params?: PolicyControllerFindAllParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerFindAll>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function usePolicyControllerFindAll<
+  TData = Awaited<ReturnType<typeof policyControllerFindAll>>,
+  TError = unknown,
+>(
+  params?: PolicyControllerFindAllParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerFindAll>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getPolicyControllerFindAllQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const policyControllerFindOne = (id: string, signal?: AbortSignal) => {
+  return customFetcher<PolicyControllerFindOne200>({
+    url: `/policy/${id}`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getPolicyControllerFindOneQueryKey = (id: string) => {
+  return [`/policy/${id}`] as const;
+};
+
+export const getPolicyControllerFindOneQueryOptions = <
+  TData = Awaited<ReturnType<typeof policyControllerFindOne>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerFindOne>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getPolicyControllerFindOneQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof policyControllerFindOne>>
+  > = ({ signal }) => policyControllerFindOne(id, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof policyControllerFindOne>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type PolicyControllerFindOneQueryResult = NonNullable<
+  Awaited<ReturnType<typeof policyControllerFindOne>>
+>;
+export type PolicyControllerFindOneQueryError = unknown;
+
+export function usePolicyControllerFindOne<
+  TData = Awaited<ReturnType<typeof policyControllerFindOne>>,
+  TError = unknown,
+>(
+  id: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerFindOne>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof policyControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof policyControllerFindOne>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePolicyControllerFindOne<
+  TData = Awaited<ReturnType<typeof policyControllerFindOne>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerFindOne>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof policyControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof policyControllerFindOne>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePolicyControllerFindOne<
+  TData = Awaited<ReturnType<typeof policyControllerFindOne>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerFindOne>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function usePolicyControllerFindOne<
+  TData = Awaited<ReturnType<typeof policyControllerFindOne>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerFindOne>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getPolicyControllerFindOneQueryOptions(id, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const policyControllerUpdate = (
+  id: string,
+  updatePolicyDto: UpdatePolicyDto,
+) => {
+  return customFetcher<PolicyControllerUpdate200>({
+    url: `/policy/${id}`,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    data: updatePolicyDto,
+  });
+};
+
+export const getPolicyControllerUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof policyControllerUpdate>>,
+    TError,
+    { id: string; data: UpdatePolicyDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof policyControllerUpdate>>,
+  TError,
+  { id: string; data: UpdatePolicyDto },
+  TContext
+> => {
+  const mutationKey = ["policyControllerUpdate"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof policyControllerUpdate>>,
+    { id: string; data: UpdatePolicyDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return policyControllerUpdate(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PolicyControllerUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof policyControllerUpdate>>
+>;
+export type PolicyControllerUpdateMutationBody = UpdatePolicyDto;
+export type PolicyControllerUpdateMutationError = unknown;
+
+export const usePolicyControllerUpdate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof policyControllerUpdate>>,
+      TError,
+      { id: string; data: UpdatePolicyDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof policyControllerUpdate>>,
+  TError,
+  { id: string; data: UpdatePolicyDto },
+  TContext
+> => {
+  const mutationOptions = getPolicyControllerUpdateMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const policyControllerRemove = (id: string) => {
+  return customFetcher<PolicyControllerRemove200>({
+    url: `/policy/${id}`,
+    method: "DELETE",
+  });
+};
+
+export const getPolicyControllerRemoveMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof policyControllerRemove>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof policyControllerRemove>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["policyControllerRemove"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof policyControllerRemove>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return policyControllerRemove(id);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PolicyControllerRemoveMutationResult = NonNullable<
+  Awaited<ReturnType<typeof policyControllerRemove>>
+>;
+
+export type PolicyControllerRemoveMutationError = unknown;
+
+export const usePolicyControllerRemove = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof policyControllerRemove>>,
+      TError,
+      { id: string },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof policyControllerRemove>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationOptions = getPolicyControllerRemoveMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const coverageControllerCreate = (
+  createCoverageDto: CreateCoverageDto,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<void>({
+    url: `/coverage`,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    data: createCoverageDto,
+    signal,
+  });
+};
+
+export const getCoverageControllerCreateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof coverageControllerCreate>>,
+    TError,
+    { data: CreateCoverageDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof coverageControllerCreate>>,
+  TError,
+  { data: CreateCoverageDto },
+  TContext
+> => {
+  const mutationKey = ["coverageControllerCreate"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof coverageControllerCreate>>,
+    { data: CreateCoverageDto }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return coverageControllerCreate(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CoverageControllerCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof coverageControllerCreate>>
+>;
+export type CoverageControllerCreateMutationBody = CreateCoverageDto;
+export type CoverageControllerCreateMutationError = unknown;
+
+export const useCoverageControllerCreate = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof coverageControllerCreate>>,
+      TError,
+      { data: CreateCoverageDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof coverageControllerCreate>>,
+  TError,
+  { data: CreateCoverageDto },
+  TContext
+> => {
+  const mutationOptions = getCoverageControllerCreateMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const coverageControllerFindAll = (
+  params?: CoverageControllerFindAllParams,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<CoverageControllerFindAll200>({
+    url: `/coverage`,
+    method: "GET",
+    params,
+    signal,
+  });
+};
+
+export const getCoverageControllerFindAllQueryKey = (
+  params?: CoverageControllerFindAllParams,
+) => {
+  return [`/coverage`, ...(params ? [params] : [])] as const;
+};
+
+export const getCoverageControllerFindAllQueryOptions = <
+  TData = Awaited<ReturnType<typeof coverageControllerFindAll>>,
+  TError = unknown,
+>(
+  params?: CoverageControllerFindAllParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof coverageControllerFindAll>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getCoverageControllerFindAllQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof coverageControllerFindAll>>
+  > = ({ signal }) => coverageControllerFindAll(params, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof coverageControllerFindAll>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type CoverageControllerFindAllQueryResult = NonNullable<
+  Awaited<ReturnType<typeof coverageControllerFindAll>>
+>;
+export type CoverageControllerFindAllQueryError = unknown;
+
+export function useCoverageControllerFindAll<
+  TData = Awaited<ReturnType<typeof coverageControllerFindAll>>,
+  TError = unknown,
+>(
+  params: undefined | CoverageControllerFindAllParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof coverageControllerFindAll>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof coverageControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof coverageControllerFindAll>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useCoverageControllerFindAll<
+  TData = Awaited<ReturnType<typeof coverageControllerFindAll>>,
+  TError = unknown,
+>(
+  params?: CoverageControllerFindAllParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof coverageControllerFindAll>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof coverageControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof coverageControllerFindAll>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useCoverageControllerFindAll<
+  TData = Awaited<ReturnType<typeof coverageControllerFindAll>>,
+  TError = unknown,
+>(
+  params?: CoverageControllerFindAllParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof coverageControllerFindAll>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useCoverageControllerFindAll<
+  TData = Awaited<ReturnType<typeof coverageControllerFindAll>>,
+  TError = unknown,
+>(
+  params?: CoverageControllerFindAllParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof coverageControllerFindAll>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getCoverageControllerFindAllQueryOptions(
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const coverageControllerFindOne = (id: string, signal?: AbortSignal) => {
+  return customFetcher<CoverageControllerFindOne200>({
+    url: `/coverage/${id}`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getCoverageControllerFindOneQueryKey = (id: string) => {
+  return [`/coverage/${id}`] as const;
+};
+
+export const getCoverageControllerFindOneQueryOptions = <
+  TData = Awaited<ReturnType<typeof coverageControllerFindOne>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof coverageControllerFindOne>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getCoverageControllerFindOneQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof coverageControllerFindOne>>
+  > = ({ signal }) => coverageControllerFindOne(id, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof coverageControllerFindOne>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type CoverageControllerFindOneQueryResult = NonNullable<
+  Awaited<ReturnType<typeof coverageControllerFindOne>>
+>;
+export type CoverageControllerFindOneQueryError = unknown;
+
+export function useCoverageControllerFindOne<
+  TData = Awaited<ReturnType<typeof coverageControllerFindOne>>,
+  TError = unknown,
+>(
+  id: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof coverageControllerFindOne>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof coverageControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof coverageControllerFindOne>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useCoverageControllerFindOne<
+  TData = Awaited<ReturnType<typeof coverageControllerFindOne>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof coverageControllerFindOne>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof coverageControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof coverageControllerFindOne>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useCoverageControllerFindOne<
+  TData = Awaited<ReturnType<typeof coverageControllerFindOne>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof coverageControllerFindOne>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useCoverageControllerFindOne<
+  TData = Awaited<ReturnType<typeof coverageControllerFindOne>>,
+  TError = unknown,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof coverageControllerFindOne>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getCoverageControllerFindOneQueryOptions(id, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const coverageControllerUpdate = (
+  id: string,
+  updateCoverageDto: UpdateCoverageDto,
+) => {
+  return customFetcher<void>({
+    url: `/coverage/${id}`,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    data: updateCoverageDto,
+  });
+};
+
+export const getCoverageControllerUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof coverageControllerUpdate>>,
+    TError,
+    { id: string; data: UpdateCoverageDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof coverageControllerUpdate>>,
+  TError,
+  { id: string; data: UpdateCoverageDto },
+  TContext
+> => {
+  const mutationKey = ["coverageControllerUpdate"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof coverageControllerUpdate>>,
+    { id: string; data: UpdateCoverageDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return coverageControllerUpdate(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CoverageControllerUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof coverageControllerUpdate>>
+>;
+export type CoverageControllerUpdateMutationBody = UpdateCoverageDto;
+export type CoverageControllerUpdateMutationError = unknown;
+
+export const useCoverageControllerUpdate = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof coverageControllerUpdate>>,
+      TError,
+      { id: string; data: UpdateCoverageDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof coverageControllerUpdate>>,
+  TError,
+  { id: string; data: UpdateCoverageDto },
+  TContext
+> => {
+  const mutationOptions = getCoverageControllerUpdateMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const coverageControllerRemove = (id: string) => {
+  return customFetcher<void>({ url: `/coverage/${id}`, method: "DELETE" });
+};
+
+export const getCoverageControllerRemoveMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof coverageControllerRemove>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof coverageControllerRemove>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["coverageControllerRemove"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof coverageControllerRemove>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return coverageControllerRemove(id);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CoverageControllerRemoveMutationResult = NonNullable<
+  Awaited<ReturnType<typeof coverageControllerRemove>>
+>;
+
+export type CoverageControllerRemoveMutationError = unknown;
+
+export const useCoverageControllerRemove = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof coverageControllerRemove>>,
+      TError,
+      { id: string },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof coverageControllerRemove>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationOptions = getCoverageControllerRemoveMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const pdfClaimExtractorControllerExtract = (
+  extractClaimDto: ExtractClaimDto,
+  signal?: AbortSignal,
+) => {
+  const formData = new FormData();
+  if (extractClaimDto.file !== undefined) {
+    extractClaimDto.file.forEach((value) => formData.append(`file`, value));
+  }
+
+  return customFetcher<void>({
+    url: `/claim-type-extractor`,
+    method: "POST",
+    headers: { "Content-Type": "multipart/form-data" },
+    data: formData,
+    signal,
+  });
+};
+
+export const getPdfClaimExtractorControllerExtractMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof pdfClaimExtractorControllerExtract>>,
+    TError,
+    { data: ExtractClaimDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof pdfClaimExtractorControllerExtract>>,
+  TError,
+  { data: ExtractClaimDto },
+  TContext
+> => {
+  const mutationKey = ["pdfClaimExtractorControllerExtract"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof pdfClaimExtractorControllerExtract>>,
+    { data: ExtractClaimDto }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return pdfClaimExtractorControllerExtract(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PdfClaimExtractorControllerExtractMutationResult = NonNullable<
+  Awaited<ReturnType<typeof pdfClaimExtractorControllerExtract>>
+>;
+export type PdfClaimExtractorControllerExtractMutationBody = ExtractClaimDto;
+export type PdfClaimExtractorControllerExtractMutationError = unknown;
+
+export const usePdfClaimExtractorControllerExtract = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof pdfClaimExtractorControllerExtract>>,
+      TError,
+      { data: ExtractClaimDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof pdfClaimExtractorControllerExtract>>,
+  TError,
+  { data: ExtractClaimDto },
+  TContext
+> => {
+  const mutationOptions =
+    getPdfClaimExtractorControllerExtractMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
