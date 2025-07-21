@@ -30,7 +30,7 @@ export interface CommonResponseDto {
   data?: CommonResponseDtoData;
 }
 
-export interface UserResponseDto {
+export interface AuthUserResponseDto {
   id: string;
   email: string;
   email_verified: boolean;
@@ -42,7 +42,7 @@ export interface UserResponseDto {
 
 export interface LoginResponseDto {
   accessToken: string;
-  user: UserResponseDto;
+  user: AuthUserResponseDto;
 }
 
 export interface LoginDto {
@@ -83,7 +83,7 @@ export type AuthControllerLogin200 = CommonResponseDto &
   AuthControllerLogin200AllOf;
 
 export type AuthControllerGetMe200AllOf = {
-  data?: UserResponseDto;
+  data?: AuthUserResponseDto;
 };
 
 export type AuthControllerGetMe200 = CommonResponseDto &

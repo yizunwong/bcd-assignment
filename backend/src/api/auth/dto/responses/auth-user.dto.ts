@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class UserResponseDto {
+export class AuthUserResponseDto {
   @ApiProperty()
   id!: string;
 
@@ -22,7 +22,7 @@ export class UserResponseDto {
   @ApiProperty()
   provider!: string;
 
-  constructor(dto: UserResponseDto) {
+  constructor(dto: AuthUserResponseDto) {
     Object.assign(this, dto);
   }
 }

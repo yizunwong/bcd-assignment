@@ -14,7 +14,7 @@ import { LoginResponseDto } from './dto/responses/login.dto';
 import { AuthGuard } from './auth.guard';
 import { ApiCommonResponse, CommonResponseDto } from '../../common/common.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
-import { UserResponseDto } from './dto/responses/user.dto';
+import { AuthUserResponseDto } from './dto/responses/auth-user.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -36,11 +36,11 @@ export class AuthController {
 
   @UseGuards(AuthGuard)
   @Get('me')
-  @ApiCommonResponse(UserResponseDto, false, 'User login')
+  @ApiCommonResponse(AuthUserResponseDto, false, 'User login')
   @ApiBearerAuth('supabase-auth')
   async getMe(
     @Request() req: AuthenticatedRequest,
-  ): Promise<CommonResponseDto<UserResponseDto>> {
+  ): Promise<CommonResponseDto<AuthUserResponseDto>> {
     return this.authService.getMe(req);
   }
 }

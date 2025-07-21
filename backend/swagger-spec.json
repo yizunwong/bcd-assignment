@@ -84,7 +84,7 @@
                     {
                       "properties": {
                         "data": {
-                          "$ref": "#/components/schemas/UserResponseDto"
+                          "$ref": "#/components/schemas/AuthUserResponseDto"
                         }
                       }
                     }
@@ -1221,6 +1221,27 @@
           "status"
         ]
       },
+      "AuthUserResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "email": { "type": "string" },
+          "email_verified": { "type": "boolean" },
+          "username": { "type": "string" },
+          "role": { "type": "string" },
+          "lastSignInAt": { "type": "string" },
+          "provider": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "email",
+          "email_verified",
+          "username",
+          "role",
+          "lastSignInAt",
+          "provider"
+        ]
+      },
       "LoginResponseDto": {
         "type": "object",
         "properties": {
@@ -1228,7 +1249,7 @@
             "type": "string"
           },
           "user": {
-            "$ref": "#/components/schemas/UserResponseDto"
+            "$ref": "#/components/schemas/AuthUserResponseDto"
           }
         },
         "required": [
