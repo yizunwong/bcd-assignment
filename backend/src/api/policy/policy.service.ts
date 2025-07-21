@@ -15,14 +15,11 @@ import {
   uploadFiles,
 } from 'src/utils/supabase-storage';
 import { CommonResponseDto } from 'src/common/common.dto';
-import { SupabaseService } from 'src/supabase/supabase.service';
 import { PolicyResponseDto } from './dto/responses/policy.dto';
 import { FindPoliciesQueryDto } from './dto/responses/policy-query.dto';
 
 @Injectable()
 export class PolicyService {
-  constructor(private readonly supabaseService: SupabaseService) {}
-
   async uploadPolicyDocuments(
     files: Array<Express.Multer.File>,
     req: AuthenticatedRequest,

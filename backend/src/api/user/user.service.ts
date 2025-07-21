@@ -46,15 +46,18 @@ export class UserService {
       throw new SupabaseException('Failed to fetch auth users', authError);
     }
 
+    console.log(authUsers.users);
+
     const merged = typedProfiles.map((profile) => {
       const auth = authUsers.users.find((u) => u.id === profile.user_id);
       return new UserResponseDto({
         user_id: profile.user_id,
         email: auth?.email ?? '—',
         name: `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim(),
-        role: parseAppMetadata(auth?.app_metadata).role ?? UserRole.POLICYHOLDER,
+        role:
+          parseAppMetadata(auth?.app_metadata).role ?? UserRole.POLICYHOLDER,
         phone: profile.phone ?? null,
-        status: profile.status ?? UserStatus.ACTIVE,
+        status: (profile.status as UserStatus) ?? UserStatus.ACTIVE,
         lastLogin: auth?.last_sign_in_at,
         joinedAt: auth?.created_at,
         bio: null,
@@ -69,7 +72,9 @@ export class UserService {
     });
   }
 
-  async getUserById(user_id: string): Promise<CommonResponseDto<UserResponseDto>> {
+  async getUserById(
+    user_id: string,
+  ): Promise<CommonResponseDto<UserResponseDto>> {
     const supabase = this.supabaseService.createClientWithToken();
     // Step 1: Get user_details and joined role details
 
@@ -171,7 +176,9 @@ export class UserService {
     });
   }
 
-  async createUser(dto: CreateUserDto): Promise<CommonResponseDto<UserResponseDto>> {
+  async createUser(
+    dto: CreateUserDto,
+  ): Promise<CommonResponseDto<UserResponseDto>> {
     const supabase = this.supabaseService.createClientWithToken();
 
     const authUser = await this.createAuthUser(supabase, dto);
@@ -190,9 +197,11 @@ export class UserService {
       data: new UserResponseDto({
         user_id,
         email: authUser.user.email ?? '',
-        name: `${dto.firstName ?? ''} ${dto.lastName ?? ''}`.trim(),
-        role: parseAppMetadata(authUser.user.app_metadata).role ?? UserRole.POLICYHOLDER,
-        phone: authUser.user.phone ?? null,
+        name: `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim(),
+        role:
+          parseAppMetadata(authUser.user.app_metadata).role ??
+          UserRole.POLICYHOLDER,
+        phone: profile.phone ?? null,
         bio: dto.bio ?? null,
         status: UserStatus.ACTIVE,
         lastLogin: authUser.user.last_sign_in_at,
@@ -356,10 +365,10 @@ export class UserService {
       statusCode: 200,
       message: 'User statistics retrieved successfully',
       data: new UserStatsResponseDto({
-        totalUsers: totalUsers || 0,
-        activeUsers: activeUsers || 0,
-        policyholders: policyholders || 0,
-        insuranceAdmins: admins || 0,
+        totalUsers: totalUsers ?? 0,
+        activeUsers: activeUsers ?? 0,
+        policyholders: policyholders ?? 0,
+        insuranceAdmins: admins ?? 0,
       }),
     });
   }

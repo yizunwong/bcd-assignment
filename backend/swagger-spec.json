@@ -17,7 +17,7 @@
         },
         "responses": {
           "200": {
-            "description": "",
+            "description": "User login",
             "content": {
               "application/json": {
                 "schema": {
@@ -73,7 +73,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
+            "description": "User login",
             "content": {
               "application/json": {
                 "schema": {
@@ -110,7 +110,28 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Get all users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/UserResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -136,8 +157,26 @@
           }
         },
         "responses": {
-          "201": {
-            "description": ""
+          "200": {
+            "description": "Create user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/UserResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -156,7 +195,25 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Get user statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/UserStatsResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -184,7 +241,25 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Get user by id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/UserResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1099,36 +1174,51 @@
       "UserResponseDto": {
         "type": "object",
         "properties": {
-          "id": {
+          "user_id": {
             "type": "string"
           },
           "email": {
             "type": "string"
           },
-          "email_verified": {
-            "type": "boolean"
-          },
-          "username": {
+          "name": {
             "type": "string"
           },
           "role": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "policyholder",
+              "insurance_admin",
+              "system_admin"
+            ]
           },
-          "lastSignInAt": {
-            "type": "string"
+          "phone": {
+            "type": "object",
+            "nullable": true
           },
-          "provider": {
-            "type": "string"
+          "bio": {
+            "type": "object",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "example": "active"
+          },
+          "lastLogin": {
+            "type": "object"
+          },
+          "joinedAt": {
+            "type": "object"
+          },
+          "details": {
+            "type": "object"
           }
         },
         "required": [
-          "id",
+          "user_id",
           "email",
-          "email_verified",
-          "username",
+          "name",
           "role",
-          "lastSignInAt",
-          "provider"
+          "status"
         ]
       },
       "LoginResponseDto": {
@@ -1242,6 +1332,29 @@
           "password",
           "confirmPassword",
           "role"
+        ]
+      },
+      "UserStatsResponseDto": {
+        "type": "object",
+        "properties": {
+          "totalUsers": {
+            "type": "number"
+          },
+          "activeUsers": {
+            "type": "number"
+          },
+          "policyholders": {
+            "type": "number"
+          },
+          "insuranceAdmins": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "totalUsers",
+          "activeUsers",
+          "policyholders",
+          "insuranceAdmins"
         ]
       },
       "CreateUserDto": {

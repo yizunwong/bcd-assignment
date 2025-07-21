@@ -1,5 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { AdminDetails, PolicyholderDetails, UserRole, UserStatus } from '../requests/create.dto';
+import {
+  AdminDetails,
+  PolicyholderDetails,
+  UserRole,
+} from '../requests/create.dto';
 
 export class UserResponseDto {
   @ApiProperty()
@@ -20,8 +24,8 @@ export class UserResponseDto {
   @ApiProperty({ required: false, nullable: true })
   bio!: string | null;
 
-  @ApiProperty({ enum: UserStatus })
-  status!: UserStatus;
+  @ApiProperty({ example: 'active' })
+  status!: string;
 
   @ApiProperty({ required: false })
   lastLogin!: string | null | undefined;
@@ -29,7 +33,7 @@ export class UserResponseDto {
   @ApiProperty({ required: false })
   joinedAt!: string | null | undefined;
 
-  @ApiProperty({ required: false, type: 'object' })
+  @ApiProperty({ required: false })
   details?: AdminDetails | PolicyholderDetails | null;
 
   constructor(dto: Partial<UserResponseDto>) {
