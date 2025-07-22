@@ -53,6 +53,7 @@ export class PolicyService {
         popular: dto.popular,
         description: dto.description || null,
         features: dto.features,
+        created_by: userData.user.id,
       })
       .select()
       .single();

@@ -206,6 +206,7 @@ export type Database = {
         Row: {
           category: string;
           coverage: number;
+          created_by: string;
           description: string | null;
           features: string[];
           id: number;
@@ -218,6 +219,7 @@ export type Database = {
         Insert: {
           category: string;
           coverage: number;
+          created_by: string;
           description?: string | null;
           features: string[];
           id?: number;
@@ -230,6 +232,7 @@ export type Database = {
         Update: {
           category?: string;
           coverage?: number;
+          created_by?: string;
           description?: string | null;
           features?: string[];
           id?: number;
