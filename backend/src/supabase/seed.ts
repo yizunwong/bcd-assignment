@@ -13,10 +13,9 @@ const supabase = createClient<Database>(
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
-type RoleSeed =
-  Database['public']['Tables']['roles']['Insert'] & {
-    permissions: string[];
-  };
+type RoleSeed = Database['public']['Tables']['roles']['Insert'] & {
+  permissions: string[];
+};
 
 const roles: RoleSeed[] = [
   {
@@ -80,7 +79,10 @@ type SeedUser = {
     Database['public']['Tables']['policyholder_details']['Insert'],
     'user_id'
   >;
-  admin?: Omit<Database['public']['Tables']['admin_details']['Insert'], 'user_id'>;
+  admin?: Omit<
+    Database['public']['Tables']['admin_details']['Insert'],
+    'user_id'
+  >;
 };
 
 const users: SeedUser[] = [
