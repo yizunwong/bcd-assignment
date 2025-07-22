@@ -1,25 +1,22 @@
 import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 import path from 'path';
+import { Database } from './types/supabase.types';
 
 dotenv.config({
   path: path.resolve(__dirname, '../.env'),
 });
 
 // ENV: set in .env file
-const supabase = createClient(
+const supabase = createClient<Database>(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
-type RoleSeed = {
-  id: string;
-  name: string;
-  description: string;
-  color: string;
-  settings: Record<string, any>;
-  permissions: string[];
-};
+type RoleSeed =
+  Database['public']['Tables']['roles']['Insert'] & {
+    permissions: string[];
+  };
 
 const roles: RoleSeed[] = [
   {
@@ -66,33 +63,50 @@ const roles: RoleSeed[] = [
   },
 ];
 
-const permissions = Array.from(
-  new Set(roles.flatMap((r) => r.permissions)),
-).map((id) => ({
-  id,
-  name: id.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-}));
+const permissions: Database['public']['Tables']['permissions']['Insert'][] =
+  Array.from(new Set(roles.flatMap((r) => r.permissions))).map((id) => ({
+    id,
+    name: id.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+  }));
 
-const users = [
+type SeedUser = {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  role: RoleSeed['id'];
+  policyholder?: Omit<
+    Database['public']['Tables']['policyholder_details']['Insert'],
+    'user_id'
+  >;
+  admin?: Omit<Database['public']['Tables']['admin_details']['Insert'], 'user_id'>;
+};
+
+const users: SeedUser[] = [
   {
     email: 'alex.johnson@example.com',
     password: 'Password123!',
+    firstName: 'Alex',
+    lastName: 'Johnson',
     role: 'policyholder',
-    profile: {
-      status: 'active',
-      kyc_status: 'verified',
-      location: 'New York, USA',
+    policyholder: {
+      date_of_birth: '1990-01-01',
+      occupation: 'Engineer',
+      address: 'New York, USA',
     },
   },
   {
     email: 'sarah.chen@example.com',
     password: 'Password123!',
+    firstName: 'Sarah',
+    lastName: 'Chen',
     role: 'insurance_admin',
-    profile: {
-      status: 'active',
-      kyc_status: 'verified',
-      location: 'California, USA',
-      company: 'HealthSecure Insurance',
+    admin: {
+      employee_id: 'A-100',
+      license_no: 'LIC-200',
+      company_name: 'HealthSecure Insurance',
+      company_address: 'California, USA',
     },
   },
 ];
@@ -141,12 +155,25 @@ async function seed() {
 
     const userId = data.user.id;
 
-    await supabase.from('user_profiles').insert({
-      user_id: data.user.id,
-      role: user.role,
-      join_date: new Date().toISOString().split('T')[0],
-      ...user.profile,
+    await supabase.from('user_details').insert({
+      user_id: userId,
+      first_name: user.firstName,
+      last_name: user.lastName,
+      phone: user.phone ?? null,
+      status: 'active',
     });
+
+    if (user.policyholder) {
+      await supabase
+        .from('policyholder_details')
+        .insert({ user_id: userId, ...user.policyholder });
+    }
+
+    if (user.admin) {
+      await supabase
+        .from('admin_details')
+        .insert({ user_id: userId, ...user.admin });
+    }
 
     await supabase.from('activity_logs').insert([
       {
