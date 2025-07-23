@@ -930,6 +930,65 @@
         ]
       }
     },
+    "/policy/dashboard/policyholder/{userId}/summary": {
+      "get": {
+        "operationId": "PolicyController_getSummary",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Policy"
+        ]
+      }
+    },
+    "/policy/browse/categories": {
+      "get": {
+        "operationId": "PolicyController_getCategoryCounts",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          },
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Policy"
+        ]
+      }
+    },
     "/coverage": {
       "post": {
         "operationId": "CoverageController_create",
@@ -1206,6 +1265,44 @@
         },
         "tags": [
           "PdfClaimExtractor"
+        ]
+      }
+    },
+    "/reviews/policy/{id}/review": {
+      "post": {
+        "operationId": "ReviewsController_leaveReview",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Reviews"
         ]
       }
     }
@@ -2124,6 +2221,23 @@
             }
           }
         }
+      },
+      "CreateReviewDto": {
+        "type": "object",
+        "properties": {
+          "rating": {
+            "type": "number",
+            "example": 5,
+            "description": "Rating from 1 to 5"
+          },
+          "comment": {
+            "type": "string",
+            "example": "Great policy!"
+          }
+        },
+        "required": [
+          "rating"
+        ]
       }
     }
   }

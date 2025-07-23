@@ -220,6 +220,76 @@ export class PolicyService {
       },
     });
   }
+  async getPolicyholderSummary(userId: string, req: AuthenticatedRequest) {
+    const supabase = req.supabase;
+
+    // 1. Fetch active policies by user
+    const { data: policies, error: policyError } = await supabase
+      .from('policies')
+      .select('coverage, id')
+      .eq('created_by', userId);
+
+    if (policyError) {
+      console.error(policyError);
+      throw new InternalServerErrorException('Failed to fetch user policies');
+    }
+
+    const activePolicyCount = policies?.length || 0;
+    const totalCoverage = policies?.reduce(
+      (sum, p) => sum + (p.coverage || 0),
+      0,
+    );
+
+    // 2. Fetch pending claims by user
+    const { data: claims, error: claimError } = await supabase
+      .from('claims')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('status', 'pending');
+
+    if (claimError) {
+      console.error(claimError);
+      throw new InternalServerErrorException('Failed to fetch pending claims');
+    }
+    const pendingClaims = claims?.length || 0;
+    // 3. Return dashboard summary
+    return {
+      statusCode: 200,
+      message: 'Dashboard summary fetched successfully',
+      data: {
+        activePolicies: activePolicyCount,
+        totalCoverage,
+        pendingClaims,
+        walletBalance: null, // Can implement later
+      },
+    };
+  }
+
+  async getPolicyCountByCategory(userId: string, req: AuthenticatedRequest) {
+    const supabase = req.supabase;
+
+    const { data, error } = await supabase
+      .from('policies')
+      .select('category')
+      .eq('created_by', userId);
+
+    if (error) {
+      throw new InternalServerErrorException('Failed to fetch categories');
+    }
+
+    const categoryCounts: Record<string, number> = {};
+
+    for (const policy of data) {
+      const category = policy.category || 'Unknown';
+      categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+    }
+
+    return {
+      statusCode: 200,
+      message: 'Policy categories counted successfully',
+      data: categoryCounts,
+    };
+  }
   async update(id: number, dto: UpdatePolicyDto, req: AuthenticatedRequest) {
     const supabase = req.supabase;
 

@@ -64,6 +64,26 @@ export class PolicyController {
     return this.policyService.findOne(+id, req);
   }
 
+  @Get('dashboard/policyholder/:userId/summary')
+  @UseGuards(AuthGuard)
+  getSummary(
+    @Param('userId') userId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.policyService.getPolicyholderSummary(userId, req);
+  }
+
+  // GET /browse/categories?userId=xxx
+  @Get('/browse/categories')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth('supabase-auth')
+  async getCategoryCounts(
+    @Query('userId') userId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.policyService.getPolicyCountByCategory(userId, req);
+  }
+
   @Patch(':id')
   @UseGuards(AuthGuard)
   @ApiCommonResponse(PolicyResponseDto, false, 'Update policy')
