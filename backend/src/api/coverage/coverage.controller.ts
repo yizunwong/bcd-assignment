@@ -69,4 +69,13 @@ export class CoverageController {
   remove(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.coverageService.remove(+id, req);
   }
+
+  @Get('policyholder/:userId/summary')
+  @UseGuards(AuthGuard)
+  async getPolicyholderSummary(
+    @Param('userId') userId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.coverageService.getPolicyholderSummary(userId, req);
+  }
 }

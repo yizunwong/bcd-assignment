@@ -18,9 +18,13 @@ import {
 } from 'src/utils/supabase-storage';
 import { ClaimResponseDto } from './dto/responses/claim.dto';
 import { CommonResponseDto } from 'src/common/common.dto';
+import { PolicyService } from '../policy/policy.service';
 @Injectable()
 export class ClaimService {
-  constructor(private readonly supabaseService: SupabaseService) {}
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly policyService: PolicyService,
+  ) {}
 
   async createClaim(
     createClaimDto: CreateClaimDto,
@@ -244,6 +248,70 @@ export class ClaimService {
       throw new Error(
         'Failed to fetch claims: ' + (error.message || 'Unknown error'),
       );
+    }
+
+    // If claim is approved, update utilization_rate in coverage
+    if (String(updateClaimDto.status) === 'approved') {
+      // Fetch the claim to get policy_id and user_id
+      const { data: claim, error: claimError } = await req.supabase
+        .from('claims')
+        .select('*')
+        .eq('id', id)
+        .single();
+      if (!claim || claimError) {
+        throw new Error('Failed to fetch claim for utilization update');
+      }
+      if (claim.policy_id == null || claim.user_id == null) {
+        throw new Error('Claim is missing policy_id or user_id');
+      }
+      // Fetch the coverage for this user and policy
+      const { data: coverage, error: coverageError } = await req.supabase
+        .from('coverage')
+        .select('*')
+        .eq('policy_id', claim.policy_id)
+        .eq('user_id', claim.user_id)
+        .single();
+      if (!coverage || coverageError) {
+        throw new Error('Failed to fetch coverage for utilization update');
+      }
+      // Fetch the policy to get the coverage amount
+      const { data: policy, error: policyError } = await req.supabase
+        .from('policies')
+        .select('coverage')
+        .eq('id', claim.policy_id)
+        .single();
+      if (!policy || policyError || typeof policy.coverage !== 'number') {
+        throw new Error('Failed to fetch policy for utilization update');
+      }
+      // Sum all approved claim amounts for this coverage
+      const { data: approvedClaims, error: approvedClaimsError } =
+        await req.supabase
+          .from('claims')
+          .select('amount')
+          .eq('policy_id', claim.policy_id)
+          .eq('user_id', claim.user_id)
+          .eq('status', 'approved');
+      if (!approvedClaims || approvedClaimsError) {
+        throw new Error(
+          'Failed to fetch approved claims for utilization update',
+        );
+      }
+      const totalApprovedAmount = approvedClaims.reduce(
+        (sum, c) => sum + (c.amount || 0),
+        0,
+      );
+      const newUtilizationRate =
+        policy.coverage > 0 ? (totalApprovedAmount / policy.coverage) * 100 : 0;
+
+      console.log('newUtilizationRate', newUtilizationRate);
+      // Update the coverage utilization_rate
+      const { error: updateCoverageError } = await req.supabase
+        .from('coverage')
+        .update({ utilization_rate: newUtilizationRate })
+        .eq('id', coverage.id);
+      if (updateCoverageError) {
+        throw new Error('Failed to update coverage utilization rate');
+      }
     }
     return new CommonResponseDto({
       statusCode: 200,
