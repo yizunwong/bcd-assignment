@@ -7,5 +7,6 @@ import { SupabaseModule } from 'src/supabase/supabase.module';
   imports: [SupabaseModule],
   controllers: [PolicyController],
   providers: [PolicyService],
+  exports: [PolicyService],
 })
 export class PolicyModule {}

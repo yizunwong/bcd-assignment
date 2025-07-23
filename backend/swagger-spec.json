@@ -1185,6 +1185,34 @@
         ]
       }
     },
+    "/coverage/policyholder/{userId}/summary": {
+      "get": {
+        "operationId": "CoverageController_getPolicyholderSummary",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Coverage"
+        ]
+      }
+    },
     "/claim-type-extractor": {
       "post": {
         "operationId": "PdfClaimExtractorController_extract",
