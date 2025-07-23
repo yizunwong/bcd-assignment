@@ -14,7 +14,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { ClaimService } from './claim.service';
-import { UpdateClaimDto } from './dto/requests/update-claim.dto';
+import { ClaimStatus, UpdateClaimDto } from './dto/requests/update-claim.dto';
 import { CreateClaimDto } from './dto/requests/create-claim.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { AuthGuard } from '../auth/auth.guard';
@@ -71,6 +71,18 @@ export class ClaimController {
   ): Promise<CommonResponseDto> {
     return this.claimService.update(+id, updateClaimDto, req);
   }
+
+  @Patch(':id/:status')
+  @UseGuards(AuthGuard)
+  @ApiCommonResponse(ClaimResponseDto, false, 'Update claim')
+  updateClaimStatus(
+    @Param('id') id: string,
+    @Param('status') status: ClaimStatus,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto> {
+    return this.claimService.updateClaimStatus(+id, status, req);
+  }
+
   @Delete(':id/file')
   @UseGuards(AuthGuard)
   @ApiCommonResponse(ClaimResponseDto, false, 'Remove claim document')
