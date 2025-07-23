@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { WagmiConfig, useAccount, useBalance } from "wagmi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Pagination } from "@/components/shared/Pagination";
+import { Connect, wagmiConfig } from "@/components/shared/Connect";
 import {
   Wallet,
   ArrowUpRight,
@@ -36,9 +38,10 @@ import {
 const ITEMS_PER_PAGE = 10;
 
 export default function WalletPage() {
-  const [walletAddress] = useState(
-    "0x742d35Cc6634C0532925a3b8D4C0532925a3b8D4"
-  );
+  const { address: walletAddress } = useAccount();
+  const { data: balanceData } = useBalance({
+    address: walletAddress,
+  });
   const [copied, setCopied] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [filterType, setFilterType] = useState("all");
@@ -111,7 +114,8 @@ export default function WalletPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const formatAddress = (address: string) => {
+  const formatAddress = (address?: string) => {
+    if (!address) return "";
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
@@ -122,6 +126,7 @@ export default function WalletPage() {
   };
 
   return (
+    <WagmiConfig config={wagmiConfig}>
     <div className="section-spacing">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -136,11 +141,15 @@ export default function WalletPage() {
                 Manage your crypto assets and transaction history
               </p>
             </div>
-          </div>
         </div>
+      </div>
 
-        {/* Wallet Overview */}
-        <div className="grid lg:grid-cols-3 gap-6 mb-8">
+      <div className="flex justify-end mb-8">
+        <Connect />
+      </div>
+
+      {/* Wallet Overview */}
+      <div className="grid lg:grid-cols-3 gap-6 mb-8">
           {/* Main Balance Card */}
           <Card className="lg:col-span-2 glass-card rounded-2xl">
             <CardHeader>
@@ -170,14 +179,14 @@ export default function WalletPage() {
               <div className="mb-6">
                 <div className="flex items-baseline space-x-2 mb-2">
                   <span className="text-4xl font-bold text-slate-800 dark:text-slate-100">
-                    {walletBalance.eth}
+                    {balanceData ? parseFloat(balanceData.formatted).toFixed(4) : '0'}
                   </span>
                   <span className="text-xl text-slate-600 dark:text-slate-400">
                     ETH
                   </span>
                 </div>
                 <p className="text-lg text-slate-600 dark:text-slate-400">
-                  ${walletBalance.usd} USD
+                  {balanceData ? balanceData.formatted : '0'} ETH
                 </p>
               </div>
 
@@ -494,5 +503,6 @@ export default function WalletPage() {
         </Tabs>
       </div>
     </div>
+    </WagmiConfig>
   );
 }
