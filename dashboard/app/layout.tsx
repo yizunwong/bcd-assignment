@@ -1,13 +1,14 @@
-import './globals.css';
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import { ThemeProvider } from '@/components/shared/ThemeProvider';
+import "./globals.css";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import { ThemeProvider } from "@/components/shared/ThemeProvider";
+import Web3Providers from "@/app/providers/Web3Providers"; // ✅ import it
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'BlockSecure Insurance - Decentralized Insurance Platform',
-  description: 'Secure, transparent insurance powered by blockchain technology',
+  title: "BlockSecure Insurance - Decentralized Insurance Platform",
+  description: "Secure, transparent insurance powered by blockchain technology",
 };
 
 export default function RootLayout({
@@ -18,12 +19,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className} suppressHydrationWarning>
-        <ThemeProvider
-          defaultTheme="light"
-          storageKey="blocksecure-ui-theme"
-        >
-          {children}
-        </ThemeProvider>
+        <Web3Providers>
+          <ThemeProvider defaultTheme="light" storageKey="blocksecure-ui-theme">
+            {children}
+          </ThemeProvider>
+        </Web3Providers>
       </body>
     </html>
   );

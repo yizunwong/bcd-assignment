@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { WagmiConfig, useAccount, useBalance } from "wagmi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Pagination } from "@/components/shared/Pagination";
+import { Connect } from "@/components/shared/Connect";
 import {
   Wallet,
   ArrowUpRight,
@@ -32,13 +34,17 @@ import {
   walletBalance,
   allTransactions,
 } from "@/public/data/policyholder/walletData";
+import { wagmiConfig } from "@/app/providers/WagmiAdapter";
+import { formatUnits } from "viem";
+import WalletSection from "@/components/shared/WalletSectiom";
 
 const ITEMS_PER_PAGE = 10;
 
 export default function WalletPage() {
-  const [walletAddress] = useState(
-    "0x742d35Cc6634C0532925a3b8D4C0532925a3b8D4"
-  );
+  const { address: walletAddress } = useAccount();
+  const { data: balanceData } = useBalance({
+    address: walletAddress,
+  });
   const [copied, setCopied] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [filterType, setFilterType] = useState("all");
@@ -111,7 +117,8 @@ export default function WalletPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const formatAddress = (address: string) => {
+  const formatAddress = (address?: string) => {
+    if (!address) return "";
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
@@ -139,97 +146,45 @@ export default function WalletPage() {
           </div>
         </div>
 
-        {/* Wallet Overview */}
-        <div className="grid lg:grid-cols-3 gap-6 mb-8">
-          {/* Main Balance Card */}
-          <Card className="lg:col-span-2 glass-card rounded-2xl">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-xl text-slate-800 dark:text-slate-100">
-                  Wallet Balance
-                </CardTitle>
-                <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-400">
-                  <span>{formatAddress(walletAddress)}</span>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => copyToClipboard(walletAddress)}
-                    className="h-6 w-6 p-0"
-                  >
-                    <Copy className="w-3 h-3" />
-                  </Button>
-                  {copied && (
-                    <span className="text-emerald-600 dark:text-emerald-400 text-xs">
-                      Copied!
-                    </span>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-6">
-                <div className="flex items-baseline space-x-2 mb-2">
-                  <span className="text-4xl font-bold text-slate-800 dark:text-slate-100">
-                    {walletBalance.eth}
-                  </span>
-                  <span className="text-xl text-slate-600 dark:text-slate-400">
-                    ETH
-                  </span>
-                </div>
-                <p className="text-lg text-slate-600 dark:text-slate-400">
-                  ${walletBalance.usd} USD
-                </p>
-              </div>
+        <div className="grid [grid-template-columns:auto_1fr_1fr] gap-6 items-stretch mb-8">
+          {/* Wallet Section - auto width */}
+          <WalletSection />
 
-              <div className="grid grid-cols-2 gap-4">
-                <Button className="gradient-accent text-white floating-button">
-                  <ArrowUpRight className="w-4 h-4 mr-2" />
-                  Send
-                </Button>
-                <Button variant="outline" className="floating-button">
-                  <ArrowDownLeft className="w-4 h-4 mr-2" />
-                  Receive
-                </Button>
+          {/* Stat Card: Total Payouts */}
+          <Card className="glass-card rounded-2xl h-full">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center">
+                  <TrendingUp className="w-6 h-6 text-white" />
+                </div>
+                <Badge className="status-badge status-active">+12.5%</Badge>
               </div>
+              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
+                $162,950
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400">
+                Total Payouts Received
+              </p>
             </CardContent>
           </Card>
 
-          {/* Quick Stats */}
-          <div className="space-y-4">
-            <Card className="glass-card rounded-2xl">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center">
-                    <TrendingUp className="w-6 h-6 text-white" />
-                  </div>
-                  <Badge className="status-badge status-active">+12.5%</Badge>
+          {/* Stat Card: Monthly Premiums */}
+          <Card className="glass-card rounded-2xl h-full">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
+                  <Shield className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                  $162,950
-                </h3>
-                <p className="text-slate-600 dark:text-slate-400">
-                  Total Payouts Received
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="glass-card rounded-2xl">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
-                    <Shield className="w-6 h-6 text-white" />
-                  </div>
-                  <Badge className="status-badge status-info">Active</Badge>
-                </div>
-                <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                  $3.5 ETH
-                </h3>
-                <p className="text-slate-600 dark:text-slate-400">
-                  Monthly Premiums
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+                <Badge className="status-badge status-info">Active</Badge>
+              </div>
+              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
+                $3.5 ETH
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400">
+                Monthly Premiums
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Token Holdings */}

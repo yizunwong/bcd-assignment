@@ -6,6 +6,7 @@ interface FetcherProps {
   headers?: Record<string, string>;
   data?: any;
   signal?: AbortSignal;
+  params?: Record<string, string | number>; // ✅ Add this
 }
 
 export const customFetcher = async <T = any>({
@@ -14,17 +15,26 @@ export const customFetcher = async <T = any>({
   headers,
   data,
   signal,
+  params,
 }: FetcherProps): Promise<T> => {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}${url}`, {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-      ...headers,
-    },
-    body: data ? JSON.stringify(data) : undefined,
-    signal,
-  });
+  // Construct query string
+  const query = params
+    ? "?" + new URLSearchParams(params as Record<string, string>).toString()
+    : "";
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}${url}${query}`,
+    {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        ...headers,
+      },
+      body: data ? JSON.stringify(data) : undefined,
+      signal,
+    }
+  );
 
   if (!res.ok) throw new Error("API error");
   return res.json();
