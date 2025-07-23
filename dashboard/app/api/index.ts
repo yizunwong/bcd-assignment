@@ -84,7 +84,6 @@ export interface RegisterDto {
   address?: string;
 }
 
-<<<<<<< HEAD:dashboard/src/api-client/api.ts
 export type UserResponseDtoRole =
   (typeof UserResponseDtoRole)[keyof typeof UserResponseDtoRole];
 
@@ -158,6 +157,43 @@ export interface CreateUserDto {
   dateOfBirth?: string;
   occupation?: string;
   address?: string;
+}
+
+export type UpdateUserDtoRole =
+  (typeof UpdateUserDtoRole)[keyof typeof UpdateUserDtoRole];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateUserDtoRole = {
+  policyholder: "policyholder",
+  insurance_admin: "insurance_admin",
+  system_admin: "system_admin",
+} as const;
+
+export type UpdateUserDtoStatus =
+  (typeof UpdateUserDtoStatus)[keyof typeof UpdateUserDtoStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateUserDtoStatus = {
+  active: "active",
+  deactivated: "deactivated",
+} as const;
+
+export interface UpdateUserDto {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  password?: string;
+  role?: UpdateUserDtoRole;
+  phone?: string;
+  bio?: string;
+  employeeId?: string;
+  licenseNumber?: string;
+  companyName?: string;
+  companyAddress?: string;
+  dateOfBirth?: string;
+  occupation?: string;
+  address?: string;
+  status?: UpdateUserDtoStatus;
 }
 
 export interface CreateClaimDto {
@@ -325,29 +361,12 @@ export interface UpdateCoverageDto {
 export interface ExtractClaimDto {
   /** Documents to upload */
   file?: Blob[];
-=======
-export type CreateUserDtoRole =
-  (typeof CreateUserDtoRole)[keyof typeof CreateUserDtoRole];
+}
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateUserDtoRole = {
-  policyholder: "policyholder",
-  insurance_admin: "insurance_admin",
-} as const;
-
-export interface CreateUserDto {
-  email: string;
-  password: string;
-  role: CreateUserDtoRole;
-  status?: string;
-  kyc_status?: string;
-  location?: string;
-  login_attempts?: number;
-  notes?: string;
-  company?: string;
-  policies?: number;
-  claims?: number;
->>>>>>> 5199243fc9c25a5d32f41c1496ac264d1447d63c:dashboard/app/api/index.ts
+export interface CreateReviewDto {
+  /** Rating from 1 to 5 */
+  rating: number;
+  comment?: string;
 }
 
 export type AuthControllerLogin200AllOf = {
@@ -391,6 +410,13 @@ export type UserControllerFindOne200AllOf = {
 
 export type UserControllerFindOne200 = CommonResponseDto &
   UserControllerFindOne200AllOf;
+
+export type UserControllerUpdate200AllOf = {
+  data?: UserResponseDto;
+};
+
+export type UserControllerUpdate200 = CommonResponseDto &
+  UserControllerUpdate200AllOf;
 
 export type ClaimControllerFindAllParams = {
   page?: number;
@@ -455,6 +481,13 @@ export type ClaimControllerRemove200AllOf = {
 
 export type ClaimControllerRemove200 = CommonResponseDto &
   ClaimControllerRemove200AllOf;
+
+export type ClaimControllerUpdateClaimStatus200AllOf = {
+  data?: ClaimResponseDto;
+};
+
+export type ClaimControllerUpdateClaimStatus200 = CommonResponseDto &
+  ClaimControllerUpdateClaimStatus200AllOf;
 
 export type ClaimControllerRemoveFile200AllOf = {
   data?: ClaimResponseDto;
@@ -526,6 +559,10 @@ export type PolicyControllerRemove200AllOf = {
 
 export type PolicyControllerRemove200 = CommonResponseDto &
   PolicyControllerRemove200AllOf;
+
+export type PolicyControllerGetCategoryCountsParams = {
+  userId: string;
+};
 
 export type CoverageControllerFindAllParams = {
   page?: number;
@@ -1395,7 +1432,82 @@ export function useUserControllerFindOne<
 
   return query;
 }
-<<<<<<< HEAD:dashboard/src/api-client/api.ts
+
+export const userControllerUpdate = (
+  id: string,
+  updateUserDto: UpdateUserDto,
+) => {
+  return customFetcher<UserControllerUpdate200>({
+    url: `/users/${id}`,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    data: updateUserDto,
+  });
+};
+
+export const getUserControllerUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof userControllerUpdate>>,
+    TError,
+    { id: string; data: UpdateUserDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof userControllerUpdate>>,
+  TError,
+  { id: string; data: UpdateUserDto },
+  TContext
+> => {
+  const mutationKey = ["userControllerUpdate"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof userControllerUpdate>>,
+    { id: string; data: UpdateUserDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return userControllerUpdate(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UserControllerUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof userControllerUpdate>>
+>;
+export type UserControllerUpdateMutationBody = UpdateUserDto;
+export type UserControllerUpdateMutationError = unknown;
+
+export const useUserControllerUpdate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof userControllerUpdate>>,
+      TError,
+      { id: string; data: UpdateUserDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof userControllerUpdate>>,
+  TError,
+  { id: string; data: UpdateUserDto },
+  TContext
+> => {
+  const mutationOptions = getUserControllerUpdateMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
 
 export const claimControllerCreate = (
   createClaimDto: CreateClaimDto,
@@ -1939,6 +2051,84 @@ export const useClaimControllerRemove = <TError = unknown, TContext = unknown>(
   TContext
 > => {
   const mutationOptions = getClaimControllerRemoveMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const claimControllerUpdateClaimStatus = (
+  id: string,
+  status: string,
+) => {
+  return customFetcher<ClaimControllerUpdateClaimStatus200>({
+    url: `/claim/${id}/${status}`,
+    method: "PATCH",
+  });
+};
+
+export const getClaimControllerUpdateClaimStatusMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
+    TError,
+    { id: string; status: string },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
+  TError,
+  { id: string; status: string },
+  TContext
+> => {
+  const mutationKey = ["claimControllerUpdateClaimStatus"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
+    { id: string; status: string }
+  > = (props) => {
+    const { id, status } = props ?? {};
+
+    return claimControllerUpdateClaimStatus(id, status);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ClaimControllerUpdateClaimStatusMutationResult = NonNullable<
+  Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>
+>;
+
+export type ClaimControllerUpdateClaimStatusMutationError = unknown;
+
+export const useClaimControllerUpdateClaimStatus = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
+      TError,
+      { id: string; status: string },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
+  TError,
+  { id: string; status: string },
+  TContext
+> => {
+  const mutationOptions =
+    getClaimControllerUpdateClaimStatusMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };
@@ -2568,6 +2758,325 @@ export const usePolicyControllerRemove = <TError = unknown, TContext = unknown>(
   return useMutation(mutationOptions, queryClient);
 };
 
+export const policyControllerGetSummary = (
+  userId: string,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<void>({
+    url: `/policy/dashboard/policyholder/${userId}/summary`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getPolicyControllerGetSummaryQueryKey = (userId: string) => {
+  return [`/policy/dashboard/policyholder/${userId}/summary`] as const;
+};
+
+export const getPolicyControllerGetSummaryQueryOptions = <
+  TData = Awaited<ReturnType<typeof policyControllerGetSummary>>,
+  TError = unknown,
+>(
+  userId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetSummary>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getPolicyControllerGetSummaryQueryKey(userId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof policyControllerGetSummary>>
+  > = ({ signal }) => policyControllerGetSummary(userId, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!userId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof policyControllerGetSummary>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type PolicyControllerGetSummaryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof policyControllerGetSummary>>
+>;
+export type PolicyControllerGetSummaryQueryError = unknown;
+
+export function usePolicyControllerGetSummary<
+  TData = Awaited<ReturnType<typeof policyControllerGetSummary>>,
+  TError = unknown,
+>(
+  userId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetSummary>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof policyControllerGetSummary>>,
+          TError,
+          Awaited<ReturnType<typeof policyControllerGetSummary>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePolicyControllerGetSummary<
+  TData = Awaited<ReturnType<typeof policyControllerGetSummary>>,
+  TError = unknown,
+>(
+  userId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetSummary>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof policyControllerGetSummary>>,
+          TError,
+          Awaited<ReturnType<typeof policyControllerGetSummary>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePolicyControllerGetSummary<
+  TData = Awaited<ReturnType<typeof policyControllerGetSummary>>,
+  TError = unknown,
+>(
+  userId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetSummary>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function usePolicyControllerGetSummary<
+  TData = Awaited<ReturnType<typeof policyControllerGetSummary>>,
+  TError = unknown,
+>(
+  userId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetSummary>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getPolicyControllerGetSummaryQueryOptions(
+    userId,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const policyControllerGetCategoryCounts = (
+  params: PolicyControllerGetCategoryCountsParams,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<void>({
+    url: `/policy/browse/categories`,
+    method: "GET",
+    params,
+    signal,
+  });
+};
+
+export const getPolicyControllerGetCategoryCountsQueryKey = (
+  params: PolicyControllerGetCategoryCountsParams,
+) => {
+  return [`/policy/browse/categories`, ...(params ? [params] : [])] as const;
+};
+
+export const getPolicyControllerGetCategoryCountsQueryOptions = <
+  TData = Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>,
+  TError = unknown,
+>(
+  params: PolicyControllerGetCategoryCountsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getPolicyControllerGetCategoryCountsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>
+  > = ({ signal }) => policyControllerGetCategoryCounts(params, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type PolicyControllerGetCategoryCountsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>
+>;
+export type PolicyControllerGetCategoryCountsQueryError = unknown;
+
+export function usePolicyControllerGetCategoryCounts<
+  TData = Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>,
+  TError = unknown,
+>(
+  params: PolicyControllerGetCategoryCountsParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>,
+          TError,
+          Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePolicyControllerGetCategoryCounts<
+  TData = Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>,
+  TError = unknown,
+>(
+  params: PolicyControllerGetCategoryCountsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>,
+          TError,
+          Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePolicyControllerGetCategoryCounts<
+  TData = Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>,
+  TError = unknown,
+>(
+  params: PolicyControllerGetCategoryCountsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function usePolicyControllerGetCategoryCounts<
+  TData = Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>,
+  TError = unknown,
+>(
+  params: PolicyControllerGetCategoryCountsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getPolicyControllerGetCategoryCountsQueryOptions(
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
 export const coverageControllerCreate = (
   createCoverageDto: CreateCoverageDto,
   signal?: AbortSignal,
@@ -3110,6 +3619,169 @@ export const useCoverageControllerRemove = <
   return useMutation(mutationOptions, queryClient);
 };
 
+export const coverageControllerGetPolicyholderSummary = (
+  userId: string,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<void>({
+    url: `/coverage/policyholder/${userId}/summary`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getCoverageControllerGetPolicyholderSummaryQueryKey = (
+  userId: string,
+) => {
+  return [`/coverage/policyholder/${userId}/summary`] as const;
+};
+
+export const getCoverageControllerGetPolicyholderSummaryQueryOptions = <
+  TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+  TError = unknown,
+>(
+  userId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getCoverageControllerGetPolicyholderSummaryQueryKey(userId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>
+  > = ({ signal }) => coverageControllerGetPolicyholderSummary(userId, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!userId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type CoverageControllerGetPolicyholderSummaryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>
+>;
+export type CoverageControllerGetPolicyholderSummaryQueryError = unknown;
+
+export function useCoverageControllerGetPolicyholderSummary<
+  TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+  TError = unknown,
+>(
+  userId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+          TError,
+          Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useCoverageControllerGetPolicyholderSummary<
+  TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+  TError = unknown,
+>(
+  userId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+          TError,
+          Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useCoverageControllerGetPolicyholderSummary<
+  TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+  TError = unknown,
+>(
+  userId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useCoverageControllerGetPolicyholderSummary<
+  TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+  TError = unknown,
+>(
+  userId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getCoverageControllerGetPolicyholderSummaryQueryOptions(
+    userId,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
 export const pdfClaimExtractorControllerExtract = (
   extractClaimDto: ExtractClaimDto,
   signal?: AbortSignal,
@@ -3195,5 +3867,85 @@ export const usePdfClaimExtractorControllerExtract = <
 
   return useMutation(mutationOptions, queryClient);
 };
-=======
->>>>>>> 5199243fc9c25a5d32f41c1496ac264d1447d63c:dashboard/app/api/index.ts
+
+export const reviewsControllerLeaveReview = (
+  id: string,
+  createReviewDto: CreateReviewDto,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<void>({
+    url: `/reviews/policy/${id}/review`,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    data: createReviewDto,
+    signal,
+  });
+};
+
+export const getReviewsControllerLeaveReviewMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reviewsControllerLeaveReview>>,
+    TError,
+    { id: string; data: CreateReviewDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reviewsControllerLeaveReview>>,
+  TError,
+  { id: string; data: CreateReviewDto },
+  TContext
+> => {
+  const mutationKey = ["reviewsControllerLeaveReview"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reviewsControllerLeaveReview>>,
+    { id: string; data: CreateReviewDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return reviewsControllerLeaveReview(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReviewsControllerLeaveReviewMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reviewsControllerLeaveReview>>
+>;
+export type ReviewsControllerLeaveReviewMutationBody = CreateReviewDto;
+export type ReviewsControllerLeaveReviewMutationError = unknown;
+
+export const useReviewsControllerLeaveReview = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reviewsControllerLeaveReview>>,
+      TError,
+      { id: string; data: CreateReviewDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof reviewsControllerLeaveReview>>,
+  TError,
+  { id: string; data: CreateReviewDto },
+  TContext
+> => {
+  const mutationOptions =
+    getReviewsControllerLeaveReviewMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
