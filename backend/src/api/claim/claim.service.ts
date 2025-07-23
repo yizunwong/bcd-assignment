@@ -5,7 +5,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UpdateClaimDto } from './dto/requests/update-claim.dto';
+import { ClaimStatus, UpdateClaimDto } from './dto/requests/update-claim.dto';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { CreateClaimDto } from './dto/requests/create-claim.dto';
 import { UploadClaimDocDto } from './dto/requests/upload-claim-doc.dto';
@@ -248,6 +248,44 @@ export class ClaimService {
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Claim updated successfully',
+      data,
+    });
+  }
+
+  //For admin to update claim status
+  async updateClaimStatus(
+    id: number,
+    status: ClaimStatus,
+    req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto> {
+    // Authenticate the user
+    const { data: userData, error: userError } =
+      await req.supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    // Update only the status field
+    const { data, error } = await req.supabase
+      .from('claims')
+      .update({
+        status: status,
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    // Handle errors
+    if (error || !data) {
+      throw new Error(
+        'Failed to update claim status: ' + (error?.message || 'Unknown error'),
+      );
+    }
+
+    // Return the response
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Claim status updated successfully',
       data,
     });
   }
