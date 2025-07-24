@@ -13,8 +13,8 @@ interface DecodedToken {
 
 type Role = 'policyholder' | 'admin' | 'system-admin';
 
-export default function GlobalNavbar() {
-  const cookieStore = cookies();
+export default async function GlobalNavbar() {
+  const cookieStore = await cookies();
   const token = cookieStore.get('access_token')?.value;
 
   let role: Role | undefined;
