@@ -72,7 +72,7 @@ export function Navbar({ role }: NavbarProps) {
     "/solutions",
     "/how-it-works",
     "/benefits",
-    "/plan",
+    "/plans",
     "/trust",
     "/help",
   ];
