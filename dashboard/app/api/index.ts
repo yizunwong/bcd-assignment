@@ -2057,7 +2057,7 @@ export const useClaimControllerRemove = <TError = unknown, TContext = unknown>(
 
 export const claimControllerUpdateClaimStatus = (
   id: string,
-  status: string,
+  status: "pending" | "approved" | "rejected" | "claimed",
 ) => {
   return customFetcher<ClaimControllerUpdateClaimStatus200>({
     url: `/claim/${id}/${status}`,
@@ -2072,13 +2072,13 @@ export const getClaimControllerUpdateClaimStatusMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
     TError,
-    { id: string; status: string },
+    { id: string; status: "pending" | "approved" | "rejected" | "claimed" },
     TContext
   >;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
   TError,
-  { id: string; status: string },
+  { id: string; status: "pending" | "approved" | "rejected" | "claimed" },
   TContext
 > => {
   const mutationKey = ["claimControllerUpdateClaimStatus"];
@@ -2092,7 +2092,7 @@ export const getClaimControllerUpdateClaimStatusMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
-    { id: string; status: string }
+    { id: string; status: "pending" | "approved" | "rejected" | "claimed" }
   > = (props) => {
     const { id, status } = props ?? {};
 
@@ -2116,7 +2116,7 @@ export const useClaimControllerUpdateClaimStatus = <
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
       TError,
-      { id: string; status: string },
+      { id: string; status: "pending" | "approved" | "rejected" | "claimed" },
       TContext
     >;
   },
@@ -2124,7 +2124,7 @@ export const useClaimControllerUpdateClaimStatus = <
 ): UseMutationResult<
   Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
   TError,
-  { id: string; status: string },
+  { id: string; status: "pending" | "approved" | "rejected" | "claimed" },
   TContext
 > => {
   const mutationOptions =

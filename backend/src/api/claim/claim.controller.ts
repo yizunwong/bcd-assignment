@@ -22,7 +22,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { FindClaimsQueryDto } from './dto/responses/claims-query.dto';
 import { ClaimResponseDto } from './dto/responses/claim.dto';
 import { ApiCommonResponse, CommonResponseDto } from 'src/common/common.dto';
-import { ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiParam } from '@nestjs/swagger';
 
 @Controller('claim')
 @ApiBearerAuth('supabase-auth')
@@ -75,6 +75,11 @@ export class ClaimController {
   @Patch(':id/:status')
   @UseGuards(AuthGuard)
   @ApiCommonResponse(ClaimResponseDto, false, 'Update claim')
+  @ApiParam({
+    name: 'status',
+    enum: ClaimStatus,
+    description: 'New status to set for the claim',
+  })
   updateClaimStatus(
     @Param('id') id: string,
     @Param('status') status: ClaimStatus,

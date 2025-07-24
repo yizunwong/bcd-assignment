@@ -6,6 +6,7 @@ export enum ClaimStatus {
   Pending = 'pending',
   Approved = 'approved',
   Rejected = 'rejected',
+  Claimed = 'claimed',
 }
 export class UpdateClaimDto extends PartialType(CreateClaimDto) {
   @ApiProperty({

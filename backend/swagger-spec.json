@@ -621,7 +621,14 @@
             "name": "status",
             "required": true,
             "in": "path",
+            "description": "New status to set for the claim",
             "schema": {
+              "enum": [
+                "pending",
+                "approved",
+                "rejected",
+                "claimed"
+              ],
               "type": "string"
             }
           }

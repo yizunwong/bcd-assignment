@@ -250,8 +250,44 @@ export class ClaimService {
       );
     }
 
-    // If claim is approved, update utilization_rate in coverage
-    if (String(updateClaimDto.status) === 'approved') {
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Claim updated successfully',
+      data,
+    });
+  }
+
+  //For admin to update claim status
+  async updateClaimStatus(
+    id: number,
+    status: ClaimStatus,
+    req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto> {
+    // Authenticate the user
+    const { data: userData, error: userError } =
+      await req.supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    // Update only the status field
+    const { data, error } = await req.supabase
+      .from('claims')
+      .update({
+        status: status,
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    // Handle errors
+    if (error || !data) {
+      throw new Error(
+        'Failed to update claim status: ' + (error?.message || 'Unknown error'),
+      );
+    }
+
+    if (status === ClaimStatus.Approved) {
       // Fetch the claim to get policy_id and user_id
       const { data: claim, error: claimError } = await req.supabase
         .from('claims')
@@ -312,42 +348,6 @@ export class ClaimService {
       if (updateCoverageError) {
         throw new Error('Failed to update coverage utilization rate');
       }
-    }
-    return new CommonResponseDto({
-      statusCode: 200,
-      message: 'Claim updated successfully',
-      data,
-    });
-  }
-
-  //For admin to update claim status
-  async updateClaimStatus(
-    id: number,
-    status: ClaimStatus,
-    req: AuthenticatedRequest,
-  ): Promise<CommonResponseDto> {
-    // Authenticate the user
-    const { data: userData, error: userError } =
-      await req.supabase.auth.getUser();
-    if (userError || !userData?.user) {
-      throw new UnauthorizedException('Invalid or expired token');
-    }
-
-    // Update only the status field
-    const { data, error } = await req.supabase
-      .from('claims')
-      .update({
-        status: status,
-      })
-      .eq('id', id)
-      .select()
-      .single();
-
-    // Handle errors
-    if (error || !data) {
-      throw new Error(
-        'Failed to update claim status: ' + (error?.message || 'Unknown error'),
-      );
     }
 
     // Return the response
