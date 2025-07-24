@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './ThemeToggle';
 import { 
@@ -33,6 +34,7 @@ interface NavbarProps {
 export function Navbar({ role }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   const allLinks = {
     policyholder: [
@@ -68,6 +70,10 @@ export function Navbar({ role }: NavbarProps) {
 
   const navigationLinks = role ? allLinks[role] : defaultLinks;
 
+  const isRolePage = pathname.startsWith('/policyholder') ||
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/system-admin');
+
   // Get the correct profile link based on role
   const getProfileLink = () => {
     switch (role) {
@@ -95,6 +101,9 @@ export function Navbar({ role }: NavbarProps) {
         return '/dashboard';
     }
   };
+
+  const dashboardLinkHref = isRolePage ? '/' : getDashboardLink();
+  const dashboardLinkLabel = isRolePage ? 'Home' : 'Dashboard';
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/20 dark:border-slate-700/50">
@@ -161,13 +170,13 @@ export function Navbar({ role }: NavbarProps) {
                         <User className="w-4 h-4 mr-3" />
                         Profile
                       </Link>
-                      <Link 
-                        href={getDashboardLink()}
+                      <Link
+                        href={dashboardLinkHref}
                         className="flex items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         <Home className="w-4 h-4 mr-3" />
-                        Dashboard
+                        {dashboardLinkLabel}
                       </Link>
                       <hr className="my-2 border-slate-200 dark:border-slate-700" />
                       <button 
@@ -251,10 +260,10 @@ export function Navbar({ role }: NavbarProps) {
                     </Button>
                   </Link>
 
-                  <Link href={getDashboardLink()}>
+                  <Link href={dashboardLinkHref}>
                     <Button variant="ghost" size="sm" className="floating-button w-full justify-start">
                       <Home className="w-5 h-5 mr-2" />
-                      Dashboard
+                      {dashboardLinkLabel}
                     </Button>
                   </Link>
 

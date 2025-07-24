@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import {
   Shield,
   Users,
@@ -23,8 +22,6 @@ import {
   Heart,
   Plane,
   Sprout,
-  Menu,
-  X,
   Wallet,
   ClipboardList,
   ShieldCheck,
@@ -40,16 +37,7 @@ import Link from "next/link";
 
 export default function Home() {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const navigationLinks = [
-    { href: "/solutions", label: "Solutions" },
-    { href: "/how-it-works", label: "How It Works" },
-    { href: "/benefits", label: "Benefits" },
-    { href: "/plans", label: "Plans & Pricing" },
-    { href: "/trust", label: "Trust & Security" },
-    { href: "/help", label: "Help Center" },
-  ];
 
   const howItWorksSteps = [
     {
@@ -160,111 +148,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/20 dark:border-slate-700/50">
-        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <Link
-              href="/"
-              className="flex items-center space-x-2 group flex-shrink-0"
-            >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
-                <Shield className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-xl font-bold text-slate-800 dark:text-slate-200 hidden sm:block">
-                BlockSecure
-              </span>
-            </Link>
-
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-2 xl:space-x-4 2xl:space-x-6 flex-1 justify-center max-w-4xl mx-8">
-              {navigationLinks.map((link, index) => (
-                <a
-                  key={index}
-                  href={link.href}
-                  className="nav-item whitespace-nowrap px-2 xl:px-3 2xl:px-4"
-                >
-                  <span className="hidden xl:block">{link.label}</span>
-                  <span className="xl:hidden text-xs">
-                    {link.label.split(" ")[0]}
-                  </span>
-                </a>
-              ))}
-            </div>
-
-            {/* Right Side Actions */}
-            <div className="hidden md:flex items-center space-x-2 lg:space-x-3 xl:space-x-4 flex-shrink-0">
-              <ThemeToggle />
-
-              <div className="flex items-center space-x-2">
-                <Link href="/auth/login">
-                  <Button
-                    variant="ghost"
-                    className="text-slate-600 dark:text-slate-300 hidden lg:inline-flex"
-                  >
-                    Sign In
-                  </Button>
-                </Link>
-                <Link href="/auth/register">
-                  <Button className="gradient-accent text-white floating-button">
-                    <span className="hidden lg:inline">Get Started</span>
-                    <span className="lg:hidden">Join</span>
-                  </Button>
-                </Link>
-              </div>
-            </div>
-
-            {/* Mobile menu button */}
-            <div className="md:hidden flex items-center space-x-2">
-              <ThemeToggle />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-slate-600 dark:text-slate-300 w-9 h-9 p-0"
-              >
-                {isMenuOpen ? (
-                  <X className="w-6 h-6" />
-                ) : (
-                  <Menu className="w-6 h-6" />
-                )}
-              </Button>
-            </div>
-          </div>
-
-          {/* Mobile Navigation */}
-          {isMenuOpen && (
-            <div className="md:hidden border-t border-white/20 dark:border-slate-700/50 py-4">
-              <div className="flex flex-col space-y-4">
-                {navigationLinks.map((link, index) => (
-                  <a
-                    key={index}
-                    href={link.href}
-                    className="nav-item"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <span>{link.label}</span>
-                  </a>
-                ))}
-
-                <div className="flex flex-col space-y-2 pt-4 border-t border-white/20 dark:border-slate-700/50">
-                  <Link href="/auth/login">
-                    <Button variant="outline" className="w-full">
-                      Sign In
-                    </Button>
-                  </Link>
-                  <Link href="/auth/register">
-                    <Button className="w-full gradient-accent text-white">
-                      Get Started
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </nav>
 
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-24 pb-20 px-4">
