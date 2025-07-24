@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Navbar } from "@/components/shared/Navbar";
-import { Footer } from "@/components/shared/Footer";
 import {
   HelpCircle,
   Search,
@@ -348,7 +346,6 @@ export default function HelpPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <Navbar />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-24 pb-20 px-4">
@@ -824,7 +821,6 @@ export default function HelpPage() {
         </div>
       </section>
 
-      <Footer />
     </div>
   );
 }

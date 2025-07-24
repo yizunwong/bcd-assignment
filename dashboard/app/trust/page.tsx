@@ -4,8 +4,6 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Navbar } from "@/components/shared/Navbar";
-import { Footer } from "@/components/shared/Footer";
 import {
   Shield,
   Lock,
@@ -302,7 +300,6 @@ export default function TrustSecurityPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <Navbar />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-24 pb-20 px-4">
@@ -1012,7 +1009,6 @@ export default function TrustSecurityPage() {
         </div>
       </section>
 
-      <Footer />
     </div>
   );
 }

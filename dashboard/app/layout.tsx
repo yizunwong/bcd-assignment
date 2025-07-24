@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
 import Web3Providers from "@/app/providers/Web3Providers"; // ✅ import it
+import GlobalNavbar from "@/components/shared/GlobalNavbar";
+import { Footer } from "@/components/shared/Footer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,7 +23,9 @@ export default function RootLayout({
       <body className={inter.className} suppressHydrationWarning>
         <Web3Providers>
           <ThemeProvider defaultTheme="light" storageKey="blocksecure-ui-theme">
-            {children}
+            <GlobalNavbar />
+            <main className="pt-16">{children}</main>
+            <Footer />
           </ThemeProvider>
         </Web3Providers>
       </body>
