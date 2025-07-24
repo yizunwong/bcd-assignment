@@ -22,19 +22,16 @@ export const customFetcher = async <T = any>({
     ? "?" + new URLSearchParams(params as Record<string, string>).toString()
     : "";
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL}${url}${query}`,
-    {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        ...headers,
-      },
-      body: data ? JSON.stringify(data) : undefined,
-      signal,
-    }
-  );
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}${query}`, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+      ...headers,
+    },
+    body: data ? JSON.stringify(data) : undefined,
+    signal,
+  });
 
   if (!res.ok) throw new Error("API error");
   return res.json();

@@ -161,7 +161,7 @@ export class AuthService {
         email: data.user.email ?? '',
         email_verified: metadata.email_verified ?? false,
         username: metadata.username ?? '',
-        role: metadata.role ?? '',
+        role: appMeta.role ?? '',
         lastSignInAt: data.user.last_sign_in_at ?? '',
         provider: appMeta.provider ?? '',
       }),
