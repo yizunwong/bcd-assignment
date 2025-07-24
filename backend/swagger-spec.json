@@ -1473,15 +1473,11 @@
       "LoginResponseDto": {
         "type": "object",
         "properties": {
-          "accessToken": {
-            "type": "string"
-          },
           "user": {
             "$ref": "#/components/schemas/AuthUserResponseDto"
           }
         },
         "required": [
-          "accessToken",
           "user"
         ]
       },

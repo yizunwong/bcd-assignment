@@ -12,12 +12,13 @@ import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { AuthUserResponseDto } from './dto/responses/auth-user.dto';
 import { UserRole } from '../user/dto/requests/create.dto';
 import { parseAppMetadata, parseUserMetadata } from 'src/utils/auth-metadata';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
   constructor(private readonly supabaseService: SupabaseService) {}
 
-  async signInWithEmail(body: LoginDto) {
+  async signInWithEmail(body: LoginDto, res: Response) {
     // ✅ Anonymous client, no token needed for login
     const supabase = this.supabaseService.createClientWithToken();
 
@@ -31,6 +32,14 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    res.cookie('access_token', data.session.access_token, {
+      httpOnly: true,
+      secure: true,
+      maxAge: 60 * 60 * 1000, // 1 hour
+      sameSite: 'lax',
+      path: '/',
+    });
+
     const metadata = parseUserMetadata(data.user.user_metadata);
     const appMeta = parseAppMetadata(data.user.app_metadata);
 
@@ -38,7 +47,6 @@ export class AuthService {
       statusCode: 200,
       message: 'Login successful',
       data: new LoginResponseDto({
-        accessToken: data.session.access_token,
         user: {
           id: data.user.id,
           email: data.user.email ?? '',

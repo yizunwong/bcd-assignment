@@ -42,7 +42,6 @@ export interface AuthUserResponseDto {
 }
 
 export interface LoginResponseDto {
-  accessToken: string;
   user: AuthUserResponseDto;
 }
 

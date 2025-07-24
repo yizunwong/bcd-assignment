@@ -4,6 +4,7 @@ import {
   Get,
   Post,
   Request,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -15,6 +16,7 @@ import { AuthGuard } from './auth.guard';
 import { ApiCommonResponse, CommonResponseDto } from '../../common/common.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { AuthUserResponseDto } from './dto/responses/auth-user.dto';
+import { Response } from 'express';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -25,8 +27,9 @@ export class AuthController {
   @ApiCommonResponse(LoginResponseDto, false, 'User login')
   async login(
     @Body() body: LoginDto,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<CommonResponseDto<LoginResponseDto>> {
-    return this.authService.signInWithEmail(body);
+    return this.authService.signInWithEmail(body, res);
   }
 
   @Post('register')
