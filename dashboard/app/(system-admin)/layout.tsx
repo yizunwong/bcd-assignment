@@ -1,5 +1,6 @@
 import { Navbar } from '@/components/shared/Navbar';
 import { Footer } from '@/components/shared/Footer';
+import AuthGuard from '@/components/shared/AuthGuard';
 
 export default function SystemAdminLayout({
   children,
@@ -7,12 +8,14 @@ export default function SystemAdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <Navbar role="system-admin" />
-      <main className="pt-16">
-        {children}
-      </main>
-      <Footer />
-    </div>
+    <AuthGuard role="system-admin">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <Navbar role="system-admin" />
+        <main className="pt-16">
+          {children}
+        </main>
+        <Footer />
+      </div>
+    </AuthGuard>
   );
 }
