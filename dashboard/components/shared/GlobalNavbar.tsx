@@ -2,6 +2,8 @@ import { cookies } from 'next/headers';
 import { jwtDecode } from 'jwt-decode';
 import { Navbar } from './Navbar';
 
+export const dynamic = 'force-dynamic';
+
 interface DecodedToken {
   app_metadata?: {
     role?: string;

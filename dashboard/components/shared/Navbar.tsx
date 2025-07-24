@@ -102,8 +102,6 @@ export function Navbar({ role }: NavbarProps) {
     }
   };
 
-  const dashboardLinkHref = isRolePage ? '/' : getDashboardLink();
-  const dashboardLinkLabel = isRolePage ? 'Home' : 'Dashboard';
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/20 dark:border-slate-700/50">
@@ -171,12 +169,12 @@ export function Navbar({ role }: NavbarProps) {
                         Profile
                       </Link>
                       <Link
-                        href={dashboardLinkHref}
+                        href={isRolePage ? '/' : getDashboardLink()}
                         className="flex items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         <Home className="w-4 h-4 mr-3" />
-                        {dashboardLinkLabel}
+                        {isRolePage ? 'Home' : 'Dashboard'}
                       </Link>
                       <hr className="my-2 border-slate-200 dark:border-slate-700" />
                       <button 
@@ -260,10 +258,10 @@ export function Navbar({ role }: NavbarProps) {
                     </Button>
                   </Link>
 
-                  <Link href={dashboardLinkHref}>
+                  <Link href={isRolePage ? '/' : getDashboardLink()}>
                     <Button variant="ghost" size="sm" className="floating-button w-full justify-start">
                       <Home className="w-5 h-5 mr-2" />
-                      {dashboardLinkLabel}
+                      {isRolePage ? 'Home' : 'Dashboard'}
                     </Button>
                   </Link>
 
