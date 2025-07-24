@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import useAuth from "@/app/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +11,8 @@ import { Shield, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { login, isLoggingIn, loginError } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -16,10 +20,14 @@ export default function LoginPage() {
     rememberMe: false,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login attempt:", formData);
-    // Handle login logic here
+    try {
+      await login({ email: formData.email, password: formData.password });
+      router.push("/");
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
@@ -131,10 +139,16 @@ export default function LoginPage() {
 
               <Button
                 type="submit"
+                disabled={isLoggingIn}
                 className="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95 py-3"
               >
                 Sign In
               </Button>
+              {loginError && (
+                <p className="text-red-500 text-sm mt-2 text-center">
+                  {(loginError as Error).message || "Login failed"}
+                </p>
+              )}
             </form>
 
             <div className="mt-6 text-center">

@@ -25,7 +25,8 @@ import {
   ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import useAuth from "@/app/hooks/useAuth";
 
 export default function RegisterPage() {
   const searchParams = useSearchParams();
@@ -69,11 +70,14 @@ export default function RegisterPage() {
       title: "Insurance Provider",
       description: "Insurance companies, brokers, and service providers",
       icon: Building,
-      gradient: "from-emerald-500 to-green-500",
+    gradient: "from-emerald-500 to-green-500",
     },
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const router = useRouter();
+  const { register: registerUser, isRegistering, registerError } = useAuth();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
@@ -82,8 +86,23 @@ export default function RegisterPage() {
         // Redirect to provider registration
         window.location.href = "/auth/register/provider";
       } else {
-        console.log("Registration data:", { ...formData, role: selectedRole });
-        // Handle policyholder registration logic here
+        try {
+          await registerUser({
+            email: formData.email,
+            password: formData.password,
+            confirmPassword: formData.confirmPassword,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            role: "policyholder",
+            phone: formData.phone,
+            dateOfBirth: formData.dateOfBirth,
+            occupation: formData.occupation,
+            address: formData.address,
+          });
+          router.push("/auth/login");
+        } catch (err) {
+          console.error(err);
+        }
       }
     }
   };
@@ -579,6 +598,7 @@ export default function RegisterPage() {
                 <Button
                   type="submit"
                   disabled={
+                    isRegistering ||
                     (currentStep === 1 && !selectedRole) ||
                     (currentStep === 3 &&
                       (!formData.agreeToTerms || !formData.agreeToPrivacy))
@@ -598,6 +618,11 @@ export default function RegisterPage() {
                     "Continue"
                   )}
                 </Button>
+                {registerError && (
+                  <p className="text-red-500 text-sm mt-2">
+                    {(registerError as Error).message || "Registration failed"}
+                  </p>
+                )}
               </div>
             </form>
           </CardContent>
