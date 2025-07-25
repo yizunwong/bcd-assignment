@@ -1,8 +1,8 @@
-import { cookies } from 'next/headers';
-import { jwtDecode } from 'jwt-decode';
-import { Navbar } from './Navbar';
+import { cookies } from "next/headers";
+import { jwtDecode } from "jwt-decode";
+import { Navbar } from "./Navbar";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 interface DecodedToken {
   app_metadata?: {
@@ -11,11 +11,11 @@ interface DecodedToken {
   [key: string]: any;
 }
 
-type Role = 'policyholder' | 'admin' | 'system-admin';
+type Role = "policyholder" | "admin" | "system-admin";
 
 export default async function GlobalNavbar() {
   const cookieStore = await cookies();
-  const token = cookieStore.get('access_token')?.value;
+  const token = cookieStore.get("access_token")?.value;
 
   let role: Role | undefined;
 
@@ -24,21 +24,21 @@ export default async function GlobalNavbar() {
       const decoded = jwtDecode<DecodedToken>(token);
       const rawRole = decoded.app_metadata?.role;
       switch (rawRole) {
-        case 'policyholder':
-          role = 'policyholder';
+        case "policyholder":
+          role = "policyholder";
           break;
-        case 'admin':
-        case 'insurance_admin':
-          role = 'admin';
+        case "admin":
+        case "insurance_admin":
+          role = "admin";
           break;
-        case 'system_admin':
-          role = 'system-admin';
+        case "system_admin":
+          role = "system-admin";
           break;
         default:
           role = undefined;
       }
     } catch (err) {
-      console.error('Failed to decode token', err);
+      console.error("Failed to decode token", err);
     }
   }
 
