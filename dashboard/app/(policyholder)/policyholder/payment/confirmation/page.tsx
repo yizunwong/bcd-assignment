@@ -32,7 +32,6 @@ import {
 import Link from "next/link";
 
 export default function PaymentConfirmation() {
-  const searchParams = useSearchParams();
   const [copied, setCopied] = useState(false);
   const [currentStep] = useState(3);
 
@@ -176,8 +175,8 @@ export default function PaymentConfirmation() {
                       step.status === "current"
                         ? "text-emerald-600 dark:text-emerald-400"
                         : step.status === "completed"
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-slate-500 dark:text-slate-400"
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : "text-slate-500 dark:text-slate-400"
                     }`}
                   >
                     {step.name}

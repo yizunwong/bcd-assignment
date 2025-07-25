@@ -39,7 +39,7 @@ function Web3ContextProvider({ children }: { children: ReactNode }) {
     setInitialState(state);
   }, []);
 
-  if (!initialState) return null; // or loading spinner
+  if (typeof window === "undefined" || !initialState) return null;
 
   return (
     <WagmiProvider

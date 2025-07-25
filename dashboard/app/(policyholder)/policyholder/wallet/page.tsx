@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { WagmiConfig, useAccount, useBalance } from "wagmi";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -15,12 +13,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Pagination } from "@/components/shared/Pagination";
-import { Connect } from "@/components/shared/Connect";
 import {
   Wallet,
   ArrowUpRight,
   ArrowDownLeft,
-  Copy,
   ExternalLink,
   Coins,
   TrendingUp,
@@ -34,18 +30,11 @@ import {
   walletBalance,
   allTransactions,
 } from "@/public/data/policyholder/walletData";
-import { wagmiConfig } from "@/app/providers/WagmiAdapter";
-import { formatUnits } from "viem";
 import WalletSection from "@/components/shared/WalletSectiom";
 
 const ITEMS_PER_PAGE = 10;
 
 export default function WalletPage() {
-  const { address: walletAddress } = useAccount();
-  const { data: balanceData } = useBalance({
-    address: walletAddress,
-  });
-  const [copied, setCopied] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -111,11 +100,6 @@ export default function WalletPage() {
     },
   ];
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   const formatAddress = (address?: string) => {
     if (!address) return "";

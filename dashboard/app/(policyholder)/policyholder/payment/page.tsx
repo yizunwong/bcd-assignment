@@ -30,7 +30,6 @@ import {
 import Link from "next/link";
 
 export default function PaymentSummary() {
-  const searchParams = useSearchParams();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(2);
   const [tokenAmount, setTokenAmount] = useState("");

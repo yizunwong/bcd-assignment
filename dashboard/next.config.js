@@ -4,6 +4,8 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: { unoptimized: true },
+  reactStrictMode: true,
+  productionBrowserSourceMaps: true,
 };
 
 module.exports = nextConfig;

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,7 +13,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
 import {
   Shield,
   Eye,
@@ -25,13 +24,12 @@ import {
   ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import useAuth from "@/app/hooks/useAuth";
 
 export default function RegisterPage() {
-  const searchParams = useSearchParams();
   const [selectedRole, setSelectedRole] = useState<string>(
-    searchParams.get("role") || ""
+    ""
   );
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -70,7 +68,7 @@ export default function RegisterPage() {
       title: "Insurance Provider",
       description: "Insurance companies, brokers, and service providers",
       icon: Building,
-    gradient: "from-emerald-500 to-green-500",
+      gradient: "from-emerald-500 to-green-500",
     },
   ];
 
