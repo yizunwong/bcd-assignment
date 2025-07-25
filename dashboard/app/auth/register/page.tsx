@@ -540,7 +540,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen py-12 px-4 bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50">
+    <div className="min-h-screen py-12 px-4 bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">

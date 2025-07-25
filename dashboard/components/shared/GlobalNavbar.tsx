@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { jwtDecode } from 'jwt-decode';
-import { Navbar } from './Navbar';
+import NavbarWrapper from './NavbarWrapper';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,5 +42,5 @@ export default async function GlobalNavbar() {
     }
   }
 
-  return <Navbar role={role} />;
+  return <NavbarWrapper role={role} />;
 }
