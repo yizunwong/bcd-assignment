@@ -45,9 +45,9 @@ export default function useAuth() {
     logout,
     user: loginMutation.data?.data?.user,
     isAuthenticated: loginMutation.data?.data?.accessToken ? true : false,
-    loginError: loginMutation.error,
+    loginError: loginMutation.error as Error,
     isLoggingIn: loginMutation.isPending,
-    registerError: registerMutation.error,
+    registerError: registerMutation.error as Error,
     isRegistering: registerMutation.isPending,
   };
 }

@@ -146,7 +146,7 @@ export default function LoginPage() {
               </Button>
               {loginError && (
                 <p className="text-red-500 text-sm mt-2 text-center">
-                  {(loginError as Error).message || "Login failed"}
+                  {loginError.message || "Login failed"}
                 </p>
               )}
             </form>

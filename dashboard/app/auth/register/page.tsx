@@ -620,7 +620,7 @@ export default function RegisterPage() {
                 </Button>
                 {registerError && (
                   <p className="text-red-500 text-sm mt-2">
-                    {(registerError as Error).message || "Registration failed"}
+                    {registerError.message || "Registration failed"}
                   </p>
                 )}
               </div>
