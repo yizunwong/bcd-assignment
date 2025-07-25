@@ -652,13 +652,7 @@
             "in": "path",
             "description": "New status to set for the claim",
             "schema": {
-              "enum": [
-                "pending",
-                "approved",
-                "rejected",
-                "claimed"
-              ],
-              "type": "string"
+              "$ref": "#/components/schemas/ClaimStatus"
             }
           }
         ],
@@ -1051,16 +1045,7 @@
     "/policy/browse/categories": {
       "get": {
         "operationId": "PolicyController_getCategoryCounts",
-        "parameters": [
-          {
-            "name": "userId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": ""
@@ -1972,6 +1957,15 @@
         "required": [
           "id",
           "status"
+        ]
+      },
+      "ClaimStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "approved",
+          "rejected",
+          "claimed"
         ]
       },
       "CreatePolicyDto": {

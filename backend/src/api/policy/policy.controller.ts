@@ -77,11 +77,8 @@ export class PolicyController {
   @Get('/browse/categories')
   @UseGuards(AuthGuard)
   @ApiBearerAuth('supabase-auth')
-  async getCategoryCounts(
-    @Query('userId') userId: string,
-    @Req() req: AuthenticatedRequest,
-  ) {
-    return this.policyService.getPolicyCountByCategory(userId, req);
+  async getCategoryCounts(@Req() req: AuthenticatedRequest) {
+    return this.policyService.getPolicyCountByCategory(req);
   }
 
   @Patch(':id')

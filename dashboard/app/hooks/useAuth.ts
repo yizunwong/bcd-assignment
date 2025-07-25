@@ -1,42 +1,39 @@
+import { useAuthControllerLogin, type LoginDto } from "@/app/api";
+import { useAuthControllerRegister, type RegisterDto } from "@/app/api";
+import { parseError } from "@/app/utils/parseError";
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  useAuthControllerLogin,
-  useAuthControllerRegister,
+  authControllerLogout,
   getAuthControllerGetMeQueryKey,
-  authControllerLogout, // ✅ Import this
-  type LoginDto,
-  type RegisterDto,
 } from "@/app/api";
-import { parseError } from '../utils/parseError';
 
-export default function useAuth() {
+export function useLoginMutation() {
+  const mutation = useAuthControllerLogin();
+
+  return {
+    ...mutation,
+    login: (data: LoginDto) => mutation.mutateAsync({ data }),
+    error: parseError(mutation.error),
+  };
+}
+
+export function useRegisterMutation() {
+  const mutation = useAuthControllerRegister();
+
+  return {
+    ...mutation,
+    register: (data: RegisterDto) => mutation.mutateAsync({ data }),
+    error: parseError(mutation.error),
+  };
+}
+
+export function useLogout() {
   const queryClient = useQueryClient();
-
-  const loginMutation = useAuthControllerLogin();
-  const registerMutation = useAuthControllerRegister();
-
-  const login = useCallback(
-    async (credentials: LoginDto) => {
-      const res = await loginMutation.mutateAsync({ data: credentials });
-      return res;
-    },
-    [loginMutation, queryClient]
-  );
-
-  const register = useCallback(
-    async (payload: RegisterDto) => {
-      return registerMutation.mutateAsync({ data: payload });
-    },
-    [registerMutation]
-  );
 
   const logout = useCallback(async () => {
     try {
-      // ✅ Call the actual logout API to clear cookie
       await authControllerLogout();
-
-      // ❌ Clear cached auth user data
       queryClient.removeQueries({
         queryKey: getAuthControllerGetMeQueryKey(),
       });
@@ -45,15 +42,28 @@ export default function useAuth() {
     }
   }, [queryClient]);
 
+  return { logout };
+}
+
+export default function useAuth() {
+  const loginMutation = useLoginMutation();
+  const registerMutation = useRegisterMutation();
+  const { logout } = useLogout();
+
+  const user = loginMutation.data?.data?.user;
+  const isAuthenticated = !!user;
+
   return {
-    login,
-    register,
-    logout,
-    user: loginMutation.data?.data?.user,
-    isAuthenticated: loginMutation.data?.data?.accessToken ? true : false,
-    loginError: parseError(loginMutation.error),
+    login: loginMutation.login,
+    loginError: loginMutation.error,
     isLoggingIn: loginMutation.isPending,
-    registerError: parseError(registerMutation.error),
+
+    register: registerMutation.register,
+    registerError: registerMutation.error,
     isRegistering: registerMutation.isPending,
+
+    logout,
+    user,
+    isAuthenticated,
   };
 }

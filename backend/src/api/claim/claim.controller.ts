@@ -78,6 +78,7 @@ export class ClaimController {
   @ApiParam({
     name: 'status',
     enum: ClaimStatus,
+    enumName: 'ClaimStatus',
     description: 'New status to set for the claim',
   })
   updateClaimStatus(

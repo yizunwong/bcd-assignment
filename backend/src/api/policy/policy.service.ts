@@ -265,13 +265,10 @@ export class PolicyService {
     };
   }
 
-  async getPolicyCountByCategory(userId: string, req: AuthenticatedRequest) {
+  async getPolicyCountByCategory(req: AuthenticatedRequest) {
     const supabase = req.supabase;
 
-    const { data, error } = await supabase
-      .from('policies')
-      .select('category')
-      .eq('created_by', userId);
+    const { data, error } = await supabase.from('policies').select('category');
 
     if (error) {
       throw new InternalServerErrorException('Failed to fetch categories');

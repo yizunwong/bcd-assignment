@@ -245,6 +245,16 @@ export interface UpdateClaimDto {
   status: string;
 }
 
+export type ClaimStatus = (typeof ClaimStatus)[keyof typeof ClaimStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ClaimStatus = {
+  pending: "pending",
+  approved: "approved",
+  rejected: "rejected",
+  claimed: "claimed",
+} as const;
+
 export interface CreatePolicyDto {
   name: string;
   category: string;
@@ -558,10 +568,6 @@ export type PolicyControllerRemove200AllOf = {
 
 export type PolicyControllerRemove200 = CommonResponseDto &
   PolicyControllerRemove200AllOf;
-
-export type PolicyControllerGetCategoryCountsParams = {
-  userId: string;
-};
 
 export type CoverageControllerFindAllParams = {
   page?: number;
@@ -2122,7 +2128,7 @@ export const useClaimControllerRemove = <TError = unknown, TContext = unknown>(
 
 export const claimControllerUpdateClaimStatus = (
   id: string,
-  status: "pending" | "approved" | "rejected" | "claimed",
+  status: ClaimStatus,
 ) => {
   return customFetcher<ClaimControllerUpdateClaimStatus200>({
     url: `/claim/${id}/${status}`,
@@ -2137,13 +2143,13 @@ export const getClaimControllerUpdateClaimStatusMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
     TError,
-    { id: string; status: "pending" | "approved" | "rejected" | "claimed" },
+    { id: string; status: ClaimStatus },
     TContext
   >;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
   TError,
-  { id: string; status: "pending" | "approved" | "rejected" | "claimed" },
+  { id: string; status: ClaimStatus },
   TContext
 > => {
   const mutationKey = ["claimControllerUpdateClaimStatus"];
@@ -2157,7 +2163,7 @@ export const getClaimControllerUpdateClaimStatusMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
-    { id: string; status: "pending" | "approved" | "rejected" | "claimed" }
+    { id: string; status: ClaimStatus }
   > = (props) => {
     const { id, status } = props ?? {};
 
@@ -2181,7 +2187,7 @@ export const useClaimControllerUpdateClaimStatus = <
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
       TError,
-      { id: string; status: "pending" | "approved" | "rejected" | "claimed" },
+      { id: string; status: ClaimStatus },
       TContext
     >;
   },
@@ -2189,7 +2195,7 @@ export const useClaimControllerUpdateClaimStatus = <
 ): UseMutationResult<
   Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
   TError,
-  { id: string; status: "pending" | "approved" | "rejected" | "claimed" },
+  { id: string; status: ClaimStatus },
   TContext
 > => {
   const mutationOptions =
@@ -2983,48 +2989,38 @@ export function usePolicyControllerGetSummary<
   return query;
 }
 
-export const policyControllerGetCategoryCounts = (
-  params: PolicyControllerGetCategoryCountsParams,
-  signal?: AbortSignal,
-) => {
+export const policyControllerGetCategoryCounts = (signal?: AbortSignal) => {
   return customFetcher<void>({
     url: `/policy/browse/categories`,
     method: "GET",
-    params,
     signal,
   });
 };
 
-export const getPolicyControllerGetCategoryCountsQueryKey = (
-  params: PolicyControllerGetCategoryCountsParams,
-) => {
-  return [`/policy/browse/categories`, ...(params ? [params] : [])] as const;
+export const getPolicyControllerGetCategoryCountsQueryKey = () => {
+  return [`/policy/browse/categories`] as const;
 };
 
 export const getPolicyControllerGetCategoryCountsQueryOptions = <
   TData = Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>,
   TError = unknown,
->(
-  params: PolicyControllerGetCategoryCountsParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>,
-        TError,
-        TData
-      >
-    >;
-  },
-) => {
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
   const { query: queryOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ??
-    getPolicyControllerGetCategoryCountsQueryKey(params);
+    queryOptions?.queryKey ?? getPolicyControllerGetCategoryCountsQueryKey();
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>
-  > = ({ signal }) => policyControllerGetCategoryCounts(params, signal);
+  > = ({ signal }) => policyControllerGetCategoryCounts(signal);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>,
@@ -3042,7 +3038,6 @@ export function usePolicyControllerGetCategoryCounts<
   TData = Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>,
   TError = unknown,
 >(
-  params: PolicyControllerGetCategoryCountsParams,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -3068,7 +3063,6 @@ export function usePolicyControllerGetCategoryCounts<
   TData = Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>,
   TError = unknown,
 >(
-  params: PolicyControllerGetCategoryCountsParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3094,7 +3088,6 @@ export function usePolicyControllerGetCategoryCounts<
   TData = Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>,
   TError = unknown,
 >(
-  params: PolicyControllerGetCategoryCountsParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3113,7 +3106,6 @@ export function usePolicyControllerGetCategoryCounts<
   TData = Awaited<ReturnType<typeof policyControllerGetCategoryCounts>>,
   TError = unknown,
 >(
-  params: PolicyControllerGetCategoryCountsParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3127,10 +3119,8 @@ export function usePolicyControllerGetCategoryCounts<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getPolicyControllerGetCategoryCountsQueryOptions(
-    params,
-    options,
-  );
+  const queryOptions =
+    getPolicyControllerGetCategoryCountsQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

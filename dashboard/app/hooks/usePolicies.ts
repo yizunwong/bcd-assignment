@@ -64,10 +64,8 @@ export function usePolicySummaryQuery(id: string) {
   };
 }
 
-export function useCategoryCountsQuery(params: {
-  category?: string;
-}) {
-  const query = usePolicyControllerGetCategoryCounts(params);
+export function useCategoryCountsQuery() {
+  const query = usePolicyControllerGetCategoryCounts();
   return {
     ...query,
     error: parseError(query.error),
