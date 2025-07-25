@@ -25,6 +25,8 @@ export default function LoginPage() {
     try {
       await login({ email: formData.email, password: formData.password });
       router.push("/");
+      // Ensure server components re-fetch cookies for accurate navbar state
+      router.refresh();
     } catch (err) {
       console.error(err);
     }
