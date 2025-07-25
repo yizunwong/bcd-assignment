@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import useAuth from '@/app/hooks/useAuth';
+import useAuth from "@/app/hooks/useAuth";
 
 export default function RegisterPage() {
   const searchParams = useSearchParams();
@@ -37,8 +37,8 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-    const router = useRouter();
-    const { register: registerUser, isRegistering, registerError } = useAuth();
+  const router = useRouter();
+  const { register: registerUser, isRegistering, registerError } = useAuth();
 
   const [formData, setFormData] = useState({
     // Basic Info
@@ -695,7 +695,7 @@ export default function RegisterPage() {
                     </Button>
                     {registerError && (
                       <p className="text-red-500 text-sm mt-2">
-                        {registerError.message || "Registration failed"}
+                        {registerError || "Registration failed"}
                       </p>
                     )}
                   </div>

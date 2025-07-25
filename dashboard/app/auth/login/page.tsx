@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Shield, Eye, EyeOff, ArrowLeft, Zap, Globe } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 import useAuth from '@/app/hooks/useAuth';
 
 export default function LoginPage() {
@@ -25,6 +25,7 @@ export default function LoginPage() {
     try {
       await login({ email: formData.email, password: formData.password });
       router.push("/");
+      router.refresh();
     } catch (err) {
       console.error(err);
     }
@@ -218,7 +219,7 @@ export default function LoginPage() {
                   </Button>
                   {loginError && (
                     <p className="text-red-500 text-sm mt-2 text-center">
-                      {(loginError as Error).message || "Login failed"}
+                      {loginError || "Login failed"}
                     </p>
                   )}
                 </form>

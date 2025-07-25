@@ -6,6 +6,7 @@ import { join } from 'path';
 import { AppModule } from './app.module';
 import { SupabaseExceptionFilter } from './supabase/types/supabase-exception.filter';
 import * as dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
 
 dotenv.config();
 async function bootstrap() {
@@ -14,6 +15,7 @@ async function bootstrap() {
 
   app.useGlobalFilters(new SupabaseExceptionFilter());
   app.useGlobalPipes(new ValidationPipe());
+  app.use(cookieParser());
 
   app.enableCors({
     origin: 'http://localhost:5000',

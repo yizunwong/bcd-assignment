@@ -14,10 +14,11 @@ export class AuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-    const token = request.headers['authorization']?.split(' ')[1];
+    const cookies = request.cookies as Record<string, string | undefined>;
+    const token = cookies?.access_token;
 
     if (!token) {
-      throw new UnauthorizedException('Missing bearer token');
+      throw new UnauthorizedException('Missing access token in cookie');
     }
 
     request.supabase = this.supabaseService.createClientWithToken(token);

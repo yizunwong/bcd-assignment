@@ -3,11 +3,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   useAuthControllerLogin,
   useAuthControllerRegister,
-  useAuthControllerGetMe,
   getAuthControllerGetMeQueryKey,
+  authControllerLogout, // ✅ Import this
   type LoginDto,
   type RegisterDto,
 } from "@/app/api";
+import { parseError } from '../utils/parseError';
 
 export default function useAuth() {
   const queryClient = useQueryClient();
@@ -22,7 +23,6 @@ export default function useAuth() {
     },
     [loginMutation, queryClient]
   );
-  
 
   const register = useCallback(
     async (payload: RegisterDto) => {
@@ -32,11 +32,17 @@ export default function useAuth() {
   );
 
   const logout = useCallback(async () => {
-    // Ideally, call a logout API that clears session/cookie on the server
-    await fetch("/api/logout", { method: "POST" }); // optional if you have a server endpoint
+    try {
+      // ✅ Call the actual logout API to clear cookie
+      await authControllerLogout();
 
-    // Invalidate cached user data
-    queryClient.removeQueries({ queryKey: getAuthControllerGetMeQueryKey() });
+      // ❌ Clear cached auth user data
+      queryClient.removeQueries({
+        queryKey: getAuthControllerGetMeQueryKey(),
+      });
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
   }, [queryClient]);
 
   return {
@@ -45,9 +51,9 @@ export default function useAuth() {
     logout,
     user: loginMutation.data?.data?.user,
     isAuthenticated: loginMutation.data?.data?.accessToken ? true : false,
-    loginError: loginMutation.error as Error,
+    loginError: parseError(loginMutation.error),
     isLoggingIn: loginMutation.isPending,
-    registerError: registerMutation.error as Error,
+    registerError: parseError(registerMutation.error),
     isRegistering: registerMutation.isPending,
   };
 }

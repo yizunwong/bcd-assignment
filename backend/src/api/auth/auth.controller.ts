@@ -20,6 +20,7 @@ import { Response } from 'express';
 
 @ApiTags('Auth')
 @Controller('auth')
+@ApiBearerAuth('supabase-auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -38,9 +39,17 @@ export class AuthController {
   }
 
   @UseGuards(AuthGuard)
+  @Post('logout')
+  async logout(
+    @Request() req: AuthenticatedRequest,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.authService.signOut(req, res);
+  }
+
+  @UseGuards(AuthGuard)
   @Get('me')
   @ApiCommonResponse(AuthUserResponseDto, false, 'User login')
-  @ApiBearerAuth('supabase-auth')
   async getMe(
     @Request() req: AuthenticatedRequest,
   ): Promise<CommonResponseDto<AuthUserResponseDto>> {

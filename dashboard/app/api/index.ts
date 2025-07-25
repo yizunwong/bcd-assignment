@@ -777,6 +777,72 @@ export const useAuthControllerRegister = <TError = unknown, TContext = unknown>(
   return useMutation(mutationOptions, queryClient);
 };
 
+export const authControllerLogout = (signal?: AbortSignal) => {
+  return customFetcher<void>({ url: `/auth/logout`, method: "POST", signal });
+};
+
+export const getAuthControllerLogoutMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authControllerLogout>>,
+    TError,
+    void,
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof authControllerLogout>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["authControllerLogout"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof authControllerLogout>>,
+    void
+  > = () => {
+    return authControllerLogout();
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AuthControllerLogoutMutationResult = NonNullable<
+  Awaited<ReturnType<typeof authControllerLogout>>
+>;
+
+export type AuthControllerLogoutMutationError = unknown;
+
+export const useAuthControllerLogout = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof authControllerLogout>>,
+      TError,
+      void,
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof authControllerLogout>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationOptions = getAuthControllerLogoutMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
 export const authControllerGetMe = (signal?: AbortSignal) => {
   return customFetcher<AuthControllerGetMe200>({
     url: `/auth/me`,

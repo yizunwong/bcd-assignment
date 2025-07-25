@@ -175,4 +175,25 @@ export class AuthService {
       }),
     });
   }
+
+  async signOut(req: AuthenticatedRequest, res: Response) {
+    const { error } = await req.supabase.auth.signOut();
+
+    // Clear the access_token cookie
+    res.clearCookie('access_token', {
+      path: '/',
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+    });
+
+    if (error) {
+      throw new UnauthorizedException('Failed to sign out: ' + error.message);
+    }
+
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Logout successful',
+    });
+  }
 }

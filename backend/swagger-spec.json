@@ -38,6 +38,11 @@
             }
           }
         },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
         "tags": [
           "Auth"
         ]
@@ -62,6 +67,30 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
         "tags": [
           "Auth"
         ]
