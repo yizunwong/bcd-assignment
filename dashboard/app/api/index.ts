@@ -260,6 +260,7 @@ export interface CreatePolicyDto {
   category: string;
   provider: string;
   coverage: number;
+  durationDays: number;
   premium: string;
   rating: number;
   description?: string;
@@ -284,6 +285,7 @@ export interface PolicyResponseDto {
   category: string;
   provider: string;
   coverage: number;
+  duration_days: number;
   premium: string;
   rating: number;
   popular: boolean;
@@ -297,6 +299,7 @@ export interface UpdatePolicyDto {
   category?: string;
   provider?: string;
   coverage?: number;
+  durationDays?: number;
   premium?: string;
   rating?: number;
   description?: string;
@@ -2285,6 +2288,7 @@ export const policyControllerCreate = (
   formData.append(`category`, createPolicyDto.category);
   formData.append(`provider`, createPolicyDto.provider);
   formData.append(`coverage`, createPolicyDto.coverage.toString());
+  formData.append(`durationDays`, createPolicyDto.durationDays.toString());
   formData.append(`premium`, createPolicyDto.premium);
   formData.append(`rating`, createPolicyDto.rating.toString());
   if (createPolicyDto.description !== undefined) {
