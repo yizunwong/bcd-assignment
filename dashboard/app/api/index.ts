@@ -262,9 +262,8 @@ export interface CreatePolicyDto {
   coverage: number;
   premium: string;
   rating: number;
-  popular: boolean;
-  features: string[];
   description?: string;
+  claimTypes: string[];
   /** Files to upload for the policy */
   files?: Blob[];
 }
@@ -289,7 +288,7 @@ export interface PolicyResponseDto {
   rating: number;
   popular: boolean;
   description?: PolicyResponseDtoDescription;
-  features: string[];
+  claim_types: string[];
   policy_documents: PolicyDocumentResponseDto[];
 }
 
@@ -300,9 +299,8 @@ export interface UpdatePolicyDto {
   coverage?: number;
   premium?: string;
   rating?: number;
-  popular?: boolean;
-  features?: string[];
   description?: string;
+  claimTypes?: string[];
   /** Files to upload for the policy */
   files?: Blob[];
 }
@@ -2289,13 +2287,12 @@ export const policyControllerCreate = (
   formData.append(`coverage`, createPolicyDto.coverage.toString());
   formData.append(`premium`, createPolicyDto.premium);
   formData.append(`rating`, createPolicyDto.rating.toString());
-  formData.append(`popular`, createPolicyDto.popular.toString());
-  createPolicyDto.features.forEach((value) =>
-    formData.append(`features`, value),
-  );
   if (createPolicyDto.description !== undefined) {
     formData.append(`description`, createPolicyDto.description);
   }
+  createPolicyDto.claimTypes.forEach((value) =>
+    formData.append(`claimTypes`, value),
+  );
   if (createPolicyDto.files !== undefined) {
     createPolicyDto.files.forEach((value) => formData.append(`files`, value));
   }
@@ -3675,53 +3672,42 @@ export const useCoverageControllerRemove = <
 };
 
 export const coverageControllerGetPolicyholderSummary = (
-  userId: string,
   signal?: AbortSignal,
 ) => {
   return customFetcher<void>({
-    url: `/coverage/policyholder/${userId}/summary`,
+    url: `/coverage/policyholder/summary`,
     method: "GET",
     signal,
   });
 };
 
-export const getCoverageControllerGetPolicyholderSummaryQueryKey = (
-  userId: string,
-) => {
-  return [`/coverage/policyholder/${userId}/summary`] as const;
+export const getCoverageControllerGetPolicyholderSummaryQueryKey = () => {
+  return [`/coverage/policyholder/summary`] as const;
 };
 
 export const getCoverageControllerGetPolicyholderSummaryQueryOptions = <
   TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
   TError = unknown,
->(
-  userId: string,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
-        TError,
-        TData
-      >
-    >;
-  },
-) => {
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
   const { query: queryOptions } = options ?? {};
 
   const queryKey =
     queryOptions?.queryKey ??
-    getCoverageControllerGetPolicyholderSummaryQueryKey(userId);
+    getCoverageControllerGetPolicyholderSummaryQueryKey();
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>
-  > = ({ signal }) => coverageControllerGetPolicyholderSummary(userId, signal);
+  > = ({ signal }) => coverageControllerGetPolicyholderSummary(signal);
 
-  return {
-    queryKey,
-    queryFn,
-    enabled: !!userId,
-    ...queryOptions,
-  } as UseQueryOptions<
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
     TError,
     TData
@@ -3737,7 +3723,6 @@ export function useCoverageControllerGetPolicyholderSummary<
   TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
   TError = unknown,
 >(
-  userId: string,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -3763,7 +3748,6 @@ export function useCoverageControllerGetPolicyholderSummary<
   TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
   TError = unknown,
 >(
-  userId: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3789,7 +3773,6 @@ export function useCoverageControllerGetPolicyholderSummary<
   TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
   TError = unknown,
 >(
-  userId: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3808,7 +3791,6 @@ export function useCoverageControllerGetPolicyholderSummary<
   TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
   TError = unknown,
 >(
-  userId: string,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3822,10 +3804,8 @@ export function useCoverageControllerGetPolicyholderSummary<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getCoverageControllerGetPolicyholderSummaryQueryOptions(
-    userId,
-    options,
-  );
+  const queryOptions =
+    getCoverageControllerGetPolicyholderSummaryQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsEmail,
   IsString,
@@ -8,7 +9,12 @@ import {
   IsDateString,
   IsEnum,
   ValidateIf,
+  ValidateNested,
 } from 'class-validator';
+import {
+  RegisterDto,
+  CompanyDetailsDto,
+} from 'src/api/auth/dto/requests/register.dto';
 import { ToPhone } from 'src/common/to-phone';
 import { Database } from 'src/supabase/types/supabase.types';
 
@@ -25,7 +31,16 @@ export enum UserRole {
 
 export type AdminDetails = Partial<
   Database['public']['Tables']['admin_details']['Row']
-> | null;
+> & {
+  company?: {
+    name?: string;
+    address?: string;
+    license_number?: string;
+    contact_no: string | null;
+    website: string | null;
+    years_in_business?: Database['public']['Enums']['years_in_business'];
+  };
+};
 
 export type PolicyholderDetails = Partial<
   Database['public']['Tables']['policyholder_details']['Row']
@@ -71,29 +86,11 @@ export class CreateUserDto {
   bio?: string;
 
   //Only for insurance_admin
-  @ValidateIf((o: CreateUserDto) => o.role === UserRole.INSURANCE_ADMIN)
-  @ApiProperty({ example: 'EMP123456', required: false })
-  @IsNotEmpty()
-  @IsString()
-  employeeId!: string;
-
-  @ValidateIf((o: CreateUserDto) => o.role === UserRole.INSURANCE_ADMIN)
-  @ApiProperty({ example: 'LIC789456', required: false })
-  @IsNotEmpty()
-  @IsString()
-  licenseNumber!: string;
-
-  @ValidateIf((o: CreateUserDto) => o.role === UserRole.INSURANCE_ADMIN)
-  @ApiProperty({ example: 'ABC Company', required: false })
-  @IsNotEmpty()
-  @IsString()
-  companyName!: string;
-
-  @ValidateIf((o: CreateUserDto) => o.role === UserRole.INSURANCE_ADMIN)
-  @ApiProperty({ example: 'New York, USA', required: false })
-  @IsNotEmpty()
-  @IsString()
-  companyAddress!: string;
+  @ValidateIf((o: RegisterDto) => o.role === UserRole.INSURANCE_ADMIN)
+  @ApiProperty({ type: () => CompanyDetailsDto, required: false })
+  @ValidateNested()
+  @Type(() => CompanyDetailsDto)
+  company?: CompanyDetailsDto;
 
   //Only for policyholder
   @ValidateIf((o: CreateUserDto) => o.role === UserRole.POLICYHOLDER)

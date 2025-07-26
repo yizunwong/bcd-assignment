@@ -83,6 +83,12 @@ export class CreatePolicyDto {
   @IsNotEmpty()
   coverage!: number;
 
+  @ApiProperty({ example: 365 })
+  @Transform(({ value }: { value: unknown }) => parseInt(value as string, 10))
+  @IsNumber()
+  @IsNotEmpty()
+  durationDays!: number;
+
   @ApiProperty({ example: '0.8 ETH/month' })
   @IsString()
   @IsNotEmpty()

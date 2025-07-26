@@ -40,27 +40,28 @@ export type Database = {
       };
       admin_details: {
         Row: {
-          company_address: string | null;
-          company_name: string | null;
-          employee_id: string;
-          license_no: string;
+          company_id: number;
           user_id: string;
+          verified_at: string | null;
         };
         Insert: {
-          company_address?: string | null;
-          company_name?: string | null;
-          employee_id: string;
-          license_no: string;
+          company_id: number;
           user_id: string;
+          verified_at?: string | null;
         };
         Update: {
-          company_address?: string | null;
-          company_name?: string | null;
-          employee_id?: string;
-          license_no?: string;
+          company_id?: number;
           user_id?: string;
+          verified_at?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: 'admin_details_company_id_fkey';
+            columns: ['company_id'];
+            isOneToOne: false;
+            referencedRelation: 'companies';
+            referencedColumns: ['id'];
+          },
           {
             foreignKeyName: 'admin_details_user_id_fkey';
             columns: ['user_id'];
@@ -120,6 +121,7 @@ export type Database = {
       claims: {
         Row: {
           amount: number;
+          claim_priority: Database['public']['Enums']['claim_priority'];
           claim_type: string;
           claimed_date: string | null;
           description: string | null;
@@ -132,6 +134,7 @@ export type Database = {
         };
         Insert: {
           amount?: number;
+          claim_priority?: Database['public']['Enums']['claim_priority'];
           claim_type: string;
           claimed_date?: string | null;
           description?: string | null;
@@ -144,6 +147,7 @@ export type Database = {
         };
         Update: {
           amount?: number;
+          claim_priority?: Database['public']['Enums']['claim_priority'];
           claim_type?: string;
           claimed_date?: string | null;
           description?: string | null;
@@ -170,6 +174,39 @@ export type Database = {
             referencedColumns: ['id'];
           },
         ];
+      };
+      companies: {
+        Row: {
+          address: string;
+          contact_no: string | null;
+          created_at: string;
+          id: number;
+          license_number: string;
+          name: string;
+          website: string | null;
+          years_in_business: Database['public']['Enums']['years_in_business'];
+        };
+        Insert: {
+          address: string;
+          contact_no?: string | null;
+          created_at?: string;
+          id?: number;
+          license_number: string;
+          name: string;
+          website?: string | null;
+          years_in_business: Database['public']['Enums']['years_in_business'];
+        };
+        Update: {
+          address?: string;
+          contact_no?: string | null;
+          created_at?: string;
+          id?: number;
+          license_number?: string;
+          name?: string;
+          website?: string | null;
+          years_in_business?: Database['public']['Enums']['years_in_business'];
+        };
+        Relationships: [];
       };
       coverage: {
         Row: {
@@ -233,6 +270,7 @@ export type Database = {
           coverage: number;
           created_by: string;
           description: string | null;
+          duration_days: number;
           id: number;
           name: string;
           popular: boolean;
@@ -245,6 +283,7 @@ export type Database = {
           coverage: number;
           created_by: string;
           description?: string | null;
+          duration_days?: number;
           id?: number;
           name: string;
           popular: boolean;
@@ -257,6 +296,7 @@ export type Database = {
           coverage?: number;
           created_by?: string;
           description?: string | null;
+          duration_days?: number;
           id?: number;
           name?: string;
           popular?: boolean;
@@ -487,10 +527,17 @@ export type Database = {
       [_ in never]: never;
     };
     Enums: {
+      claim_priority: 'high' | 'medium' | 'low';
       claim_status: 'pending' | 'approved' | 'rejected' | 'claimed';
       coverage_status: 'active' | 'limitExceeded' | 'expired' | 'suspended';
       role: 'admin' | 'user';
       user_status: 'active' | 'deactivated';
+      years_in_business:
+        | '0-1 years'
+        | '2-5 years'
+        | '6-10 years'
+        | '11-20 years'
+        | '20+ years';
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -621,10 +668,18 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      claim_priority: ['high', 'medium', 'low'],
       claim_status: ['pending', 'approved', 'rejected', 'claimed'],
       coverage_status: ['active', 'limitExceeded', 'expired', 'suspended'],
       role: ['admin', 'user'],
       user_status: ['active', 'deactivated'],
+      years_in_business: [
+        '0-1 years',
+        '2-5 years',
+        '6-10 years',
+        '11-20 years',
+        '20+ years',
+      ],
     },
   },
 } as const;

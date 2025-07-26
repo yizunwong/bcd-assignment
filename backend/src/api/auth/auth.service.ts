@@ -10,7 +10,7 @@ import { LoginResponseDto } from './dto/responses/login.dto';
 import { CommonResponseDto } from '../../common/common.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { AuthUserResponseDto } from './dto/responses/auth-user.dto';
-import { UserRole } from '../user/dto/requests/create.dto';
+import { UserRole, UserStatus } from '../user/dto/requests/create.dto';
 import { parseAppMetadata, parseUserMetadata } from 'src/utils/auth-metadata';
 import { Response } from 'express';
 
@@ -68,6 +68,7 @@ export class AuthService {
       email: dto.email,
       password: dto.password,
     });
+
     if (signUpError || !auth?.user) {
       throw new ConflictException(
         signUpError?.message || 'Failed to register user',
@@ -75,10 +76,9 @@ export class AuthService {
     }
 
     const user_id = auth.user.id;
+    let status: UserStatus = UserStatus.ACTIVE;
 
-    const adminClient = this.supabaseService.createClientWithToken();
-
-    const { error: updateError } = await adminClient.auth.admin.updateUserById(
+    const { error: updateError } = await supabase.auth.admin.updateUserById(
       user_id,
       {
         app_metadata: {
@@ -87,13 +87,17 @@ export class AuthService {
       },
     );
 
+    if (dto.role === UserRole.INSURANCE_ADMIN) {
+      status = UserStatus.DEACTIVATED; // Pending admin verification
+    }
+
     // 2. Insert into user_details
     const { error: profileError } = await supabase.from('user_details').insert([
       {
         user_id,
         first_name: dto.firstName,
         last_name: dto.lastName,
-        status: 'active',
+        status,
         bio: dto.bio ?? null,
         phone: dto.phone ?? null,
       },
@@ -105,17 +109,35 @@ export class AuthService {
       );
     }
 
-    // 3. Insert role-specific details
+    // 3. Role-specific data handling
     if (dto.role === UserRole.INSURANCE_ADMIN) {
+      // Insert company if provided
+      let company_id = 1; // fallback or default company
+
+      if (dto.company) {
+        const { data: insertedCompany, error: companyError } = await supabase
+          .from('companies')
+          .insert([dto.company])
+          .select('id')
+          .single();
+
+        if (companyError || !insertedCompany?.id) {
+          throw new ConflictException(
+            'Failed to insert company: ' + companyError?.message,
+          );
+        }
+
+        company_id = insertedCompany.id;
+      }
+
+      // Insert into admin_details with company_id
       const { error: adminError } = await supabase
         .from('admin_details')
         .insert([
           {
             user_id,
-            employee_id: dto.employeeId ?? '',
-            license_no: dto.licenseNumber ?? '',
-            company_name: dto.companyName ?? '',
-            company_address: dto.companyAddress ?? '',
+            company_id,
+            verified_at: null,
           },
         ]);
 

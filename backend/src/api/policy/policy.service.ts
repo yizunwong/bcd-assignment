@@ -50,6 +50,7 @@ export class PolicyService {
           category: dto.category,
           provider: dto.provider,
           coverage: dto.coverage,
+          duration_days: dto.durationDays,
           premium: dto.premium,
           rating: dto.rating,
           popular: false,
@@ -345,6 +346,8 @@ export class PolicyService {
     if (dto.rating !== undefined) updateFields.rating = dto.rating;
     if (dto.description !== undefined)
       updateFields.description = dto.description;
+    if (dto.durationDays !== undefined)
+      updateFields.duration_days = dto.durationDays;
 
     // Step 3: Update policy
     const { data: updated, error: updateError } = await supabase

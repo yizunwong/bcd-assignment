@@ -33,6 +33,9 @@ export class PolicyResponseDto {
   coverage!: number;
 
   @ApiProperty()
+  duration_days!: number;
+
+  @ApiProperty()
   premium!: string;
 
   @ApiProperty()

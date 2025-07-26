@@ -4,7 +4,6 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Request } from 'express';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { SupabaseService } from 'src/supabase/supabase.service';
 
@@ -30,6 +29,17 @@ export class AuthGuard implements CanActivate {
     }
 
     request.user = data.user;
+
+    // Check user is verified or not
+    const { data: userDetails, error: detailsError } = await request.supabase
+      .from('admin_details')
+      .select('verified_at')
+      .eq('user_id', data.user.id)
+      .single();
+
+    if (detailsError || !userDetails || !userDetails.verified_at) {
+      throw new UnauthorizedException('User is not verified');
+    }
 
     return true;
   }

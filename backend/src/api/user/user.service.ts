@@ -90,10 +90,14 @@ export class UserService {
       phone,
       bio,
       admin_details (
-        employee_id,
-        license_no,
-        company_name,
-        company_address
+        company:companies (
+          name,
+          address,
+          license_number,
+          contact_no,
+          website,
+          years_in_business
+        )
       ),
       policyholder_details (
         date_of_birth,
@@ -147,10 +151,14 @@ export class UserService {
       !('code' in profile.admin_details)
     ) {
       details = {
-        employee_id: profile.admin_details.employee_id,
-        license_no: profile.admin_details.license_no,
-        company_name: profile.admin_details.company_name,
-        company_address: profile.admin_details.company_address,
+        company: {
+          name: profile.admin_details.company?.name,
+          address: profile.admin_details.company?.address,
+          license_number: profile.admin_details.company?.license_number,
+          contact_no: profile.admin_details.company?.contact_no,
+          website: profile.admin_details.company?.website,
+          years_in_business: profile.admin_details.company?.years_in_business,
+        },
       };
     }
 
@@ -266,17 +274,34 @@ export class UserService {
     dto: CreateUserDto,
   ) {
     if (dto.role === UserRole.INSURANCE_ADMIN) {
-      const { employeeId, licenseNumber, companyName, companyAddress } = dto;
+      const { company } = dto;
+
+      if (!company) {
+        throw new SupabaseException(
+          'Company information is required for insurance admin',
+        );
+      }
+
+      // Safe to proceed — company is guaranteed
+      const { data: insertedCompany, error: companyError } = await supabase
+        .from('companies')
+        .insert([company])
+        .select('id')
+        .single();
+
+      if (companyError || !insertedCompany?.id) {
+        throw new SupabaseException('Failed to insert company', companyError);
+      }
+
+      const company_id = insertedCompany.id;
 
       const { data, error } = await supabase
         .from('admin_details')
         .insert([
           {
             user_id,
-            employee_id: employeeId,
-            license_no: licenseNumber,
-            company_name: companyName ?? '',
-            company_address: companyAddress ?? '',
+            company_id,
+            verified_at: null,
           },
         ])
         .select()
@@ -367,14 +392,6 @@ export class UserService {
       const adminUpdates: Database['public']['Tables']['admin_details']['Update'] & {
         user_id: string;
       } = { user_id };
-      if (dto.employeeId !== undefined)
-        adminUpdates.employee_id = dto.employeeId;
-      if (dto.licenseNumber !== undefined)
-        adminUpdates.license_no = dto.licenseNumber;
-      if (dto.companyName !== undefined)
-        adminUpdates.company_name = dto.companyName;
-      if (dto.companyAddress !== undefined)
-        adminUpdates.company_address = dto.companyAddress;
 
       if (Object.keys(adminUpdates).length > 1) {
         const { error: adminError } = await supabase

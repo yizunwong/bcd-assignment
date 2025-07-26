@@ -1,5 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsOptional, IsArray } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsOptional,
+  IsArray,
+  IsEnum,
+} from 'class-validator';
+
+export enum ClaimPriority {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+}
 
 export class CreateClaimDto {
   @ApiProperty({
@@ -16,6 +28,15 @@ export class CreateClaimDto {
   @IsString({ message: 'Claim type must be a string' })
   @IsNotEmpty({ message: 'Claim type is required' })
   claim_type!: string;
+
+  @ApiProperty({
+    example: ClaimPriority.MEDIUM,
+    enum: ClaimPriority,
+    description: 'Priority of the claim',
+  })
+  @IsNotEmpty({ message: 'Priority is required' })
+  @IsEnum(ClaimPriority)
+  priority!: ClaimPriority;
 
   @ApiProperty({
     example: 1000,
