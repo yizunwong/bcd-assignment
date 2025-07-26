@@ -6,7 +6,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ClaimStatus, UpdateClaimDto } from './dto/requests/update-claim.dto';
-import { SupabaseService } from 'src/supabase/supabase.service';
 import { CreateClaimDto } from './dto/requests/create-claim.dto';
 import { UploadClaimDocDto } from './dto/requests/upload-claim-doc.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
@@ -18,14 +17,8 @@ import {
 } from 'src/utils/supabase-storage';
 import { ClaimResponseDto } from './dto/responses/claim.dto';
 import { CommonResponseDto } from 'src/common/common.dto';
-import { PolicyService } from '../policy/policy.service';
 @Injectable()
 export class ClaimService {
-  constructor(
-    private readonly supabaseService: SupabaseService,
-    private readonly policyService: PolicyService,
-  ) {}
-
   async createClaim(
     createClaimDto: CreateClaimDto,
     req: AuthenticatedRequest,
@@ -456,5 +449,64 @@ export class ClaimService {
       message: 'Claim document removed successfully',
       data,
     });
+  }
+
+  async attachClaimTypesToPolicy(
+    claimTypeNames: string[],
+    policyId: number,
+    req: AuthenticatedRequest,
+  ) {
+    console.log('Attaching claim types to policy:', {
+      claimTypeNames,
+      policyId,
+    });
+    for (const rawName of claimTypeNames) {
+      const name = rawName.toLowerCase();
+      console.log('Processing claim type:', name);
+      // Check if claim type already exists
+      const { data: existingType, error: lookupError } = await req.supabase
+        .from('claim_types')
+        .select('id')
+        .eq('name', name)
+        .single();
+
+      if (lookupError && lookupError.code !== 'PGRST116') {
+        throw new InternalServerErrorException(
+          `Error checking claim type: ${name}`,
+        );
+      }
+
+      let claimTypeId = existingType?.id || null;
+
+      if (!claimTypeId) {
+        // Insert new claim type
+        const { data: newType, error: insertError } = await req.supabase
+          .from('claim_types')
+          .insert({ name })
+          .select()
+          .single();
+
+        if (insertError || !newType) {
+          throw new InternalServerErrorException(
+            `Failed to create claim type: ${name}`,
+          );
+        }
+
+        claimTypeId = newType.id;
+      }
+
+      // Link claim type to policy via upsert
+      const { error: linkError } = await req.supabase
+        .from('policy_claim_type')
+        .upsert([{ policy_id: policyId, claim_type_id: claimTypeId }], {
+          onConflict: 'policy_id,claim_type_id',
+        });
+
+      if (linkError) {
+        throw new InternalServerErrorException(
+          `Failed to link claim type '${name}' to policy`,
+        );
+      }
+    }
   }
 }

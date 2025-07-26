@@ -42,10 +42,10 @@ export class PolicyResponseDto {
   popular!: boolean;
 
   @ApiProperty({ required: false })
-  description!: string | null;
+  description?: string | null;
 
-  @ApiProperty({ type: [String] })
-  features!: string[];
+  @ApiProperty()
+  claim_types!: string[];
 
   @ApiProperty({ type: [PolicyDocumentResponseDto] })
   policy_documents!: PolicyDocumentResponseDto[];

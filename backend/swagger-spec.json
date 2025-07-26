@@ -1319,19 +1319,10 @@
         ]
       }
     },
-    "/coverage/policyholder/{userId}/summary": {
+    "/coverage/policyholder/summary": {
       "get": {
         "operationId": "CoverageController_getPolicyholderSummary",
-        "parameters": [
-          {
-            "name": "userId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": ""
@@ -1995,11 +1986,11 @@
             "type": "number",
             "example": 0
           },
-          "popular": {
-            "type": "boolean",
-            "example": false
+          "description": {
+            "type": "string",
+            "example": "Complete healthcare coverage with blockchain-verified claims processing"
           },
-          "features": {
+          "claimTypes": {
             "example": [
               "Emergency Care",
               "Prescription Drugs",
@@ -2009,10 +2000,6 @@
             "items": {
               "type": "string"
             }
-          },
-          "description": {
-            "type": "string",
-            "example": "Complete healthcare coverage with blockchain-verified claims processing"
           },
           "files": {
             "description": "Files to upload for the policy",
@@ -2030,8 +2017,7 @@
           "coverage",
           "premium",
           "rating",
-          "popular",
-          "features"
+          "claimTypes"
         ]
       },
       "PolicyDocumentResponseDto": {
@@ -2088,7 +2074,7 @@
           "description": {
             "type": "object"
           },
-          "features": {
+          "claim_types": {
             "type": "array",
             "items": {
               "type": "string"
@@ -2110,7 +2096,7 @@
           "premium",
           "rating",
           "popular",
-          "features",
+          "claim_types",
           "policy_documents"
         ]
       },
@@ -2141,11 +2127,11 @@
             "type": "number",
             "example": 0
           },
-          "popular": {
-            "type": "boolean",
-            "example": false
+          "description": {
+            "type": "string",
+            "example": "Complete healthcare coverage with blockchain-verified claims processing"
           },
-          "features": {
+          "claimTypes": {
             "example": [
               "Emergency Care",
               "Prescription Drugs",
@@ -2155,10 +2141,6 @@
             "items": {
               "type": "string"
             }
-          },
-          "description": {
-            "type": "string",
-            "example": "Complete healthcare coverage with blockchain-verified claims processing"
           },
           "files": {
             "description": "Files to upload for the policy",

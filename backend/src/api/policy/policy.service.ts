@@ -17,9 +17,11 @@ import {
 import { CommonResponseDto } from 'src/common/common.dto';
 import { PolicyResponseDto } from './dto/responses/policy.dto';
 import { FindPoliciesQueryDto } from './dto/responses/policy-query.dto';
+import { ClaimService } from '../claim/claim.service';
 
 @Injectable()
 export class PolicyService {
+  constructor(private readonly claimsService: ClaimService) {}
   async uploadPolicyDocuments(
     files: Array<Express.Multer.File>,
     req: AuthenticatedRequest,
@@ -32,7 +34,6 @@ export class PolicyService {
     req: AuthenticatedRequest,
     files?: Array<Express.Multer.File>,
   ) {
-    console.log(dto);
     const { data: userData, error: userError } =
       await req.supabase.auth.getUser();
 
@@ -40,55 +41,70 @@ export class PolicyService {
       throw new UnauthorizedException('Invalid or expired token');
     }
 
-    // Step 1: Insert policy
-    const { data: policy, error: policyError } = await req.supabase
-      .from('policies')
-      .insert({
-        name: dto.name,
-        category: dto.category,
-        provider: dto.provider,
-        coverage: dto.coverage,
-        premium: dto.premium,
-        rating: dto.rating,
-        popular: dto.popular,
-        description: dto.description || null,
-        features: dto.features,
-        created_by: userData.user.id,
-      })
-      .select()
-      .single();
+    try {
+      // Step 1: Insert policy
+      const { data: policy, error: policyError } = await req.supabase
+        .from('policies')
+        .insert({
+          name: dto.name,
+          category: dto.category,
+          provider: dto.provider,
+          coverage: dto.coverage,
+          premium: dto.premium,
+          rating: dto.rating,
+          popular: false,
+          description: dto.description || null,
+          created_by: userData.user.id,
+        })
+        .select()
+        .single();
 
-    if (policyError || !policy) {
-      console.error(policyError);
-      throw new InternalServerErrorException('Failed to create policy');
-    }
-
-    const policyId = policy.id;
-
-    // Step 2: Upload files to Supabase and insert metadata
-    if (files && files.length > 0) {
-      const path = await this.uploadPolicyDocuments(files, req);
-      const docInserts = files.map((file, index) => ({
-        policy_id: policyId,
-        name: file.originalname,
-        path: path[index],
-      }));
-
-      const { error: docError } = await req.supabase
-        .from('policy_documents')
-        .insert(docInserts);
-
-      if (docError) {
-        console.error(docError);
-        throw new InternalServerErrorException('Failed to create documents');
+      if (policyError || !policy) {
+        console.error(policyError);
+        throw new InternalServerErrorException('Failed to create policy');
       }
-    }
 
-    return new CommonResponseDto({
-      statusCode: 201,
-      message: 'Policy created successfully',
-      data: policy,
-    });
+      const policyId = policy.id;
+
+      // Step 2: Attach claim types (optional)
+      if (dto.claimTypes?.length) {
+        await this.claimsService.attachClaimTypesToPolicy(
+          dto.claimTypes,
+          policyId,
+          req,
+        );
+      }
+
+      // Step 3: Upload files (optional)
+      if (files && files.length > 0) {
+        const path = await this.uploadPolicyDocuments(files, req);
+        const docInserts = files.map((file, index) => ({
+          policy_id: policyId,
+          name: file.originalname,
+          path: path[index],
+        }));
+
+        const { error: docError } = await req.supabase
+          .from('policy_documents')
+          .insert(docInserts);
+
+        if (docError) {
+          console.error(docError);
+          throw new InternalServerErrorException('Failed to create documents');
+        }
+      }
+
+      return new CommonResponseDto({
+        statusCode: 201,
+        message: 'Policy created successfully',
+        data: policy,
+      });
+    } catch (error) {
+      return new CommonResponseDto({
+        statusCode: 500,
+        message: error instanceof Error ? error.message : '',
+      });
+    }
   }
 
   async findAll(
@@ -104,7 +120,14 @@ export class PolicyService {
 
     let dbQuery = req.supabase
       .from('policies')
-      .select('*, policy_documents(*)', { count: 'exact' })
+      .select(
+        `*, 
+     policy_documents(*), 
+     policy_claim_type:policy_claim_type(
+       claim_type:claim_types(name)
+     )`,
+        { count: 'exact' },
+      )
       .range(offset, offset + (query.limit || 5) - 1)
       .order(query.sortBy || 'id', {
         ascending: (query.sortOrder || 'asc') === 'asc',
@@ -144,18 +167,23 @@ export class PolicyService {
     const signedUrls = await getSignedUrls(req.supabase, allPaths);
 
     let urlIndex = 0;
-    const enrichedPolicies: PolicyResponseDto[] = data.map((policy) => ({
-      ...policy,
-      policy_documents: Array.isArray(policy.policy_documents)
-        ? policy.policy_documents.map((doc) => ({
-            id: doc.id,
-            name: doc.name,
-            policy_id: doc.policy_id,
-            signedUrl: signedUrls[urlIndex++] || '',
-          }))
-        : [],
-    }));
+    const enrichedPolicies: PolicyResponseDto[] = data.map((policy) => {
+      const { policy_claim_type, ...rest } = policy;
 
+      return {
+        ...rest,
+        policy_documents: Array.isArray(policy.policy_documents)
+          ? policy.policy_documents.map((doc) => ({
+              id: doc.id,
+              name: doc.name,
+              policy_id: doc.policy_id,
+              signedUrl: signedUrls[urlIndex++] || '',
+            }))
+          : [],
+        claim_types:
+          policy_claim_type?.map((link) => link.claim_type.name) || [],
+      };
+    });
     return new CommonResponseDto<PolicyResponseDto[]>({
       statusCode: 200,
       message: 'Policies retrieved successfully',
@@ -165,12 +193,12 @@ export class PolicyService {
   }
 
   async findOne(id: number, req: AuthenticatedRequest) {
-    // const supabase = this.supabaseService.createClientWithToken();
-
-    // Step 1: Get the policy
+    // Step 1: Get the policy + claim types
     const { data: policy, error: policyError } = await req.supabase
       .from('policies')
-      .select('*')
+      .select(
+        '*, policy_claim_type:policy_claim_type(claim_type:claim_types(name))',
+      )
       .eq('id', id)
       .single();
 
@@ -210,16 +238,21 @@ export class PolicyService {
       throw new InternalServerErrorException('Failed to fetch reviews');
     }
 
+    const { policy_claim_type, ...rest } = policy;
+
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Policy retrieved successfully',
       data: {
-        ...policy,
+        ...rest,
         policy_documents: enrichedDocuments,
         reviews: reviews || [],
+        claim_types:
+          policy_claim_type?.map((link) => link.claim_type.name) || [],
       },
     });
   }
+
   async getPolicyholderSummary(userId: string, req: AuthenticatedRequest) {
     const supabase = req.supabase;
 
@@ -290,7 +323,7 @@ export class PolicyService {
   async update(id: number, dto: UpdatePolicyDto, req: AuthenticatedRequest) {
     const supabase = req.supabase;
 
-    // Step 1: Fetch the existing policy
+    // Step 1: Fetch existing policy
     const { data: existing, error: fetchError } = await supabase
       .from('policies')
       .select('*')
@@ -301,7 +334,7 @@ export class PolicyService {
       throw new NotFoundException(`Policy with ID ${id} not found`);
     }
 
-    // Step 2: Prepare the allowed fields ONLY
+    // Step 2: Prepare update fields
     const updateFields: Partial<typeof existing> = {};
 
     if (dto.name !== undefined) updateFields.name = dto.name;
@@ -310,12 +343,10 @@ export class PolicyService {
     if (dto.coverage !== undefined) updateFields.coverage = dto.coverage;
     if (dto.premium !== undefined) updateFields.premium = dto.premium;
     if (dto.rating !== undefined) updateFields.rating = dto.rating;
-    if (dto.popular !== undefined) updateFields.popular = dto.popular;
     if (dto.description !== undefined)
       updateFields.description = dto.description;
-    if (dto.features !== undefined) updateFields.features = dto.features;
 
-    // Step 3: Perform the update
+    // Step 3: Update policy
     const { data: updated, error: updateError } = await supabase
       .from('policies')
       .update(updateFields)
@@ -326,6 +357,28 @@ export class PolicyService {
     if (updateError) {
       console.error(updateError);
       throw new InternalServerErrorException('Failed to update policy');
+    }
+
+    // Step 4: Update claim types (if provided)
+    if (dto.claimTypes && dto.claimTypes.length > 0) {
+      // Step 4a: Remove old mappings
+      const { error: deleteError } = await supabase
+        .from('policy_claim_type')
+        .delete()
+        .eq('policy_id', id);
+
+      if (deleteError) {
+        throw new InternalServerErrorException(
+          'Failed to clear old claim types',
+        );
+      }
+
+      // Step 4b: Reattach new claim types (reuse your existing logic)
+      await this.claimsService.attachClaimTypesToPolicy(
+        dto.claimTypes,
+        id,
+        req,
+      );
     }
 
     return new CommonResponseDto({

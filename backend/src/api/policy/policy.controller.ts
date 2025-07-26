@@ -37,8 +37,10 @@ export class PolicyController {
     @Req() req: AuthenticatedRequest,
     @UploadedFiles() files: Array<Express.Multer.File>,
   ): Promise<CommonResponseDto> {
-    if (typeof dto.features === 'string') {
-      dto.features = (dto.features as string).split(',').map((v) => v.trim());
+    if (typeof dto.claimTypes === 'string') {
+      dto.claimTypes = (dto.claimTypes as string)
+        .split(',')
+        .map((v) => v.trim());
     }
 
     return this.policyService.create(dto, req, files);

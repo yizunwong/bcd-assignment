@@ -3,7 +3,6 @@ import {
   IsNotEmpty,
   IsString,
   IsNumber,
-  IsBoolean,
   IsArray,
   IsOptional,
   Max,
@@ -12,7 +11,6 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import { Express } from 'express';
 
 export class CreateDocumentsDto {
   @ApiProperty({ example: 'Policy Terms', description: 'Document name' })
@@ -96,28 +94,6 @@ export class CreatePolicyDto {
   @IsNotEmpty()
   rating!: number;
 
-  @ApiProperty({ example: false })
-  @Transform(({ value }) => value === 'true' || value === true)
-  @IsBoolean()
-  @IsNotEmpty()
-  popular!: boolean;
-
-  @ApiProperty({
-    example: ['Emergency Care', 'Prescription Drugs', 'Mental Health'],
-  })
-  @Transform(({ value }): string[] => {
-    if (Array.isArray(value)) {
-      return value.filter((v): v is string => typeof v === 'string');
-    }
-    if (typeof value === 'string') {
-      return value.split(',').map((v) => v.trim());
-    }
-    return [];
-  })
-  @IsArray()
-  @IsNotEmpty()
-  features!: string[];
-
   @ApiProperty({
     example:
       'Complete healthcare coverage with blockchain-verified claims processing',
@@ -142,6 +118,22 @@ export class CreatePolicyDto {
   @Type(() => CreateDocumentsDto)
   @IsOptional()
   documentMetas?: CreateDocumentsDto[];
+
+  @ApiProperty({
+    example: ['Emergency Care', 'Prescription Drugs', 'Mental Health'],
+  })
+  @Transform(({ value }): string[] => {
+    if (Array.isArray(value)) {
+      return value.filter((v): v is string => typeof v === 'string');
+    }
+    if (typeof value === 'string') {
+      return value.split(',').map((v) => v.trim());
+    }
+    return [];
+  })
+  @IsArray()
+  @IsNotEmpty()
+  claimTypes!: string[];
 
   @ApiProperty({
     type: 'string',

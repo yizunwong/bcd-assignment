@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -99,6 +99,24 @@ export type Database = {
           },
         ];
       };
+      claim_types: {
+        Row: {
+          created_at: string;
+          id: number;
+          name: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: number;
+          name: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: number;
+          name?: string;
+        };
+        Relationships: [];
+      };
       claims: {
         Row: {
           amount: number;
@@ -137,6 +155,13 @@ export type Database = {
           user_id?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: 'claims_claim_type_fkey';
+            columns: ['claim_type'];
+            isOneToOne: false;
+            referencedRelation: 'claim_types';
+            referencedColumns: ['name'];
+          },
           {
             foreignKeyName: 'claims_policy_id_fkey';
             columns: ['policy_id'];
@@ -208,7 +233,6 @@ export type Database = {
           coverage: number;
           created_by: string;
           description: string | null;
-          features: string[];
           id: number;
           name: string;
           popular: boolean;
@@ -221,7 +245,6 @@ export type Database = {
           coverage: number;
           created_by: string;
           description?: string | null;
-          features: string[];
           id?: number;
           name: string;
           popular: boolean;
@@ -234,7 +257,6 @@ export type Database = {
           coverage?: number;
           created_by?: string;
           description?: string | null;
-          features?: string[];
           id?: number;
           name?: string;
           popular?: boolean;
@@ -243,6 +265,42 @@ export type Database = {
           rating?: number;
         };
         Relationships: [];
+      };
+      policy_claim_type: {
+        Row: {
+          claim_type_id: number;
+          created_at: string;
+          id: number;
+          policy_id: number;
+        };
+        Insert: {
+          claim_type_id: number;
+          created_at?: string;
+          id?: number;
+          policy_id: number;
+        };
+        Update: {
+          claim_type_id?: number;
+          created_at?: string;
+          id?: number;
+          policy_id?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'policy_claim_type_claim_type_id_fkey';
+            columns: ['claim_type_id'];
+            isOneToOne: false;
+            referencedRelation: 'claim_types';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'policy_claim_type_policy_id_fkey';
+            columns: ['policy_id'];
+            isOneToOne: false;
+            referencedRelation: 'policies';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       policy_documents: {
         Row: {
