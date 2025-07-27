@@ -55,8 +55,8 @@ export function useRemoveCoverageMutation() {
   };
 }
 
-export function usePolicyholderSummaryQuery(id: string) {
-  const query = useCoverageControllerGetPolicyholderSummary(id);
+export function usePolicyholderSummaryQuery() {
+  const query = useCoverageControllerGetPolicyholderSummary();
   return {
     ...query,
     error: parseError(query.error),

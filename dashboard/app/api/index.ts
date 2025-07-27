@@ -52,6 +52,32 @@ export interface LoginDto {
   password: string;
 }
 
+export type CompanyDetailsDtoContactNo = { [key: string]: unknown };
+
+export type CompanyDetailsDtoWebsite = { [key: string]: unknown };
+
+export type CompanyDetailsDtoYearsInBusiness =
+  (typeof CompanyDetailsDtoYearsInBusiness)[keyof typeof CompanyDetailsDtoYearsInBusiness];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CompanyDetailsDtoYearsInBusiness = {
+  "0-1_years": "0-1 years",
+  "2-5_years": "2-5 years",
+  "6-10_years": "6-10 years",
+  "11-20_years": "11-20 years",
+  "20+_years": "20+ years",
+} as const;
+
+export interface CompanyDetailsDto {
+  name?: string;
+  address?: string;
+  contact_no?: CompanyDetailsDtoContactNo;
+  website?: CompanyDetailsDtoWebsite;
+  license_number?: string;
+  years_in_business?: CompanyDetailsDtoYearsInBusiness;
+  created_at?: string;
+}
+
 export type RegisterDtoRole =
   (typeof RegisterDtoRole)[keyof typeof RegisterDtoRole];
 
@@ -74,10 +100,7 @@ export interface RegisterDto {
   role: RegisterDtoRole;
   phone?: string;
   bio?: string;
-  employeeId?: string;
-  licenseNumber?: string;
-  companyName?: string;
-  companyAddress?: string;
+  company?: CompanyDetailsDto;
   dateOfBirth?: string;
   occupation?: string;
   address?: string;
@@ -149,10 +172,7 @@ export interface CreateUserDto {
   role: CreateUserDtoRole;
   phone?: string;
   bio?: string;
-  employeeId?: string;
-  licenseNumber?: string;
-  companyName?: string;
-  companyAddress?: string;
+  company?: CompanyDetailsDto;
   dateOfBirth?: string;
   occupation?: string;
   address?: string;
@@ -185,21 +205,33 @@ export interface UpdateUserDto {
   role?: UpdateUserDtoRole;
   phone?: string;
   bio?: string;
-  employeeId?: string;
-  licenseNumber?: string;
-  companyName?: string;
-  companyAddress?: string;
+  company?: CompanyDetailsDto;
   dateOfBirth?: string;
   occupation?: string;
   address?: string;
   status?: UpdateUserDtoStatus;
 }
 
+/**
+ * Priority of the claim
+ */
+export type CreateClaimDtoPriority =
+  (typeof CreateClaimDtoPriority)[keyof typeof CreateClaimDtoPriority];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateClaimDtoPriority = {
+  low: "low",
+  medium: "medium",
+  high: "high",
+} as const;
+
 export interface CreateClaimDto {
   /** ID of the policy associated with the claim */
   policy_id: number;
   /** Type of the claim */
   claim_type: string;
+  /** Priority of the claim */
+  priority: CreateClaimDtoPriority;
   /** Amount claimed */
   amount: number;
   /** Description of the claim */
@@ -228,11 +260,26 @@ export interface ClaimResponseDto {
   claim_documents: ClaimDocumentResponseDto[];
 }
 
+/**
+ * Priority of the claim
+ */
+export type UpdateClaimDtoPriority =
+  (typeof UpdateClaimDtoPriority)[keyof typeof UpdateClaimDtoPriority];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateClaimDtoPriority = {
+  low: "low",
+  medium: "medium",
+  high: "high",
+} as const;
+
 export interface UpdateClaimDto {
   /** ID of the policy associated with the claim */
   policy_id?: number;
   /** Type of the claim */
   claim_type?: string;
+  /** Priority of the claim */
+  priority?: UpdateClaimDtoPriority;
   /** Amount claimed */
   amount?: number;
   /** Description of the claim */
@@ -1588,6 +1635,7 @@ export const claimControllerCreate = (
   const formData = new FormData();
   formData.append(`policy_id`, createClaimDto.policy_id.toString());
   formData.append(`claim_type`, createClaimDto.claim_type);
+  formData.append(`priority`, createClaimDto.priority);
   formData.append(`amount`, createClaimDto.amount.toString());
   if (createClaimDto.description !== undefined) {
     formData.append(`description`, createClaimDto.description);

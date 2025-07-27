@@ -10,7 +10,14 @@ interface DecodedToken {
   [key: string]: any;
 }
 
+// ✅ Toggle this to true/false to enable/disable middleware role protection
+const ENABLE_ROLE_PROTECTION = false;
+
 export function middleware(request: NextRequest) {
+  if (!ENABLE_ROLE_PROTECTION) {
+    return NextResponse.next(); // 👈 Skip all checks if disabled
+  }
+
   const token = request.cookies.get("access_token")?.value;
   const pathname = request.nextUrl.pathname;
 
@@ -33,7 +40,6 @@ export function middleware(request: NextRequest) {
 
       const userPath = roleToPath[role as keyof typeof roleToPath];
 
-      // ✅ If role exists, but is accessing a path not for their role, redirect them to their correct dashboard
       if (userPath && !pathname.startsWith(userPath)) {
         return NextResponse.redirect(new URL(userPath, request.url));
       }
