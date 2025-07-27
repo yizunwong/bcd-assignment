@@ -11,42 +11,9 @@ import {
   ValidateIf,
   ValidateNested,
 } from 'class-validator';
-import {
-  RegisterDto,
-  CompanyDetailsDto,
-} from 'src/api/auth/dto/requests/register.dto';
+import { CompanyDetailsDto } from 'src/api/auth/dto/requests/register.dto';
 import { ToPhone } from 'src/common/to-phone';
-import { Database } from 'src/supabase/types/supabase.types';
-
-export enum UserStatus {
-  ACTIVE = 'active',
-  DEACTIVATED = 'deactivated',
-}
-
-export enum UserRole {
-  POLICYHOLDER = 'policyholder',
-  INSURANCE_ADMIN = 'insurance_admin',
-  SYSTEM_ADMIN = 'system_admin',
-}
-
-export type AdminDetails = Partial<
-  Database['public']['Tables']['admin_details']['Row']
-> & {
-  company?: {
-    name?: string;
-    address?: string;
-    license_number?: string;
-    contact_no: string | null;
-    website: string | null;
-    years_in_business?: Database['public']['Enums']['years_in_business'];
-  };
-};
-
-export type PolicyholderDetails = Partial<
-  Database['public']['Tables']['policyholder_details']['Row']
-> | null;
-
-export type UserDetails = Database['public']['Tables']['user_details']['Row'];
+import { UserRole } from 'src/enums';
 
 export class CreateUserDto {
   @ApiProperty({ example: 'John', required: false })
@@ -86,7 +53,7 @@ export class CreateUserDto {
   bio?: string;
 
   //Only for insurance_admin
-  @ValidateIf((o: RegisterDto) => o.role === UserRole.INSURANCE_ADMIN)
+  @ValidateIf((o: CreateUserDto) => o.role === UserRole.INSURANCE_ADMIN)
   @ApiProperty({ type: () => CompanyDetailsDto, required: false })
   @ValidateNested()
   @Type(() => CompanyDetailsDto)

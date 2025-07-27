@@ -105,10 +105,8 @@ const users: SeedUser[] = [
     lastName: 'Chen',
     role: 'insurance_admin',
     admin: {
-      employee_id: 'A-100',
-      license_no: 'LIC-200',
-      company_name: 'HealthSecure Insurance',
-      company_address: 'California, USA',
+      company_id: 1,
+      verified_at: new Date().toISOString(),
     },
   },
 ];

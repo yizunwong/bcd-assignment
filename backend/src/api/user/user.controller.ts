@@ -1,10 +1,17 @@
-import { Body, Controller, Get, Param, Post, Patch, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Patch,
+  UseGuards,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/requests/create.dto';
 import { UpdateUserDto } from './dto/requests/update.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
-import { Role } from '../auth/role.decorator';
 import { RolesGuard } from '../auth/role.guard';
 import { ApiCommonResponse, CommonResponseDto } from 'src/common/common.dto';
 import { UserResponseDto } from './dto/respond/user.dto';
@@ -14,7 +21,7 @@ import { UserStatsResponseDto } from './dto/respond/user-stats.dto';
 @Controller('users')
 @ApiBearerAuth('supabase-auth')
 @UseGuards(AuthGuard, RolesGuard)
-@Role('system_admin')
+// @Role('system_admin')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

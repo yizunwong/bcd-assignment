@@ -1,4 +1,4 @@
-import { UserRole } from 'src/api/user/dto/requests/create.dto';
+import { UserRole } from 'src/enums';
 
 export interface ParsedAppMetadata {
   role?: UserRole;

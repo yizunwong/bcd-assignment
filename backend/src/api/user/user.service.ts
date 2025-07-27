@@ -1,12 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { SupabaseException } from 'src/supabase/types/supabase.exception';
-import {
-  AdminDetails,
-  CreateUserDto,
-  PolicyholderDetails,
-  UserRole,
-  UserStatus,
-} from './dto/requests/create.dto';
+import { CreateUserDto } from './dto/requests/create.dto';
 import { UpdateUserDto } from './dto/requests/update.dto';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { Database } from 'src/supabase/types/supabase.types';
@@ -14,6 +8,13 @@ import { parseAppMetadata } from 'src/utils/auth-metadata';
 import { CommonResponseDto } from 'src/common/common.dto';
 import { UserResponseDto } from './dto/respond/user.dto';
 import { UserStatsResponseDto } from './dto/respond/user-stats.dto';
+import {
+  UserRole,
+  UserStatus,
+  AdminDetails,
+  PolicyholderDetails,
+} from 'src/enums';
+import { CompanyDetailsDto } from '../auth/dto/requests/register.dto';
 
 @Injectable()
 export class UserService {
@@ -224,12 +225,11 @@ export class UserService {
     supabase: ReturnType<SupabaseService['createClientWithToken']>,
     dto: CreateUserDto,
   ) {
-    const { email, password, role } = dto;
     const { data, error } = await supabase.auth.admin.createUser({
-      email,
-      password,
+      email: dto.email,
+      password: dto.password,
       email_confirm: true,
-      app_metadata: { role },
+      app_metadata: { role: dto.role },
     });
 
     if (error || !data?.user) {
@@ -274,26 +274,54 @@ export class UserService {
     dto: CreateUserDto,
   ) {
     if (dto.role === UserRole.INSURANCE_ADMIN) {
-      const { company } = dto;
+      let company_id: number | null = null;
 
-      if (!company) {
-        throw new SupabaseException(
-          'Company information is required for insurance admin',
-        );
+      if (dto.company) {
+        // 🔍 Step 1: Check if company with same name exists
+        const { data: existingCompany, error: checkError } = await supabase
+          .from('companies')
+          .select('id')
+          .eq('name', dto.company.name)
+          .single();
+
+        if (checkError && checkError.code !== 'PGRST116') {
+          throw new ConflictException(
+            'Failed to check existing company: ' + checkError.message,
+          );
+        }
+
+        if (existingCompany?.id) {
+          company_id = existingCompany.id;
+        } else {
+          // 🆕 Step 2: Insert new company (fill required defaults if any)
+          const safeCompany = {
+            name: dto.company.name,
+            address: dto.company.address ?? '',
+            license_number: dto.company.license_number ?? '',
+            contact_no: dto.company.contact_no ?? '',
+            website: dto.company.website ?? '',
+            years_in_business: dto.company.years_in_business ?? '0-1 years',
+          };
+
+          const { data: insertedCompany, error: insertError } = await supabase
+            .from('companies')
+            .insert([safeCompany])
+            .select('id')
+            .single();
+
+          if (insertError || !insertedCompany?.id) {
+            throw new ConflictException(
+              'Failed to insert company: ' + insertError?.message,
+            );
+          }
+
+          company_id = insertedCompany.id;
+        }
       }
 
-      // Safe to proceed — company is guaranteed
-      const { data: insertedCompany, error: companyError } = await supabase
-        .from('companies')
-        .insert([company])
-        .select('id')
-        .single();
-
-      if (companyError || !insertedCompany?.id) {
-        throw new SupabaseException('Failed to insert company', companyError);
+      if (!company_id) {
+        throw new ConflictException('Company could not be resolved.');
       }
-
-      const company_id = insertedCompany.id;
 
       const { data, error } = await supabase
         .from('admin_details')
@@ -389,6 +417,9 @@ export class UserService {
     }
 
     if (dto.role === UserRole.INSURANCE_ADMIN) {
+      if (dto.company) {
+        await this.updateOrInsertCompany(supabase, user_id, dto.company);
+      }
       const adminUpdates: Database['public']['Tables']['admin_details']['Update'] & {
         user_id: string;
       } = { user_id };
@@ -492,5 +523,69 @@ export class UserService {
         insuranceAdmins: admins ?? 0,
       }),
     });
+  }
+
+  private async updateOrInsertCompany(
+    supabase: ReturnType<SupabaseService['createClientWithToken']>,
+    user_id: string,
+    company: CompanyDetailsDto,
+  ): Promise<number> {
+    if (!company) {
+      throw new SupabaseException('Missing company data for admin');
+    }
+
+    // Check if admin already has a company
+    const { data: existingAdmin, error: adminError } = await supabase
+      .from('admin_details')
+      .select('company_id')
+      .eq('user_id', user_id)
+      .single();
+
+    if (adminError) {
+      throw new SupabaseException('Failed to fetch admin details', adminError);
+    }
+
+    // Update existing company if one is already linked
+    if (existingAdmin?.company_id) {
+      const { error: updateCompanyError } = await supabase
+        .from('companies')
+        .update(company)
+        .eq('id', existingAdmin.company_id);
+
+      if (updateCompanyError) {
+        throw new SupabaseException(
+          'Failed to update company',
+          updateCompanyError,
+        );
+      }
+
+      return existingAdmin.company_id;
+    }
+
+    // Insert new company and return new ID
+    const { data: inserted, error: insertError } = await supabase
+      .from('companies')
+      .insert([company])
+      .select('id')
+      .single();
+
+    if (insertError || !inserted?.id) {
+      throw new SupabaseException('Failed to insert new company', insertError);
+    }
+
+    // Also update admin_details to reference the new company
+    const { error: updateAdminError } = await supabase
+      .from('admin_details')
+      .update({ company_id: inserted.id })
+      .eq('user_id', user_id);
+
+    if (updateAdminError) {
+      throw new SupabaseException(
+        'Failed to link new company to admin',
+        updateAdminError,
+      );
+    }
+
+    return inserted.id;
   }
 }

@@ -2,7 +2,6 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsEmail,
-  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -12,17 +11,10 @@ import {
   ValidateIf,
   IsUrl,
   ValidateNested,
+  IsEnum,
 } from 'class-validator';
-import { UserRole } from 'src/api/user/dto/requests/create.dto';
 import { ToPhone } from 'src/common/to-phone';
-
-export enum YearsInBusiness {
-  ZERO_TO_ONE = '0-1 years',
-  TWO_TO_FIVE = '2-5 years',
-  SIX_TO_TEN = '6-10 years',
-  ELEVEN_TO_TWENTY = '11-20 years',
-  TWENTY_PLUS = '20+ years',
-}
+import { UserRole, YearsInBusiness } from 'src/enums';
 
 export class CompanyDetailsDto {
   @ApiProperty({ example: 'ABC Company', required: false })
@@ -51,7 +43,7 @@ export class CompanyDetailsDto {
   license_number!: string;
 
   @ApiProperty({
-    example: '1-3 years',
+    example: YearsInBusiness.ZERO_TO_ONE,
     enum: YearsInBusiness,
     required: false,
   })
@@ -117,7 +109,7 @@ export class RegisterDto {
   @IsEnum(UserRole)
   role!: UserRole;
 
-  @ApiProperty({ example: '+1234567890', required: false })
+  @ApiProperty({ example: '+60123456789', required: false })
   @ToPhone
   @IsString({ message: 'must be a valid phone number' })
   phone?: string;

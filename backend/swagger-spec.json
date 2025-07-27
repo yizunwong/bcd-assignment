@@ -1505,6 +1505,46 @@
           "password"
         ]
       },
+      "CompanyDetailsDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "ABC Company"
+          },
+          "address": {
+            "type": "string",
+            "example": "123 Main St, New York, USA"
+          },
+          "contact_no": {
+            "type": "object",
+            "example": "+1 555-1234"
+          },
+          "website": {
+            "type": "object",
+            "example": "www.abccompany.com"
+          },
+          "license_number": {
+            "type": "string",
+            "example": "LIC-00012345"
+          },
+          "years_in_business": {
+            "type": "string",
+            "example": "0-1 years",
+            "enum": [
+              "0-1 years",
+              "2-5 years",
+              "6-10 years",
+              "11-20 years",
+              "20+ years"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "example": "2024-01-01T00:00:00Z"
+          }
+        }
+      },
       "RegisterDto": {
         "type": "object",
         "properties": {
@@ -1542,27 +1582,14 @@
           },
           "phone": {
             "type": "string",
-            "example": "+1234567890"
+            "example": "+60123456789"
           },
           "bio": {
             "type": "string",
             "example": "I am a policyholder"
           },
-          "employeeId": {
-            "type": "string",
-            "example": "EMP123456"
-          },
-          "licenseNumber": {
-            "type": "string",
-            "example": "LIC789456"
-          },
-          "companyName": {
-            "type": "string",
-            "example": "ABC Company"
-          },
-          "companyAddress": {
-            "type": "string",
-            "example": "New York, USA"
+          "company": {
+            "$ref": "#/components/schemas/CompanyDetailsDto"
           },
           "dateOfBirth": {
             "type": "string",
@@ -1693,21 +1720,8 @@
             "type": "string",
             "example": "I am a policyholder"
           },
-          "employeeId": {
-            "type": "string",
-            "example": "EMP123456"
-          },
-          "licenseNumber": {
-            "type": "string",
-            "example": "LIC789456"
-          },
-          "companyName": {
-            "type": "string",
-            "example": "ABC Company"
-          },
-          "companyAddress": {
-            "type": "string",
-            "example": "New York, USA"
+          "company": {
+            "$ref": "#/components/schemas/CompanyDetailsDto"
           },
           "dateOfBirth": {
             "type": "string",
@@ -1764,21 +1778,8 @@
             "type": "string",
             "example": "I am a policyholder"
           },
-          "employeeId": {
-            "type": "string",
-            "example": "EMP123456"
-          },
-          "licenseNumber": {
-            "type": "string",
-            "example": "LIC789456"
-          },
-          "companyName": {
-            "type": "string",
-            "example": "ABC Company"
-          },
-          "companyAddress": {
-            "type": "string",
-            "example": "New York, USA"
+          "company": {
+            "$ref": "#/components/schemas/CompanyDetailsDto"
           },
           "dateOfBirth": {
             "type": "string",
@@ -1815,6 +1816,16 @@
             "example": "accident",
             "description": "Type of the claim"
           },
+          "priority": {
+            "type": "string",
+            "example": "medium",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "description": "Priority of the claim"
+          },
           "amount": {
             "type": "number",
             "example": 1000,
@@ -1837,6 +1848,7 @@
         "required": [
           "policy_id",
           "claim_type",
+          "priority",
           "amount"
         ]
       },
@@ -1915,6 +1927,16 @@
             "type": "string",
             "example": "accident",
             "description": "Type of the claim"
+          },
+          "priority": {
+            "type": "string",
+            "example": "medium",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "description": "Priority of the claim"
           },
           "amount": {
             "type": "number",

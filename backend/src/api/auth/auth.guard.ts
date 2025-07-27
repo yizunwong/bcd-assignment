@@ -6,6 +6,8 @@ import {
 } from '@nestjs/common';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { SupabaseService } from 'src/supabase/supabase.service';
+import { parseAppMetadata } from 'src/utils/auth-metadata';
+import { UserRole } from 'src/enums';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -21,7 +23,6 @@ export class AuthGuard implements CanActivate {
     }
 
     request.supabase = this.supabaseService.createClientWithToken(token);
-
     const { data, error } = await request.supabase.auth.getUser();
 
     if (error || !data.user) {
@@ -30,15 +31,20 @@ export class AuthGuard implements CanActivate {
 
     request.user = data.user;
 
-    // Check user is verified or not
-    const { data: userDetails, error: detailsError } = await request.supabase
-      .from('admin_details')
-      .select('verified_at')
-      .eq('user_id', data.user.id)
-      .single();
+    // ✅ Get role from app_metadata
+    const appMeta = parseAppMetadata(data.user.app_metadata);
 
-    if (detailsError || !userDetails || !userDetails.verified_at) {
-      throw new UnauthorizedException('User is not verified');
+    // 🔒 Only check verified_at if role is insurance_admin
+    if (appMeta.role === UserRole.INSURANCE_ADMIN) {
+      const { data: adminDetails } = await request.supabase
+        .from('admin_details')
+        .select('verified_at')
+        .eq('user_id', data.user.id)
+        .single();
+
+      if (!adminDetails || !adminDetails.verified_at) {
+        throw new UnauthorizedException('User is not verified');
+      }
     }
 
     return true;

@@ -1,9 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  AdminDetails,
-  PolicyholderDetails,
-  UserRole,
-} from '../requests/create.dto';
+import { UserRole, AdminDetails, PolicyholderDetails } from 'src/enums';
 
 export class UserResponseDto {
   @ApiProperty()

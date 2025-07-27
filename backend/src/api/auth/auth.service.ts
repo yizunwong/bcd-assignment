@@ -10,9 +10,9 @@ import { LoginResponseDto } from './dto/responses/login.dto';
 import { CommonResponseDto } from '../../common/common.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { AuthUserResponseDto } from './dto/responses/auth-user.dto';
-import { UserRole, UserStatus } from '../user/dto/requests/create.dto';
 import { parseAppMetadata, parseUserMetadata } from 'src/utils/auth-metadata';
 import { Response } from 'express';
+import { UserRole, UserStatus } from 'src/enums';
 
 @Injectable()
 export class AuthService {
@@ -61,116 +61,157 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto) {
-    const supabase = this.supabaseService.createClientWithToken();
+    try {
+      const supabase = this.supabaseService.createClientWithToken();
 
-    // 1. Create Supabase Auth User
-    const { data: auth, error: signUpError } = await supabase.auth.signUp({
-      email: dto.email,
-      password: dto.password,
-    });
+      // 1. Create Supabase Auth User
+      const { data: auth, error: signUpError } = await supabase.auth.signUp({
+        email: dto.email,
+        password: dto.password,
+      });
 
-    if (signUpError || !auth?.user) {
-      throw new ConflictException(
-        signUpError?.message || 'Failed to register user',
-      );
-    }
+      if (signUpError || !auth?.user) {
+        throw new ConflictException(
+          signUpError?.message || 'Failed to register user',
+        );
+      }
 
-    const user_id = auth.user.id;
-    let status: UserStatus = UserStatus.ACTIVE;
+      const user_id = auth.user.id;
+      let status: UserStatus = UserStatus.ACTIVE;
 
-    const { error: updateError } = await supabase.auth.admin.updateUserById(
-      user_id,
-      {
-        app_metadata: {
-          role: dto.role,
-        },
-      },
-    );
-
-    if (dto.role === UserRole.INSURANCE_ADMIN) {
-      status = UserStatus.DEACTIVATED; // Pending admin verification
-    }
-
-    // 2. Insert into user_details
-    const { error: profileError } = await supabase.from('user_details').insert([
-      {
+      const { error: updateError } = await supabase.auth.admin.updateUserById(
         user_id,
-        first_name: dto.firstName,
-        last_name: dto.lastName,
-        status,
-        bio: dto.bio ?? null,
-        phone: dto.phone ?? null,
-      },
-    ]);
-
-    if (profileError || updateError) {
-      throw new ConflictException(
-        'Failed to insert user profile: ' + profileError?.message,
+        {
+          app_metadata: {
+            role: dto.role,
+          },
+        },
       );
-    }
 
-    // 3. Role-specific data handling
-    if (dto.role === UserRole.INSURANCE_ADMIN) {
-      // Insert company if provided
-      let company_id = 1; // fallback or default company
+      if (dto.role === UserRole.INSURANCE_ADMIN) {
+        status = UserStatus.DEACTIVATED; // Pending admin verification
+      }
 
-      if (dto.company) {
-        const { data: insertedCompany, error: companyError } = await supabase
-          .from('companies')
-          .insert([dto.company])
-          .select('id')
-          .single();
+      // 2. Insert into user_details
+      const { error: profileError } = await supabase
+        .from('user_details')
+        .insert([
+          {
+            user_id,
+            first_name: dto.firstName,
+            last_name: dto.lastName,
+            status,
+            bio: dto.bio ?? null,
+            phone: dto.phone ?? null,
+          },
+        ]);
 
-        if (companyError || !insertedCompany?.id) {
-          throw new ConflictException(
-            'Failed to insert company: ' + companyError?.message,
-          );
+      if (profileError || updateError) {
+        throw new ConflictException(
+          'Failed to insert user profile: ' + profileError?.message,
+        );
+      }
+
+      // 3. Role-specific data handling
+      if (dto.role === UserRole.INSURANCE_ADMIN) {
+        let company_id: number | null = null;
+
+        if (dto.company) {
+          // 🔍 Step 1: Check if company with same name exists
+          const { data: existingCompany, error: checkError } = await supabase
+            .from('companies')
+            .select('id')
+            .eq('name', dto.company.name)
+            .single();
+
+          if (checkError && checkError.code !== 'PGRST116') {
+            throw new ConflictException(
+              'Failed to check existing company: ' + checkError.message,
+            );
+          }
+
+          if (existingCompany?.id) {
+            company_id = existingCompany.id;
+          } else {
+            // 🆕 Step 2: Insert new company (fill required defaults if any)
+            const safeCompany = {
+              name: dto.company.name,
+              address: dto.company.address ?? '',
+              license_number: dto.company.license_number ?? '',
+              contact_no: dto.company.contact_no ?? '',
+              website: dto.company.website ?? '',
+              years_in_business: dto.company.years_in_business ?? '0-1 years',
+            };
+
+            const { data: insertedCompany, error: insertError } = await supabase
+              .from('companies')
+              .insert([safeCompany])
+              .select('id')
+              .single();
+
+            if (insertError || !insertedCompany?.id) {
+              throw new ConflictException(
+                'Failed to insert company: ' + insertError?.message,
+              );
+            }
+
+            company_id = insertedCompany.id;
+          }
         }
 
-        company_id = insertedCompany.id;
+        if (!company_id) {
+          throw new ConflictException('Company could not be resolved.');
+        }
+
+        // Step 3: Insert into admin_details
+        const { error: adminError } = await supabase
+          .from('admin_details')
+          .insert([
+            {
+              user_id,
+              company_id,
+              verified_at: null,
+            },
+          ]);
+
+        if (adminError) {
+          throw new ConflictException(
+            'Failed to insert admin details: ' + adminError.message,
+          );
+        }
       }
 
-      // Insert into admin_details with company_id
-      const { error: adminError } = await supabase
-        .from('admin_details')
-        .insert([
-          {
-            user_id,
-            company_id,
-            verified_at: null,
-          },
-        ]);
+      if (dto.role === UserRole.POLICYHOLDER) {
+        const { error: holderError } = await supabase
+          .from('policyholder_details')
+          .insert([
+            {
+              user_id,
+              date_of_birth: dto.dateOfBirth ?? '',
+              occupation: dto.occupation ?? '',
+              address: dto.address ?? '',
+            },
+          ]);
 
-      if (adminError) {
-        throw new ConflictException(
-          'Failed to insert admin details: ' + adminError.message,
-        );
+        if (holderError) {
+          throw new ConflictException(
+            'Failed to insert policyholder details: ' + holderError.message,
+          );
+        }
       }
+
+      return new CommonResponseDto({
+        statusCode: 201,
+        message: 'Registration successful',
+      });
+    } catch (e) {
+      return new CommonResponseDto({
+        statusCode: 400,
+        message:
+          'Registration failed: ' +
+          (e instanceof ConflictException ? e.message : 'Unknown error'),
+      });
     }
-
-    if (dto.role === UserRole.POLICYHOLDER) {
-      const { error: holderError } = await supabase
-        .from('policyholder_details')
-        .insert([
-          {
-            user_id,
-            date_of_birth: dto.dateOfBirth ?? '',
-            occupation: dto.occupation ?? '',
-            address: dto.address ?? '',
-          },
-        ]);
-
-      if (holderError) {
-        throw new ConflictException(
-          'Failed to insert policyholder details: ' + holderError.message,
-        );
-      }
-    }
-
-    return new CommonResponseDto({
-      statusCode: 201,
-      message: 'Registration successful',
-    });
   }
 
   async getMe(req: AuthenticatedRequest) {
