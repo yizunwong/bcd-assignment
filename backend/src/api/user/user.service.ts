@@ -239,19 +239,24 @@ export class UserService {
     return data;
   }
 
-  private async createUserProfile(
+  async createUserProfile(
     supabase: ReturnType<SupabaseService['createClientWithToken']>,
     user_id: string,
     dto: CreateUserDto,
   ) {
     const { bio, firstName, lastName } = dto;
+    let status: UserStatus = UserStatus.ACTIVE;
+
+    if (dto.role === UserRole.INSURANCE_ADMIN) {
+      status = UserStatus.DEACTIVATED; // Pending admin verification
+    }
 
     const { data, error } = await supabase
       .from('user_details')
       .insert([
         {
           user_id,
-          status: UserStatus.ACTIVE,
+          status: status,
           bio: bio ?? null,
           first_name: firstName ?? null,
           last_name: lastName ?? null,
@@ -268,7 +273,7 @@ export class UserService {
     return data;
   }
 
-  private async createRoleSpecificDetails(
+  async createRoleSpecificDetails(
     supabase: ReturnType<SupabaseService['createClientWithToken']>,
     user_id: string,
     dto: CreateUserDto,

@@ -12,11 +12,14 @@ import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { AuthUserResponseDto } from './dto/responses/auth-user.dto';
 import { parseAppMetadata, parseUserMetadata } from 'src/utils/auth-metadata';
 import { Response } from 'express';
-import { UserRole, UserStatus } from 'src/enums';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly supabaseService: SupabaseService) {}
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly userService: UserService,
+  ) {}
 
   async signInWithEmail(body: LoginDto, res: Response) {
     // ✅ Anonymous client, no token needed for login
@@ -77,7 +80,6 @@ export class AuthService {
       }
 
       const user_id = auth.user.id;
-      let status: UserStatus = UserStatus.ACTIVE;
 
       const { error: updateError } = await supabase.auth.admin.updateUserById(
         user_id,
@@ -88,117 +90,14 @@ export class AuthService {
         },
       );
 
-      if (dto.role === UserRole.INSURANCE_ADMIN) {
-        status = UserStatus.DEACTIVATED; // Pending admin verification
-      }
-
-      // 2. Insert into user_details
-      const { error: profileError } = await supabase
-        .from('user_details')
-        .insert([
-          {
-            user_id,
-            first_name: dto.firstName,
-            last_name: dto.lastName,
-            status,
-            bio: dto.bio ?? null,
-            phone: dto.phone ?? null,
-          },
-        ]);
-
-      if (profileError || updateError) {
+      if (updateError) {
         throw new ConflictException(
-          'Failed to insert user profile: ' + profileError?.message,
+          'Failed to update user role: ' + updateError.message,
         );
       }
 
-      // 3. Role-specific data handling
-      if (dto.role === UserRole.INSURANCE_ADMIN) {
-        let company_id: number | null = null;
-
-        if (dto.company) {
-          // 🔍 Step 1: Check if company with same name exists
-          const { data: existingCompany, error: checkError } = await supabase
-            .from('companies')
-            .select('id')
-            .eq('name', dto.company.name)
-            .single();
-
-          if (checkError && checkError.code !== 'PGRST116') {
-            throw new ConflictException(
-              'Failed to check existing company: ' + checkError.message,
-            );
-          }
-
-          if (existingCompany?.id) {
-            company_id = existingCompany.id;
-          } else {
-            // 🆕 Step 2: Insert new company (fill required defaults if any)
-            const safeCompany = {
-              name: dto.company.name,
-              address: dto.company.address ?? '',
-              license_number: dto.company.license_number ?? '',
-              contact_no: dto.company.contact_no ?? '',
-              website: dto.company.website ?? '',
-              years_in_business: dto.company.years_in_business ?? '0-1 years',
-            };
-
-            const { data: insertedCompany, error: insertError } = await supabase
-              .from('companies')
-              .insert([safeCompany])
-              .select('id')
-              .single();
-
-            if (insertError || !insertedCompany?.id) {
-              throw new ConflictException(
-                'Failed to insert company: ' + insertError?.message,
-              );
-            }
-
-            company_id = insertedCompany.id;
-          }
-        }
-
-        if (!company_id) {
-          throw new ConflictException('Company could not be resolved.');
-        }
-
-        // Step 3: Insert into admin_details
-        const { error: adminError } = await supabase
-          .from('admin_details')
-          .insert([
-            {
-              user_id,
-              company_id,
-              verified_at: null,
-            },
-          ]);
-
-        if (adminError) {
-          throw new ConflictException(
-            'Failed to insert admin details: ' + adminError.message,
-          );
-        }
-      }
-
-      if (dto.role === UserRole.POLICYHOLDER) {
-        const { error: holderError } = await supabase
-          .from('policyholder_details')
-          .insert([
-            {
-              user_id,
-              date_of_birth: dto.dateOfBirth ?? '',
-              occupation: dto.occupation ?? '',
-              address: dto.address ?? '',
-            },
-          ]);
-
-        if (holderError) {
-          throw new ConflictException(
-            'Failed to insert policyholder details: ' + holderError.message,
-          );
-        }
-      }
+      await this.userService.createUserProfile(supabase, user_id, dto);
+      await this.userService.createRoleSpecificDetails(supabase, user_id, dto);
 
       return new CommonResponseDto({
         statusCode: 201,

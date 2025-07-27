@@ -130,7 +130,7 @@ export class RegisterDto {
   @ValidateIf((o: RegisterDto) => o.role === UserRole.POLICYHOLDER)
   @IsNotEmpty({ message: 'Date of birth is required for policyholders' })
   @ApiProperty({ example: '1990-06-15', required: false })
-  dateOfBirth?: string;
+  dateOfBirth!: string;
 
   @ApiProperty({ example: 'Engineer', required: false })
   @IsOptional()
