@@ -300,7 +300,6 @@ export default function TrustSecurityPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-24 pb-20 px-4">
         <div className="max-w-7xl mx-auto text-center">
@@ -441,12 +440,12 @@ export default function TrustSecurityPage() {
                     Our Security Commitment
                   </h3>
                   <p className="text-blue-700 dark:text-blue-300 mb-4">
-                    At BlockSecure, security is our highest priority. We employ
-                    a defense-in-depth approach with multiple layers of
-                    protection to safeguard your data and funds. Our security
-                    team continuously monitors for threats and vulnerabilities,
-                    and we regularly conduct third-party security audits to
-                    ensure our systems remain impenetrable.
+                    At Coverly, security is our highest priority. We employ a
+                    defense-in-depth approach with multiple layers of protection
+                    to safeguard your data and funds. Our security team
+                    continuously monitors for threats and vulnerabilities, and
+                    we regularly conduct third-party security audits to ensure
+                    our systems remain impenetrable.
                   </p>
                   <p className="text-blue-700 dark:text-blue-300">
                     We maintain a comprehensive bug bounty program and encourage
@@ -1008,7 +1007,6 @@ export default function TrustSecurityPage() {
           </div>
         </div>
       </section>
-
     </div>
   );
 }

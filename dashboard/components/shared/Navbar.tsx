@@ -135,7 +135,7 @@ export function Navbar({ role }: NavbarProps) {
               <Shield className="w-6 h-6 text-white" />
             </div>
             <span className="text-xl font-bold text-slate-800 dark:text-slate-200 hidden sm:block">
-              BlockSecure
+              Coverly
             </span>
           </Link>
 

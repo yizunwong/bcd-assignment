@@ -382,88 +382,59 @@ export class UserService {
   ): Promise<CommonResponseDto<UserResponseDto>> {
     const supabase = this.supabaseService.createClientWithToken();
 
-    const authUpdates: Record<string, any> = {};
-    if (dto.email !== undefined) authUpdates.email = dto.email;
-    if (dto.password !== undefined) authUpdates.password = dto.password;
-    if (dto.role !== undefined) {
-      authUpdates.app_metadata = { role: dto.role };
+    const { error: authError } = await supabase.auth.admin.updateUserById(
+      user_id,
+      {
+        email: dto.email,
+        password: dto.password,
+        app_metadata: {
+          role: dto.role,
+        },
+      },
+    );
+
+    if (authError) {
+      throw new SupabaseException('Failed to update auth user', authError);
     }
 
-    if (Object.keys(authUpdates).length > 0) {
-      const { error: authError } = await supabase.auth.admin.updateUserById(
-        user_id,
-        authUpdates,
+    const { error: profileError } = await supabase
+      .from('user_details')
+      .update({
+        status: dto.status,
+        first_name: dto.firstName,
+        last_name: dto.lastName,
+        phone: dto.phone,
+        bio: dto.bio,
+      })
+      .eq('user_id', user_id);
+
+    if (profileError) {
+      throw new SupabaseException(
+        'Failed to update user profile',
+        profileError,
       );
-      if (authError) {
-        throw new SupabaseException('Failed to update auth user', authError);
-      }
-    }
-
-    const profileUpdates: Database['public']['Tables']['user_details']['Update'] =
-      {};
-    if (dto.firstName !== undefined) profileUpdates.first_name = dto.firstName;
-    if (dto.lastName !== undefined) profileUpdates.last_name = dto.lastName;
-    if (dto.phone !== undefined) profileUpdates.phone = dto.phone;
-    if (dto.bio !== undefined) profileUpdates.bio = dto.bio;
-    if (dto.status !== undefined) profileUpdates.status = dto.status;
-
-    if (Object.keys(profileUpdates).length > 0) {
-      const { error: profileError } = await supabase
-        .from('user_details')
-        .update(profileUpdates)
-        .eq('user_id', user_id);
-
-      if (profileError) {
-        throw new SupabaseException(
-          'Failed to update user profile',
-          profileError,
-        );
-      }
     }
 
     if (dto.role === UserRole.INSURANCE_ADMIN) {
       if (dto.company) {
         await this.updateOrInsertCompany(supabase, user_id, dto.company);
       }
-      const adminUpdates: Database['public']['Tables']['admin_details']['Update'] & {
-        user_id: string;
-      } = { user_id };
-
-      if (Object.keys(adminUpdates).length > 1) {
-        const { error: adminError } = await supabase
-          .from('admin_details')
-          .update(adminUpdates);
-
-        if (adminError) {
-          throw new SupabaseException(
-            'Failed to update admin details',
-            adminError,
-          );
-        }
-      }
     }
 
     if (dto.role === UserRole.POLICYHOLDER) {
-      const holderUpdates: Database['public']['Tables']['policyholder_details']['Update'] & {
-        user_id: string;
-      } = { user_id };
-      if (dto.dateOfBirth !== undefined)
-        holderUpdates.date_of_birth = dto.dateOfBirth;
-      if (dto.occupation !== undefined)
-        holderUpdates.occupation = dto.occupation;
-      if (dto.address !== undefined) holderUpdates.address = dto.address;
+      const { error: holderError } = await supabase
+        .from('policyholder_details')
+        .update({
+          date_of_birth: dto.dateOfBirth,
+          occupation: dto.occupation,
+          address: dto.address,
+        });
 
-      if (Object.keys(holderUpdates).length > 1) {
-        const { error: holderError } = await supabase
-          .from('policyholder_details')
-          .update(holderUpdates);
-
-        if (holderError) {
-          throw new SupabaseException(
-            'Failed to update policyholder details',
-            holderError,
-          );
-        }
+      if (holderError) {
+        throw new SupabaseException(
+          'Failed to update policyholder details',
+          holderError,
+        );
       }
     }
 

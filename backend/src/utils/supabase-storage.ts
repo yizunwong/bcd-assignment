@@ -10,6 +10,8 @@ export async function uploadFiles(
   supabase: SupabaseClient,
   files: Array<Express.Multer.File>,
   folder: string,
+  subfolder?: string, // optional
+  customFileNameFn?: (file: Express.Multer.File) => string, // optional
 ): Promise<string[]> {
   if (!folder) {
     throw new InternalServerErrorException('Upload folder is required');
@@ -19,17 +21,22 @@ export async function uploadFiles(
 
   for (const file of files) {
     const timestamp = Date.now();
-    const uniqueName = `${timestamp}-${file.originalname}`;
-    const filePath = `${folder}/${uniqueName}`;
+    const sanitizedName = file.originalname.replace(/\s+/g, '_'); // space-safe
+    const uniqueName = customFileNameFn
+      ? customFileNameFn(file)
+      : `${timestamp}-${sanitizedName}`;
 
-    const { error: uploadError } = await supabase.storage
+    const filePath = `${folder}${subfolder ? `/${subfolder}` : ''}/${uniqueName}`;
+
+    const { error } = await supabase.storage
       .from(BUCKET)
       .upload(filePath, file.buffer, {
         contentType: file.mimetype,
+        upsert: true, // optional, based on your overwrite preference
       });
 
-    if (uploadError) {
-      throw new InternalServerErrorException(uploadError.message);
+    if (error) {
+      throw new InternalServerErrorException(`Upload failed: ${error.message}`);
     }
 
     filePaths.push(filePath);
@@ -42,25 +49,22 @@ export async function getSignedUrls(
   supabase: SupabaseClient,
   filePaths: string[],
 ): Promise<string[]> {
-  const signedUrls: string[] = [];
+  const results = await Promise.all(
+    filePaths.map(async (path) => {
+      const { data, error } = await supabase.storage
+        .from(BUCKET)
+        .createSignedUrl(path, SIGNED_URL_EXPIRY);
 
-  for (const path of filePaths) {
-    const { data, error } = await supabase.storage
-      .from(BUCKET)
-      .createSignedUrl(path, SIGNED_URL_EXPIRY);
+      if (error || !data?.signedUrl) {
+        console.error(`Failed signed URL: ${path}`, error?.message);
+        return '';
+      }
 
-    if (error || !data?.signedUrl) {
-      console.error(
-        `Failed to generate signed URL for: ${path}`,
-        error?.message,
-      );
-      signedUrls.push(''); // or throw if preferred
-    } else {
-      signedUrls.push(data.signedUrl);
-    }
-  }
+      return data.signedUrl;
+    }),
+  );
 
-  return signedUrls;
+  return results;
 }
 
 export async function removeFileFromStorage(
@@ -71,7 +75,7 @@ export async function removeFileFromStorage(
     console.log('Attempting to remove file at path:', filePath);
 
     const { data, error } = await supabase.storage
-      .from('supastorage')
+      .from(BUCKET)
       .remove([filePath]);
 
     if (error) {

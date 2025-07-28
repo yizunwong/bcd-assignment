@@ -1539,6 +1539,17 @@
               "20+ years"
             ]
           },
+          "employees_number": {
+            "type": "string",
+            "example": "0-10",
+            "enum": [
+              "0-10",
+              "11-50",
+              "51-200",
+              "201-500",
+              "500+"
+            ]
+          },
           "created_at": {
             "type": "string",
             "example": "2024-01-01T00:00:00Z"

@@ -649,9 +649,7 @@ export default function ProviderRegistrationPage() {
               <div className="w-16 h-16 mb-6 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
                 <Building className="w-8 h-8 text-white" />
               </div>
-              <h1 className="text-4xl font-bold mb-4">
-                Partner with BlockSecure
-              </h1>
+              <h1 className="text-4xl font-bold mb-4">Partner with Coverly</h1>
               <p className="text-xl text-purple-100 mb-8">
                 Join our network of trusted insurance providers and
                 revolutionize the industry with blockchain technology.

@@ -1,8 +1,7 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Loader } from "lucide-react"; // 🔄 Spinner icon
-
+import { Loader } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
@@ -50,18 +49,42 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       asChild = false,
       loading = false,
       children,
-      disabled,
+      disabled = false,
+      onClick,
+      type = "button",
       ...props
     },
     ref
   ) => {
     const Comp = asChild ? Slot : "button";
+    const [cooldown, setCooldown] = React.useState(false);
+
+    const startCooldown = () => {
+      setCooldown(true);
+      setTimeout(() => {
+        setCooldown(false);
+      }, 500);
+    };
+
+    const handleClick: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+      if (loading || disabled || cooldown) return;
+
+      // Trigger user-defined click event first
+      onClick?.(event);
+
+      // Delay cooldown activation to let form submission proceed
+      setTimeout(startCooldown, 0);
+    };
+
+    const isDisabled = disabled || loading || cooldown;
 
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size }), className, "relative")}
         ref={ref}
-        disabled={disabled || loading}
+        type={type}
+        onClick={handleClick}
+        disabled={isDisabled}
+        className={cn(buttonVariants({ variant, size }), className, "relative")}
         {...props}
       >
         {loading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
@@ -70,6 +93,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     );
   }
 );
-Button.displayName = "Button";
 
+Button.displayName = "Button";
 export { Button, buttonVariants };

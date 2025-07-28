@@ -14,7 +14,6 @@ export function useLoginMutation() {
   return {
     ...mutation,
     login: (data: LoginDto) => mutation.mutateAsync({ data }),
-    error: parseError(mutation.error),
   };
 }
 
@@ -24,7 +23,6 @@ export function useRegisterMutation() {
   return {
     ...mutation,
     register: (data: RegisterDto) => mutation.mutateAsync({ data }),
-    error: parseError(mutation.error),
   };
 }
 
@@ -55,11 +53,9 @@ export default function useAuth() {
 
   return {
     login: loginMutation.login,
-    loginError: loginMutation.error?.[0],
     isLoggingIn: loginMutation.isPending,
 
     register: registerMutation.register,
-    registerError: registerMutation.error?.[0],
     isRegistering: registerMutation.isPending,
 
     logout,

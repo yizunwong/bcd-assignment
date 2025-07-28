@@ -29,6 +29,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import useAuth from "@/app/hooks/useAuth";
 import { useToast } from "@/components/shared/ToastProvider";
+import { parseError } from '@/app/utils/parseError';
 
 export default function RegisterPage() {
   const searchParams = useSearchParams();
@@ -39,7 +40,7 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const router = useRouter();
-  const { register: registerUser, isRegistering, registerError } = useAuth();
+  const { register: registerUser, isRegistering } = useAuth();
   const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -55,7 +56,7 @@ export default function RegisterPage() {
     dateOfBirth: "",
     address: "",
     occupation: "",
-    annualIncome: "",
+    // annualIncome: "",
 
     // Common
     agreeToTerms: false,
@@ -105,7 +106,8 @@ export default function RegisterPage() {
           router.push("/auth/login");
         } catch (err) {
           console.error(err);
-          showToast(registerError || 'Registration failed', 'error');
+          console.error("Registration failed:", err);
+          showToast(parseError(err) || 'Registration failed', 'error');
         }
       }
     }
@@ -369,7 +371,7 @@ export default function RegisterPage() {
             />
           </div>
 
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Annual Income Range
             </label>
@@ -391,7 +393,7 @@ export default function RegisterPage() {
                 <SelectItem value="over-150k">Over $150,000</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </div> */}
 
           <div className="space-y-4">
             <div className="flex items-start space-x-3">

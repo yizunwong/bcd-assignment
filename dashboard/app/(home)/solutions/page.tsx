@@ -253,7 +253,6 @@ export default function SolutionsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-24 pb-20 px-4">
         <div className="max-w-7xl mx-auto text-center">
@@ -553,8 +552,8 @@ export default function SolutionsPage() {
             Ready to Get Protected?
           </h2>
           <p className="text-xl text-slate-600 dark:text-slate-300 mb-8">
-            Join thousands of satisfied customers who trust BlockSecure for
-            their insurance needs
+            Join thousands of satisfied customers who trust Coverly for their
+            insurance needs
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -579,7 +578,6 @@ export default function SolutionsPage() {
           </div>
         </div>
       </section>
-
     </div>
   );
 }

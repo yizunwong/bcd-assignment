@@ -184,7 +184,7 @@ export default function BenefitsPage() {
       role: "Digital Nomad",
       company: "Remote Tech Consultant",
       content:
-        "BlockSecure saved my European trip when my flight was cancelled. The instant payout covered my expenses immediately, unlike traditional insurance that would have taken weeks.",
+        "Coverly saved my European trip when my flight was cancelled. The instant payout covered my expenses immediately, unlike traditional insurance that would have taken weeks.",
       rating: 5,
       avatar: "👩‍💻",
       benefit: "Instant Payouts",
@@ -217,7 +217,7 @@ export default function BenefitsPage() {
       role: "Business Owner",
       company: "TechStart Solutions",
       content:
-        "We switched our company insurance to BlockSecure and saved 35% on premiums while getting better coverage. The smart contracts eliminate the bureaucracy.",
+        "We switched our company insurance to Coverly and saved 35% on premiums while getting better coverage. The smart contracts eliminate the bureaucracy.",
       rating: 5,
       avatar: "👨‍💼",
       benefit: "Cost Savings",
@@ -380,7 +380,6 @@ export default function BenefitsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-24 pb-20 px-4">
         <div className="max-w-7xl mx-auto text-center">
@@ -531,7 +530,7 @@ export default function BenefitsPage() {
                         Traditional Insurance
                       </th>
                       <th className="text-center p-6 text-emerald-700 dark:text-emerald-400 font-semibold">
-                        BlockSecure
+                        Coverly
                       </th>
                       <th className="text-center p-6 text-slate-700 dark:text-slate-300 font-semibold">
                         Improvement
@@ -576,8 +575,8 @@ export default function BenefitsPage() {
               Real Stories, Real Benefits
             </h2>
             <p className="text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto">
-              Hear from customers who have experienced the BlockSecure
-              difference firsthand
+              Hear from customers who have experienced the Coverly difference
+              firsthand
             </p>
           </div>
 
@@ -718,7 +717,7 @@ export default function BenefitsPage() {
           </h2>
           <p className="text-xl text-slate-600 dark:text-slate-300 mb-8">
             Join the insurance revolution and discover why thousands choose
-            BlockSecure for superior protection
+            Coverly for superior protection
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -743,7 +742,6 @@ export default function BenefitsPage() {
           </div>
         </div>
       </section>
-
     </div>
   );
 }

@@ -52,9 +52,9 @@ export default function HelpPage() {
     general: [
       {
         id: "what-is-blocksecure",
-        question: "What is BlockSecure?",
+        question: "What is Coverly?",
         answer:
-          "BlockSecure is a blockchain-powered insurance platform that provides transparent, efficient, and secure insurance coverage. We use smart contracts to automate policy management, claims processing, and payouts, resulting in faster service and lower costs compared to traditional insurance.",
+          "Coverly is a blockchain-powered insurance platform that provides transparent, efficient, and secure insurance coverage. We use smart contracts to automate policy management, claims processing, and payouts, resulting in faster service and lower costs compared to traditional insurance.",
       },
       {
         id: "how-blockchain-insurance-works",
@@ -71,13 +71,13 @@ export default function HelpPage() {
       },
       {
         id: "countries-available",
-        question: "In which countries is BlockSecure available?",
+        question: "In which countries is Coverly available?",
         answer:
-          "BlockSecure is currently available in over 120 countries worldwide. However, due to regulatory requirements, some features may be limited in certain jurisdictions. Please check our Regulatory Compliance page for specific information about your country or contact our support team for detailed availability information.",
+          "Coverly is currently available in over 120 countries worldwide. However, due to regulatory requirements, some features may be limited in certain jurisdictions. Please check our Regulatory Compliance page for specific information about your country or contact our support team for detailed availability information.",
       },
       {
         id: "get-started",
-        question: "How do I get started with BlockSecure?",
+        question: "How do I get started with Coverly?",
         answer:
           "Getting started is simple: 1) Create an account on our platform, 2) Connect your crypto wallet, 3) Browse and select the insurance coverage you need, 4) Complete the application process, 5) Pay your premium using cryptocurrency or traditional payment methods, and 6) Receive your policy NFT in your wallet. The entire process takes just a few minutes.",
       },
@@ -91,9 +91,9 @@ export default function HelpPage() {
       },
       {
         id: "wallet-requirements",
-        question: "What wallet do I need to use BlockSecure?",
+        question: "What wallet do I need to use Coverly?",
         answer:
-          "BlockSecure supports most major Ethereum-compatible wallets including MetaMask, WalletConnect, Coinbase Wallet, and Trust Wallet. Your wallet is used to sign transactions, receive policy NFTs, and receive claim payouts in cryptocurrency if desired.",
+          "Coverly supports most major Ethereum-compatible wallets including MetaMask, WalletConnect, Coinbase Wallet, and Trust Wallet. Your wallet is used to sign transactions, receive policy NFTs, and receive claim payouts in cryptocurrency if desired.",
       },
       {
         id: "account-security",
@@ -117,9 +117,9 @@ export default function HelpPage() {
     policies: [
       {
         id: "policy-types",
-        question: "What types of insurance does BlockSecure offer?",
+        question: "What types of insurance does Coverly offer?",
         answer:
-          "BlockSecure offers a wide range of insurance products including: 1) Health insurance, 2) Travel insurance, 3) Agricultural/crop insurance, 4) Business insurance, 5) Property insurance, and 6) Specialty insurance products. Each category has multiple plans with different coverage levels to suit your specific needs.",
+          "Coverly offers a wide range of insurance products including: 1) Health insurance, 2) Travel insurance, 3) Agricultural/crop insurance, 4) Business insurance, 5) Property insurance, and 6) Specialty insurance products. Each category has multiple plans with different coverage levels to suit your specific needs.",
       },
       {
         id: "policy-customization",
@@ -346,7 +346,6 @@ export default function HelpPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-24 pb-20 px-4">
         <div className="max-w-7xl mx-auto text-center">
@@ -820,7 +819,6 @@ export default function HelpPage() {
           </div>
         </div>
       </section>
-
     </div>
   );
 }
