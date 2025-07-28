@@ -11,6 +11,7 @@ import { PolicyModule } from './api/policy/policy.module';
 import { CoverageModule } from './api/coverage/coverage.module';
 import { PdfClaimExtractorModule } from './api/pdf-claim-extractor/pdf-claim-extractor.module';
 import { ReviewsModule } from './api/reviews/reviews.module';
+import { CompanyModule } from './api/company/company.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { ReviewsModule } from './api/reviews/reviews.module';
     CoverageModule,
     PdfClaimExtractorModule,
     ReviewsModule,
+    CompanyModule,
   ],
 
   controllers: [AppController],
