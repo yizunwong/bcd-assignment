@@ -16,6 +16,7 @@ export class CompanyService {
       req.supabase,
       files,
       'company_documents',
+      companyId.toString(10),
     );
 
     const inserts = files.map((file, idx) => ({

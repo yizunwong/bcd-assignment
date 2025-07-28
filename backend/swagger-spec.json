@@ -362,7 +362,7 @@
         "requestBody": {
           "required": true,
           "content": {
-            "multipart/form-data": {
+            "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateClaimDto"
               }
@@ -478,6 +478,44 @@
                 }
               }
             }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Claim"
+        ]
+      }
+    },
+    "/claim/{id}/documents": {
+      "post": {
+        "operationId": "ClaimController_uploadDocuments",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadDocDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
           }
         },
         "security": [
@@ -742,7 +780,7 @@
         "requestBody": {
           "required": true,
           "content": {
-            "multipart/form-data": {
+            "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreatePolicyDto"
               }
@@ -858,6 +896,44 @@
                 }
               }
             }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Policy"
+        ]
+      }
+    },
+    "/policy/{id}/documents": {
+      "post": {
+        "operationId": "PolicyController_uploadDocuments",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadDocDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
           }
         },
         "security": [
@@ -1399,6 +1475,44 @@
           "Reviews"
         ]
       }
+    },
+    "/company/{id}/documents": {
+      "post": {
+        "operationId": "CompanyController_upload",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadDocDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Company"
+        ]
+      }
     }
   },
   "info": {
@@ -1541,20 +1655,24 @@
           },
           "employees_number": {
             "type": "string",
-            "example": "0-10",
+            "example": "1-10 employees",
             "enum": [
-              "0-10",
-              "11-50",
-              "51-200",
-              "201-500",
-              "500+"
+              "1-10 employees",
+              "11-50 employees",
+              "51-200 employees",
+              "201-500 employees",
+              "500+ employees"
             ]
           },
           "created_at": {
             "type": "string",
             "example": "2024-01-01T00:00:00Z"
           }
-        }
+        },
+        "required": [
+          "years_in_business",
+          "employees_number"
+        ]
       },
       "RegisterDto": {
         "type": "object",
@@ -1846,14 +1964,6 @@
             "type": "string",
             "example": "Accident on highway, car damaged.",
             "description": "Description of the claim"
-          },
-          "documents": {
-            "description": "Documents to upload",
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "binary"
-            }
           }
         },
         "required": [
@@ -1862,6 +1972,19 @@
           "priority",
           "amount"
         ]
+      },
+      "UploadDocDto": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "description": "Files to upload for the document",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        }
       },
       "ClaimDocumentResponseDto": {
         "type": "object",
@@ -1959,14 +2082,6 @@
             "example": "Accident on highway, car damaged.",
             "description": "Description of the claim"
           },
-          "documents": {
-            "description": "Documents to upload",
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "binary"
-            }
-          },
           "id": {
             "type": "number",
             "example": 1,
@@ -2036,14 +2151,6 @@
             "type": "array",
             "items": {
               "type": "string"
-            }
-          },
-          "files": {
-            "description": "Files to upload for the policy",
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "binary"
             }
           }
         },
@@ -2186,14 +2293,6 @@
             "type": "array",
             "items": {
               "type": "string"
-            }
-          },
-          "files": {
-            "description": "Files to upload for the policy",
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "binary"
             }
           }
         }

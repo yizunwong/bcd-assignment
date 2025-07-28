@@ -22,6 +22,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiCommonResponse, CommonResponseDto } from 'src/common/common.dto';
 import { PolicyResponseDto } from './dto/responses/policy.dto';
 import { FindPoliciesQueryDto } from './dto/responses/policy-query.dto';
+import { UploadDocDto } from '../file/requests/document-upload.dto';
 
 @Controller('policy')
 @ApiBearerAuth('supabase-auth')
@@ -34,12 +35,6 @@ export class PolicyController {
     @Body() dto: CreatePolicyDto,
     @Req() req: AuthenticatedRequest,
   ): Promise<CommonResponseDto> {
-    if (typeof dto.claimTypes === 'string') {
-      dto.claimTypes = (dto.claimTypes as string)
-        .split(',')
-        .map((v) => v.trim());
-    }
-
     return this.policyService.create(dto, req);
   }
 
@@ -49,6 +44,7 @@ export class PolicyController {
   @UseGuards(AuthGuard)
   async uploadDocuments(
     @Param('id') id: string,
+    @Body() dto: UploadDocDto,
     @UploadedFiles() files: Array<Express.Multer.File>,
     @Req() req: AuthenticatedRequest,
   ): Promise<CommonResponseDto> {

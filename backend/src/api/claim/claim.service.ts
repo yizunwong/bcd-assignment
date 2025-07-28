@@ -67,10 +67,16 @@ export class ClaimService {
     files: Array<Express.Multer.File>,
     req: AuthenticatedRequest,
   ): Promise<CommonResponseDto> {
+    const { data: userData, error: userError } =
+      await req.supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
     const paths = await this.fileService.uploadFiles(
       req.supabase,
       files,
       'claim_documents',
+      userData.user.id,
     );
 
     const inserts = files.map((file, idx) => ({
@@ -84,12 +90,14 @@ export class ClaimService {
       .insert(inserts);
 
     if (error) {
-      throw new InternalServerErrorException('Failed to create documents');
+      throw new InternalServerErrorException(
+        'Failed to create claim documents',
+      );
     }
 
     return new CommonResponseDto({
       statusCode: 201,
-      message: 'Documents uploaded successfully',
+      message: 'Claim Documents uploaded successfully',
     });
   }
 

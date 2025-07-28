@@ -141,7 +141,6 @@ export class CreatePolicyDto {
   @IsNotEmpty()
   claimTypes!: string[];
 
-
   constructor(dto: CreatePolicyDto) {
     Object.assign(this, dto);
   }

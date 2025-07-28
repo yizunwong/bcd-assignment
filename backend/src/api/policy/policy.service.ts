@@ -21,47 +21,46 @@ export class PolicyService {
     private readonly claimsService: ClaimService,
     private readonly fileService: FileService,
   ) {}
-  private async uploadPolicyDocuments(
-    files: Array<Express.Multer.File>,
-    req: AuthenticatedRequest,
-  ): Promise<string[]> {
-    return this.fileService.uploadFiles(
-      req.supabase,
-      files,
-      'policy_documents',
-    );
-  }
-
   async addPolicyDocuments(
-    policyId: number,
+    id: number,
     files: Array<Express.Multer.File>,
     req: AuthenticatedRequest,
   ): Promise<CommonResponseDto> {
-    const paths = await this.uploadPolicyDocuments(files, req);
-    const docInserts = files.map((file, index) => ({
-      policy_id: policyId,
+    const { data: userData, error: userError } =
+      await req.supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+    const paths = await this.fileService.uploadFiles(
+      req.supabase,
+      files,
+      'policy_documents',
+      userData.user.id,
+    );
+
+    const inserts = files.map((file, idx) => ({
+      policy_id: id,
       name: file.originalname,
-      path: paths[index],
+      path: paths[idx],
     }));
 
     const { error } = await req.supabase
       .from('policy_documents')
-      .insert(docInserts);
+      .insert(inserts);
 
     if (error) {
-      throw new InternalServerErrorException('Failed to create documents');
+      throw new InternalServerErrorException(
+        'Failed to create policy documents',
+      );
     }
 
     return new CommonResponseDto({
       statusCode: 201,
-      message: 'Documents uploaded successfully',
+      message: 'Policy Documents uploaded successfully',
     });
   }
 
-  async create(
-    dto: CreatePolicyDto,
-    req: AuthenticatedRequest,
-  ) {
+  async create(dto: CreatePolicyDto, req: AuthenticatedRequest) {
     const { data: userData, error: userError } =
       await req.supabase.auth.getUser();
 
@@ -103,7 +102,6 @@ export class PolicyService {
           req,
         );
       }
-
 
       return new CommonResponseDto({
         statusCode: 201,

@@ -39,7 +39,9 @@ export class FileService {
         });
 
       if (error) {
-        throw new InternalServerErrorException(`Upload failed: ${error.message}`);
+        throw new InternalServerErrorException(
+          `Upload failed: ${error.message}`,
+        );
       }
 
       filePaths.push(filePath);
@@ -82,7 +84,9 @@ export class FileService {
         .remove([filePath]);
 
       if (error) {
-        console.error('File removal error details:', { message: error.message });
+        console.error('File removal error details:', {
+          message: error.message,
+        });
         throw new InternalServerErrorException(
           'Failed to remove file from storage: ' + error.message,
         );

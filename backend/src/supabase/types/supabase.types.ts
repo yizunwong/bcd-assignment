@@ -211,6 +211,35 @@ export type Database = {
         };
         Relationships: [];
       };
+      company_documents: {
+        Row: {
+          company_id: number;
+          id: number;
+          name: string;
+          path: string;
+        };
+        Insert: {
+          company_id: number;
+          id?: number;
+          name: string;
+          path: string;
+        };
+        Update: {
+          company_id?: number;
+          id?: number;
+          name?: string;
+          path?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'company_documents_company_id_fkey';
+            columns: ['company_id'];
+            isOneToOne: false;
+            referencedRelation: 'companies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       coverage: {
         Row: {
           end_date: string;
@@ -370,35 +399,6 @@ export type Database = {
             columns: ['policy_id'];
             isOneToOne: false;
             referencedRelation: 'policies';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      company_documents: {
-        Row: {
-          id: number;
-          name: string;
-          path: string;
-          company_id: number;
-        };
-        Insert: {
-          id?: number;
-          name: string;
-          path: string;
-          company_id: number;
-        };
-        Update: {
-          id?: number;
-          name?: string;
-          path?: string;
-          company_id?: number;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'company_documents_company_id_fkey';
-            columns: ['company_id'];
-            isOneToOne: false;
-            referencedRelation: 'companies';
             referencedColumns: ['id'];
           },
         ];
