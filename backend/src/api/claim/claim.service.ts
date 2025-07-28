@@ -10,15 +10,12 @@ import { CreateClaimDto } from './dto/requests/create-claim.dto';
 import { UploadClaimDocDto } from './dto/requests/upload-claim-doc.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { FindClaimsQueryDto } from './dto/responses/claims-query.dto';
-import {
-  getSignedUrls,
-  removeFileFromStorage,
-  uploadFiles,
-} from 'src/utils/supabase-storage';
+import { FileService } from '../file/file.service';
 import { ClaimResponseDto } from './dto/responses/claim.dto';
 import { CommonResponseDto } from 'src/common/common.dto';
 @Injectable()
 export class ClaimService {
+  constructor(private readonly fileService: FileService) {}
   async createClaim(
     createClaimDto: CreateClaimDto,
     req: AuthenticatedRequest,
@@ -60,7 +57,7 @@ export class ClaimService {
     const claimId = data.id;
 
     if (files?.length > 0) {
-      const filePaths = await uploadFiles(
+      const filePaths = await this.fileService.uploadFiles(
         req.supabase,
         files,
         'claim_documents',
@@ -142,7 +139,10 @@ export class ClaimService {
       }
     }
 
-    const signedUrls = await getSignedUrls(req.supabase, allPaths);
+    const signedUrls = await this.fileService.getSignedUrls(
+      req.supabase,
+      allPaths,
+    );
 
     let urlIndex = 0;
     const enrichedClaims: ClaimResponseDto[] = data.map((claim) => ({
@@ -189,7 +189,10 @@ export class ClaimService {
       .filter(Boolean);
 
     // Generate signed URLs
-    const signedUrls = await getSignedUrls(req.supabase, filePaths);
+    const signedUrls = await this.fileService.getSignedUrls(
+      req.supabase,
+      filePaths,
+    );
 
     const enrichedDocuments = documents.map((doc, idx) => ({
       ...doc,
@@ -371,7 +374,7 @@ export class ClaimService {
 
     // Step 2: Remove files from Supabase storage
     for (const doc of documents as { path: string }[]) {
-      await removeFileFromStorage(req.supabase, doc.path);
+      await this.fileService.removeFileFromStorage(req.supabase, doc.path);
     }
 
     // Step 3: Remove claim_documents from database
@@ -429,7 +432,7 @@ export class ClaimService {
     }
 
     // Step 2: Remove the file from Supabase storage
-    await removeFileFromStorage(req.supabase, document.path);
+    await this.fileService.removeFileFromStorage(req.supabase, document.path);
 
     // Step 3: Remove the claim document record from the database
     const { data, error: deleteError } = await req.supabase
