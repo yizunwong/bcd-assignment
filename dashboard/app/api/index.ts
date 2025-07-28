@@ -68,13 +68,26 @@ export const CompanyDetailsDtoYearsInBusiness = {
   "20+_years": "20+ years",
 } as const;
 
+export type CompanyDetailsDtoEmployeesNumber =
+  (typeof CompanyDetailsDtoEmployeesNumber)[keyof typeof CompanyDetailsDtoEmployeesNumber];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CompanyDetailsDtoEmployeesNumber = {
+  "1-10_employees": "1-10 employees",
+  "11-50_employees": "11-50 employees",
+  "51-200_employees": "51-200 employees",
+  "201-500_employees": "201-500 employees",
+  "500+_employees": "500+ employees",
+} as const;
+
 export interface CompanyDetailsDto {
   name?: string;
   address?: string;
   contact_no?: CompanyDetailsDtoContactNo;
   website?: CompanyDetailsDtoWebsite;
   license_number?: string;
-  years_in_business?: CompanyDetailsDtoYearsInBusiness;
+  years_in_business: CompanyDetailsDtoYearsInBusiness;
+  employees_number: CompanyDetailsDtoEmployeesNumber;
   created_at?: string;
 }
 
@@ -236,8 +249,11 @@ export interface CreateClaimDto {
   amount: number;
   /** Description of the claim */
   description?: string;
-  /** Documents to upload */
-  documents?: Blob[];
+}
+
+export interface UploadDocDto {
+  /** Files to upload for the document */
+  files?: Blob[];
 }
 
 export interface ClaimDocumentResponseDto {
@@ -284,8 +300,6 @@ export interface UpdateClaimDto {
   amount?: number;
   /** Description of the claim */
   description?: string;
-  /** Documents to upload */
-  documents?: Blob[];
   /** ID of the claim to update */
   id: number;
   /** Status of the claim */
@@ -312,8 +326,6 @@ export interface CreatePolicyDto {
   rating: number;
   description?: string;
   claimTypes: string[];
-  /** Files to upload for the policy */
-  files?: Blob[];
 }
 
 export interface PolicyDocumentResponseDto {
@@ -351,8 +363,6 @@ export interface UpdatePolicyDto {
   rating?: number;
   description?: string;
   claimTypes?: string[];
-  /** Files to upload for the policy */
-  files?: Blob[];
 }
 
 export interface CreateCoverageDto {
@@ -1632,25 +1642,11 @@ export const claimControllerCreate = (
   createClaimDto: CreateClaimDto,
   signal?: AbortSignal,
 ) => {
-  const formData = new FormData();
-  formData.append(`policy_id`, createClaimDto.policy_id.toString());
-  formData.append(`claim_type`, createClaimDto.claim_type);
-  formData.append(`priority`, createClaimDto.priority);
-  formData.append(`amount`, createClaimDto.amount.toString());
-  if (createClaimDto.description !== undefined) {
-    formData.append(`description`, createClaimDto.description);
-  }
-  if (createClaimDto.documents !== undefined) {
-    createClaimDto.documents.forEach((value) =>
-      formData.append(`documents`, value),
-    );
-  }
-
   return customFetcher<void>({
     url: `/claim`,
     method: "POST",
-    headers: { "Content-Type": "multipart/form-data" },
-    data: formData,
+    headers: { "Content-Type": "application/json" },
+    data: createClaimDto,
     signal,
   });
 };
@@ -1873,6 +1869,93 @@ export function useClaimControllerFindAll<
 
   return query;
 }
+
+export const claimControllerUploadDocuments = (
+  id: string,
+  uploadDocDto: UploadDocDto,
+  signal?: AbortSignal,
+) => {
+  const formData = new FormData();
+  if (uploadDocDto.files !== undefined) {
+    uploadDocDto.files.forEach((value) => formData.append(`files`, value));
+  }
+
+  return customFetcher<void>({
+    url: `/claim/${id}/documents`,
+    method: "POST",
+    headers: { "Content-Type": "multipart/form-data" },
+    data: formData,
+    signal,
+  });
+};
+
+export const getClaimControllerUploadDocumentsMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof claimControllerUploadDocuments>>,
+    TError,
+    { id: string; data: UploadDocDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof claimControllerUploadDocuments>>,
+  TError,
+  { id: string; data: UploadDocDto },
+  TContext
+> => {
+  const mutationKey = ["claimControllerUploadDocuments"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof claimControllerUploadDocuments>>,
+    { id: string; data: UploadDocDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return claimControllerUploadDocuments(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ClaimControllerUploadDocumentsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof claimControllerUploadDocuments>>
+>;
+export type ClaimControllerUploadDocumentsMutationBody = UploadDocDto;
+export type ClaimControllerUploadDocumentsMutationError = unknown;
+
+export const useClaimControllerUploadDocuments = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof claimControllerUploadDocuments>>,
+      TError,
+      { id: string; data: UploadDocDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof claimControllerUploadDocuments>>,
+  TError,
+  { id: string; data: UploadDocDto },
+  TContext
+> => {
+  const mutationOptions =
+    getClaimControllerUploadDocumentsMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
 
 export const claimControllerFindOne = (id: string, signal?: AbortSignal) => {
   return customFetcher<ClaimControllerFindOne200>({
@@ -2331,29 +2414,11 @@ export const policyControllerCreate = (
   createPolicyDto: CreatePolicyDto,
   signal?: AbortSignal,
 ) => {
-  const formData = new FormData();
-  formData.append(`name`, createPolicyDto.name);
-  formData.append(`category`, createPolicyDto.category);
-  formData.append(`provider`, createPolicyDto.provider);
-  formData.append(`coverage`, createPolicyDto.coverage.toString());
-  formData.append(`durationDays`, createPolicyDto.durationDays.toString());
-  formData.append(`premium`, createPolicyDto.premium);
-  formData.append(`rating`, createPolicyDto.rating.toString());
-  if (createPolicyDto.description !== undefined) {
-    formData.append(`description`, createPolicyDto.description);
-  }
-  createPolicyDto.claimTypes.forEach((value) =>
-    formData.append(`claimTypes`, value),
-  );
-  if (createPolicyDto.files !== undefined) {
-    createPolicyDto.files.forEach((value) => formData.append(`files`, value));
-  }
-
   return customFetcher<void>({
     url: `/policy`,
     method: "POST",
-    headers: { "Content-Type": "multipart/form-data" },
-    data: formData,
+    headers: { "Content-Type": "application/json" },
+    data: createPolicyDto,
     signal,
   });
 };
@@ -2576,6 +2641,93 @@ export function usePolicyControllerFindAll<
 
   return query;
 }
+
+export const policyControllerUploadDocuments = (
+  id: string,
+  uploadDocDto: UploadDocDto,
+  signal?: AbortSignal,
+) => {
+  const formData = new FormData();
+  if (uploadDocDto.files !== undefined) {
+    uploadDocDto.files.forEach((value) => formData.append(`files`, value));
+  }
+
+  return customFetcher<void>({
+    url: `/policy/${id}/documents`,
+    method: "POST",
+    headers: { "Content-Type": "multipart/form-data" },
+    data: formData,
+    signal,
+  });
+};
+
+export const getPolicyControllerUploadDocumentsMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof policyControllerUploadDocuments>>,
+    TError,
+    { id: string; data: UploadDocDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof policyControllerUploadDocuments>>,
+  TError,
+  { id: string; data: UploadDocDto },
+  TContext
+> => {
+  const mutationKey = ["policyControllerUploadDocuments"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof policyControllerUploadDocuments>>,
+    { id: string; data: UploadDocDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return policyControllerUploadDocuments(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PolicyControllerUploadDocumentsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof policyControllerUploadDocuments>>
+>;
+export type PolicyControllerUploadDocumentsMutationBody = UploadDocDto;
+export type PolicyControllerUploadDocumentsMutationError = unknown;
+
+export const usePolicyControllerUploadDocuments = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof policyControllerUploadDocuments>>,
+      TError,
+      { id: string; data: UploadDocDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof policyControllerUploadDocuments>>,
+  TError,
+  { id: string; data: UploadDocDto },
+  TContext
+> => {
+  const mutationOptions =
+    getPolicyControllerUploadDocumentsMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
 
 export const policyControllerFindOne = (id: string, signal?: AbortSignal) => {
   return customFetcher<PolicyControllerFindOne200>({
@@ -4033,6 +4185,92 @@ export const useReviewsControllerLeaveReview = <
 > => {
   const mutationOptions =
     getReviewsControllerLeaveReviewMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const companyControllerUpload = (
+  id: string,
+  uploadDocDto: UploadDocDto,
+  signal?: AbortSignal,
+) => {
+  const formData = new FormData();
+  if (uploadDocDto.files !== undefined) {
+    uploadDocDto.files.forEach((value) => formData.append(`files`, value));
+  }
+
+  return customFetcher<void>({
+    url: `/company/${id}/documents`,
+    method: "POST",
+    headers: { "Content-Type": "multipart/form-data" },
+    data: formData,
+    signal,
+  });
+};
+
+export const getCompanyControllerUploadMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof companyControllerUpload>>,
+    TError,
+    { id: string; data: UploadDocDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof companyControllerUpload>>,
+  TError,
+  { id: string; data: UploadDocDto },
+  TContext
+> => {
+  const mutationKey = ["companyControllerUpload"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof companyControllerUpload>>,
+    { id: string; data: UploadDocDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return companyControllerUpload(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CompanyControllerUploadMutationResult = NonNullable<
+  Awaited<ReturnType<typeof companyControllerUpload>>
+>;
+export type CompanyControllerUploadMutationBody = UploadDocDto;
+export type CompanyControllerUploadMutationError = unknown;
+
+export const useCompanyControllerUpload = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof companyControllerUpload>>,
+      TError,
+      { id: string; data: UploadDocDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof companyControllerUpload>>,
+  TError,
+  { id: string; data: UploadDocDto },
+  TContext
+> => {
+  const mutationOptions = getCompanyControllerUploadMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };
