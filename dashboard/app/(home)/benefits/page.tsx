@@ -45,28 +45,10 @@ export default function BenefitsPage() {
       gradient: "from-yellow-500 to-orange-500",
       stats: "95% faster than traditional insurance",
       details: [
-        "Automated claim verification using AI",
         "Smart contract execution for approved claims",
         "Direct wallet transfers in cryptocurrency",
         "No waiting for bank processing times",
         "Real-time transaction tracking",
-      ],
-    },
-    {
-      id: "transparency",
-      category: "trust",
-      icon: Eye,
-      title: "Complete Transparency",
-      description:
-        "Every transaction recorded on blockchain for full audit trail and unprecedented transparency",
-      gradient: "from-blue-500 to-cyan-500",
-      stats: "100% transparent operations",
-      details: [
-        "All transactions visible on blockchain",
-        "Immutable claim processing records",
-        "Public smart contract code",
-        "Real-time policy status updates",
-        "Open-source verification tools",
       ],
     },
     {
@@ -87,23 +69,6 @@ export default function BenefitsPage() {
       ],
     },
     {
-      id: "global-coverage",
-      category: "accessibility",
-      icon: Globe,
-      title: "Global Coverage",
-      description:
-        "Decentralized network provides worldwide coverage with 24/7 accessibility from anywhere",
-      gradient: "from-purple-500 to-indigo-500",
-      stats: "120+ countries supported",
-      details: [
-        "No geographic restrictions",
-        "24/7 global accessibility",
-        "Multi-currency support",
-        "International claim processing",
-        "Cross-border policy transfers",
-      ],
-    },
-    {
       id: "security",
       category: "trust",
       icon: Lock,
@@ -118,23 +83,6 @@ export default function BenefitsPage() {
         "Regular security audits",
         "Decentralized data storage",
         "Zero single points of failure",
-      ],
-    },
-    {
-      id: "automation",
-      category: "speed",
-      icon: RefreshCw,
-      title: "Smart Automation",
-      description:
-        "AI-powered automation handles everything from underwriting to claims processing",
-      gradient: "from-teal-500 to-cyan-500",
-      stats: "90% automated processes",
-      details: [
-        "Automated policy issuance",
-        "AI-driven risk assessment",
-        "Smart contract execution",
-        "Automatic premium payments",
-        "Predictive claim analysis",
       ],
     },
   ];
@@ -169,12 +117,6 @@ export default function BenefitsPage() {
       traditional: "Paper-based",
       blockchain: "Digital & secure",
       improvement: "Instant access",
-    },
-    {
-      feature: "Fraud Prevention",
-      traditional: "Manual review",
-      blockchain: "AI + Blockchain",
-      improvement: "99.9% accuracy",
     },
   ];
 
@@ -356,12 +298,6 @@ export default function BenefitsPage() {
         "Advanced analytics provide insights into your coverage and claims",
       icon: BarChart3,
       benefit: "Data-driven insurance decisions",
-    },
-    {
-      title: "Mobile-First Design",
-      description: "Optimized for mobile devices with native app functionality",
-      icon: Smartphone,
-      benefit: "Manage insurance on the go",
     },
   ];
 
