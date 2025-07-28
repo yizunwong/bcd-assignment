@@ -685,6 +685,7 @@ export default function RegisterPage() {
 
                     <Button
                       type="submit"
+                      loading={isRegistering}
                       disabled={
                         (currentStep === 1 && !selectedRole) ||
                         (currentStep === 3 &&

@@ -55,11 +55,11 @@ export default function useAuth() {
 
   return {
     login: loginMutation.login,
-    loginError: loginMutation.error,
+    loginError: loginMutation.error?.[0],
     isLoggingIn: loginMutation.isPending,
 
     register: registerMutation.register,
-    registerError: registerMutation.error,
+    registerError: registerMutation.error?.[0],
     isRegistering: registerMutation.isPending,
 
     logout,

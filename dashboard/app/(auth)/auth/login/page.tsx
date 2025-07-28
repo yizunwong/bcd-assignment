@@ -43,7 +43,7 @@ export default function LoginPage() {
                 <Shield className="w-8 h-8 text-white" />
               </div>
               <h1 className="text-4xl font-bold mb-4">
-                Welcome Back to BlockSecure
+                Welcome Back to Coverly
               </h1>
               <p className="text-xl text-emerald-100 mb-8">
                 Access your decentralized insurance dashboard and manage your
@@ -71,7 +71,8 @@ export default function LoginPage() {
                 <div>
                   <h3 className="font-semibold">Instant Payouts</h3>
                   <p className="text-emerald-100 text-sm">
-                    Smart contracts enable automatic claims
+                    Smart contracts automate secure payouts after claims are
+                    approved
                   </p>
                 </div>
               </div>
@@ -210,7 +211,7 @@ export default function LoginPage() {
                     </Link>
                   </div>
 
-                  <GetStartedButton text="Sign In" />
+                  <GetStartedButton text="Sign In" loading={isLoggingIn} />
                   {loginError && (
                     <p className="text-red-500 text-sm mt-2 text-center">
                       {loginError || "Login failed"}
