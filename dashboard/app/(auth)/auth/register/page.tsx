@@ -28,6 +28,7 @@ import {
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import useAuth from "@/app/hooks/useAuth";
+import { useToast } from "@/components/shared/ToastProvider";
 
 export default function RegisterPage() {
   const searchParams = useSearchParams();
@@ -39,6 +40,7 @@ export default function RegisterPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const router = useRouter();
   const { register: registerUser, isRegistering, registerError } = useAuth();
+  const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
     // Basic Info
@@ -99,9 +101,11 @@ export default function RegisterPage() {
             occupation: formData.occupation,
             address: formData.address,
           });
+          showToast('Account created successfully', 'success');
           router.push("/auth/login");
         } catch (err) {
           console.error(err);
+          showToast(registerError || 'Registration failed', 'error');
         }
       }
     }
@@ -707,11 +711,6 @@ export default function RegisterPage() {
                       )}
                     </Button>
                   </div>
-                  {registerError && (
-                    <p className="text-red-500 text-sm mt-2 text-center">
-                      {registerError || "Login failed"}
-                    </p>
-                  )}
                 </form>
               </CardContent>
             </Card>

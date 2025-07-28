@@ -8,11 +8,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Shield, Eye, EyeOff, ArrowLeft, Zap, Globe } from "lucide-react";
 import Link from "next/link";
 import useAuth from "@/app/hooks/useAuth";
+import { useToast } from "@/components/shared/ToastProvider";
 import { useRouter } from "next/navigation";
 import GetStartedButton from '@/components/animata/button/get-started-button';
 export default function LoginPage() {
   const router = useRouter();
   const { login, isLoggingIn, loginError } = useAuth();
+  const { showToast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -24,10 +26,12 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       await login({ email: formData.email, password: formData.password });
+      showToast('Logged in successfully', 'success');
       router.push("/");
       router.refresh();
     } catch (err) {
       console.error(err);
+      showToast(loginError || 'Login failed', 'error');
     }
   };
 
@@ -212,11 +216,6 @@ export default function LoginPage() {
                   </div>
 
                   <GetStartedButton text="Sign In" loading={isLoggingIn} />
-                  {loginError && (
-                    <p className="text-red-500 text-sm mt-2 text-center">
-                      {loginError || "Login failed"}
-                    </p>
-                  )}
                 </form>
 
                 <div className="mt-6 text-center">

@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/shared/ThemeProvider";
 import { Footer } from "@/components/shared/Footer";
 import Web3Providers from './providers/Web3Providers';
 import GlobalNavbar from '@/components/shared/GlobalNavbar';
+import { ToastProvider } from '@/components/shared/ToastProvider';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,9 +25,11 @@ export default function RootLayout({
       <body className={inter.className} suppressHydrationWarning>
         <Web3Providers>
           <ThemeProvider defaultTheme="light" storageKey="blocksecure-ui-theme">
-            <GlobalNavbar />
-            <main className="pt-16">{children}</main>
-            <Footer />
+            <ToastProvider>
+              <GlobalNavbar />
+              <main className="pt-16">{children}</main>
+              <Footer />
+            </ToastProvider>
           </ThemeProvider>
         </Web3Providers>
       </body>
