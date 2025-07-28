@@ -374,6 +374,35 @@ export type Database = {
           },
         ];
       };
+      company_documents: {
+        Row: {
+          id: number;
+          name: string;
+          path: string;
+          company_id: number;
+        };
+        Insert: {
+          id?: number;
+          name: string;
+          path: string;
+          company_id: number;
+        };
+        Update: {
+          id?: number;
+          name?: string;
+          path?: string;
+          company_id?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'company_documents_company_id_fkey';
+            columns: ['company_id'];
+            isOneToOne: false;
+            referencedRelation: 'companies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       policyholder_details: {
         Row: {
           address: string | null;

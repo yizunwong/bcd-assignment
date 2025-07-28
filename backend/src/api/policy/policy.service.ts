@@ -21,7 +21,7 @@ export class PolicyService {
     private readonly claimsService: ClaimService,
     private readonly fileService: FileService,
   ) {}
-  async uploadPolicyDocuments(
+  private async uploadPolicyDocuments(
     files: Array<Express.Multer.File>,
     req: AuthenticatedRequest,
   ): Promise<string[]> {
@@ -32,10 +32,35 @@ export class PolicyService {
     );
   }
 
+  async addPolicyDocuments(
+    policyId: number,
+    files: Array<Express.Multer.File>,
+    req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto> {
+    const paths = await this.uploadPolicyDocuments(files, req);
+    const docInserts = files.map((file, index) => ({
+      policy_id: policyId,
+      name: file.originalname,
+      path: paths[index],
+    }));
+
+    const { error } = await req.supabase
+      .from('policy_documents')
+      .insert(docInserts);
+
+    if (error) {
+      throw new InternalServerErrorException('Failed to create documents');
+    }
+
+    return new CommonResponseDto({
+      statusCode: 201,
+      message: 'Documents uploaded successfully',
+    });
+  }
+
   async create(
     dto: CreatePolicyDto,
     req: AuthenticatedRequest,
-    files?: Array<Express.Multer.File>,
   ) {
     const { data: userData, error: userError } =
       await req.supabase.auth.getUser();
@@ -79,24 +104,6 @@ export class PolicyService {
         );
       }
 
-      // Step 3: Upload files (optional)
-      if (files && files.length > 0) {
-        const path = await this.uploadPolicyDocuments(files, req);
-        const docInserts = files.map((file, index) => ({
-          policy_id: policyId,
-          name: file.originalname,
-          path: path[index],
-        }));
-
-        const { error: docError } = await req.supabase
-          .from('policy_documents')
-          .insert(docInserts);
-
-        if (docError) {
-          console.error(docError);
-          throw new InternalServerErrorException('Failed to create documents');
-        }
-      }
 
       return new CommonResponseDto({
         statusCode: 201,

@@ -19,7 +19,6 @@ export class ClaimService {
   async createClaim(
     createClaimDto: CreateClaimDto,
     req: AuthenticatedRequest,
-    files: Array<Express.Multer.File>,
   ): Promise<CommonResponseDto> {
     const { data: userData, error: userError } =
       await req.supabase.auth.getUser();
@@ -56,31 +55,41 @@ export class ClaimService {
 
     const claimId = data.id;
 
-    if (files?.length > 0) {
-      const filePaths = await this.fileService.uploadFiles(
-        req.supabase,
-        files,
-        'claim_documents',
-      );
-      const docInserts = files.map((file, index) => ({
-        claim_id: claimId,
-        name: file.originalname,
-        path: filePaths[index],
-      }));
+    return new CommonResponseDto({
+      statusCode: 201,
+      message: 'Claim created successfully',
+      data: { id: claimId },
+    });
+  }
 
-      const { error: docError } = await req.supabase
-        .from('claim_documents')
-        .insert(docInserts);
+  async addClaimDocuments(
+    claimId: number,
+    files: Array<Express.Multer.File>,
+    req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto> {
+    const paths = await this.fileService.uploadFiles(
+      req.supabase,
+      files,
+      'claim_documents',
+    );
 
-      if (docError) {
-        console.error(docError);
-        throw new InternalServerErrorException('Failed to create documents');
-      }
+    const inserts = files.map((file, idx) => ({
+      claim_id: claimId,
+      name: file.originalname,
+      path: paths[idx],
+    }));
+
+    const { error } = await req.supabase
+      .from('claim_documents')
+      .insert(inserts);
+
+    if (error) {
+      throw new InternalServerErrorException('Failed to create documents');
     }
 
     return new CommonResponseDto({
       statusCode: 201,
-      message: 'Claim created successfully',
+      message: 'Documents uploaded successfully',
     });
   }
 

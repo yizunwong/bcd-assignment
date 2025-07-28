@@ -1,11 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsNotEmpty,
-  IsString,
-  IsOptional,
-  IsArray,
-  IsEnum,
-} from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsEnum } from 'class-validator';
 
 export enum ClaimPriority {
   LOW = 'low',
@@ -55,14 +49,4 @@ export class CreateClaimDto {
   @IsString({ message: 'Description must be a string' })
   description?: string;
 
-  @ApiProperty({
-    type: 'string',
-    format: 'binary',
-    isArray: true,
-    required: false,
-    description: 'Documents to upload',
-  })
-  @IsOptional()
-  @IsArray()
-  documents?: Express.Multer.File[];
 }

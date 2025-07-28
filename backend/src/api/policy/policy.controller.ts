@@ -29,13 +29,10 @@ export class PolicyController {
   constructor(private readonly policyService: PolicyService) {}
 
   @Post()
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FilesInterceptor('files'))
   @UseGuards(AuthGuard)
   async create(
     @Body() dto: CreatePolicyDto,
     @Req() req: AuthenticatedRequest,
-    @UploadedFiles() files: Array<Express.Multer.File>,
   ): Promise<CommonResponseDto> {
     if (typeof dto.claimTypes === 'string') {
       dto.claimTypes = (dto.claimTypes as string)
@@ -43,7 +40,19 @@ export class PolicyController {
         .map((v) => v.trim());
     }
 
-    return this.policyService.create(dto, req, files);
+    return this.policyService.create(dto, req);
+  }
+
+  @Post(':id/documents')
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FilesInterceptor('files'))
+  @UseGuards(AuthGuard)
+  async uploadDocuments(
+    @Param('id') id: string,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto> {
+    return this.policyService.addPolicyDocuments(+id, files, req);
   }
 
   @Get()
