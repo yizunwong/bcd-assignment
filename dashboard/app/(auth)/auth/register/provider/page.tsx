@@ -43,8 +43,6 @@ interface UploadedFile {
 }
 
 export default function ProviderRegistrationPage() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [uploadedFiles, setUploadedFiles] = useState<
     Record<string, UploadedFile[]>
@@ -103,23 +101,6 @@ export default function ProviderRegistrationPage() {
       required: true,
       maxFiles: 5,
       acceptedFormats: ".pdf,.jpg,.jpeg,.png",
-    },
-    {
-      id: "insurance",
-      title: "Professional Liability Insurance",
-      description:
-        "Proof of professional liability and errors & omissions coverage",
-      required: true,
-      maxFiles: 2,
-      acceptedFormats: ".pdf,.jpg,.jpeg,.png",
-    },
-    {
-      id: "financial",
-      title: "Financial Statements",
-      description: "Audited financial statements for the last 2 years",
-      required: false,
-      maxFiles: 4,
-      acceptedFormats: ".pdf",
     },
   ];
 
@@ -278,15 +259,17 @@ export default function ProviderRegistrationPage() {
   const renderCompanyInfo = () => (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <h3 className="text-2xl font-bold text-white mb-2">
+        <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
           Company Information
         </h3>
-        <p className="text-slate-400">Tell us about your insurance business</p>
+        <p className="text-slate-600 dark:text-slate-400">
+          Tell us about your insurance business
+        </p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Company Name *
           </label>
           <Input
@@ -295,40 +278,12 @@ export default function ProviderRegistrationPage() {
               setFormData({ ...formData, companyName: e.target.value })
             }
             placeholder="Your company name"
-            className="bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
+            className="form-input"
             required
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">
-            Company Type *
-          </label>
-          <Select
-            value={formData.companyType}
-            onValueChange={(value) =>
-              setFormData({ ...formData, companyType: value })
-            }
-          >
-            <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
-              <SelectValue placeholder="Select company type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="insurance-company">
-                Insurance Company
-              </SelectItem>
-              <SelectItem value="broker">Insurance Broker</SelectItem>
-              <SelectItem value="agent">Insurance Agent</SelectItem>
-              <SelectItem value="reinsurer">Reinsurer</SelectItem>
-              <SelectItem value="mga">Managing General Agent</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             License Number *
           </label>
           <Input
@@ -337,21 +292,7 @@ export default function ProviderRegistrationPage() {
               setFormData({ ...formData, licenseNumber: e.target.value })
             }
             placeholder="Insurance license number"
-            className="bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">
-            Tax ID / EIN *
-          </label>
-          <Input
-            value={formData.taxId}
-            onChange={(e) =>
-              setFormData({ ...formData, taxId: e.target.value })
-            }
-            placeholder="Federal Tax ID or EIN"
-            className="bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
+            className="form-input"
             required
           />
         </div>
@@ -359,7 +300,7 @@ export default function ProviderRegistrationPage() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Years in Business *
           </label>
           <Select
@@ -368,7 +309,7 @@ export default function ProviderRegistrationPage() {
               setFormData({ ...formData, yearsInBusiness: value })
             }
           >
-            <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
+            <SelectTrigger className="form-input">
               <SelectValue placeholder="Select years" />
             </SelectTrigger>
             <SelectContent>
@@ -381,7 +322,7 @@ export default function ProviderRegistrationPage() {
           </Select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Number of Employees
           </label>
           <Select
@@ -390,7 +331,7 @@ export default function ProviderRegistrationPage() {
               setFormData({ ...formData, employeeCount: value })
             }
           >
-            <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
+            <SelectTrigger className="form-input">
               <SelectValue placeholder="Select employee count" />
             </SelectTrigger>
             <SelectContent>
@@ -405,7 +346,7 @@ export default function ProviderRegistrationPage() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
           Business Address *
         </label>
         <Textarea
@@ -414,14 +355,14 @@ export default function ProviderRegistrationPage() {
             setFormData({ ...formData, businessAddress: e.target.value })
           }
           placeholder="Enter your complete business address"
-          className="bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
+          className="form-input"
           required
         />
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Business Phone *
           </label>
           <Input
@@ -431,12 +372,12 @@ export default function ProviderRegistrationPage() {
               setFormData({ ...formData, businessPhone: e.target.value })
             }
             placeholder="Business phone number"
-            className="bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
+            className="form-input"
             required
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Website
           </label>
           <Input
@@ -446,7 +387,7 @@ export default function ProviderRegistrationPage() {
               setFormData({ ...formData, website: e.target.value })
             }
             placeholder="https://yourcompany.com"
-            className="bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
+            className="form-input"
           />
         </div>
       </div>
@@ -456,10 +397,10 @@ export default function ProviderRegistrationPage() {
   const renderDocumentUpload = () => (
     <div className="space-y-8">
       <div className="text-center mb-8">
-        <h3 className="text-2xl font-bold text-white mb-2">
+        <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
           Required Documentation
         </h3>
-        <p className="text-slate-400">
+        <p className="text-slate-600 dark:text-slate-400">
           Upload the required documents to verify your business
         </p>
       </div>
@@ -468,17 +409,19 @@ export default function ProviderRegistrationPage() {
         <div key={docType.id} className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-lg font-semibold text-white flex items-center">
+              <h4 className="text-lg font-semibold text-slate-800 dark:text-white flex items-center">
                 {docType.title}
                 {docType.required && (
                   <span className="text-red-500 ml-1">*</span>
                 )}
               </h4>
-              <p className="text-sm text-slate-400">{docType.description}</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                {docType.description}
+              </p>
             </div>
             <Badge
               variant="secondary"
-              className="text-xs bg-slate-700 text-slate-300"
+              className="text-xs bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
             >
               {uploadedFiles[docType.id]?.length || 0} / {docType.maxFiles}
             </Badge>
@@ -488,18 +431,18 @@ export default function ProviderRegistrationPage() {
           <div
             className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
               dragActive === docType.id
-                ? "border-emerald-500 bg-emerald-50"
-                : "border-slate-600 bg-slate-700/30"
+                ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
+                : "border-slate-300 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-700/30"
             }`}
             onDragEnter={(e) => handleDrag(e, docType.id)}
             onDragLeave={(e) => handleDrag(e, docType.id)}
             onDragOver={(e) => handleDrag(e, docType.id)}
             onDrop={(e) => handleDrop(e, docType.id)}
           >
-            <Upload className="w-12 h-12 text-slate-500 mx-auto mb-4" />
-            <p className="text-slate-300 mb-2">
+            <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+            <p className="text-slate-700 dark:text-slate-300 mb-2">
               Drag and drop files here, or{" "}
-              <label className="text-emerald-600 cursor-pointer hover:text-emerald-700">
+              <label className="text-emerald-600 dark:text-emerald-400 cursor-pointer hover:text-emerald-700 dark:hover:text-emerald-300">
                 browse
                 <input
                   type="file"
@@ -510,7 +453,7 @@ export default function ProviderRegistrationPage() {
                 />
               </label>
             </p>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-slate-500 dark:text-slate-500">
               Supported formats:{" "}
               {docType.acceptedFormats.replace(/\./g, "").toUpperCase()} • Max
               10MB per file
@@ -523,10 +466,10 @@ export default function ProviderRegistrationPage() {
               {uploadedFiles[docType.id].map((file) => (
                 <div
                   key={file.id}
-                  className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg border border-slate-600"
+                  className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-600"
                 >
                   <div className="flex items-center space-x-3 flex-1">
-                    <div className="w-10 h-10 rounded-lg bg-slate-600 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-lg bg-slate-200 dark:bg-slate-600 flex items-center justify-center">
                       {file.preview ? (
                         <img
                           src={file.preview}
@@ -534,20 +477,20 @@ export default function ProviderRegistrationPage() {
                           className="w-8 h-8 rounded object-cover"
                         />
                       ) : (
-                        <File className="w-5 h-5 text-slate-400" />
+                        <File className="w-5 h-5 text-slate-500 dark:text-slate-400" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">
+                      <p className="text-sm font-medium text-slate-800 dark:text-white truncate">
                         {file.file.name}
                       </p>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
                         {(file.file.size / 1024 / 1024).toFixed(2)} MB
                       </p>
                       {file.status === "uploading" && (
                         <div className="mt-2">
                           <Progress value={file.progress} className="h-1" />
-                          <p className="text-xs text-slate-400 mt-1">
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                             Uploading... {Math.round(file.progress)}%
                           </p>
                         </div>
@@ -565,7 +508,7 @@ export default function ProviderRegistrationPage() {
                       size="sm"
                       variant="ghost"
                       onClick={() => removeFile(docType.id, file.id)}
-                      className="h-8 w-8 p-0 text-slate-400 hover:text-red-400"
+                      className="h-8 w-8 p-0 text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400"
                     >
                       <X className="w-4 h-4" />
                     </Button>
@@ -582,10 +525,10 @@ export default function ProviderRegistrationPage() {
   const renderTermsAndSubmit = () => (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <h3 className="text-2xl font-bold text-white mb-2">
+        <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
           Terms & Conditions
         </h3>
-        <p className="text-slate-400">
+        <p className="text-slate-600 dark:text-slate-400">
           Review and accept our terms to complete registration
         </p>
       </div>
@@ -600,11 +543,14 @@ export default function ProviderRegistrationPage() {
             }
             className="mt-1"
           />
-          <label htmlFor="terms" className="text-sm text-slate-300">
+          <label
+            htmlFor="terms"
+            className="text-sm text-slate-700 dark:text-slate-300"
+          >
             I agree to the{" "}
             <Link
               href="/terms"
-              className="text-emerald-600 hover:text-emerald-700"
+              className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
             >
               Terms of Service
             </Link>{" "}
@@ -622,11 +568,14 @@ export default function ProviderRegistrationPage() {
             }
             className="mt-1"
           />
-          <label htmlFor="privacy" className="text-sm text-slate-300">
+          <label
+            htmlFor="privacy"
+            className="text-sm text-slate-700 dark:text-slate-300"
+          >
             I agree to the{" "}
             <Link
               href="/privacy"
-              className="text-emerald-600 hover:text-emerald-700"
+              className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
             >
               Privacy Policy
             </Link>{" "}
@@ -646,7 +595,10 @@ export default function ProviderRegistrationPage() {
             }
             className="mt-1"
           />
-          <label htmlFor="compliance" className="text-sm text-slate-300">
+          <label
+            htmlFor="compliance"
+            className="text-sm text-slate-700 dark:text-slate-300"
+          >
             I certify that all information provided is accurate and that my
             business complies with all applicable insurance regulations and
             licensing requirements.
@@ -657,9 +609,11 @@ export default function ProviderRegistrationPage() {
       <div className="p-4 bg-emerald-900/20 rounded-lg border border-emerald-700/50">
         <div className="flex items-center space-x-2 mb-2">
           <Shield className="w-5 h-5 text-emerald-400" />
-          <h4 className="font-medium text-emerald-300">Verification Process</h4>
+          <h4 className="font-medium text-emerald-700 dark:text-emerald-300">
+            Verification Process
+          </h4>
         </div>
-        <p className="text-emerald-200 text-sm">
+        <p className="text-emerald-600 dark:text-emerald-200 text-sm">
           Your application will undergo a comprehensive verification process
           including document review, license validation, and compliance checks.
           This typically takes 3-5 business days.
@@ -669,9 +623,11 @@ export default function ProviderRegistrationPage() {
       <div className="p-4 bg-blue-900/20 rounded-lg border border-blue-700/50">
         <div className="flex items-center space-x-2 mb-2">
           <FileText className="w-5 h-5 text-blue-400" />
-          <h4 className="font-medium text-blue-300">What Happens Next?</h4>
+          <h4 className="font-medium text-blue-700 dark:text-blue-300">
+            What Happens Next?
+          </h4>
         </div>
-        <ul className="text-blue-200 text-sm space-y-1">
+        <ul className="text-blue-600 dark:text-blue-200 text-sm space-y-1">
           <li>• Document verification and compliance review</li>
           <li>• License validation with regulatory authorities</li>
           <li>• Background check and financial assessment</li>
@@ -683,7 +639,7 @@ export default function ProviderRegistrationPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <div className="min-h-screen flex">
         {/* Left Banner */}
         <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 relative overflow-hidden">
@@ -777,33 +733,30 @@ export default function ProviderRegistrationPage() {
               </Link>
 
               <div className="lg:hidden mb-6">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center shadow-lg">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg">
                   <Building className="w-8 h-8 text-white" />
                 </div>
               </div>
 
               {/* Step Indicator */}
               {renderStepIndicator()}
-              <h2 className="text-3xl font-bold text-white mb-2">
+              <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">
                 Provider Registration
               </h2>
               {/* Registration Form */}
-              <Card className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 shadow-xl rounded-2xl">
+              <Card className="glass-card rounded-2xl">
                 <CardContent className="p-8">
                   <form onSubmit={handleSubmit}>
                     {currentStep === 1 && renderCompanyInfo()}
                     {currentStep === 2 && renderDocumentUpload()}
                     {currentStep === 3 && renderTermsAndSubmit()}
-                    <p className="text-slate-400">
-                      Join our network of trusted insurance providers
-                    </p>
                     <div className="flex justify-between mt-8">
                       {currentStep > 1 && (
                         <Button
                           type="button"
                           variant="outline"
                           onClick={() => setCurrentStep(currentStep - 1)}
-                          className="border-slate-600 text-slate-300 bg-slate-700/50 hover:bg-slate-600 hover:text-white hover:border-slate-500 transform transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95"
+                          className="floating-button"
                         >
                           Previous
                         </Button>
@@ -817,7 +770,7 @@ export default function ProviderRegistrationPage() {
                             !formData.agreeToPrivacy ||
                             !formData.agreeToCompliance)
                         }
-                        className="bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95 ml-auto"
+                        className="gradient-accent text-white floating-button ml-auto"
                       >
                         {currentStep === 3 ? "Submit Application" : "Continue"}
                       </Button>
@@ -828,11 +781,11 @@ export default function ProviderRegistrationPage() {
             </div>
             {/* Login Link */}
             <div className="text-center mt-6">
-              <p className="text-slate-400">
+              <p className="text-slate-600 dark:text-slate-400">
                 Already have an account?{" "}
                 <Link
                   href="/auth/login"
-                  className="text-emerald-400 hover:text-emerald-300 font-medium"
+                  className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium"
                 >
                   Sign in here
                 </Link>

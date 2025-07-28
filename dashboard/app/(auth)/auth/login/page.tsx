@@ -7,9 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Shield, Eye, EyeOff, ArrowLeft, Zap, Globe } from "lucide-react";
 import Link from "next/link";
+import useAuth from "@/app/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import useAuth from '@/app/hooks/useAuth';
-
+import GetStartedButton from '@/components/animata/button/get-started-button';
 export default function LoginPage() {
   const router = useRouter();
   const { login, isLoggingIn, loginError } = useAuth();
@@ -32,10 +32,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <div className="min-h-screen flex">
         {/* Left Banner */}
-        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 relative overflow-hidden">
+        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-emerald-500 via-teal-500 to-emerald-600 relative overflow-hidden">
           <div className="absolute inset-0 bg-black/20"></div>
           <div className="relative z-10 flex flex-col justify-center px-12 text-white">
             <div className="mb-8">
@@ -121,25 +121,25 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <h2 className="text-3xl font-bold text-white mb-2">
+              <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">
                 Welcome Back
               </h2>
-              <p className="text-slate-400">
+              <p className="text-slate-600 dark:text-slate-400">
                 Sign in to your BlockSecure account
               </p>
             </div>
 
             {/* Login Form */}
-            <Card className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 shadow-xl rounded-2xl">
+            <Card className="glass-card rounded-2xl">
               <CardHeader>
-                <CardTitle className="text-xl text-white text-center">
+                <CardTitle className="text-xl text-slate-800 dark:text-white text-center">
                   Sign In
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                       Email Address
                     </label>
                     <Input
@@ -149,13 +149,13 @@ export default function LoginPage() {
                         setFormData({ ...formData, email: e.target.value })
                       }
                       placeholder="Enter your email"
-                      className="bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
+                      className="form-input"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                       Password
                     </label>
                     <div className="relative">
@@ -166,13 +166,13 @@ export default function LoginPage() {
                           setFormData({ ...formData, password: e.target.value })
                         }
                         placeholder="Enter your password"
-                        className="bg-slate-700/50 border-slate-600 text-white placeholder-slate-400 pr-10"
+                        className="form-input pr-10"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-300"
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
                       >
                         {showPassword ? (
                           <EyeOff className="w-4 h-4" />
@@ -197,7 +197,7 @@ export default function LoginPage() {
                       />
                       <label
                         htmlFor="remember"
-                        className="text-sm text-slate-400"
+                        className="text-sm text-slate-600 dark:text-slate-400"
                       >
                         Remember me
                       </label>
@@ -210,13 +210,7 @@ export default function LoginPage() {
                     </Link>
                   </div>
 
-                  <Button
-                    type="submit"
-                    disabled={isLoggingIn}
-                    className="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95 py-3"
-                  >
-                    Sign In
-                  </Button>
+                  <GetStartedButton text="Sign In" />
                   {loginError && (
                     <p className="text-red-500 text-sm mt-2 text-center">
                       {loginError || "Login failed"}
@@ -225,7 +219,7 @@ export default function LoginPage() {
                 </form>
 
                 <div className="mt-6 text-center">
-                  <p className="text-slate-400">
+                  <p className="text-slate-600 dark:text-slate-400">
                     Don't have an account?{" "}
                     <Link
                       href="/auth/register"
@@ -240,7 +234,7 @@ export default function LoginPage() {
 
             {/* Security Notice */}
             <div className="text-center mt-6">
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-500">
                 Protected by blockchain security and end-to-end encryption
               </p>
             </div>
