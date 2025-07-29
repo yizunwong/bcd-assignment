@@ -2,7 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { FileService } from '../file/file.service';
 import { CommonResponseDto } from 'src/common/common.dto';
 import { SupabaseService } from 'src/supabase/supabase.service';
-import { CompanyDetailsDto } from '../auth/dto/requests/register.dto';
+import { CompanyDetailsDto } from './dto/create-company.dto';
 
 @Injectable()
 export class CompanyService {

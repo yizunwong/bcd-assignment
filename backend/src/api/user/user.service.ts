@@ -14,7 +14,7 @@ import {
   AdminDetails,
   PolicyholderDetails,
 } from 'src/enums';
-import { CompanyDetailsDto } from '../auth/dto/requests/register.dto';
+import { CompanyDetailsDto } from '../company/dto/create-company.dto';
 
 @Injectable()
 export class UserService {

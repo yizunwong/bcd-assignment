@@ -13,7 +13,7 @@ import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { CompanyService } from './company.service';
 import { CommonResponseDto } from 'src/common/common.dto';
 import { UploadDocDto } from '../file/requests/document-upload.dto';
-import { CompanyDetailsDto } from '../auth/dto/requests/register.dto';
+import { CompanyDetailsDto } from './dto/create-company.dto';
 
 @Controller('company')
 @ApiBearerAuth('supabase-auth')
