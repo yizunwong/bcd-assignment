@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import useAuth from "@/app/hooks/useAuth";
+import { useCompanyUploadMutation } from "@/app/hooks/useCompany";
 import { parseError } from "@/app/utils/parseError";
 import { useToast } from "@/components/shared/ToastProvider";
 import { useRouter } from "next/navigation";
@@ -59,9 +60,9 @@ export default function ProviderRegistrationPage() {
     financial: [],
   });
   const [dragActive, setDragActive] = useState<string | null>(null);
-  const { register: registerUser, isRegistering } = useAuth();
   const { printMessage } = useToast();
   const router = useRouter();
+  const { uploadCompanyDocuments } = useCompanyUploadMutation();
 
   const [formData, setFormData] = useState({
     // Personal & Account Info (collected separately)
@@ -260,8 +261,20 @@ export default function ProviderRegistrationPage() {
             employees_number: formData.employeeCount as CompanyDetailsDtoEmployeesNumber,
           },
         });
+        const companyDocs = Object.values(uploadedFiles)
+          .flat()
+          .map((f) => f.file);
+        if (companyDocs.length) {
+          try {
+            await uploadCompanyDocuments("1", { files: companyDocs });
+          } catch (uploadErr) {
+            console.error(uploadErr);
+          }
+        }
+        printMessage("Account created successfully", "success");
         resetAdminInfo();
         router.push("/auth/login");
+        router.refresh();
       } catch (err) {
         console.error(err);
         console.error("Registration failed:", err);
@@ -678,8 +691,7 @@ export default function ProviderRegistrationPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <div className="min-h-screen flex">
+    <div className="min-h-screen flex">
         {/* Left Banner */}
         <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 relative overflow-hidden">
           <div className="absolute inset-0 bg-black/20"></div>
@@ -831,6 +843,5 @@ export default function ProviderRegistrationPage() {
           </div>
         </div>
       </div>
-    </div>
   );
 }
