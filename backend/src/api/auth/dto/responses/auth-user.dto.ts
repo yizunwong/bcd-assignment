@@ -22,6 +22,42 @@ export class AuthUserResponseDto {
   @ApiProperty()
   provider!: string;
 
+  // General profile fields
+  @ApiProperty({ required: false })
+  firstName?: string | null;
+
+  @ApiProperty({ required: false })
+  lastName?: string | null;
+
+  @ApiProperty({ required: false })
+  phone?: string | null;
+
+  @ApiProperty({ required: false })
+  bio?: string | null;
+
+  // Policyholder specific fields
+  @ApiProperty({ required: false })
+  address?: string | null;
+
+  @ApiProperty({ required: false })
+  dateOfBirth?: string | null;
+
+  @ApiProperty({ required: false })
+  occupation?: string | null;
+
+  // Insurance admin specific fields
+  @ApiProperty({ required: false })
+  companyName?: string | null;
+
+  @ApiProperty({ required: false })
+  companyAddress?: string | null;
+
+  @ApiProperty({ required: false })
+  companyContactNo?: string | null;
+
+  @ApiProperty({ required: false })
+  companyLicenseNo?: string | null;
+
   constructor(dto: AuthUserResponseDto) {
     Object.assign(this, dto);
   }

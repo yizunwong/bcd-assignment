@@ -1575,9 +1575,20 @@
           "lastSignInAt": {
             "type": "string"
           },
-          "provider": {
-            "type": "string"
-          }
+        "provider": {
+          "type": "string"
+        },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "phone": { "type": "string", "nullable": true },
+        "bio": { "type": "string", "nullable": true },
+        "address": { "type": "string", "nullable": true },
+        "dateOfBirth": { "type": "string", "nullable": true },
+        "occupation": { "type": "string", "nullable": true },
+        "companyName": { "type": "string", "nullable": true },
+        "companyAddress": { "type": "string", "nullable": true },
+        "companyContactNo": { "type": "string", "nullable": true },
+        "companyLicenseNo": { "type": "string", "nullable": true }
         },
         "required": [
           "id",
