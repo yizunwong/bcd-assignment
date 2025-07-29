@@ -13,6 +13,7 @@ import { AuthUserResponseDto } from './dto/responses/auth-user.dto';
 import { parseAppMetadata, parseUserMetadata } from 'src/utils/auth-metadata';
 import { Response } from 'express';
 import { UserService } from '../user/user.service';
+import { UserRole } from 'src/enums';
 
 @Injectable()
 export class AuthService {
@@ -123,18 +124,49 @@ export class AuthService {
     const metadata = parseUserMetadata(data.user.user_metadata);
     const appMeta = parseAppMetadata(data.user.app_metadata);
 
+    const { data: profile } = await req.supabase
+      .from('user_details')
+      .select(
+        `first_name, last_name, phone, bio,
+        policyholder_details(address, date_of_birth, occupation),
+        admin_details(company:companies(name, address, contact_no, license_number))`,
+      )
+      .eq('user_id', data.user.id)
+      .single();
+
+    const dto = new AuthUserResponseDto({
+      id: data.user.id,
+      email: data.user.email ?? '',
+      email_verified: metadata.email_verified ?? false,
+      username: metadata.username ?? '',
+      role: appMeta.role ?? '',
+      lastSignInAt: data.user.last_sign_in_at ?? '',
+      provider: appMeta.provider ?? '',
+      firstName: profile?.first_name ?? '',
+      lastName: profile?.last_name ?? '',
+      phone: profile?.phone ?? '',
+      bio: profile?.bio ?? '',
+    });
+
+    if (appMeta.role === UserRole.POLICYHOLDER) {
+      dto.address = profile?.policyholder_details?.address ?? null;
+      dto.dateOfBirth = profile?.policyholder_details?.date_of_birth ?? null;
+      dto.occupation = profile?.policyholder_details?.occupation ?? null;
+    }
+
+    if (appMeta.role === UserRole.INSURANCE_ADMIN) {
+      dto.companyName = profile?.admin_details?.company?.name ?? null;
+      dto.companyAddress = profile?.admin_details?.company?.address ?? null;
+      dto.companyContactNo =
+        profile?.admin_details?.company?.contact_no ?? null;
+      dto.companyLicenseNo =
+        profile?.admin_details?.company?.license_number ?? null;
+    }
+
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Authenticated User retrieved successfully',
-      data: new AuthUserResponseDto({
-        id: data.user.id,
-        email: data.user.email ?? '',
-        email_verified: metadata.email_verified ?? false,
-        username: metadata.username ?? '',
-        role: appMeta.role ?? '',
-        lastSignInAt: data.user.last_sign_in_at ?? '',
-        provider: appMeta.provider ?? '',
-      }),
+      data: dto,
     });
   }
 

@@ -10,19 +10,15 @@ import { CreateClaimDto } from './dto/requests/create-claim.dto';
 import { UploadClaimDocDto } from './dto/requests/upload-claim-doc.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { FindClaimsQueryDto } from './dto/responses/claims-query.dto';
-import {
-  getSignedUrls,
-  removeFileFromStorage,
-  uploadFiles,
-} from 'src/utils/supabase-storage';
+import { FileService } from '../file/file.service';
 import { ClaimResponseDto } from './dto/responses/claim.dto';
 import { CommonResponseDto } from 'src/common/common.dto';
 @Injectable()
 export class ClaimService {
+  constructor(private readonly fileService: FileService) {}
   async createClaim(
     createClaimDto: CreateClaimDto,
     req: AuthenticatedRequest,
-    files: Array<Express.Multer.File>,
   ): Promise<CommonResponseDto> {
     const { data: userData, error: userError } =
       await req.supabase.auth.getUser();
@@ -59,31 +55,49 @@ export class ClaimService {
 
     const claimId = data.id;
 
-    if (files?.length > 0) {
-      const filePaths = await uploadFiles(
-        req.supabase,
-        files,
-        'claim_documents',
+    return new CommonResponseDto({
+      statusCode: 201,
+      message: 'Claim created successfully',
+      data: { id: claimId },
+    });
+  }
+
+  async addClaimDocuments(
+    claimId: number,
+    files: Array<Express.Multer.File>,
+    req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto> {
+    const { data: userData, error: userError } =
+      await req.supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+    const paths = await this.fileService.uploadFiles(
+      req.supabase,
+      files,
+      'claim_documents',
+      userData.user.id,
+    );
+
+    const inserts = files.map((file, idx) => ({
+      claim_id: claimId,
+      name: file.originalname,
+      path: paths[idx],
+    }));
+
+    const { error } = await req.supabase
+      .from('claim_documents')
+      .insert(inserts);
+
+    if (error) {
+      throw new InternalServerErrorException(
+        'Failed to create claim documents',
       );
-      const docInserts = files.map((file, index) => ({
-        claim_id: claimId,
-        name: file.originalname,
-        path: filePaths[index],
-      }));
-
-      const { error: docError } = await req.supabase
-        .from('claim_documents')
-        .insert(docInserts);
-
-      if (docError) {
-        console.error(docError);
-        throw new InternalServerErrorException('Failed to create documents');
-      }
     }
 
     return new CommonResponseDto({
       statusCode: 201,
-      message: 'Claim created successfully',
+      message: 'Claim Documents uploaded successfully',
     });
   }
 
@@ -142,7 +156,10 @@ export class ClaimService {
       }
     }
 
-    const signedUrls = await getSignedUrls(req.supabase, allPaths);
+    const signedUrls = await this.fileService.getSignedUrls(
+      req.supabase,
+      allPaths,
+    );
 
     let urlIndex = 0;
     const enrichedClaims: ClaimResponseDto[] = data.map((claim) => ({
@@ -189,7 +206,10 @@ export class ClaimService {
       .filter(Boolean);
 
     // Generate signed URLs
-    const signedUrls = await getSignedUrls(req.supabase, filePaths);
+    const signedUrls = await this.fileService.getSignedUrls(
+      req.supabase,
+      filePaths,
+    );
 
     const enrichedDocuments = documents.map((doc, idx) => ({
       ...doc,
@@ -371,7 +391,7 @@ export class ClaimService {
 
     // Step 2: Remove files from Supabase storage
     for (const doc of documents as { path: string }[]) {
-      await removeFileFromStorage(req.supabase, doc.path);
+      await this.fileService.removeFileFromStorage(req.supabase, doc.path);
     }
 
     // Step 3: Remove claim_documents from database
@@ -429,7 +449,7 @@ export class ClaimService {
     }
 
     // Step 2: Remove the file from Supabase storage
-    await removeFileFromStorage(req.supabase, document.path);
+    await this.fileService.removeFileFromStorage(req.supabase, document.path);
 
     // Step 3: Remove the claim document record from the database
     const { data, error: deleteError } = await req.supabase

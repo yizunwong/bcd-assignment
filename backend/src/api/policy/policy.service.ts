@@ -9,11 +9,7 @@ import { CreatePolicyDto } from './dto/requests/create-policy.dto';
 import { UpdatePolicyDto } from './dto/requests/update-policy.dto';
 // import { SupabaseService } from 'src/supabase/supabase.service';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
-import {
-  getSignedUrls,
-  removeFileFromStorage,
-  uploadFiles,
-} from 'src/utils/supabase-storage';
+import { FileService } from '../file/file.service';
 import { CommonResponseDto } from 'src/common/common.dto';
 import { PolicyResponseDto } from './dto/responses/policy.dto';
 import { FindPoliciesQueryDto } from './dto/responses/policy-query.dto';
@@ -21,19 +17,50 @@ import { ClaimService } from '../claim/claim.service';
 
 @Injectable()
 export class PolicyService {
-  constructor(private readonly claimsService: ClaimService) {}
-  async uploadPolicyDocuments(
+  constructor(
+    private readonly claimsService: ClaimService,
+    private readonly fileService: FileService,
+  ) {}
+  async addPolicyDocuments(
+    id: number,
     files: Array<Express.Multer.File>,
     req: AuthenticatedRequest,
-  ): Promise<string[]> {
-    return uploadFiles(req.supabase, files, 'policy_documents');
+  ): Promise<CommonResponseDto> {
+    const { data: userData, error: userError } =
+      await req.supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+    const paths = await this.fileService.uploadFiles(
+      req.supabase,
+      files,
+      'policy_documents',
+      userData.user.id,
+    );
+
+    const inserts = files.map((file, idx) => ({
+      policy_id: id,
+      name: file.originalname,
+      path: paths[idx],
+    }));
+
+    const { error } = await req.supabase
+      .from('policy_documents')
+      .insert(inserts);
+
+    if (error) {
+      throw new InternalServerErrorException(
+        'Failed to create policy documents',
+      );
+    }
+
+    return new CommonResponseDto({
+      statusCode: 201,
+      message: 'Policy Documents uploaded successfully',
+    });
   }
 
-  async create(
-    dto: CreatePolicyDto,
-    req: AuthenticatedRequest,
-    files?: Array<Express.Multer.File>,
-  ) {
+  async create(dto: CreatePolicyDto, req: AuthenticatedRequest) {
     const { data: userData, error: userError } =
       await req.supabase.auth.getUser();
 
@@ -74,25 +101,6 @@ export class PolicyService {
           policyId,
           req,
         );
-      }
-
-      // Step 3: Upload files (optional)
-      if (files && files.length > 0) {
-        const path = await this.uploadPolicyDocuments(files, req);
-        const docInserts = files.map((file, index) => ({
-          policy_id: policyId,
-          name: file.originalname,
-          path: path[index],
-        }));
-
-        const { error: docError } = await req.supabase
-          .from('policy_documents')
-          .insert(docInserts);
-
-        if (docError) {
-          console.error(docError);
-          throw new InternalServerErrorException('Failed to create documents');
-        }
       }
 
       return new CommonResponseDto({
@@ -165,7 +173,10 @@ export class PolicyService {
       }
     }
 
-    const signedUrls = await getSignedUrls(req.supabase, allPaths);
+    const signedUrls = await this.fileService.getSignedUrls(
+      req.supabase,
+      allPaths,
+    );
 
     let urlIndex = 0;
     const enrichedPolicies: PolicyResponseDto[] = data.map((policy) => {
@@ -220,7 +231,10 @@ export class PolicyService {
     }
 
     const paths = (documents || []).map((d) => d.path);
-    const signedUrls = await getSignedUrls(req.supabase, paths);
+    const signedUrls = await this.fileService.getSignedUrls(
+      req.supabase,
+      paths,
+    );
     const enrichedDocuments = (documents || []).map((doc, idx) => ({
       id: doc.id,
       name: doc.name,
@@ -406,7 +420,7 @@ export class PolicyService {
 
     for (const doc of documents as { path: string }[]) {
       try {
-        await removeFileFromStorage(req.supabase, doc.path);
+        await this.fileService.removeFileFromStorage(req.supabase, doc.path);
       } catch {
         console.warn(`Failed to delete file "${doc.path}":`);
       }
@@ -447,6 +461,6 @@ export class PolicyService {
     });
   }
   async removeFile(filePath: string, req: AuthenticatedRequest): Promise<void> {
-    await removeFileFromStorage(req.supabase, filePath);
+    await this.fileService.removeFileFromStorage(req.supabase, filePath);
   }
 }

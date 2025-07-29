@@ -96,10 +96,10 @@ export default function AdminProfile() {
                   {profileData.firstName} {profileData.lastName}
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400 mb-2">
-                  {profileData.position}
+                  {profileData.companyName}
                 </p>
                 <p className="text-sm text-slate-500 dark:text-slate-500 mb-4">
-                  {profileData.company}
+                  {profileData.companyAddress}
                 </p>
                 <div className="space-y-2">
                   <Badge className="status-badge status-active">
@@ -302,14 +302,14 @@ export default function AdminProfile() {
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                          Position
+                          Company Name
                         </label>
                         <Input
-                          value={profileData.position}
+                          value={profileData.companyName}
                           onChange={(e) =>
                             setProfileData({
                               ...profileData,
-                              position: e.target.value,
+                              companyName: e.target.value,
                             })
                           }
                           disabled={!isEditing}
@@ -318,14 +318,14 @@ export default function AdminProfile() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                          Department
+                          Company Address
                         </label>
                         <Input
-                          value={profileData.department}
+                          value={profileData.companyAddress}
                           onChange={(e) =>
                             setProfileData({
                               ...profileData,
-                              department: e.target.value,
+                              companyAddress: e.target.value,
                             })
                           }
                           disabled={!isEditing}
@@ -337,22 +337,34 @@ export default function AdminProfile() {
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                          Employee ID
+                          Company Contact No
                         </label>
                         <Input
-                          value={profileData.employeeId}
-                          disabled
-                          className="form-input bg-slate-100 dark:bg-slate-700"
+                          value={profileData.companyContactNo}
+                          onChange={(e) =>
+                            setProfileData({
+                              ...profileData,
+                              companyContactNo: e.target.value,
+                            })
+                          }
+                          disabled={!isEditing}
+                          className="form-input"
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                          License Number
+                          Company License No
                         </label>
                         <Input
-                          value={profileData.licenseNumber}
-                          disabled
-                          className="form-input bg-slate-100 dark:bg-slate-700"
+                          value={profileData.companyLicenseNo}
+                          onChange={(e) =>
+                            setProfileData({
+                              ...profileData,
+                              companyLicenseNo: e.target.value,
+                            })
+                          }
+                          disabled={!isEditing}
+                          className="form-input"
                         />
                       </div>
                     </div>

@@ -21,7 +21,7 @@ export function Footer() {
               <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center">
                 <Shield className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xl font-bold">BlockSecure Insurance</span>
+              <span className="text-xl font-bold">Coverly Insurance</span>
             </div>
             <p className="text-slate-300 mb-4 max-w-md">
               Revolutionizing insurance through blockchain technology. Secure,
@@ -126,7 +126,7 @@ export function Footer() {
 
         <div className="border-t border-slate-700 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-slate-400 text-sm">
-            © 2025 BlockSecure Insurance. All rights reserved.
+            © 2025 Coverly Insurance. All rights reserved.
           </p>
           <div className="flex items-center space-x-4 mt-4 md:mt-0">
             <span className="text-slate-400 text-sm">

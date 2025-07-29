@@ -180,6 +180,7 @@ export type Database = {
           address: string;
           contact_no: string | null;
           created_at: string;
+          employees_number: Database['public']['Enums']['number_of_employees'];
           id: number;
           license_number: string;
           name: string;
@@ -190,6 +191,7 @@ export type Database = {
           address: string;
           contact_no?: string | null;
           created_at?: string;
+          employees_number?: Database['public']['Enums']['number_of_employees'];
           id?: number;
           license_number: string;
           name: string;
@@ -200,6 +202,7 @@ export type Database = {
           address?: string;
           contact_no?: string | null;
           created_at?: string;
+          employees_number?: Database['public']['Enums']['number_of_employees'];
           id?: number;
           license_number?: string;
           name?: string;
@@ -207,6 +210,35 @@ export type Database = {
           years_in_business?: Database['public']['Enums']['years_in_business'];
         };
         Relationships: [];
+      };
+      company_documents: {
+        Row: {
+          company_id: number;
+          id: number;
+          name: string;
+          path: string;
+        };
+        Insert: {
+          company_id: number;
+          id?: number;
+          name: string;
+          path: string;
+        };
+        Update: {
+          company_id?: number;
+          id?: number;
+          name?: string;
+          path?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'company_documents_company_id_fkey';
+            columns: ['company_id'];
+            isOneToOne: false;
+            referencedRelation: 'companies';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       coverage: {
         Row: {
@@ -530,6 +562,12 @@ export type Database = {
       claim_priority: 'high' | 'medium' | 'low';
       claim_status: 'pending' | 'approved' | 'rejected' | 'claimed';
       coverage_status: 'active' | 'limitExceeded' | 'expired' | 'suspended';
+      number_of_employees:
+        | '1-10 employees'
+        | '11-50 employees'
+        | '51-200 employees'
+        | '201-500 employees'
+        | '500+ employees';
       role: 'admin' | 'user';
       user_status: 'active' | 'deactivated';
       years_in_business:
@@ -671,6 +709,13 @@ export const Constants = {
       claim_priority: ['high', 'medium', 'low'],
       claim_status: ['pending', 'approved', 'rejected', 'claimed'],
       coverage_status: ['active', 'limitExceeded', 'expired', 'suspended'],
+      number_of_employees: [
+        '1-10 employees',
+        '11-50 employees',
+        '51-200 employees',
+        '201-500 employees',
+        '500+ employees',
+      ],
       role: ['admin', 'user'],
       user_status: ['active', 'deactivated'],
       years_in_business: [

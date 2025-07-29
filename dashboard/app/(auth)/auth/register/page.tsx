@@ -28,7 +28,9 @@ import {
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import useAuth from "@/app/hooks/useAuth";
-import { useAdminRegistrationStore } from "@/app/store/useAdminRegistrationStore";
+import { useToast } from "@/components/shared/ToastProvider";
+import { parseError } from '@/app/utils/parseError';
+import { useAdminRegistrationStore } from '@/app/store/useAdminRegistrationStore';
 
 export default function RegisterPage() {
   const searchParams = useSearchParams();
@@ -39,7 +41,8 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const router = useRouter();
-  const { register: registerUser, isRegistering, registerError } = useAuth();
+  const { register: registerUser, isRegistering } = useAuth();
+  const { printMessage } = useToast();
   const setAdminData = useAdminRegistrationStore((state) => state.setData);
 
   const [formData, setFormData] = useState({
@@ -55,7 +58,7 @@ export default function RegisterPage() {
     dateOfBirth: "",
     address: "",
     occupation: "",
-    annualIncome: "",
+    // annualIncome: "",
 
     // Common
     agreeToTerms: false,
@@ -109,9 +112,12 @@ export default function RegisterPage() {
             occupation: formData.occupation,
             address: formData.address,
           });
+          printMessage("Account created successfully", "success");
           router.push("/auth/login");
         } catch (err) {
           console.error(err);
+          console.error("Registration failed:", err);
+          printMessage(parseError(err) || "Registration failed", "error");
         }
       }
     }
@@ -145,10 +151,10 @@ export default function RegisterPage() {
   const renderRoleSelection = () => (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <h3 className="text-2xl font-bold text-white mb-2">
+        <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
           Choose Your Account Type
         </h3>
-        <p className="text-slate-400">
+        <p className="text-slate-600 dark:text-slate-400">
           Select the option that best describes you
         </p>
       </div>
@@ -157,9 +163,9 @@ export default function RegisterPage() {
         {roles.map((role) => (
           <Card
             key={role.id}
-            className={`cursor-pointer transition-all duration-300 bg-slate-700/50 backdrop-blur-xl border border-slate-600/50 shadow-xl rounded-2xl ${
+            className={`cursor-pointer transition-all duration-300 glass-card rounded-2xl ${
               selectedRole === role.id
-                ? "ring-2 ring-emerald-500 bg-emerald-900/20"
+                ? "ring-2 ring-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20"
                 : "hover:shadow-lg"
             }`}
             onClick={() => setSelectedRole(role.id)}
@@ -171,10 +177,9 @@ export default function RegisterPage() {
                 <role.icon className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1">
-                <h4 className="text-lg font-semibold text-white">
+                <h4 className="text-lg font-semibold text-slate-800 dark:text-white">
                   {role.title}
                 </h4>
-                <p className="text-slate-400">{role.description}</p>
               </div>
               {selectedRole === role.id && (
                 <CheckCircle className="w-6 h-6 text-emerald-500" />
@@ -189,15 +194,17 @@ export default function RegisterPage() {
   const renderBasicInfo = () => (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <h3 className="text-2xl font-bold text-white mb-2">
+        <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
           Basic Information
         </h3>
-        <p className="text-slate-400">Tell us about yourself</p>
+        <p className="text-slate-600 dark:text-slate-400">
+          Tell us about yourself
+        </p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             First Name *
           </label>
           <Input
@@ -206,12 +213,12 @@ export default function RegisterPage() {
               setFormData({ ...formData, firstName: e.target.value })
             }
             placeholder="Enter your first name"
-            className="bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
+            className="form-input"
             required
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Last Name *
           </label>
           <Input
@@ -220,14 +227,14 @@ export default function RegisterPage() {
               setFormData({ ...formData, lastName: e.target.value })
             }
             placeholder="Enter your last name"
-            className="bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
+            className="form-input"
             required
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
           Email Address *
         </label>
         <Input
@@ -235,13 +242,13 @@ export default function RegisterPage() {
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           placeholder="Enter your email"
-          className="bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
+          className="form-input"
           required
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
           Phone Number *
         </label>
         <Input
@@ -249,14 +256,14 @@ export default function RegisterPage() {
           value={formData.phone}
           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
           placeholder="Enter your phone number"
-          className="bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
+          className="form-input"
           required
         />
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Password *
           </label>
           <div className="relative">
@@ -267,13 +274,13 @@ export default function RegisterPage() {
                 setFormData({ ...formData, password: e.target.value })
               }
               placeholder="Create a password"
-              className="bg-slate-700/50 border-slate-600 text-white placeholder-slate-400 pr-10"
+              className="form-input pr-10"
               required
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
             >
               {showPassword ? (
                 <EyeOff className="w-4 h-4" />
@@ -284,7 +291,7 @@ export default function RegisterPage() {
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Confirm Password *
           </label>
           <div className="relative">
@@ -295,13 +302,13 @@ export default function RegisterPage() {
                 setFormData({ ...formData, confirmPassword: e.target.value })
               }
               placeholder="Confirm your password"
-              className="bg-slate-700/50 border-slate-600 text-white placeholder-slate-400 pr-10"
+              className="form-input pr-10"
               required
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
             >
               {showConfirmPassword ? (
                 <EyeOff className="w-4 h-4" />
@@ -320,17 +327,17 @@ export default function RegisterPage() {
       return (
         <div className="space-y-6">
           <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold text-white mb-2">
+            <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
               Personal Details
             </h3>
-            <p className="text-slate-400">
+            <p className="text-slate-600 dark:text-slate-400">
               Additional information for your insurance profile
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Date of Birth *
               </label>
               <Input
@@ -339,12 +346,12 @@ export default function RegisterPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, dateOfBirth: e.target.value })
                 }
-                className="bg-slate-700/50 border-slate-600 text-white"
+                className="form-input"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Occupation *
               </label>
               <Input
@@ -353,14 +360,14 @@ export default function RegisterPage() {
                   setFormData({ ...formData, occupation: e.target.value })
                 }
                 placeholder="Your occupation"
-                className="bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
+                className="form-input"
                 required
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Address *
             </label>
             <Textarea
@@ -369,13 +376,13 @@ export default function RegisterPage() {
                 setFormData({ ...formData, address: e.target.value })
               }
               placeholder="Enter your full address"
-              className="bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
+              className="form-input"
               required
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+          {/* <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Annual Income Range
             </label>
             <Select
@@ -384,7 +391,7 @@ export default function RegisterPage() {
                 setFormData({ ...formData, annualIncome: value })
               }
             >
-              <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
+              <SelectTrigger className="form-input">
                 <SelectValue placeholder="Select income range" />
               </SelectTrigger>
               <SelectContent>
@@ -396,7 +403,7 @@ export default function RegisterPage() {
                 <SelectItem value="over-150k">Over $150,000</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </div> */}
 
           <div className="space-y-4">
             <div className="flex items-start space-x-3">
@@ -408,7 +415,10 @@ export default function RegisterPage() {
                 }
                 className="mt-1"
               />
-              <label htmlFor="terms" className="text-sm text-slate-300">
+              <label
+                htmlFor="terms"
+                className="text-sm text-slate-700 dark:text-slate-300"
+              >
                 I agree to the{" "}
                 <Link
                   href="/terms"
@@ -432,7 +442,10 @@ export default function RegisterPage() {
                 }
                 className="mt-1"
               />
-              <label htmlFor="privacy" className="text-sm text-slate-300">
+              <label
+                htmlFor="privacy"
+                className="text-sm text-slate-700 dark:text-slate-300"
+              >
                 I agree to the{" "}
                 <Link
                   href="/privacy"
@@ -450,28 +463,28 @@ export default function RegisterPage() {
       return (
         <div className="space-y-6">
           <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold text-white mb-2">
+            <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
               Insurance Provider Setup
             </h3>
-            <p className="text-slate-400">
+            <p className="text-slate-600 dark:text-slate-400">
               You'll be redirected to complete your provider registration
             </p>
           </div>
 
-          <div className="p-6 bg-blue-900/20 rounded-lg border border-blue-700/50">
+          <div className="p-6 bg-blue-50/50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700/50">
             <div className="flex items-center space-x-3 mb-4">
               <Building className="w-8 h-8 text-blue-400" />
               <div>
-                <h4 className="font-semibold text-blue-300">
+                <h4 className="font-semibold text-blue-700 dark:text-blue-300">
                   Insurance Provider Registration
                 </h4>
-                <p className="text-blue-400 text-sm">
+                <p className="text-blue-600 dark:text-blue-400 text-sm">
                   Complete registration with additional business requirements
                 </p>
               </div>
             </div>
 
-            <div className="space-y-3 text-blue-300 text-sm">
+            <div className="space-y-3 text-blue-700 dark:text-blue-300 text-sm">
               <div className="flex items-center space-x-2">
                 <CheckCircle className="w-4 h-4 text-blue-400" />
                 <span>Business license and registration documents</span>
@@ -501,7 +514,10 @@ export default function RegisterPage() {
                 }
                 className="mt-1"
               />
-              <label htmlFor="terms" className="text-sm text-slate-300">
+              <label
+                htmlFor="terms"
+                className="text-sm text-slate-700 dark:text-slate-300"
+              >
                 I agree to the{" "}
                 <Link
                   href="/terms"
@@ -532,7 +548,10 @@ export default function RegisterPage() {
                 }
                 className="mt-1"
               />
-              <label htmlFor="privacy" className="text-sm text-slate-300">
+              <label
+                htmlFor="privacy"
+                className="text-sm text-slate-700 dark:text-slate-300"
+              >
                 I agree to the{" "}
                 <Link
                   href="/privacy"
@@ -552,10 +571,10 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <div className="min-h-screen flex">
         {/* Left Banner */}
-        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 relative overflow-hidden">
+        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-emerald-500 via-teal-500 to-emerald-600 relative overflow-hidden">
           <div className="absolute inset-0 bg-black/20"></div>
           <div className="relative z-10 flex flex-col justify-center px-12 text-white">
             <div className="mb-8">
@@ -649,10 +668,10 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              <h1 className="text-3xl font-bold text-white mb-2">
+              <h1 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">
                 Create Your Account
               </h1>
-              <p className="text-slate-400">
+              <p className="text-slate-600 dark:text-slate-400">
                 Join the future of decentralized insurance
               </p>
             </div>
@@ -661,7 +680,7 @@ export default function RegisterPage() {
             {renderStepIndicator()}
 
             {/* Registration Form */}
-            <Card className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 shadow-xl rounded-2xl">
+            <Card className="glass-card rounded-2xl">
               <CardContent className="p-8">
                 <form onSubmit={handleSubmit}>
                   {currentStep === 1 && renderRoleSelection()}
@@ -674,7 +693,7 @@ export default function RegisterPage() {
                         type="button"
                         variant="outline"
                         onClick={() => setCurrentStep(currentStep - 1)}
-                        className="border-slate-600 text-slate-300 bg-slate-700/50 hover:bg-slate-600 hover:text-white hover:border-slate-500 transform transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95"
+                        className="floating-button"
                       >
                         Previous
                       </Button>
@@ -682,13 +701,13 @@ export default function RegisterPage() {
 
                     <Button
                       type="submit"
+                      loading={isRegistering}
                       disabled={
-                        isRegistering ||
                         (currentStep === 1 && !selectedRole) ||
                         (currentStep === 3 &&
                           (!formData.agreeToTerms || !formData.agreeToPrivacy))
                       }
-                      className="bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95 ml-auto"
+                      className="gradient-accent text-white floating-button ml-auto"
                     >
                       {currentStep === 3 ? (
                         selectedRole === "admin" ? (
@@ -703,18 +722,13 @@ export default function RegisterPage() {
                         "Continue"
                       )}
                     </Button>
-                    {registerError && (
-                      <p className="text-red-500 text-sm mt-2">
-                        {registerError || "Registration failed"}
-                      </p>
-                    )}
                   </div>
                 </form>
               </CardContent>
             </Card>
             {/* Login Link */}
             <div className="text-center mt-6">
-              <p className="text-slate-400">
+              <p className="text-slate-600 dark:text-slate-400">
                 Already have an account?{" "}
                 <Link
                   href="/auth/login"

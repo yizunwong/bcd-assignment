@@ -141,17 +141,6 @@ export class CreatePolicyDto {
   @IsNotEmpty()
   claimTypes!: string[];
 
-  @ApiProperty({
-    type: 'string',
-    format: 'binary',
-    isArray: true,
-    required: false,
-    description: 'Files to upload for the policy',
-  })
-  @IsOptional()
-  @IsArray()
-  files?: Express.Multer.File[];
-
   constructor(dto: CreatePolicyDto) {
     Object.assign(this, dto);
   }

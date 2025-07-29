@@ -6,6 +6,8 @@ import {
   usePolicyControllerRemove,
   usePolicyControllerGetSummary,
   usePolicyControllerGetCategoryCounts,
+  usePolicyControllerUploadDocuments,
+  type UploadDocDto,
   type PolicyControllerFindAllParams,
   type CreatePolicyDto,
   type UpdatePolicyDto,
@@ -69,5 +71,15 @@ export function useCategoryCountsQuery() {
   return {
     ...query,
     error: parseError(query.error),
+  };
+}
+
+export function useUploadPolicyDocumentsMutation() {
+  const mutation = usePolicyControllerUploadDocuments();
+  return {
+    ...mutation,
+    uploadPolicyDocuments: (id: string, data: UploadDocDto) =>
+      mutation.mutateAsync({ id, data }),
+    error: parseError(mutation.error),
   };
 }

@@ -241,7 +241,6 @@ export default function HowItWorksPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-24 pb-20 px-4">
         <div className="max-w-7xl mx-auto text-center">
@@ -250,7 +249,7 @@ export default function HowItWorksPage() {
           </div>
 
           <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-slate-800 via-emerald-600 to-teal-600 dark:from-slate-200 dark:via-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
-            How BlockSecure Works
+            How Coverly Works
           </h1>
 
           <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-300 mb-12 max-w-4xl mx-auto">
@@ -593,7 +592,6 @@ export default function HowItWorksPage() {
           </div>
         </div>
       </section>
-
     </div>
   );
 }

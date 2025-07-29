@@ -23,6 +23,7 @@ import { FindClaimsQueryDto } from './dto/responses/claims-query.dto';
 import { ClaimResponseDto } from './dto/responses/claim.dto';
 import { ApiCommonResponse, CommonResponseDto } from 'src/common/common.dto';
 import { ApiBearerAuth, ApiConsumes, ApiParam } from '@nestjs/swagger';
+import { UploadDocDto } from '../file/requests/document-upload.dto';
 
 @Controller('claim')
 @ApiBearerAuth('supabase-auth')
@@ -30,15 +31,25 @@ export class ClaimController {
   constructor(private readonly claimService: ClaimService) {}
 
   @Post()
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FilesInterceptor('documents'))
   @UseGuards(AuthGuard)
   create(
     @Body() createClaimDto: CreateClaimDto,
     @Req() req: AuthenticatedRequest,
-    @UploadedFiles() files: Array<Express.Multer.File>,
   ): Promise<CommonResponseDto> {
-    return this.claimService.createClaim(createClaimDto, req, files);
+    return this.claimService.createClaim(createClaimDto, req);
+  }
+
+  @Post(':id/documents')
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FilesInterceptor('files'))
+  @UseGuards(AuthGuard)
+  uploadDocuments(
+    @Param('id') id: string,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @Body() dto: UploadDocDto,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto> {
+    return this.claimService.addClaimDocuments(+id, files, req);
   }
 
   @Get()

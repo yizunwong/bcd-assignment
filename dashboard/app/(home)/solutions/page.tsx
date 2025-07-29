@@ -48,7 +48,6 @@ export default function SolutionsPage() {
         "Preventive care programs",
       ],
       capabilities: [
-        "AI-powered claim verification",
         "Real-time health monitoring integration",
         "Smart contract automation",
         "Global provider network",
@@ -202,58 +201,11 @@ export default function SolutionsPage() {
     },
   ];
 
-  const technicalSpecs = [
-    {
-      category: "Blockchain Infrastructure",
-      specs: [
-        "Ethereum mainnet deployment",
-        "Layer 2 scaling solutions",
-        "IPFS document storage",
-        "Multi-signature security",
-        "Smart contract auditing",
-        "Gas optimization protocols",
-      ],
-    },
-    {
-      category: "Security & Compliance",
-      specs: [
-        "SOC 2 Type II certification",
-        "GDPR compliance",
-        "AES-256 encryption",
-        "Multi-factor authentication",
-        "Regular security audits",
-        "Penetration testing",
-      ],
-    },
-    {
-      category: "Integration Capabilities",
-      specs: [
-        "RESTful API endpoints",
-        "Webhook notifications",
-        "SDK for major platforms",
-        "Oracle data feeds",
-        "Third-party integrations",
-        "Mobile app support",
-      ],
-    },
-    {
-      category: "Performance Metrics",
-      specs: [
-        "99.9% uptime guarantee",
-        "<2 second response time",
-        "10,000+ TPS capacity",
-        "24/7 monitoring",
-        "Auto-scaling infrastructure",
-        "Global CDN deployment",
-      ],
-    },
-  ];
 
   const selectedSolutionData = solutions.find((s) => s.id === selectedSolution);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-24 pb-20 px-4">
         <div className="max-w-7xl mx-auto text-center">
@@ -508,43 +460,6 @@ export default function SolutionsPage() {
         </div>
       </section>
 
-      {/* Technical Specifications */}
-      <section className="py-20 px-4 bg-white/50 dark:bg-slate-800/30">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-800 dark:text-slate-100">
-              Technical Specifications
-            </h2>
-            <p className="text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto">
-              Built on enterprise-grade infrastructure with industry-leading
-              security and performance
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {technicalSpecs.map((category, index) => (
-              <Card key={index} className="glass-card rounded-2xl">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">
-                    {category.category}
-                  </h3>
-                  <ul className="space-y-3">
-                    {category.specs.map((spec, specIndex) => (
-                      <li
-                        key={specIndex}
-                        className="flex items-center text-sm text-slate-600 dark:text-slate-400"
-                      >
-                        <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mr-2 flex-shrink-0" />
-                        {spec}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* CTA Section */}
       <section className="py-20 px-4">
@@ -553,8 +468,8 @@ export default function SolutionsPage() {
             Ready to Get Protected?
           </h2>
           <p className="text-xl text-slate-600 dark:text-slate-300 mb-8">
-            Join thousands of satisfied customers who trust BlockSecure for
-            their insurance needs
+            Join thousands of satisfied customers who trust Coverly for their
+            insurance needs
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -579,7 +494,6 @@ export default function SolutionsPage() {
           </div>
         </div>
       </section>
-
     </div>
   );
 }

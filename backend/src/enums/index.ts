@@ -19,6 +19,14 @@ export enum YearsInBusiness {
   TWENTY_PLUS = '20+ years',
 }
 
+export enum NumberOfEmployees {
+  ZERO_TO_TEN = '1-10 employees',
+  ELEVEN_TO_FIFTY = '11-50 employees',
+  FIFTY_TO_TWO_HUNDRED = '51-200 employees',
+  TWO_HUNDRED_TO_FIVE_HUNDRED = '201-500 employees',
+  OVER_500 = '500+ employees',
+}
+
 export type AdminDetails = Partial<
   Database['public']['Tables']['admin_details']['Row']
 > & {

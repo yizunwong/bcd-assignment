@@ -6,6 +6,8 @@ import {
   useClaimControllerRemove,
   useClaimControllerUpdateClaimStatus,
   useClaimControllerRemoveFile,
+  useClaimControllerUploadDocuments,
+  type UploadDocDto,
   type ClaimControllerFindAllParams,
   type CreateClaimDto,
   type UpdateClaimDto,
@@ -72,6 +74,16 @@ export function useRemoveClaimFileMutation() {
   return {
     ...mutation,
     removeClaimFile: (id: string) => mutation.mutateAsync({ id }),
+    error: parseError(mutation.error),
+  };
+}
+
+export function useUploadClaimDocumentsMutation() {
+  const mutation = useClaimControllerUploadDocuments();
+  return {
+    ...mutation,
+    uploadClaimDocuments: (id: string, data: UploadDocDto) =>
+      mutation.mutateAsync({ id, data }),
     error: parseError(mutation.error),
   };
 }

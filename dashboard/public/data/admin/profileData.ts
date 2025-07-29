@@ -5,11 +5,10 @@ export const profileData = {
   phone: '+1 (555) 234-5678',
   address: '456 Insurance Ave, San Francisco, CA 94102',
   dateOfBirth: '1985-08-22',
-  position: 'Senior Claims Manager',
-  department: 'Claims Processing',
-  employeeId: 'HS-2024-001',
-  company: 'HealthSecure Insurance',
-  licenseNumber: 'INS-CA-789456',
+  companyName: 'HealthSecure Insurance',
+  companyAddress: '123 Corporate Plaza, San Francisco, CA 94103',
+  companyContactNo: '+1 (555) 222-3333',
+  companyLicenseNo: 'INS-CA-789456',
   bio: 'Experienced insurance professional with 8+ years in claims management and policy administration.'
 };
 

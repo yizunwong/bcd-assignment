@@ -22,6 +22,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiCommonResponse, CommonResponseDto } from 'src/common/common.dto';
 import { PolicyResponseDto } from './dto/responses/policy.dto';
 import { FindPoliciesQueryDto } from './dto/responses/policy-query.dto';
+import { UploadDocDto } from '../file/requests/document-upload.dto';
 
 @Controller('policy')
 @ApiBearerAuth('supabase-auth')
@@ -29,21 +30,25 @@ export class PolicyController {
   constructor(private readonly policyService: PolicyService) {}
 
   @Post()
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FilesInterceptor('files'))
   @UseGuards(AuthGuard)
   async create(
     @Body() dto: CreatePolicyDto,
     @Req() req: AuthenticatedRequest,
-    @UploadedFiles() files: Array<Express.Multer.File>,
   ): Promise<CommonResponseDto> {
-    if (typeof dto.claimTypes === 'string') {
-      dto.claimTypes = (dto.claimTypes as string)
-        .split(',')
-        .map((v) => v.trim());
-    }
+    return this.policyService.create(dto, req);
+  }
 
-    return this.policyService.create(dto, req, files);
+  @Post(':id/documents')
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FilesInterceptor('files'))
+  @UseGuards(AuthGuard)
+  async uploadDocuments(
+    @Param('id') id: string,
+    @Body() dto: UploadDocDto,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto> {
+    return this.policyService.addPolicyDocuments(+id, files, req);
   }
 
   @Get()

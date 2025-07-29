@@ -27,6 +27,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import useAuth from "@/app/hooks/useAuth";
+import { useToast } from './ToastProvider';
 
 interface NavbarProps {
   role?: "policyholder" | "admin" | "system-admin";
@@ -38,6 +39,7 @@ export function Navbar({ role }: NavbarProps) {
   const pathname = usePathname();
   const { logout } = useAuth();
   const router = useRouter();
+  const { printMessage } = useToast();
 
   const allLinks = {
     policyholder: [
@@ -135,7 +137,7 @@ export function Navbar({ role }: NavbarProps) {
               <Shield className="w-6 h-6 text-white" />
             </div>
             <span className="text-xl font-bold text-slate-800 dark:text-slate-200 hidden sm:block">
-              BlockSecure
+              Coverly
             </span>
           </Link>
 
@@ -212,6 +214,7 @@ export function Navbar({ role }: NavbarProps) {
                         onClick={async () => {
                           setIsUserMenuOpen(false);
                           await logout();
+                          printMessage("Logged out successfully", "success");
                           router.push("/");
                           router.refresh();
                         }}
@@ -322,6 +325,7 @@ export function Navbar({ role }: NavbarProps) {
                     onClick={async () => {
                       setIsOpen(false);
                       await logout();
+                      printMessage("Logged out successfully", "success");
                       router.push("/");
                       router.refresh();
                     }}

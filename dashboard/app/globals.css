@@ -323,67 +323,6 @@
   }
 }
 
-/* Animation keyframes */
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
-  50% { box-shadow: 0 0 30px rgba(16, 185, 129, 0.6); }
-}
-
-@keyframes data-flow {
-  0% { transform: translateX(-100%) scaleX(0); }
-  50% { transform: translateX(0%) scaleX(1); }
-  100% { transform: translateX(100%) scaleX(0); }
-}
-
-.float-animation {
-  animation: float 3s ease-in-out infinite;
-}
-
-.pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
-}
-
-.data-flow {
-  animation: data-flow 2s ease-in-out infinite;
-}
-
-/* Smooth theme transitions */
-* {
-  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 300ms;
-}
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-  
-  .floating-button {
-    @apply hover:scale-100;
-  }
-  
-  .card-hover {
-    @apply hover:scale-100;
-  }
-  
-  .blockchain-node::before {
-    animation: none;
-  }
-  
-  .pulse-glow {
-    animation: none;
-  }
-}
-
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

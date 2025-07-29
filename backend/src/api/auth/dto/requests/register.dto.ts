@@ -14,7 +14,7 @@ import {
   IsEnum,
 } from 'class-validator';
 import { ToPhone } from 'src/common/to-phone';
-import { UserRole, YearsInBusiness } from 'src/enums';
+import { NumberOfEmployees, UserRole, YearsInBusiness } from 'src/enums';
 
 export class CompanyDetailsDto {
   @ApiProperty({ example: 'ABC Company', required: false })
@@ -45,11 +45,18 @@ export class CompanyDetailsDto {
   @ApiProperty({
     example: YearsInBusiness.ZERO_TO_ONE,
     enum: YearsInBusiness,
-    required: false,
   })
   @IsNotEmpty()
   @IsEnum(YearsInBusiness)
   years_in_business!: YearsInBusiness;
+
+  @ApiProperty({
+    example: NumberOfEmployees.ZERO_TO_TEN,
+    enum: NumberOfEmployees,
+  })
+  @IsNotEmpty()
+  @IsEnum(NumberOfEmployees)
+  employees_number!: NumberOfEmployees;
 
   @ApiProperty({ example: '2024-01-01T00:00:00Z', required: false })
   @IsOptional()
@@ -132,13 +139,15 @@ export class RegisterDto {
   @ApiProperty({ example: '1990-06-15', required: false })
   dateOfBirth!: string;
 
-  @ApiProperty({ example: 'Engineer', required: false })
-  @IsOptional()
+  @ValidateIf((o: RegisterDto) => o.role === UserRole.POLICYHOLDER)
+  @ApiProperty({ example: 'Software Engineer', required: false })
+  @IsNotEmpty()
   @IsString()
-  occupation?: string;
+  occupation!: string;
 
+  @ValidateIf((o: RegisterDto) => o.role === UserRole.POLICYHOLDER)
   @ApiProperty({ example: '123 Main St', required: false })
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  address?: string;
+  address!: string;
 }
