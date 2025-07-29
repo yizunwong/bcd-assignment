@@ -214,7 +214,7 @@ export function Navbar({ role }: NavbarProps) {
                         onClick={async () => {
                           setIsUserMenuOpen(false);
                           await logout();
-
+                          printMessage("Logged out successfully", "success");
                           router.push("/");
                           router.refresh();
                         }}

@@ -39,6 +39,17 @@ export interface AuthUserResponseDto {
   role: string;
   lastSignInAt: string;
   provider: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  phone?: string | null;
+  bio?: string | null;
+  address?: string | null;
+  dateOfBirth?: string | null;
+  occupation?: string | null;
+  companyName?: string | null;
+  companyAddress?: string | null;
+  companyContactNo?: string | null;
+  companyLicenseNo?: string | null;
 }
 
 export interface LoginResponseDto {
