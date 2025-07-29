@@ -38,15 +38,25 @@ import { useCompanyUploadMutation } from "@/app/hooks/useCompany";
 import { parseError } from "@/app/utils/parseError";
 import { useToast } from "@/components/shared/ToastProvider";
 import { useRouter } from "next/navigation";
-import { CompanyDetailsDtoEmployeesNumber, CompanyDetailsDtoYearsInBusiness, RegisterDtoRole } from "@/app/api";
-import { useAdminRegistrationStore } from "@/app/store/useAdminRegistrationStore";
+import {
+  CompanyDetailsDtoEmployeesNumber,
+  CompanyDetailsDtoYearsInBusiness,
+  RegisterDtoRole,
+} from "@/app/api";
+import { useUserRegistrationStore } from "@/app/store/useAdminRegistrationStore";
 
 interface UploadedFile {
   id: string;
   file: File;
   progress: number;
-  status: "uploading" | "completed" | "error";
+  status: UploadStatus;
   preview?: string;
+}
+
+enum UploadStatus {
+  UPLOADING = "uploading",
+  COMPLETED = "completed",
+  ERROR = "error",
 }
 
 export default function ProviderRegistrationPage() {
@@ -95,14 +105,14 @@ export default function ProviderRegistrationPage() {
   });
 
   const { register: registerAdmin } = useAuth();
-  const adminInfo = useAdminRegistrationStore((state) => state.data);
-  const resetAdminInfo = useAdminRegistrationStore((state) => state.reset);
+  const userInfo = useUserRegistrationStore((state) => state.data);
+  const resetUserInfo = useUserRegistrationStore((state) => state.reset);
 
   useEffect(() => {
-    if (!adminInfo.email) {
-      router.push("/auth/register?role=admin");
+    if (!userInfo.email) {
+      router.push("/auth/register");
     }
-  }, [adminInfo.email, router]);
+  }, [userInfo.email, router]);
 
   const documentTypes = [
     {
@@ -183,7 +193,7 @@ export default function ProviderRegistrationPage() {
         id: fileId,
         file,
         progress: 0,
-        status: "uploading",
+        status: UploadStatus.UPLOADING,
       };
 
       // Create preview for images
@@ -209,23 +219,33 @@ export default function ProviderRegistrationPage() {
 
       // Simulate upload progress
       const interval = setInterval(() => {
-        setUploadedFiles((prev) => ({
-          ...prev,
-          [docType]: prev[docType].map((f) => {
-            if (f.id === fileId) {
-              const newProgress = Math.min(
-                f.progress + Math.random() * 30,
-                100
-              );
-              if (newProgress >= 100) {
-                clearInterval(interval);
-                return { ...f, progress: 100, status: "completed" };
+        let shouldClear = false;
+
+        setUploadedFiles((prev) => {
+          const updated = {
+            ...prev,
+            [docType]: prev[docType].map((f) => {
+              if (f.id === fileId) {
+                const newProgress = Math.min(
+                  f.progress + Math.random() * 30,
+                  100
+                );
+                if (newProgress >= 100) {
+                  shouldClear = true;
+                  return { ...f, progress: 100 , status: UploadStatus.COMPLETED };
+                }
+                return { ...f, progress: newProgress };
               }
-              return { ...f, progress: newProgress };
-            }
-            return f;
-          }),
-        }));
+              return f;
+            }),
+          };
+
+          return updated;
+        });
+
+        if (shouldClear) {
+          clearInterval(interval);
+        }
       }, 200);
     });
   };
@@ -244,21 +264,23 @@ export default function ProviderRegistrationPage() {
     } else {
       try {
         const res = await registerAdmin({
-          email: adminInfo.email,
-          password: adminInfo.password,
-          confirmPassword: adminInfo.confirmPassword,
-          firstName: adminInfo.firstName,
-          lastName: adminInfo.lastName,
+          email: userInfo.email,
+          password: userInfo.password,
+          confirmPassword: userInfo.confirmPassword,
+          firstName: userInfo.firstName,
+          lastName: userInfo.lastName,
           role: RegisterDtoRole.insurance_admin,
-          phone: adminInfo.phone,
+          phone: userInfo.phone,
           company: {
             name: formData.companyName,
             address: formData.businessAddress,
             license_number: formData.licenseNumber,
             contact_no: formData.businessPhone,
             website: formData.website,
-            years_in_business: formData.yearsInBusiness as CompanyDetailsDtoYearsInBusiness,
-            employees_number: formData.employeeCount as CompanyDetailsDtoEmployeesNumber,
+            years_in_business:
+              formData.yearsInBusiness as CompanyDetailsDtoYearsInBusiness,
+            employees_number:
+              formData.employeeCount as CompanyDetailsDtoEmployeesNumber,
           },
         });
         const companyId = (res as any)?.data?.companyId ?? "";
@@ -267,13 +289,15 @@ export default function ProviderRegistrationPage() {
           .map((f) => f.file);
         if (companyDocs.length) {
           try {
-            await uploadCompanyDocuments(String(companyId), { files: companyDocs });
+            await uploadCompanyDocuments(String(companyId), {
+              files: companyDocs,
+            });
           } catch (uploadErr) {
             console.error(uploadErr);
           }
         }
         printMessage("Account created successfully", "success");
-        resetAdminInfo();
+        resetUserInfo();
         router.push("/auth/login");
         router.refresh();
       } catch (err) {
@@ -391,7 +415,9 @@ export default function ProviderRegistrationPage() {
               <SelectItem value="1-10 employees">1-10 employees</SelectItem>
               <SelectItem value="11-50 employees">11-50 employees</SelectItem>
               <SelectItem value="51-200 employees">51-200 employees</SelectItem>
-              <SelectItem value="201-500 employees">201-500 employees</SelectItem>
+              <SelectItem value="201-500 employees">
+                201-500 employees
+              </SelectItem>
               <SelectItem value="500+ employees">500+ employees</SelectItem>
             </SelectContent>
           </Select>
@@ -693,156 +719,152 @@ export default function ProviderRegistrationPage() {
 
   return (
     <div className="min-h-screen flex">
-        {/* Left Banner */}
-        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 relative overflow-hidden">
-          <div className="absolute inset-0 bg-black/20"></div>
-          <div className="relative z-10 flex flex-col justify-center px-12 text-white">
-            <div className="mb-8">
-              <div className="w-16 h-16 mb-6 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <Building className="w-8 h-8 text-white" />
-              </div>
-              <h1 className="text-4xl font-bold mb-4">Partner with Coverly</h1>
-              <p className="text-xl text-purple-100 mb-8">
-                Join our network of trusted insurance providers and
-                revolutionize the industry with blockchain technology.
-              </p>
+      {/* Left Banner */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 relative overflow-hidden">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="relative z-10 flex flex-col justify-center px-12 text-white">
+          <div className="mb-8">
+            <div className="w-16 h-16 mb-6 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <Building className="w-8 h-8 text-white" />
             </div>
+            <h1 className="text-4xl font-bold mb-4">Partner with Coverly</h1>
+            <p className="text-xl text-purple-100 mb-8">
+              Join our network of trusted insurance providers and revolutionize
+              the industry with blockchain technology.
+            </p>
+          </div>
 
-            <div className="space-y-6">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                  <Globe className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Global Reach</h3>
-                  <p className="text-purple-100 text-sm">
-                    Access to worldwide customer base
-                  </p>
-                </div>
+          <div className="space-y-6">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <Globe className="w-6 h-6 text-white" />
               </div>
-
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                  <Zap className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Automated Operations</h3>
-                  <p className="text-purple-100 text-sm">
-                    Smart contracts reduce operational costs
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                  <Shield className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Enhanced Security</h3>
-                  <p className="text-purple-100 text-sm">
-                    Blockchain-secured transactions and data
-                  </p>
-                </div>
+              <div>
+                <h3 className="font-semibold">Global Reach</h3>
+                <p className="text-purple-100 text-sm">
+                  Access to worldwide customer base
+                </p>
               </div>
             </div>
 
-            <div className="mt-12 p-6 bg-white/10 backdrop-blur-sm rounded-xl">
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div>
-                  <div className="text-2xl font-bold">500+</div>
-                  <div className="text-purple-100 text-sm">
-                    Partner Providers
-                  </div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold">$2.5B+</div>
-                  <div className="text-purple-100 text-sm">
-                    Claims Processed
-                  </div>
-                </div>
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <Zap className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold">Automated Operations</h3>
+                <p className="text-purple-100 text-sm">
+                  Smart contracts reduce operational costs
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <Shield className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold">Enhanced Security</h3>
+                <p className="text-purple-100 text-sm">
+                  Blockchain-secured transactions and data
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Decorative elements */}
-          <div className="absolute top-20 right-20 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
-          <div className="absolute bottom-20 left-20 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+          <div className="mt-12 p-6 bg-white/10 backdrop-blur-sm rounded-xl">
+            <div className="grid grid-cols-2 gap-4 text-center">
+              <div>
+                <div className="text-2xl font-bold">500+</div>
+                <div className="text-purple-100 text-sm">Partner Providers</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold">$2.5B+</div>
+                <div className="text-purple-100 text-sm">Claims Processed</div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Right Form Section */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
-          <div className="max-w-2xl w-full">
-            {/* Header */}
-            <div className="mb-8">
-              <Link
-                href="/auth/register"
-                className="inline-flex items-center space-x-2 group mb-8 text-slate-400 hover:text-emerald-400 transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back to Registration</span>
-              </Link>
+        {/* Decorative elements */}
+        <div className="absolute top-20 right-20 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
+        <div className="absolute bottom-20 left-20 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+      </div>
 
-              <div className="lg:hidden mb-6">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg">
-                  <Building className="w-8 h-8 text-white" />
-                </div>
+      {/* Right Form Section */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
+        <div className="max-w-2xl w-full">
+          {/* Header */}
+          <div className="mb-8">
+            <Link
+              href="/auth/register"
+              className="inline-flex items-center space-x-2 group mb-8 text-slate-400 hover:text-emerald-400 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to Registration</span>
+            </Link>
+
+            <div className="lg:hidden mb-6">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg">
+                <Building className="w-8 h-8 text-white" />
               </div>
+            </div>
 
-              {/* Step Indicator */}
-              {renderStepIndicator()}
-              <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">
-                Provider Registration
-              </h2>
-              {/* Registration Form */}
-              <Card className="glass-card rounded-2xl">
-                <CardContent className="p-8">
-                  <form onSubmit={handleSubmit}>
-                    {currentStep === 1 && renderCompanyInfo()}
-                    {currentStep === 2 && renderDocumentUpload()}
-                    {currentStep === 3 && renderTermsAndSubmit()}
-                    <div className="flex justify-between mt-8">
-                      {currentStep > 1 && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setCurrentStep(currentStep - 1)}
-                          className="floating-button"
-                        >
-                          Previous
-                        </Button>
-                      )}
-
+            {/* Step Indicator */}
+            {renderStepIndicator()}
+            <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">
+              Provider Registration
+            </h2>
+            {/* Registration Form */}
+            <Card className="glass-card rounded-2xl">
+              <CardContent className="p-8">
+                <form onSubmit={handleSubmit}>
+                  {currentStep === 1 && renderCompanyInfo()}
+                  {currentStep === 2 && renderDocumentUpload()}
+                  {currentStep === 3 && renderTermsAndSubmit()}
+                  <div className="flex justify-between mt-8">
+                    {currentStep > 1 && (
                       <Button
-                        type="submit"
-                        disabled={
-                          currentStep === 3 &&
-                          (!formData.agreeToTerms ||
-                            !formData.agreeToPrivacy ||
-                            !formData.agreeToCompliance)
-                        }
-                        className="gradient-accent text-white floating-button ml-auto"
+                        type="button"
+                        variant="outline"
+                        onClick={() => setCurrentStep(currentStep - 1)}
+                        className="floating-button"
                       >
-                        {currentStep === 3 ? "Submit Application" : "Continue"}
+                        Previous
                       </Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
-            </div>
-            {/* Login Link */}
-            <div className="text-center mt-6">
-              <p className="text-slate-600 dark:text-slate-400">
-                Already have an account?{" "}
-                <Link
-                  href="/auth/login"
-                  className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium"
-                >
-                  Sign in here
-                </Link>
-              </p>
-            </div>
+                    )}
+
+                    <Button
+                      type="submit"
+                      disabled={
+                        currentStep === 3 &&
+                        (!formData.agreeToTerms ||
+                          !formData.agreeToPrivacy ||
+                          !formData.agreeToCompliance)
+                      }
+                      className="gradient-accent text-white floating-button ml-auto"
+                    >
+                      {currentStep === 3 ? "Submit Application" : "Continue"}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+          {/* Login Link */}
+          <div className="text-center mt-6">
+            <p className="text-slate-600 dark:text-slate-400">
+              Already have an account?{" "}
+              <Link
+                href="/auth/login"
+                className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium"
+              >
+                Sign in here
+              </Link>
+            </p>
           </div>
         </div>
       </div>
+    </div>
   );
 }

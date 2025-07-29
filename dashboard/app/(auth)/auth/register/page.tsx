@@ -30,7 +30,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import useAuth from "@/app/hooks/useAuth";
 import { useToast } from "@/components/shared/ToastProvider";
 import { parseError } from "@/app/utils/parseError";
-import { useAdminRegistrationStore } from "@/app/store/useAdminRegistrationStore";
+import { useUserRegistrationStore } from "@/app/store/useAdminRegistrationStore";
 
 export default function RegisterPage() {
   const searchParams = useSearchParams();
@@ -43,7 +43,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const { register: registerUser, isRegistering } = useAuth();
   const { printMessage } = useToast();
-  const setAdminData = useAdminRegistrationStore((state) => state.setData);
+  const setRegistrationData = useUserRegistrationStore((state) => state.setData);
 
   const [formData, setFormData] = useState({
     // Basic Info
@@ -88,8 +88,7 @@ export default function RegisterPage() {
       setCurrentStep(currentStep + 1);
     } else {
       if (selectedRole === "admin") {
-        // Store basic info in Zustand and redirect to provider registration
-        setAdminData({
+        setRegistrationData({
           email: formData.email,
           password: formData.password,
           confirmPassword: formData.confirmPassword,

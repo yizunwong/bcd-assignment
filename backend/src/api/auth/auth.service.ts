@@ -13,7 +13,7 @@ import { AuthUserResponseDto } from './dto/responses/auth-user.dto';
 import { parseAppMetadata, parseUserMetadata } from 'src/utils/auth-metadata';
 import { Response } from 'express';
 import { UserService } from '../user/user.service';
-import { UserRole, AdminDetails } from 'src/enums';
+import { UserRole } from 'src/enums';
 
 @Injectable()
 export class AuthService {
@@ -106,10 +106,10 @@ export class AuthService {
         dto,
       );
 
-      let companyId: number | null = null;
-      if (dto.role === UserRole.INSURANCE_ADMIN && roleDetails) {
-        companyId = (roleDetails as AdminDetails).company_id ?? null;
-      }
+      const companyId =
+        roleDetails && 'company_id' in roleDetails
+          ? roleDetails.company_id
+          : null;
 
       return new CommonResponseDto({
         statusCode: 201,

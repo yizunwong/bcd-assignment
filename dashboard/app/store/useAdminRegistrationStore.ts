@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export interface AdminRegistrationData {
+export interface UserRegistrationData {
   email: string;
   password: string;
   confirmPassword: string;
@@ -9,13 +9,13 @@ export interface AdminRegistrationData {
   phone: string;
 }
 
-interface AdminRegistrationState {
-  data: AdminRegistrationData;
-  setData: (data: Partial<AdminRegistrationData>) => void;
+interface UserRegistrationState {
+  data: UserRegistrationData;
+  setData: (data: Partial<UserRegistrationData>) => void;
   reset: () => void;
 }
 
-export const useAdminRegistrationStore = create<AdminRegistrationState>((set) => ({
+export const useUserRegistrationStore = create<UserRegistrationState>((set) => ({
   data: {
     email: "",
     password: "",
@@ -24,8 +24,7 @@ export const useAdminRegistrationStore = create<AdminRegistrationState>((set) =>
     lastName: "",
     phone: "",
   },
-  setData: (data) =>
-    set((state) => ({ data: { ...state.data, ...data } })),
+  setData: (data) => set((state) => ({ data: { ...state.data, ...data } })),
   reset: () =>
     set({
       data: {
