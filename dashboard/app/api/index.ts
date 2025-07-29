@@ -4303,3 +4303,80 @@ export const useCompanyControllerUpload = <
 
   return useMutation(mutationOptions, queryClient);
 };
+
+export const companyControllerCreate = (
+  companyDetailsDto: CompanyDetailsDto,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<CommonResponseDto>({
+    url: `/company`,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    data: companyDetailsDto,
+    signal,
+  });
+};
+
+export const getCompanyControllerCreateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof companyControllerCreate>>,
+    TError,
+    { data: CompanyDetailsDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof companyControllerCreate>>,
+  TError,
+  { data: CompanyDetailsDto },
+  TContext
+> => {
+  const mutationKey = ["companyControllerCreate"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof companyControllerCreate>>,
+    { data: CompanyDetailsDto }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return companyControllerCreate(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CompanyControllerCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof companyControllerCreate>>
+>;
+export type CompanyControllerCreateMutationBody = CompanyDetailsDto;
+export type CompanyControllerCreateMutationError = unknown;
+
+export const useCompanyControllerCreate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof companyControllerCreate>>,
+      TError,
+      { data: CompanyDetailsDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof companyControllerCreate>>,
+  TError,
+  { data: CompanyDetailsDto },
+  TContext
+> => {
+  const mutationOptions = getCompanyControllerCreateMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};

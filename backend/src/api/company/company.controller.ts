@@ -13,11 +13,17 @@ import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { CompanyService } from './company.service';
 import { CommonResponseDto } from 'src/common/common.dto';
 import { UploadDocDto } from '../file/requests/document-upload.dto';
+import { CompanyDetailsDto } from '../auth/dto/requests/register.dto';
 
 @Controller('company')
 @ApiBearerAuth('supabase-auth')
 export class CompanyController {
   constructor(private readonly service: CompanyService) {}
+
+  @Post()
+  create(@Body() dto: CompanyDetailsDto): Promise<CommonResponseDto> {
+    return this.service.createCompany(dto);
+  }
 
   @Post(':id/documents')
   @ApiConsumes('multipart/form-data')

@@ -34,7 +34,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import useAuth from "@/app/hooks/useAuth";
-import { useCompanyUploadMutation } from "@/app/hooks/useCompany";
+import {
+  useCompanyUploadMutation,
+  useCreateCompanyMutation,
+} from "@/app/hooks/useCompany";
 import { parseError } from "@/app/utils/parseError";
 import { useToast } from "@/components/shared/ToastProvider";
 import { useRouter } from "next/navigation";
@@ -63,6 +66,7 @@ export default function ProviderRegistrationPage() {
   const { printMessage } = useToast();
   const router = useRouter();
   const { uploadCompanyDocuments } = useCompanyUploadMutation();
+  const { createCompany } = useCreateCompanyMutation();
 
   const [formData, setFormData] = useState({
     // Personal & Account Info (collected separately)
@@ -243,7 +247,7 @@ export default function ProviderRegistrationPage() {
       setCurrentStep(currentStep + 1);
     } else {
       try {
-        const res = await registerAdmin({
+        await registerAdmin({
           email: adminInfo.email,
           password: adminInfo.password,
           confirmPassword: adminInfo.confirmPassword,
@@ -251,17 +255,19 @@ export default function ProviderRegistrationPage() {
           lastName: adminInfo.lastName,
           role: RegisterDtoRole.insurance_admin,
           phone: adminInfo.phone,
-          company: {
-            name: formData.companyName,
-            address: formData.businessAddress,
-            license_number: formData.licenseNumber,
-            contact_no: formData.businessPhone,
-            website: formData.website,
-            years_in_business: formData.yearsInBusiness as CompanyDetailsDtoYearsInBusiness,
-            employees_number: formData.employeeCount as CompanyDetailsDtoEmployeesNumber,
-          },
         });
-        const companyId = (res as any)?.data?.companyId ?? "";
+        const companyRes = await createCompany({
+          name: formData.companyName,
+          address: formData.businessAddress,
+          license_number: formData.licenseNumber,
+          contact_no: formData.businessPhone,
+          website: formData.website,
+          years_in_business:
+            formData.yearsInBusiness as CompanyDetailsDtoYearsInBusiness,
+          employees_number:
+            formData.employeeCount as CompanyDetailsDtoEmployeesNumber,
+        });
+        const companyId = (companyRes as any)?.data?.id ?? "";
         const companyDocs = Object.values(uploadedFiles)
           .flat()
           .map((f) => f.file);

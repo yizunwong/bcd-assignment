@@ -2,6 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { FileService } from '../file/file.service';
 import { CommonResponseDto } from 'src/common/common.dto';
 import { SupabaseService } from 'src/supabase/supabase.service';
+import { CompanyDetailsDto } from '../auth/dto/requests/register.dto';
 
 @Injectable()
 export class CompanyService {
@@ -9,6 +10,26 @@ export class CompanyService {
     private readonly fileService: FileService,
     private readonly supabaseService: SupabaseService,
   ) {}
+
+  async createCompany(dto: CompanyDetailsDto): Promise<CommonResponseDto> {
+    const supabase = this.supabaseService.createClientWithToken();
+
+    const { data, error } = await supabase
+      .from('companies')
+      .insert([dto])
+      .select('id')
+      .single();
+
+    if (error || !data?.id) {
+      throw new InternalServerErrorException('Failed to create company');
+    }
+
+    return new CommonResponseDto({
+      statusCode: 201,
+      message: 'Company created successfully',
+      data: { id: data.id },
+    });
+  }
 
   async addDocuments(
     companyId: number,
