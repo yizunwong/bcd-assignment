@@ -874,9 +874,6 @@ export default function TrustSecurityPage() {
                         Web App
                       </div>
                       <div className="px-3 py-1 bg-white dark:bg-slate-800 rounded text-sm">
-                        Mobile App
-                      </div>
-                      <div className="px-3 py-1 bg-white dark:bg-slate-800 rounded text-sm">
                         API
                       </div>
                     </div>
@@ -892,9 +889,6 @@ export default function TrustSecurityPage() {
                       </div>
                       <div className="px-3 py-1 bg-white dark:bg-slate-800 rounded text-sm">
                         Claims Processing
-                      </div>
-                      <div className="px-3 py-1 bg-white dark:bg-slate-800 rounded text-sm">
-                        Risk Assessment
                       </div>
                     </div>
                   </div>

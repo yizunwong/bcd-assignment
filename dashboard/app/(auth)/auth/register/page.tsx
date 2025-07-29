@@ -41,7 +41,7 @@ export default function RegisterPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const router = useRouter();
   const { register: registerUser, isRegistering } = useAuth();
-  const { showToast } = useToast();
+  const { printMessage } = useToast();
 
   const [formData, setFormData] = useState({
     // Basic Info
@@ -102,12 +102,12 @@ export default function RegisterPage() {
             occupation: formData.occupation,
             address: formData.address,
           });
-          showToast('Account created successfully', 'success');
+          printMessage("Account created successfully", "success");
           router.push("/auth/login");
         } catch (err) {
           console.error(err);
           console.error("Registration failed:", err);
-          showToast(parseError(err) || 'Registration failed', 'error');
+          printMessage(parseError(err) || "Registration failed", "error");
         }
       }
     }

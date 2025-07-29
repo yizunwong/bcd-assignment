@@ -284,17 +284,7 @@ export default function HelpPage() {
         "Clear your browser cache and try again",
       ],
     },
-    {
-      title: "Mobile App Troubleshooting",
-      icon: Smartphone,
-      steps: [
-        "Update the app to the latest version",
-        "Force close and restart the app",
-        "Check your internet connection",
-        "Clear the app cache in your device settings",
-        "Uninstall and reinstall the app if problems persist",
-      ],
-    },
+
   ];
 
   const selfHelpResources = [

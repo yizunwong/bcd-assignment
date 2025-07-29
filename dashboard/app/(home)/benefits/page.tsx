@@ -380,27 +380,10 @@ export default function BenefitsPage() {
               Experience advantages that traditional insurance simply cannot
               match
             </p>
-
-            {/* Category Filter */}
-            <div className="flex flex-wrap justify-center gap-2 mb-12">
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
-                    selectedCategory === category.id
-                      ? "bg-emerald-500 text-white shadow-lg"
-                      : "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600"
-                  }`}
-                >
-                  {category.label}
-                </button>
-              ))}
-            </div>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredBenefits.map((benefit) => (
+            {keyBenefits.map((benefit) => (
               <Card
                 key={benefit.id}
                 className="glass-card rounded-2xl card-hover"

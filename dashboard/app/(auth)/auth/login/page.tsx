@@ -15,7 +15,7 @@ import { parseError } from "@/app/utils/parseError";
 export default function LoginPage() {
   const router = useRouter();
   const { login, isLoggingIn } = useAuth();
-  const { showToast } = useToast();
+  const { printMessage } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -27,11 +27,11 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       await login({ email: formData.email, password: formData.password });
-      showToast("Logged in successfully", "success");
+      printMessage("Logged in successfully", "success");
       router.push("/");
       router.refresh();
     } catch (err) {
-      showToast(parseError(err) || "Login failed", "error");
+      printMessage(parseError(err) || "Login failed", "error");
     }
   };
 
