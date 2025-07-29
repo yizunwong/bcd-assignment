@@ -100,7 +100,13 @@ export class AuthService {
       }
 
       await this.userService.createUserProfile(supabase, user_id, dto);
-      await this.userService.createRoleSpecificDetails(supabase, user_id, dto);
+      if (dto.role !== UserRole.INSURANCE_ADMIN) {
+        await this.userService.createRoleSpecificDetails(
+          supabase,
+          user_id,
+          dto,
+        );
+      }
 
       return new CommonResponseDto({
         statusCode: 201,

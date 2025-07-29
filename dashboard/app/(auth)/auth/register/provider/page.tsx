@@ -34,11 +34,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import useAuth from "@/app/hooks/useAuth";
-import { useCompanyUploadMutation } from "@/app/hooks/useCompany";
+import { useCreateCompanyMutation } from "@/app/hooks/useCompany";
 import { parseError } from "@/app/utils/parseError";
 import { useToast } from "@/components/shared/ToastProvider";
 import { useRouter } from "next/navigation";
-import { CompanyDetailsDtoEmployeesNumber, CompanyDetailsDtoYearsInBusiness, RegisterDtoRole } from "@/app/api";
+import { RegisterDtoRole } from "@/app/api";
 import { useAdminRegistrationStore } from "@/app/store/useAdminRegistrationStore";
 
 interface UploadedFile {
@@ -62,7 +62,7 @@ export default function ProviderRegistrationPage() {
   const [dragActive, setDragActive] = useState<string | null>(null);
   const { printMessage } = useToast();
   const router = useRouter();
-  const { uploadCompanyDocuments } = useCompanyUploadMutation();
+  const { createCompany } = useCreateCompanyMutation();
 
   const [formData, setFormData] = useState({
     // Personal & Account Info (collected separately)
@@ -251,26 +251,22 @@ export default function ProviderRegistrationPage() {
           lastName: adminInfo.lastName,
           role: RegisterDtoRole.insurance_admin,
           phone: adminInfo.phone,
-          company: {
-            name: formData.companyName,
-            address: formData.businessAddress,
-            license_number: formData.licenseNumber,
-            contact_no: formData.businessPhone,
-            website: formData.website,
-            years_in_business: formData.yearsInBusiness as CompanyDetailsDtoYearsInBusiness,
-            employees_number: formData.employeeCount as CompanyDetailsDtoEmployeesNumber,
-          },
         });
         const companyDocs = Object.values(uploadedFiles)
           .flat()
           .map((f) => f.file);
-        if (companyDocs.length) {
-          try {
-            await uploadCompanyDocuments("1", { files: companyDocs });
-          } catch (uploadErr) {
-            console.error(uploadErr);
-          }
-        }
+
+        const companyForm = new FormData();
+        companyForm.append("name", formData.companyName);
+        companyForm.append("address", formData.businessAddress);
+        companyForm.append("license_number", formData.licenseNumber);
+        companyForm.append("contact_no", formData.businessPhone);
+        companyForm.append("website", formData.website);
+        companyForm.append("years_in_business", formData.yearsInBusiness);
+        companyForm.append("employees_number", formData.employeeCount);
+        companyDocs.forEach((file) => companyForm.append("files", file));
+
+        await createCompany(companyForm);
         printMessage("Account created successfully", "success");
         resetAdminInfo();
         router.push("/auth/login");

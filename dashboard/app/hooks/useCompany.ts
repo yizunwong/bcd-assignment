@@ -1,12 +1,11 @@
-import { useCompanyControllerUpload, type UploadDocDto } from "@/app/api";
+import { useCompanyControllerCreate } from "@/app/api";
 import { parseError } from "../utils/parseError";
 
-export function useCompanyUploadMutation() {
-  const mutation = useCompanyControllerUpload();
+export function useCreateCompanyMutation() {
+  const mutation = useCompanyControllerCreate();
   return {
     ...mutation,
-    uploadCompanyDocuments: (id: string, data: UploadDocDto) =>
-      mutation.mutateAsync({ id, data }),
+    createCompany: (data: FormData) => mutation.mutateAsync({ data }),
     error: parseError(mutation.error),
   };
 }

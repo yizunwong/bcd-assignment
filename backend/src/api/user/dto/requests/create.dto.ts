@@ -11,7 +11,7 @@ import {
   ValidateIf,
   ValidateNested,
 } from 'class-validator';
-import { CompanyDetailsDto } from 'src/api/auth/dto/requests/register.dto';
+import { CompanyDetailsDto } from 'src/api/company/dto/create-company.dto';
 import { ToPhone } from 'src/common/to-phone';
 import { UserRole } from 'src/enums';
 

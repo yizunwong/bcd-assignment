@@ -1476,6 +1476,35 @@
         ]
       }
     },
+    "/company": {
+      "post": {
+        "operationId": "CompanyController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CompanyDetailsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Company"
+        ]
+      }
+    },
     "/company/{id}/documents": {
       "post": {
         "operationId": "CompanyController_upload",
@@ -1652,61 +1681,6 @@
           "password"
         ]
       },
-      "CompanyDetailsDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "ABC Company"
-          },
-          "address": {
-            "type": "string",
-            "example": "123 Main St, New York, USA"
-          },
-          "contact_no": {
-            "type": "string",
-            "example": "+1 555-1234"
-          },
-          "website": {
-            "type": "string",
-            "example": "www.abccompany.com"
-          },
-          "license_number": {
-            "type": "string",
-            "example": "LIC-00012345"
-          },
-          "years_in_business": {
-            "type": "string",
-            "example": "0-1 years",
-            "enum": [
-              "0-1 years",
-              "2-5 years",
-              "6-10 years",
-              "11-20 years",
-              "20+ years"
-            ]
-          },
-          "employees_number": {
-            "type": "string",
-            "example": "1-10 employees",
-            "enum": [
-              "1-10 employees",
-              "11-50 employees",
-              "51-200 employees",
-              "201-500 employees",
-              "500+ employees"
-            ]
-          },
-          "created_at": {
-            "type": "string",
-            "example": "2024-01-01T00:00:00Z"
-          }
-        },
-        "required": [
-          "years_in_business",
-          "employees_number"
-        ]
-      },
       "RegisterDto": {
         "type": "object",
         "properties": {
@@ -1749,9 +1723,6 @@
           "bio": {
             "type": "string",
             "example": "I am a policyholder"
-          },
-          "company": {
-            "$ref": "#/components/schemas/CompanyDetailsDto"
           },
           "dateOfBirth": {
             "type": "string",
@@ -1844,6 +1815,61 @@
           "activeUsers",
           "policyholders",
           "insuranceAdmins"
+        ]
+      },
+      "CompanyDetailsDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "ABC Company"
+          },
+          "address": {
+            "type": "string",
+            "example": "123 Main St, New York, USA"
+          },
+          "contact_no": {
+            "type": "string",
+            "example": "+1 555-1234"
+          },
+          "website": {
+            "type": "string",
+            "example": "www.abccompany.com"
+          },
+          "license_number": {
+            "type": "string",
+            "example": "LIC-00012345"
+          },
+          "years_in_business": {
+            "type": "string",
+            "example": "0-1 years",
+            "enum": [
+              "0-1 years",
+              "2-5 years",
+              "6-10 years",
+              "11-20 years",
+              "20+ years"
+            ]
+          },
+          "employees_number": {
+            "type": "string",
+            "example": "1-10 employees",
+            "enum": [
+              "1-10 employees",
+              "11-50 employees",
+              "51-200 employees",
+              "201-500 employees",
+              "500+ employees"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "example": "2024-01-01T00:00:00Z"
+          }
+        },
+        "required": [
+          "years_in_business",
+          "employees_number"
         ]
       },
       "CreateUserDto": {
