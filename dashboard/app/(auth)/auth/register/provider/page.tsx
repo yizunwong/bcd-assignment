@@ -37,7 +37,7 @@ import useAuth from "@/app/hooks/useAuth";
 import { parseError } from "@/app/utils/parseError";
 import { useToast } from "@/components/shared/ToastProvider";
 import { useRouter } from "next/navigation";
-import { CompanyDetailsDtoYearsInBusiness, RegisterDtoRole } from "@/app/api";
+import { CompanyDetailsDtoEmployeesNumber, CompanyDetailsDtoYearsInBusiness, RegisterDtoRole } from "@/app/api";
 import { useAdminRegistrationStore } from "@/app/store/useAdminRegistrationStore";
 
 interface UploadedFile {
@@ -77,8 +77,8 @@ export default function ProviderRegistrationPage() {
     companyType: "",
     licenseNumber: "",
     businessAddress: "",
-    yearsInBusiness: CompanyDetailsDtoYearsInBusiness,
-    employeeCount: "",
+    yearsInBusiness: "0-1 years",
+    employeeCount: "1-10 employees",
     website: "",
 
     // Contact Info
@@ -256,7 +256,8 @@ export default function ProviderRegistrationPage() {
             license_number: formData.licenseNumber,
             contact_no: formData.businessPhone,
             website: formData.website,
-            years_in_business: formData.yearsInBusiness,
+            years_in_business: formData.yearsInBusiness as CompanyDetailsDtoYearsInBusiness,
+            employees_number: formData.employeeCount as CompanyDetailsDtoEmployeesNumber,
           },
         });
         resetAdminInfo();
@@ -351,11 +352,11 @@ export default function ProviderRegistrationPage() {
               <SelectValue placeholder="Select years" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="0-1">0-1 years</SelectItem>
-              <SelectItem value="2-5">2-5 years</SelectItem>
-              <SelectItem value="6-10">6-10 years</SelectItem>
-              <SelectItem value="11-20">11-20 years</SelectItem>
-              <SelectItem value="20+">20+ years</SelectItem>
+              <SelectItem value="0-1 years">0-1 years</SelectItem>
+              <SelectItem value="2-5 years">2-5 years</SelectItem>
+              <SelectItem value="6-10 years">6-10 years</SelectItem>
+              <SelectItem value="11-20 years">11-20 years</SelectItem>
+              <SelectItem value="20+ years">20+ years</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -373,11 +374,11 @@ export default function ProviderRegistrationPage() {
               <SelectValue placeholder="Select employee count" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1-10">1-10 employees</SelectItem>
-              <SelectItem value="11-50">11-50 employees</SelectItem>
-              <SelectItem value="51-200">51-200 employees</SelectItem>
-              <SelectItem value="201-500">201-500 employees</SelectItem>
-              <SelectItem value="500+">500+ employees</SelectItem>
+              <SelectItem value="1-10 employees">1-10 employees</SelectItem>
+              <SelectItem value="11-50 employees">11-50 employees</SelectItem>
+              <SelectItem value="51-200 employees">51-200 employees</SelectItem>
+              <SelectItem value="201-500 employees">201-500 employees</SelectItem>
+              <SelectItem value="500+ employees">500+ employees</SelectItem>
             </SelectContent>
           </Select>
         </div>
