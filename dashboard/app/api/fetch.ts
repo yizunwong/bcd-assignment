@@ -18,7 +18,6 @@ export const customFetcher = async <T = any>({
   signal,
   params,
 }: FetcherProps): Promise<T> => {
-  // ✅ Build query string if any
   const query = params
     ? "?" + new URLSearchParams(params as Record<string, string>).toString()
     : "";
@@ -29,7 +28,7 @@ export const customFetcher = async <T = any>({
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}${query}`, {
     method,
     headers: isFormData
-      ? headers
+      ? undefined // ✅ Let browser set Content-Type with boundary
       : {
           "Content-Type": "application/json",
           ...(headers || {}),

@@ -68,6 +68,8 @@ export class AuthService {
     try {
       const supabase = this.supabaseService.createClientWithToken();
 
+      console.log('Registering user:', dto);
+
       // 1. Create Supabase Auth User
       const { data: auth, error: signUpError } = await supabase.auth.signUp({
         email: dto.email,
