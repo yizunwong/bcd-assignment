@@ -1664,11 +1664,11 @@
             "example": "123 Main St, New York, USA"
           },
           "contact_no": {
-            "type": "object",
+            "type": "string",
             "example": "+1 555-1234"
           },
           "website": {
-            "type": "object",
+            "type": "string",
             "example": "www.abccompany.com"
           },
           "license_number": {

@@ -85,10 +85,6 @@ export interface LoginDto {
   password: string;
 }
 
-export type CompanyDetailsDtoContactNo = { [key: string]: unknown };
-
-export type CompanyDetailsDtoWebsite = { [key: string]: unknown };
-
 export type CompanyDetailsDtoYearsInBusiness =
   (typeof CompanyDetailsDtoYearsInBusiness)[keyof typeof CompanyDetailsDtoYearsInBusiness];
 
@@ -116,8 +112,8 @@ export const CompanyDetailsDtoEmployeesNumber = {
 export interface CompanyDetailsDto {
   name?: string;
   address?: string;
-  contact_no?: CompanyDetailsDtoContactNo;
-  website?: CompanyDetailsDtoWebsite;
+  contact_no?: string;
+  website?: string;
   license_number?: string;
   years_in_business: CompanyDetailsDtoYearsInBusiness;
   employees_number: CompanyDetailsDtoEmployeesNumber;

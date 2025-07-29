@@ -103,25 +103,6 @@ export default function ProviderRegistrationPage() {
     }
   }, [adminInfo.email, router]);
 
-  const mapYearsInBusiness = (
-    value: string
-  ): CompanyDetailsDtoYearsInBusiness | undefined => {
-    switch (value) {
-      case "0-1":
-        return CompanyDetailsDtoYearsInBusiness["0-1_years"];
-      case "2-5":
-        return CompanyDetailsDtoYearsInBusiness["2-5_years"];
-      case "6-10":
-        return CompanyDetailsDtoYearsInBusiness["6-10_years"];
-      case "11-20":
-        return CompanyDetailsDtoYearsInBusiness["11-20_years"];
-      case "20+":
-        return CompanyDetailsDtoYearsInBusiness["20+_years"];
-      default:
-        return undefined;
-    }
-  };
-
   const documentTypes = [
     {
       id: "license",
@@ -275,7 +256,7 @@ export default function ProviderRegistrationPage() {
             license_number: formData.licenseNumber,
             contact_no: formData.businessPhone,
             website: formData.website,
-            years_in_business: mapYearsInBusiness(formData.yearsInBusiness),
+            years_in_business: formData.yearsInBusiness,
           },
         });
         resetAdminInfo();

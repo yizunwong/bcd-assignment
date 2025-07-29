@@ -30,12 +30,12 @@ export class CompanyDetailsDto {
   @ApiProperty({ example: '+1 555-1234', required: false })
   @IsOptional()
   @IsString()
-  contact_no?: string | null;
+  contact_no?: string;
 
   @ApiProperty({ example: 'www.abccompany.com', required: false })
   @IsOptional()
   @IsUrl()
-  website?: string | null;
+  website?: string;
 
   @ApiProperty({ example: 'LIC-00012345', required: false })
   @IsNotEmpty()
