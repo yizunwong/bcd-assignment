@@ -28,6 +28,7 @@ import {
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import useAuth from "@/app/hooks/useAuth";
+import { useAdminRegistrationStore } from "@/app/store/useAdminRegistrationStore";
 
 export default function RegisterPage() {
   const searchParams = useSearchParams();
@@ -39,6 +40,7 @@ export default function RegisterPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const router = useRouter();
   const { register: registerUser, isRegistering, registerError } = useAuth();
+  const setAdminData = useAdminRegistrationStore((state) => state.setData);
 
   const [formData, setFormData] = useState({
     // Basic Info
@@ -83,8 +85,16 @@ export default function RegisterPage() {
       setCurrentStep(currentStep + 1);
     } else {
       if (selectedRole === "admin") {
-        // Redirect to provider registration
-        window.location.href = "/auth/register/provider";
+        // Store basic info in Zustand and redirect to provider registration
+        setAdminData({
+          email: formData.email,
+          password: formData.password,
+          confirmPassword: formData.confirmPassword,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          phone: formData.phone,
+        });
+        router.push("/auth/register/provider");
       } else {
         try {
           await registerUser({
