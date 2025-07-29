@@ -23,13 +23,18 @@ export const customFetcher = async <T = any>({
     ? "?" + new URLSearchParams(params as Record<string, string>).toString()
     : "";
 
+  const isFormData =
+    typeof FormData !== "undefined" && data instanceof FormData;
+
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}${query}`, {
     method,
-    headers: {
-      "Content-Type": "application/json",
-      ...(headers || {}),
-    },
-    body: data ? JSON.stringify(data) : undefined,
+    headers: isFormData
+      ? headers
+      : {
+          "Content-Type": "application/json",
+          ...(headers || {}),
+        },
+    body: data ? (isFormData ? data : JSON.stringify(data)) : undefined,
     signal,
     credentials: "include",
   });
