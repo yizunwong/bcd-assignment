@@ -66,13 +66,15 @@ export class CreateUserDto {
   @IsDateString()
   dateOfBirth!: string;
 
+  @ValidateIf((o: CreateUserDto) => o.role === UserRole.POLICYHOLDER)
   @ApiProperty({ example: 'Software Engineer', required: false })
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  occupation?: string;
+  occupation!: string;
 
+  @ValidateIf((o: CreateUserDto) => o.role === UserRole.POLICYHOLDER)
   @ApiProperty({ example: '123 Main St', required: false })
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  address?: string;
+  address!: string;
 }

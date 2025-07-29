@@ -139,13 +139,15 @@ export class RegisterDto {
   @ApiProperty({ example: '1990-06-15', required: false })
   dateOfBirth!: string;
 
-  @ApiProperty({ example: 'Engineer', required: false })
-  @IsOptional()
+  @ValidateIf((o: RegisterDto) => o.role === UserRole.POLICYHOLDER)
+  @ApiProperty({ example: 'Software Engineer', required: false })
+  @IsNotEmpty()
   @IsString()
-  occupation?: string;
+  occupation!: string;
 
+  @ValidateIf((o: RegisterDto) => o.role === UserRole.POLICYHOLDER)
   @ApiProperty({ example: '123 Main St', required: false })
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  address?: string;
+  address!: string;
 }

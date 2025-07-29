@@ -33,6 +33,11 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "next/link";
+import useAuth from "@/app/hooks/useAuth";
+import { parseError } from "@/app/utils/parseError";
+import { useToast } from "@/components/shared/ToastProvider";
+import { useRouter } from "next/navigation";
+import { CompanyDetailsDtoYearsInBusiness } from "@/app/api";
 
 interface UploadedFile {
   id: string;
@@ -53,6 +58,9 @@ export default function ProviderRegistrationPage() {
     financial: [],
   });
   const [dragActive, setDragActive] = useState<string | null>(null);
+  const { register: registerUser, isRegistering } = useAuth();
+  const { printMessage } = useToast();
+  const router = useRouter();
 
   const [formData, setFormData] = useState({
     // Personal & Account Info (collected separately)
@@ -68,10 +76,9 @@ export default function ProviderRegistrationPage() {
     companyType: "",
     licenseNumber: "",
     businessAddress: "",
-    yearsInBusiness: "",
+    yearsInBusiness: CompanyDetailsDtoYearsInBusiness,
     employeeCount: "",
     website: "",
-    taxId: "",
 
     // Contact Info
     businessPhone: "",
@@ -218,16 +225,37 @@ export default function ProviderRegistrationPage() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     } else {
-      console.log("Registration data:", {
-        ...formData,
-        documents: uploadedFiles,
-      });
-      // Handle registration logic here
+      try {
+        await registerUser({
+          email: formData.email,
+          password: formData.password,
+          confirmPassword: formData.confirmPassword,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          role: "policyholder",
+          phone: formData.phone,
+          company: {
+            name: formData.companyName,
+            license_number: formData.licenseNumber,
+            address: formData.businessAddress,
+            employees_number: formData.employeeCount,
+            years_in_business: formData.yearsInBusiness,
+            website: formData.website,
+            contact_no: formData.contactNumber,
+          },
+        });
+        printMessage("Account created successfully", "success");
+        router.push("/auth/login");
+      } catch (err) {
+        console.error(err);
+        console.error("Registration failed:", err);
+        printMessage(parseError(err) || "Registration failed", "error");
+      }
     }
   };
 

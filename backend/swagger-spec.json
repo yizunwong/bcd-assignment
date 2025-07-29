@@ -1575,20 +1575,42 @@
           "lastSignInAt": {
             "type": "string"
           },
-        "provider": {
-          "type": "string"
-        },
-        "firstName": { "type": "string" },
-        "lastName": { "type": "string" },
-        "phone": { "type": "string", "nullable": true },
-        "bio": { "type": "string", "nullable": true },
-        "address": { "type": "string", "nullable": true },
-        "dateOfBirth": { "type": "string", "nullable": true },
-        "occupation": { "type": "string", "nullable": true },
-        "companyName": { "type": "string", "nullable": true },
-        "companyAddress": { "type": "string", "nullable": true },
-        "companyContactNo": { "type": "string", "nullable": true },
-        "companyLicenseNo": { "type": "string", "nullable": true }
+          "provider": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "object"
+          },
+          "lastName": {
+            "type": "object"
+          },
+          "phone": {
+            "type": "object"
+          },
+          "bio": {
+            "type": "object"
+          },
+          "address": {
+            "type": "object"
+          },
+          "dateOfBirth": {
+            "type": "object"
+          },
+          "occupation": {
+            "type": "object"
+          },
+          "companyName": {
+            "type": "object"
+          },
+          "companyAddress": {
+            "type": "object"
+          },
+          "companyContactNo": {
+            "type": "object"
+          },
+          "companyLicenseNo": {
+            "type": "object"
+          }
         },
         "required": [
           "id",
@@ -1737,7 +1759,7 @@
           },
           "occupation": {
             "type": "string",
-            "example": "Engineer"
+            "example": "Software Engineer"
           },
           "address": {
             "type": "string",

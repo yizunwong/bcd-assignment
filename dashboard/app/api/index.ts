@@ -31,6 +31,28 @@ export interface CommonResponseDto {
   count?: number;
 }
 
+export type AuthUserResponseDtoFirstName = { [key: string]: unknown };
+
+export type AuthUserResponseDtoLastName = { [key: string]: unknown };
+
+export type AuthUserResponseDtoPhone = { [key: string]: unknown };
+
+export type AuthUserResponseDtoBio = { [key: string]: unknown };
+
+export type AuthUserResponseDtoAddress = { [key: string]: unknown };
+
+export type AuthUserResponseDtoDateOfBirth = { [key: string]: unknown };
+
+export type AuthUserResponseDtoOccupation = { [key: string]: unknown };
+
+export type AuthUserResponseDtoCompanyName = { [key: string]: unknown };
+
+export type AuthUserResponseDtoCompanyAddress = { [key: string]: unknown };
+
+export type AuthUserResponseDtoCompanyContactNo = { [key: string]: unknown };
+
+export type AuthUserResponseDtoCompanyLicenseNo = { [key: string]: unknown };
+
 export interface AuthUserResponseDto {
   id: string;
   email: string;
@@ -39,17 +61,17 @@ export interface AuthUserResponseDto {
   role: string;
   lastSignInAt: string;
   provider: string;
-  firstName?: string | null;
-  lastName?: string | null;
-  phone?: string | null;
-  bio?: string | null;
-  address?: string | null;
-  dateOfBirth?: string | null;
-  occupation?: string | null;
-  companyName?: string | null;
-  companyAddress?: string | null;
-  companyContactNo?: string | null;
-  companyLicenseNo?: string | null;
+  firstName?: AuthUserResponseDtoFirstName;
+  lastName?: AuthUserResponseDtoLastName;
+  phone?: AuthUserResponseDtoPhone;
+  bio?: AuthUserResponseDtoBio;
+  address?: AuthUserResponseDtoAddress;
+  dateOfBirth?: AuthUserResponseDtoDateOfBirth;
+  occupation?: AuthUserResponseDtoOccupation;
+  companyName?: AuthUserResponseDtoCompanyName;
+  companyAddress?: AuthUserResponseDtoCompanyAddress;
+  companyContactNo?: AuthUserResponseDtoCompanyContactNo;
+  companyLicenseNo?: AuthUserResponseDtoCompanyLicenseNo;
 }
 
 export interface LoginResponseDto {
