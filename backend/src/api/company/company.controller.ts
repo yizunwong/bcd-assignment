@@ -21,8 +21,13 @@ export class CompanyController {
   constructor(private readonly service: CompanyService) {}
 
   @Post()
-  create(@Body() dto: CompanyDetailsDto): Promise<CommonResponseDto> {
-    return this.service.createCompany(dto);
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FilesInterceptor('files'))
+  create(
+    @Body() dto: CompanyDetailsDto,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+  ): Promise<CommonResponseDto> {
+    return this.service.createCompany(dto, files);
   }
 
   @Post(':id/documents')

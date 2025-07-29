@@ -4305,14 +4305,14 @@ export const useCompanyControllerUpload = <
 };
 
 export const companyControllerCreate = (
-  companyDetailsDto: CompanyDetailsDto,
+  formData: FormData,
   signal?: AbortSignal,
 ) => {
   return customFetcher<CommonResponseDto>({
     url: `/company`,
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    data: companyDetailsDto,
+    headers: { "Content-Type": "multipart/form-data" },
+    data: formData,
     signal,
   });
 };
@@ -4324,13 +4324,13 @@ export const getCompanyControllerCreateMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof companyControllerCreate>>,
     TError,
-    { data: CompanyDetailsDto },
+    { data: FormData },
     TContext
   >;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof companyControllerCreate>>,
   TError,
-  { data: CompanyDetailsDto },
+  { data: FormData },
   TContext
 > => {
   const mutationKey = ["companyControllerCreate"];
@@ -4344,7 +4344,7 @@ export const getCompanyControllerCreateMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof companyControllerCreate>>,
-    { data: CompanyDetailsDto }
+    { data: FormData }
   > = (props) => {
     const { data } = props ?? {};
 
@@ -4357,7 +4357,7 @@ export const getCompanyControllerCreateMutationOptions = <
 export type CompanyControllerCreateMutationResult = NonNullable<
   Awaited<ReturnType<typeof companyControllerCreate>>
 >;
-export type CompanyControllerCreateMutationBody = CompanyDetailsDto;
+export type CompanyControllerCreateMutationBody = FormData;
 export type CompanyControllerCreateMutationError = unknown;
 
 export const useCompanyControllerCreate = <TError = unknown, TContext = unknown>(
@@ -4365,7 +4365,7 @@ export const useCompanyControllerCreate = <TError = unknown, TContext = unknown>
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof companyControllerCreate>>,
       TError,
-      { data: CompanyDetailsDto },
+      { data: FormData },
       TContext
     >;
   },
@@ -4373,7 +4373,7 @@ export const useCompanyControllerCreate = <TError = unknown, TContext = unknown>
 ): UseMutationResult<
   Awaited<ReturnType<typeof companyControllerCreate>>,
   TError,
-  { data: CompanyDetailsDto },
+  { data: FormData },
   TContext
 > => {
   const mutationOptions = getCompanyControllerCreateMutationOptions(options);

@@ -11,7 +11,10 @@ export class CompanyService {
     private readonly supabaseService: SupabaseService,
   ) {}
 
-  async createCompany(dto: CompanyDetailsDto): Promise<CommonResponseDto> {
+  async createCompany(
+    dto: CompanyDetailsDto,
+    files: Array<Express.Multer.File> = [],
+  ): Promise<CommonResponseDto> {
     const supabase = this.supabaseService.createClientWithToken();
 
     const { data, error } = await supabase
@@ -22,6 +25,10 @@ export class CompanyService {
 
     if (error || !data?.id) {
       throw new InternalServerErrorException('Failed to create company');
+    }
+
+    if (files.length) {
+      await this.addDocuments(data.id, files);
     }
 
     return new CommonResponseDto({
