@@ -1,12 +1,9 @@
-import { useAuthControllerLogin, type LoginDto } from "@/app/api";
-import { useAuthControllerRegister, type RegisterDto } from "@/app/api";
-import { parseError } from "@/app/utils/parseError";
+import { useAuthControllerLogin, type LoginDto } from "@/api";
+import { useAuthControllerRegister, type RegisterDto } from "@/api";
+import { parseError } from "@/utils/parseError";
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  authControllerLogout,
-  getAuthControllerGetMeQueryKey,
-} from "@/app/api";
+import { authControllerLogout, getAuthControllerGetMeQueryKey } from "@/api";
 
 export function useLoginMutation() {
   const mutation = useAuthControllerLogin();

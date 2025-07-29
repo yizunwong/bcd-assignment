@@ -12,7 +12,7 @@ import {
   type CreateClaimDto,
   type UpdateClaimDto,
   ClaimStatus,
-} from "@/app/api";
+} from "@/api";
 import { parseError } from "../utils/parseError";
 
 export function useClaimsQuery(params?: ClaimControllerFindAllParams) {

@@ -6,7 +6,7 @@ import {
   useUserControllerGetStats,
   type CreateUserDto,
   type UpdateUserDto,
-} from "@/app/api";
+} from "@/api";
 import { parseError } from "../utils/parseError";
 
 export function useUsersQuery() {

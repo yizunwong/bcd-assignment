@@ -33,17 +33,17 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "next/link";
-import useAuth from "@/app/hooks/useAuth";
-import { useCompanyUploadMutation } from "@/app/hooks/useCompany";
-import { parseError } from "@/app/utils/parseError";
+import useAuth from "@/hooks/useAuth";
+import { useCompanyUploadMutation } from "@/hooks/useCompany";
+import { parseError } from "@/utils/parseError";
 import { useToast } from "@/components/shared/ToastProvider";
 import { useRouter } from "next/navigation";
 import {
   CompanyDetailsDtoEmployeesNumber,
   CompanyDetailsDtoYearsInBusiness,
   RegisterDtoRole,
-} from "@/app/api";
-import { useUserRegistrationStore } from "@/app/store/useAdminRegistrationStore";
+} from "@/api";
+import { useUserRegistrationStore } from "@/store/useAdminRegistrationStore";
 
 interface UploadedFile {
   id: string;
@@ -232,7 +232,11 @@ export default function ProviderRegistrationPage() {
                 );
                 if (newProgress >= 100) {
                   shouldClear = true;
-                  return { ...f, progress: 100 , status: UploadStatus.COMPLETED };
+                  return {
+                    ...f,
+                    progress: 100,
+                    status: UploadStatus.COMPLETED,
+                  };
                 }
                 return { ...f, progress: newProgress };
               }

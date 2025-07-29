@@ -1,7 +1,4 @@
-import {
-  useReviewsControllerLeaveReview,
-  type CreateReviewDto,
-} from "@/app/api";
+import { useReviewsControllerLeaveReview, type CreateReviewDto } from "@/api";
 import { parseError } from "../utils/parseError";
 
 export function useLeaveReviewMutation() {

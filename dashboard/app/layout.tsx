@@ -4,7 +4,7 @@ import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
 
 import { Footer } from "@/components/shared/Footer";
-import Web3Providers from "./providers/Web3Providers";
+import Web3Providers from "../providers/Web3Providers";
 import GlobalNavbar from "@/components/shared/GlobalNavbar";
 import { ToastProvider } from "@/components/shared/ToastProvider";
 

@@ -1,7 +1,7 @@
 import {
   usePdfClaimExtractorControllerExtract,
   type ExtractClaimDto,
-} from "@/app/api";
+} from "@/api";
 import { parseError } from "../utils/parseError";
 
 export function useExtractClaimMutation() {

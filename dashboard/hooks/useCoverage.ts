@@ -8,7 +8,7 @@ import {
   type CoverageControllerFindAllParams,
   type CreateCoverageDto,
   type UpdateCoverageDto,
-} from "@/app/api";
+} from "@/api";
 import { parseError } from "../utils/parseError";
 
 export function useCoverageListQuery(params?: CoverageControllerFindAllParams) {

@@ -1,4 +1,4 @@
-import { useCompanyControllerUpload, type UploadDocDto } from "@/app/api";
+import { useCompanyControllerUpload, type UploadDocDto } from "@/api";
 import { parseError } from "../utils/parseError";
 
 export function useCompanyUploadMutation() {

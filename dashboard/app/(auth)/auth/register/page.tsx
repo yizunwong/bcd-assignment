@@ -27,10 +27,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import useAuth from "@/app/hooks/useAuth";
+import useAuth from "@/hooks/useAuth";
 import { useToast } from "@/components/shared/ToastProvider";
-import { parseError } from "@/app/utils/parseError";
-import { useUserRegistrationStore } from "@/app/store/useAdminRegistrationStore";
+import { parseError } from "@/utils/parseError";
+import { useUserRegistrationStore } from "@/store/useAdminRegistrationStore";
 
 export default function RegisterPage() {
   const searchParams = useSearchParams();
@@ -43,7 +43,9 @@ export default function RegisterPage() {
   const router = useRouter();
   const { register: registerUser, isRegistering } = useAuth();
   const { printMessage } = useToast();
-  const setRegistrationData = useUserRegistrationStore((state) => state.setData);
+  const setRegistrationData = useUserRegistrationStore(
+    (state) => state.setData
+  );
 
   const [formData, setFormData] = useState({
     // Basic Info

@@ -11,7 +11,7 @@ import {
   type PolicyControllerFindAllParams,
   type CreatePolicyDto,
   type UpdatePolicyDto,
-} from "@/app/api";
+} from "@/api";
 import { parseError } from "../utils/parseError";
 
 export function usePoliciesQuery(params?: PolicyControllerFindAllParams) {

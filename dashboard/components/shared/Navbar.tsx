@@ -26,8 +26,8 @@ import {
   Users,
   ChevronDown,
 } from "lucide-react";
-import useAuth from "@/app/hooks/useAuth";
-import { useToast } from './ToastProvider';
+import useAuth from "@/hooks/useAuth";
+import { useToast } from "./ToastProvider";
 
 interface NavbarProps {
   role?: "policyholder" | "admin" | "system-admin";

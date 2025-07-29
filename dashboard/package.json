@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start -p 5000",
     "lint": "next lint",
-    "format:orval": "prettier --write app/api/**/index.ts",
+    "format:orval": "prettier --write api/**/index.ts",
     "orval:gen": "npx orval && npm run format:orval"
   },
   "dependencies": {
