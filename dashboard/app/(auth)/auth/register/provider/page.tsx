@@ -243,7 +243,7 @@ export default function ProviderRegistrationPage() {
       setCurrentStep(currentStep + 1);
     } else {
       try {
-        await registerAdmin({
+        const res = await registerAdmin({
           email: adminInfo.email,
           password: adminInfo.password,
           confirmPassword: adminInfo.confirmPassword,
@@ -261,12 +261,13 @@ export default function ProviderRegistrationPage() {
             employees_number: formData.employeeCount as CompanyDetailsDtoEmployeesNumber,
           },
         });
+        const companyId = (res as any)?.data?.companyId ?? "";
         const companyDocs = Object.values(uploadedFiles)
           .flat()
           .map((f) => f.file);
         if (companyDocs.length) {
           try {
-            await uploadCompanyDocuments("1", { files: companyDocs });
+            await uploadCompanyDocuments(String(companyId), { files: companyDocs });
           } catch (uploadErr) {
             console.error(uploadErr);
           }

@@ -13,7 +13,7 @@ import { AuthUserResponseDto } from './dto/responses/auth-user.dto';
 import { parseAppMetadata, parseUserMetadata } from 'src/utils/auth-metadata';
 import { Response } from 'express';
 import { UserService } from '../user/user.service';
-import { UserRole } from 'src/enums';
+import { UserRole, AdminDetails } from 'src/enums';
 
 @Injectable()
 export class AuthService {
@@ -100,11 +100,21 @@ export class AuthService {
       }
 
       await this.userService.createUserProfile(supabase, user_id, dto);
-      await this.userService.createRoleSpecificDetails(supabase, user_id, dto);
+      const roleDetails = await this.userService.createRoleSpecificDetails(
+        supabase,
+        user_id,
+        dto,
+      );
+
+      let companyId: number | null = null;
+      if (dto.role === UserRole.INSURANCE_ADMIN && roleDetails) {
+        companyId = (roleDetails as AdminDetails).company_id ?? null;
+      }
 
       return new CommonResponseDto({
         statusCode: 201,
         message: 'Registration successful',
+        data: companyId ? { companyId } : undefined,
       });
     } catch (e) {
       return new CommonResponseDto({
