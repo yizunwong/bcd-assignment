@@ -29,8 +29,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import useAuth from "@/app/hooks/useAuth";
 import { useToast } from "@/components/shared/ToastProvider";
-import { parseError } from '@/app/utils/parseError';
-import { useAdminRegistrationStore } from '@/app/store/useAdminRegistrationStore';
+import { parseError } from "@/app/utils/parseError";
+import { useAdminRegistrationStore } from "@/app/store/useAdminRegistrationStore";
 
 export default function RegisterPage() {
   const searchParams = useSearchParams();
@@ -320,6 +320,7 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
+    </div>
   );
 
   const renderRoleSpecificInfo = () => {
@@ -571,7 +572,8 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <div className="min-h-screen flex">
         {/* Left Banner */}
         <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-emerald-500 via-teal-500 to-emerald-600 relative overflow-hidden">
           <div className="absolute inset-0 bg-black/20"></div>
@@ -740,5 +742,6 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
+    </div>
   );
 }

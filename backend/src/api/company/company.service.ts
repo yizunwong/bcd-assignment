@@ -1,19 +1,22 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { FileService } from '../file/file.service';
 import { CommonResponseDto } from 'src/common/common.dto';
+import { SupabaseService } from 'src/supabase/supabase.service';
 
 @Injectable()
 export class CompanyService {
-  constructor(private readonly fileService: FileService) {}
+  constructor(
+    private readonly fileService: FileService,
+    private readonly supabaseService: SupabaseService,
+  ) {}
 
   async addDocuments(
     companyId: number,
     files: Array<Express.Multer.File>,
-    req: AuthenticatedRequest,
   ): Promise<CommonResponseDto> {
+    const supabase = this.supabaseService.createClientWithToken();
     const paths = await this.fileService.uploadFiles(
-      req.supabase,
+      supabase,
       files,
       'company_documents',
       companyId.toString(10),
@@ -25,9 +28,7 @@ export class CompanyService {
       path: paths[idx],
     }));
 
-    const { error } = await req.supabase
-      .from('company_documents')
-      .insert(inserts);
+    const { error } = await supabase.from('company_documents').insert(inserts);
 
     if (error) {
       throw new InternalServerErrorException('Failed to create documents');
