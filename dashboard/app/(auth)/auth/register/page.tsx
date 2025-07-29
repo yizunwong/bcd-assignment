@@ -31,6 +31,8 @@ import useAuth from "@/hooks/useAuth";
 import { useToast } from "@/components/shared/ToastProvider";
 import { parseError } from "@/utils/parseError";
 import { useUserRegistrationStore } from "@/store/useAdminRegistrationStore";
+import { getCountries, getCountryCallingCode } from "libphonenumber-js";
+import PhoneCodeDropdown from '@/components/shared/PhoneCodeDropDown';
 
 export default function RegisterPage() {
   const searchParams = useSearchParams();
@@ -46,6 +48,10 @@ export default function RegisterPage() {
   const setRegistrationData = useUserRegistrationStore(
     (state) => state.setData
   );
+  const countryOptions = getCountries().map((countryCode) => ({
+    code: countryCode,
+    dialCode: `+${getCountryCallingCode(countryCode)}`,
+  }));
 
   const [formData, setFormData] = useState({
     // Basic Info
@@ -54,6 +60,7 @@ export default function RegisterPage() {
     email: "",
     password: "",
     confirmPassword: "",
+    phoneCode: "+60",
     phone: "",
 
     // Policyholder Specific
@@ -85,6 +92,8 @@ export default function RegisterPage() {
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
+    const fullPhoneNumber = `${formData.phoneCode}${formData.phone}`;
+
     e.preventDefault();
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
@@ -96,7 +105,7 @@ export default function RegisterPage() {
           confirmPassword: formData.confirmPassword,
           firstName: formData.firstName,
           lastName: formData.lastName,
-          phone: formData.phone,
+          phone: fullPhoneNumber,
         });
         router.push("/auth/register/provider");
       } else {
@@ -108,7 +117,7 @@ export default function RegisterPage() {
             firstName: formData.firstName,
             lastName: formData.lastName,
             role: "policyholder",
-            phone: formData.phone,
+            phone: fullPhoneNumber,
             dateOfBirth: formData.dateOfBirth,
             occupation: formData.occupation,
             address: formData.address,
@@ -253,14 +262,22 @@ export default function RegisterPage() {
         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
           Phone Number *
         </label>
-        <Input
-          type="tel"
-          value={formData.phone}
-          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          placeholder="Enter your phone number"
-          className="form-input"
-          required
-        />
+        <div className="flex space-x-2">
+          <PhoneCodeDropdown
+            value={formData.phoneCode}
+            onChange={(val) => setFormData({ ...formData, phoneCode: val })}
+          />
+          <Input
+            type="tel"
+            value={formData.phone}
+            onChange={(e) =>
+              setFormData({ ...formData, phone: e.target.value })
+            }
+            placeholder="Enter your phone number"
+            className="form-input flex-1"
+            required
+          />
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
