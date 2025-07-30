@@ -57,9 +57,9 @@ export default function ManagePolicies() {
   const [newPolicy, setNewPolicy] = useState({
     name: "",
     category: "",
-    coverage: "",
-    premium: "",
-    duration: "",
+    coverage: 0,
+    premium: 0,
+    duration: 0,
     description: "",
     claimTypes: [""],
   });
@@ -181,9 +181,9 @@ export default function ManagePolicies() {
     setNewPolicy({
       name: "",
       category: "",
-      coverage: "",
-      premium: "",
-      duration: "",
+      coverage: 0,
+      premium: 0,
+      duration: 0,
       description: "",
       claimTypes: [""],
     });
@@ -360,10 +360,14 @@ export default function ManagePolicies() {
                     </label>
                     <Input
                       value={newPolicy.coverage}
+                      type="number"
+                      step={0.01}
                       onChange={(e) =>
-                        setNewPolicy({ ...newPolicy, coverage: e.target.value })
+                        setNewPolicy({
+                          ...newPolicy,
+                          coverage: Number(e.target.value),
+                        })
                       }
-                      placeholder="e.g., $100,000"
                       className="form-input"
                     />
                   </div>
@@ -373,23 +377,23 @@ export default function ManagePolicies() {
                     </label>
                     <Input
                       value={newPolicy.premium}
+                      type="number"
+                      step={0.01}
                       onChange={(e) =>
-                        setNewPolicy({ ...newPolicy, premium: e.target.value })
+                        setNewPolicy({ ...newPolicy, premium: Number(e.target.value) })
                       }
-                      placeholder="e.g., 0.8 ETH/month"
                       className="form-input"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      Duration
+                      Duration (in Days)
                     </label>
                     <Input
                       value={newPolicy.duration}
                       onChange={(e) =>
-                        setNewPolicy({ ...newPolicy, duration: e.target.value })
+                        setNewPolicy({ ...newPolicy, duration: Number(e.target.value) })
                       }
-                      placeholder="e.g., 12 months"
                       className="form-input"
                     />
                   </div>
