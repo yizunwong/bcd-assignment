@@ -95,7 +95,7 @@ export default function ManagePolicies() {
     coverage: policy.coverage ? `$${policy.coverage.toLocaleString()}` : "-",
     premium: policy.premium,
     status: "active", 
-    sales: 0, 
+    sales: policy.sales, 
     revenue: "-", 
     created: "-", 
     lastUpdated: "-", 
@@ -755,7 +755,7 @@ export default function ManagePolicies() {
                         Premium
                       </p>
                       <p className="font-semibold text-emerald-600 dark:text-emerald-400">
-                        {policy.premium}
+                        {policy.premium} ETH/month
                       </p>
                     </div>
                   </div>
@@ -783,7 +783,7 @@ export default function ManagePolicies() {
 
                   <div>
                     <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      Key Features:
+                      Claim Type:
                     </p>
                     <div className="flex flex-wrap gap-1">
                       {policy.features.slice(0, 3).map((feature, index) => (

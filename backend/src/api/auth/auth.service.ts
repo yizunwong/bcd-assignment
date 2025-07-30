@@ -146,13 +146,7 @@ export class AuthService {
   }
 
   async getMe(req: AuthenticatedRequest) {
-    const { data, error } = await req.supabase.auth.getUser();
-
-    if (error || !data.user) {
-      throw new UnauthorizedException('Invalid or expired token');
-    }
-
-    const appMeta = parseAppMetadata(data.user.app_metadata);
+    const appMeta = parseAppMetadata(req.user.app_metadata);
 
     const { data: profile } = await req.supabase
       .from('user_details')
@@ -161,15 +155,15 @@ export class AuthService {
         policyholder_details(address, date_of_birth, occupation),
         admin_details(company:companies(name, address, contact_no, license_number))`,
       )
-      .eq('user_id', data.user.id)
+      .eq('user_id', req.user.id)
       .single();
 
     const dto = new ProfileResponseDto({
-      id: data.user.id,
+      id: req.user.id,
       role: appMeta.role!,
       firstName: profile?.first_name ?? '',
       lastName: profile?.last_name ?? '',
-      email: data.user.email ?? '',
+      email: req.user.email ?? '',
       phone: profile?.phone ?? '',
       bio: profile?.bio ?? '',
       status: profile?.status ?? '',

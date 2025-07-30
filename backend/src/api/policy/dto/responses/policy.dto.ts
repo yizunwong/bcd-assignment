@@ -36,7 +36,7 @@ export class PolicyResponseDto {
   duration_days!: number;
 
   @ApiProperty()
-  premium!: string;
+  premium!: number;
 
   @ApiProperty()
   rating!: number;
@@ -49,6 +49,9 @@ export class PolicyResponseDto {
 
   @ApiProperty()
   claim_types!: string[];
+
+  @ApiProperty()
+  sales!: number;
 
   @ApiProperty({ type: [PolicyDocumentResponseDto] })
   policy_documents!: PolicyDocumentResponseDto[];

@@ -306,7 +306,7 @@ export type Database = {
           id: number;
           name: string;
           popular: boolean;
-          premium: string;
+          premium: number;
           provider: string;
           rating: number;
         };
@@ -319,7 +319,7 @@ export type Database = {
           id?: number;
           name: string;
           popular: boolean;
-          premium: string;
+          premium: number;
           provider: string;
           rating: number;
         };
@@ -332,7 +332,7 @@ export type Database = {
           id?: number;
           name?: string;
           popular?: boolean;
-          premium?: string;
+          premium?: number;
           provider?: string;
           rating?: number;
         };
@@ -556,7 +556,13 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      count_policy_sales: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          policy_id: number;
+          sales: number;
+        }[];
+      };
     };
     Enums: {
       claim_priority: 'high' | 'medium' | 'low';

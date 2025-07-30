@@ -141,7 +141,8 @@ export class PolicyService {
       .range(offset, offset + (query.limit || 5) - 1)
       .order(query.sortBy || 'id', {
         ascending: (query.sortOrder || 'asc') === 'asc',
-      });
+      })
+      .eq('created_by', req.user.id);
 
     console.log(query);
 
@@ -177,6 +178,15 @@ export class PolicyService {
       }
     }
 
+    const { data: coverageCounts } =
+      await req.supabase.rpc('count_policy_sales');
+
+    const coverageMap = new Map<number, number>();
+
+    coverageCounts?.forEach((row: { policy_id: number; sales: number }) => {
+      coverageMap.set(row.policy_id, row.sales);
+    });
+
     const signedUrls = await this.fileService.getSignedUrls(
       req.supabase,
       allPaths,
@@ -198,6 +208,7 @@ export class PolicyService {
           : [],
         claim_types:
           policy_claim_type?.map((link) => link.claim_type.name) || [],
+        sales: coverageMap.get(policy.id) || 0,
       };
     });
 
@@ -269,6 +280,7 @@ export class PolicyService {
         reviews: reviews || [],
         claim_types:
           policy_claim_type?.map((link) => link.claim_type.name) || [],
+        sales: 0,
       },
     });
   }

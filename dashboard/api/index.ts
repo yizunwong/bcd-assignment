@@ -434,6 +434,7 @@ export interface PolicyResponseDto {
   popular: boolean;
   description?: PolicyResponseDtoDescription;
   claim_types: string[];
+  sales: number;
   policy_documents: PolicyDocumentResponseDto[];
 }
 

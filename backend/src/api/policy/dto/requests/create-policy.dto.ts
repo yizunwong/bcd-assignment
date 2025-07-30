@@ -9,6 +9,7 @@ import {
   Min,
   IsUUID,
   ValidateNested,
+  IsDecimal,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
@@ -89,10 +90,10 @@ export class CreatePolicyDto {
   @IsNotEmpty()
   durationDays!: number;
 
-  @ApiProperty({ example: '0.8 ETH/month' })
-  @IsString()
+  @ApiProperty({ example: '0.8' })
+  @IsDecimal()
   @IsNotEmpty()
-  premium!: string;
+  premium!: number;
 
   @ApiProperty({ example: 0 })
   @Transform(({ value }: { value: unknown }) => parseInt(value as string, 10))

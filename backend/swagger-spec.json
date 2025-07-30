@@ -2252,8 +2252,8 @@
             "example": 365
           },
           "premium": {
-            "type": "string",
-            "example": "0.8 ETH/month"
+            "type": "number",
+            "example": "0.8"
           },
           "rating": {
             "type": "number",
@@ -2332,7 +2332,7 @@
             "type": "number"
           },
           "premium": {
-            "type": "string"
+            "type": "number"
           },
           "rating": {
             "type": "number"
@@ -2348,6 +2348,9 @@
             "items": {
               "type": "string"
             }
+          },
+          "sales": {
+            "type": "number"
           },
           "policy_documents": {
             "type": "array",
@@ -2367,6 +2370,7 @@
           "rating",
           "popular",
           "claim_types",
+          "sales",
           "policy_documents"
         ]
       },
@@ -2394,8 +2398,8 @@
             "example": 365
           },
           "premium": {
-            "type": "string",
-            "example": "0.8 ETH/month"
+            "type": "number",
+            "example": "0.8"
           },
           "rating": {
             "type": "number",
