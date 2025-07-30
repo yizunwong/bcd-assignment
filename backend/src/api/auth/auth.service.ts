@@ -9,6 +9,7 @@ import { LoginDto } from './dto/requests/login.dto';
 import { LoginResponseDto } from './dto/responses/login.dto';
 import { CommonResponseDto } from '../../common/common.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
+import { Request } from 'express';
 import { AuthUserResponseDto } from './dto/responses/auth-user.dto';
 import { parseAppMetadata, parseUserMetadata } from 'src/utils/auth-metadata';
 import { Response } from 'express';

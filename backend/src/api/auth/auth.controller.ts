@@ -3,7 +3,7 @@ import {
   Controller,
   Get,
   Post,
-  Request,
+  Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -15,6 +15,7 @@ import { LoginResponseDto } from './dto/responses/login.dto';
 import { AuthGuard } from './auth.guard';
 import { ApiCommonResponse, CommonResponseDto } from '../../common/common.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
+import { Request } from 'express';
 import { AuthUserResponseDto } from './dto/responses/auth-user.dto';
 import { Response } from 'express';
 
@@ -41,7 +42,7 @@ export class AuthController {
   @UseGuards(AuthGuard)
   @Post('logout')
   async logout(
-    @Request() req: AuthenticatedRequest,
+    @Req() req: AuthenticatedRequest,
     @Res({ passthrough: true }) res: Response,
   ) {
     return this.authService.signOut(req, res);
@@ -51,7 +52,7 @@ export class AuthController {
   @Get('me')
   @ApiCommonResponse(AuthUserResponseDto, false, 'User login')
   async getMe(
-    @Request() req: AuthenticatedRequest,
+    @Req() req: AuthenticatedRequest,
   ): Promise<CommonResponseDto<AuthUserResponseDto>> {
     return this.authService.getMe(req);
   }

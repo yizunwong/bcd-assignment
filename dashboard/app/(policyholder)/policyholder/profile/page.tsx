@@ -27,12 +27,16 @@ import {
   activityLog,
 } from "@/public/data/policyholder/profileData";
 import { useMeQuery } from "@/hooks/useAuth";
+import { useUpdateUserMutation } from "@/hooks/useUsers";
+import { useToast } from "@/components/shared/ToastProvider";
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState(initialProfileData);
   const [notifications, setNotifications] = useState(initialNotifications);
   const { data } = useMeQuery();
+  const { updateUser, isPending } = useUpdateUserMutation();
+  const { printMessage } = useToast();
 
   useEffect(() => {
     if (data?.data) {
@@ -51,9 +55,24 @@ export default function Profile() {
       }));
     }
   }, [data]);
-  const handleSave = () => {
-    setIsEditing(false);
-    // Here you would typically save to backend
+  const handleSave = async () => {
+    if (!data?.data?.id) return;
+    try {
+      await updateUser(data.data.id, {
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        phone: profileData.phone,
+        bio: profileData.bio,
+        dateOfBirth: profileData.dateOfBirth,
+        occupation: profileData.occupation,
+        address: profileData.address,
+      });
+      printMessage("Profile updated", "success");
+      setIsEditing(false);
+    } catch (err) {
+      console.error(err);
+      printMessage("Update failed", "error");
+    }
   };
 
   const handleCancel = () => {
@@ -185,6 +204,7 @@ export default function Profile() {
                         </Button>
                         <Button
                           onClick={handleSave}
+                          disabled={isPending}
                           className="gradient-accent text-white floating-button"
                         >
                           <Save className="w-4 h-4 mr-2" />
