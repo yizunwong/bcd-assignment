@@ -3,7 +3,11 @@ import { useAuthControllerRegister, type RegisterDto } from "@/api";
 import { parseError } from "@/utils/parseError";
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { authControllerLogout, getAuthControllerGetMeQueryKey } from "@/api";
+import {
+  authControllerLogout,
+  getAuthControllerGetMeQueryKey,
+  useAuthControllerGetMe,
+} from "@/api";
 
 export function useLoginMutation() {
   const mutation = useAuthControllerLogin();
@@ -38,6 +42,15 @@ export function useLogout() {
   }, [queryClient]);
 
   return { logout };
+}
+
+export function useMeQuery() {
+  const query = useAuthControllerGetMe();
+
+  return {
+    ...query,
+    error: parseError(query.error),
+  };
 }
 
 export default function useAuth() {

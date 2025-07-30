@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,11 +26,30 @@ import {
   kycStatus,
   activityLog,
 } from "@/public/data/policyholder/profileData";
+import { useMeQuery } from "@/hooks/useAuth";
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState(initialProfileData);
   const [notifications, setNotifications] = useState(initialNotifications);
+  const { data } = useMeQuery();
+
+  useEffect(() => {
+    if (data?.data) {
+      const user = data.data;
+      setProfileData((prev) => ({
+        ...prev,
+        firstName: (user.firstName as string) ?? prev.firstName,
+        lastName: (user.lastName as string) ?? prev.lastName,
+        email: user.email ?? prev.email,
+        phone: (user.phone as string) ?? prev.phone,
+        address: (user.address as string) ?? prev.address,
+        dateOfBirth: (user.dateOfBirth as string) ?? prev.dateOfBirth,
+        occupation: (user.occupation as string) ?? prev.occupation,
+        bio: (user.bio as string) ?? prev.bio,
+      }));
+    }
+  }, [data]);
   const handleSave = () => {
     setIsEditing(false);
     // Here you would typically save to backend
