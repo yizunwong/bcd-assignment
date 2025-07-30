@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { CreatePolicyDto } from './dto/requests/create-policy.dto';
 import { UpdatePolicyDto } from './dto/requests/update-policy.dto';
-// import { SupabaseService } from 'src/supabase/supabase.service';
+import { SupabaseService } from 'src/supabase/supabase.service';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { FileService } from '../file/file.service';
 import { CommonResponseDto } from 'src/common/common.dto';
@@ -20,6 +20,7 @@ export class PolicyService {
   constructor(
     private readonly claimsService: ClaimService,
     private readonly fileService: FileService,
+    private readonly supabaseService: SupabaseService,
   ) {}
   async addPolicyDocuments(
     id: number,
@@ -142,7 +143,7 @@ export class PolicyService {
         ascending: (query.sortOrder || 'asc') === 'asc',
       });
 
-    if (query.category) {
+    if (query.category !== undefined) {
       dbQuery = dbQuery.eq('category', query.category);
     }
 
@@ -196,6 +197,7 @@ export class PolicyService {
           policy_claim_type?.map((link) => link.claim_type.name) || [],
       };
     });
+
     return new CommonResponseDto<PolicyResponseDto[]>({
       statusCode: 200,
       message: 'Policies retrieved successfully',
