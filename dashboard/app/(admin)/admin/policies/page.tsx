@@ -39,7 +39,9 @@ import {
   FileText,
   Download,
 } from "lucide-react";
-import { usePoliciesQuery } from "@/hooks/usePolicies";
+import { usePoliciesQuery, useCreatePolicyMutation } from "@/hooks/usePolicies";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useMeQuery } from "@/hooks/useAuth";
 import { useToast } from '@/components/shared/ToastProvider';
 
 export default function ManagePolicies() {
@@ -53,6 +55,10 @@ export default function ManagePolicies() {
   const [uploadedTermsFile, setUploadedTermsFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const { printMessage } = useToast();
+
+  const { data: meData } = useMeQuery();
+  const { createPolicy, error: createError } = useCreatePolicyMutation();
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const [newPolicy, setNewPolicy] = useState({
     name: "",
@@ -70,6 +76,7 @@ export default function ManagePolicies() {
     error,
   } = usePoliciesQuery({
     category: filterCategory,
+    search: debouncedSearchTerm,
     page: currentPage,
     limit: itemsPerPage,
   });
@@ -147,20 +154,14 @@ export default function ManagePolicies() {
   const filteredPolicies = useMemo(() => {
     if (!policies) return [];
 
-    let filtered = policies.filter((policy) => {
-      const matchesTab = activeTab === "all" || policy.status === activeTab;
-      const matchesSearch =
-        policy.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        policy.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory =
-        filterCategory === "all" || policy.category === filterCategory;
-      return matchesTab && matchesSearch && matchesCategory;
-    });
+    const filtered = policies.filter(
+      (policy) => activeTab === "all" || policy.status === activeTab
+    );
 
     return filtered.sort(
       (a, b) => new Date(b.created).getTime() - new Date(a.created).getTime()
     );
-  }, [policies, activeTab, searchTerm, filterCategory]);
+  }, [policies, activeTab]);
 
   const totalPages = Math.ceil(filteredPolicies.length / itemsPerPage);
   const paginatedPolicies = filteredPolicies.slice(
@@ -174,10 +175,28 @@ export default function ManagePolicies() {
     setCurrentPage(1);
   };
 
-  const handleCreatePolicy = () => {
-    console.log("Creating policy:", newPolicy);
+  const handleCreatePolicy = async () => {
+    try {
+      await createPolicy({
+        name: newPolicy.name,
+        category: newPolicy.category,
+        provider: meData?.data?.companyName || "Unknown Provider",
+        coverage: newPolicy.coverage,
+        durationDays: newPolicy.duration,
+        premium: newPolicy.premium.toString(),
+        rating: 0,
+        description: newPolicy.description,
+        claimTypes: newPolicy.claimTypes.filter((c) => c),
+      });
+      printMessage("Policy created successfully", "success");
+    } catch (err) {
+      printMessage(
+        typeof err === "string" ? err : createError || "Failed to create policy",
+        "error"
+      );
+    }
+
     setIsCreateDialogOpen(false);
-    // Reset form
     setNewPolicy({
       name: "",
       category: "",
