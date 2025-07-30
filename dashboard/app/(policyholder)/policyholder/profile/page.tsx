@@ -40,8 +40,6 @@ export default function Profile() {
   const { updateUser, isPending } = useUpdateUserMutation();
   const { printMessage } = useToast();
 
-  console.log(data);
-
   useEffect(() => {
     if (data?.data) {
       const user: ProfileResponseDto = data.data;

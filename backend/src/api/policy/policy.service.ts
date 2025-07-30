@@ -144,10 +144,7 @@ export class PolicyService {
       })
       .eq('created_by', req.user.id);
 
-    console.log(query);
-
     if (query.category && query.category !== 'all') {
-      console.log(query.category);
       dbQuery = dbQuery.eq('category', query.category);
     }
 

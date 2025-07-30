@@ -87,7 +87,6 @@ export default function ManagePolicies() {
   });
 
   useEffect(() => {
-    console.log("Policies API response:", policiesData);
   }, [policiesData]);
 
   useEffect(() => {
@@ -397,7 +396,10 @@ export default function ManagePolicies() {
                       type="number"
                       step={0.01}
                       onChange={(e) =>
-                        setNewPolicy({ ...newPolicy, premium: Number(e.target.value) })
+                        setNewPolicy({
+                          ...newPolicy,
+                          premium: Number(e.target.value),
+                        })
                       }
                       className="form-input"
                     />
@@ -409,7 +411,10 @@ export default function ManagePolicies() {
                     <Input
                       value={newPolicy.duration}
                       onChange={(e) =>
-                        setNewPolicy({ ...newPolicy, duration: Number(e.target.value) })
+                        setNewPolicy({
+                          ...newPolicy,
+                          duration: Number(e.target.value),
+                        })
                       }
                       className="form-input"
                     />
@@ -509,7 +514,7 @@ export default function ManagePolicies() {
                           PDF format only • Max 10MB • up to 3 files
                         </p>
                       </div>
-                      ) : (
+                    ) : (
                       <div className="space-y-2">
                         {uploadedTermsFiles.map((file, index) => (
                           <div
@@ -530,7 +535,11 @@ export default function ManagePolicies() {
                               </div>
                             </div>
                             <div className="flex items-center space-x-2">
-                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0"
+                              >
                                 <Download className="w-4 h-4" />
                               </Button>
                               <Button
@@ -754,134 +763,134 @@ export default function ManagePolicies() {
             </div>
           ) : (
             paginatedPolicies.map((policy) => {
-            const CategoryIcon = getCategoryIcon(policy.category);
-            return (
-              <Card
-                key={policy.id}
-                className="glass-card rounded-2xl card-hover"
-              >
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div
-                        className={`w-12 h-12 rounded-xl bg-gradient-to-r ${getCategoryColor(policy.category)} flex items-center justify-center`}
+              const CategoryIcon = getCategoryIcon(policy.category);
+              return (
+                <Card
+                  key={policy.id}
+                  className="glass-card rounded-2xl card-hover"
+                >
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div
+                          className={`w-12 h-12 rounded-xl bg-gradient-to-r ${getCategoryColor(policy.category)} flex items-center justify-center`}
+                        >
+                          <CategoryIcon className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg text-slate-800 dark:text-slate-100">
+                            {policy.name}
+                          </CardTitle>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">
+                            {policy.provider} • {policy.id}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge
+                        className={`status-badge ${getStatusColor(policy.status)}`}
                       >
-                        <CategoryIcon className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg text-slate-800 dark:text-slate-100">
-                          {policy.name}
-                        </CardTitle>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                          {policy.provider} • {policy.id}
-                        </p>
-                      </div>
+                        {policy.status.charAt(0).toUpperCase() +
+                          policy.status.slice(1)}
+                      </Badge>
                     </div>
-                    <Badge
-                      className={`status-badge ${getStatusColor(policy.status)}`}
-                    >
-                      {policy.status.charAt(0).toUpperCase() +
-                        policy.status.slice(1)}
-                    </Badge>
-                  </div>
-                </CardHeader>
+                  </CardHeader>
 
-                <CardContent className="space-y-4">
-                  <p className="text-slate-700 dark:text-slate-300">
-                    {policy.description}
-                  </p>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Coverage
-                      </p>
-                      <p className="font-semibold text-slate-800 dark:text-slate-100">
-                        {policy.coverage}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Premium
-                      </p>
-                      <p className="font-semibold text-emerald-600 dark:text-emerald-400">
-                        {policy.premium} ETH/month
-                      </p>
-                    </div>
-                  </div>
-
-                  {policy.status === "active" && (
-                    <div className="grid grid-cols-2 gap-4 p-3 bg-slate-50/50 dark:bg-slate-700/30 rounded-lg">
-                      <div>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                          Sales
-                        </p>
-                        <p className="font-semibold text-slate-800 dark:text-slate-100">
-                          {policy.sales}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                          Revenue
-                        </p>
-                        <p className="font-semibold text-slate-800 dark:text-slate-100">
-                          {policy.revenue}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      Claim Type:
+                  <CardContent className="space-y-4">
+                    <p className="text-slate-700 dark:text-slate-300">
+                      {policy.description}
                     </p>
-                    <div className="flex flex-wrap gap-1">
-                      {policy.features.slice(0, 3).map((feature, index) => (
-                        <Badge
-                          key={index}
-                          variant="secondary"
-                          className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
-                        >
-                          {feature}
-                        </Badge>
-                      ))}
-                      {policy.features.length > 3 && (
-                        <Badge
-                          variant="secondary"
-                          className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
-                        >
-                          +{policy.features.length - 3} more
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
 
-                  <div className="flex gap-2 pt-4 border-t border-slate-100 dark:border-slate-700">
-                    <Button
-                      variant="outline"
-                      className="flex-1 floating-button"
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      View Details
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex-1 floating-button"
-                    >
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          Coverage
+                        </p>
+                        <p className="font-semibold text-slate-800 dark:text-slate-100">
+                          {policy.coverage}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          Premium
+                        </p>
+                        <p className="font-semibold text-emerald-600 dark:text-emerald-400">
+                          {policy.premium} ETH/month
+                        </p>
+                      </div>
+                    </div>
+
+                    {policy.status === "active" && (
+                      <div className="grid grid-cols-2 gap-4 p-3 bg-slate-50/50 dark:bg-slate-700/30 rounded-lg">
+                        <div>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">
+                            Sales
+                          </p>
+                          <p className="font-semibold text-slate-800 dark:text-slate-100">
+                            {policy.sales}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">
+                            Revenue
+                          </p>
+                          <p className="font-semibold text-slate-800 dark:text-slate-100">
+                            {policy.revenue}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Claim Type:
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {policy.features.slice(0, 3).map((feature, index) => (
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
+                          >
+                            {feature}
+                          </Badge>
+                        ))}
+                        {policy.features.length > 3 && (
+                          <Badge
+                            variant="secondary"
+                            className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
+                          >
+                            +{policy.features.length - 3} more
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-4 border-t border-slate-100 dark:border-slate-700">
+                      <Button
+                        variant="outline"
+                        className="flex-1 floating-button"
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        View Details
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="flex-1 floating-button"
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
           )}
         </div>
 
@@ -896,7 +905,7 @@ export default function ManagePolicies() {
           className="mb-8"
         />
 
-        {filteredPolicies.length === 0 && (
+        {filteredPolicies.length === 0 && !isLoading && (
           <div className="text-center py-12">
             <Shield className="w-16 h-16 text-slate-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">
