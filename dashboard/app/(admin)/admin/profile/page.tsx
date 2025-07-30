@@ -41,7 +41,11 @@ import {
   Users,
   BarChart3,
 } from "lucide-react";
-import { CompanyDetailsDtoEmployeesNumber, CompanyDetailsDtoYearsInBusiness, ProfileResponseDto } from '@/api';
+import {
+  CompanyDetailsDtoEmployeesNumber,
+  CompanyDetailsDtoYearsInBusiness,
+  ProfileResponseDto,
+} from "@/api";
 
 const roleLabels: Record<string, string> = {
   insurance_admin: "Insurance Admin",
@@ -49,29 +53,25 @@ const roleLabels: Record<string, string> = {
   system_admin: "System Admin",
 };
 
-
 export default function AdminProfile() {
   const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState<ProfileResponseDto>(defaultProfileData);
+  const [profileData, setProfileData] =
+    useState<ProfileResponseDto>(defaultProfileData);
   const [notifications, setNotifications] = useState(defaultNotifications);
   const { data } = useMeQuery();
   const { updateUser, isPending } = useUpdateUserMutation();
   const { printMessage } = useToast();
-
-  console.log(data);
 
   useEffect(() => {
     if (data?.data) {
       const user = data.data;
       setProfileData((prev) => ({
         ...prev,
-        firstName: user.firstName?? prev.firstName,
+        firstName: user.firstName ?? prev.firstName,
         lastName: user.lastName ?? prev.lastName,
         role: user.role ?? prev.role,
         email: user.email ?? prev.email,
         phone: user.phone ?? prev.phone,
-        address: user.address ?? prev.address,
-        dateOfBirth: user.dateOfBirth ?? prev.dateOfBirth,
         companyName: user.companyName ?? prev.companyName,
         companyAddress: user.companyAddress ?? prev.companyAddress,
         companyContactNo: user.companyContactNo ?? prev.companyContactNo,
@@ -89,17 +89,18 @@ export default function AdminProfile() {
         lastName: profileData.lastName,
         phone: profileData.phone,
         bio: profileData.bio,
-        dateOfBirth: profileData.dateOfBirth,
-        occupation: profileData.occupation,
-        address: profileData.address,
         role: profileData.role,
         company: {
           name: profileData.companyName,
           address: profileData.companyAddress,
           contact_no: profileData.companyContactNo,
           license_number: profileData.companyLicenseNo,
-          employees_number: profileData.companyEmployeesNumber ?? CompanyDetailsDtoEmployeesNumber['1-10_employees'],
-          years_in_business: profileData.companyYearsInBusiness ?? CompanyDetailsDtoYearsInBusiness['0-1_years'],
+          employees_number:
+            profileData.companyEmployeesNumber ??
+            CompanyDetailsDtoEmployeesNumber["1-10_employees"],
+          years_in_business:
+            profileData.companyYearsInBusiness ??
+            CompanyDetailsDtoYearsInBusiness["0-1_years"],
         },
       });
       printMessage("Profile updated", "success");
@@ -222,15 +223,12 @@ export default function AdminProfile() {
           {/* Main Content */}
           <div className="lg:col-span-3">
             <Tabs defaultValue="personal" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+              <TabsList className="grid w-full grid-cols-3 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                 <TabsTrigger value="personal" className="rounded-lg">
                   Personal Info
                 </TabsTrigger>
                 <TabsTrigger value="permissions" className="rounded-lg">
                   Permissions
-                </TabsTrigger>
-                <TabsTrigger value="notifications" className="rounded-lg">
-                  Notifications
                 </TabsTrigger>
                 <TabsTrigger value="activity" className="rounded-lg">
                   Activity
@@ -343,24 +341,9 @@ export default function AdminProfile() {
                         />
                       </div>
                     </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                        Address
-                      </label>
-                      <Input
-                        value={profileData.address}
-                        onChange={(e) =>
-                          setProfileData({
-                            ...profileData,
-                            address: e.target.value,
-                          })
-                        }
-                        disabled={!isEditing}
-                        className="form-input"
-                      />
-                    </div>
-
+                    <CardTitle className="text-xl text-slate-800 dark:text-slate-100">
+                      Company Information
+                    </CardTitle>
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -495,126 +478,6 @@ export default function AdminProfile() {
                           </Badge>
                         </div>
                       ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="notifications">
-                <Card className="glass-card rounded-2xl">
-                  <CardHeader>
-                    <CardTitle className="text-xl text-slate-800 dark:text-slate-100">
-                      Notification Preferences
-                    </CardTitle>
-                    <p className="text-slate-600 dark:text-slate-400">
-                      Manage how you receive administrative notifications
-                    </p>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div>
-                      <h4 className="font-semibold text-slate-800 dark:text-slate-100 mb-4">
-                        Email Notifications
-                      </h4>
-                      <div className="space-y-3">
-                        {[
-                          {
-                            key: "emailClaims",
-                            label: "New claims and claim updates",
-                          },
-                          {
-                            key: "emailPolicies",
-                            label: "Policy changes and renewals",
-                          },
-                          {
-                            key: "emailReports",
-                            label: "Weekly and monthly reports",
-                          },
-                        ].map(({ key, label }) => (
-                          <div
-                            key={key}
-                            className="flex items-center justify-between p-3 bg-slate-50/50 dark:bg-slate-700/30 rounded-lg"
-                          >
-                            <span className="text-slate-700 dark:text-slate-300">
-                              {label}
-                            </span>
-                            <Button
-                              variant={
-                                notifications[key as keyof typeof notifications]
-                                  ? "default"
-                                  : "outline"
-                              }
-                              size="sm"
-                              onClick={() =>
-                                setNotifications({
-                                  ...notifications,
-                                  [key]:
-                                    !notifications[
-                                      key as keyof typeof notifications
-                                    ],
-                                })
-                              }
-                              className="floating-button"
-                            >
-                              {notifications[key as keyof typeof notifications]
-                                ? "On"
-                                : "Off"}
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="font-semibold text-slate-800 dark:text-slate-100 mb-4">
-                        Push Notifications
-                      </h4>
-                      <div className="space-y-3">
-                        {[
-                          {
-                            key: "pushClaims",
-                            label: "Urgent claim notifications",
-                          },
-                          {
-                            key: "pushPolicies",
-                            label: "Policy approval requests",
-                          },
-                          {
-                            key: "pushReports",
-                            label: "Report generation alerts",
-                          },
-                        ].map(({ key, label }) => (
-                          <div
-                            key={key}
-                            className="flex items-center justify-between p-3 bg-slate-50/50 dark:bg-slate-700/30 rounded-lg"
-                          >
-                            <span className="text-slate-700 dark:text-slate-300">
-                              {label}
-                            </span>
-                            <Button
-                              variant={
-                                notifications[key as keyof typeof notifications]
-                                  ? "default"
-                                  : "outline"
-                              }
-                              size="sm"
-                              onClick={() =>
-                                setNotifications({
-                                  ...notifications,
-                                  [key]:
-                                    !notifications[
-                                      key as keyof typeof notifications
-                                    ],
-                                })
-                              }
-                              className="floating-button"
-                            >
-                              {notifications[key as keyof typeof notifications]
-                                ? "On"
-                                : "Off"}
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
                     </div>
                   </CardContent>
                 </Card>

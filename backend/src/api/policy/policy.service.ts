@@ -143,7 +143,10 @@ export class PolicyService {
         ascending: (query.sortOrder || 'asc') === 'asc',
       });
 
-    if (query.category !== undefined) {
+    console.log(query);
+
+    if (query.category && query.category !== 'all') {
+      console.log(query.category);
       dbQuery = dbQuery.eq('category', query.category);
     }
 

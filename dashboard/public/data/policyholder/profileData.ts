@@ -9,8 +9,8 @@ export const profileData = {
   phone: '+1 (555) 123-4567',
   address: '123 Main Street, New York, NY 10001',
   dateOfBirth: '1990-05-15',
-  occupation: 'Software Engineer',
-  bio: 'Blockchain enthusiast and early adopter of decentralized insurance solutions.',
+  occupation: '',
+  bio: '',
   status: 'active'
 };
 

@@ -40,9 +40,10 @@ import {
   Download,
 } from "lucide-react";
 import { usePoliciesQuery } from "@/hooks/usePolicies";
+import { useToast } from '@/components/shared/ToastProvider';
 
 export default function ManagePolicies() {
-  const [activeTab, setActiveTab] = useState("active");
+  const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -51,6 +52,7 @@ export default function ManagePolicies() {
   const [itemsPerPage, setItemsPerPage] = useState(15);
   const [uploadedTermsFile, setUploadedTermsFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const { printMessage } = useToast();
 
   const [newPolicy, setNewPolicy] = useState({
     name: "",
@@ -62,34 +64,29 @@ export default function ManagePolicies() {
     claimTypes: [""],
   });
 
-  // Fetch policies from API
   const {
     data: policiesData,
     isLoading,
     error,
   } = usePoliciesQuery({
-    category: filterCategory !== "all" ? filterCategory : undefined,
+    category: filterCategory,
     page: currentPage,
     limit: itemsPerPage,
   });
 
-  // Debug: Log the raw API response
   useEffect(() => {
     console.log("Policies API response:", policiesData);
   }, [policiesData]);
 
-  // Show error toast if error
   useEffect(() => {
     if (error) {
-      // Replace with your toast logic if needed
-      alert(
+      printMessage(
         "Failed to load policies: " +
           (typeof error === "string" ? error : "Unknown error")
       );
     }
   }, [error]);
 
-  // Map API data to the UI format
   const policies = (policiesData?.data || []).map((policy) => ({
     id: policy.id,
     name: policy.name,
@@ -97,15 +94,15 @@ export default function ManagePolicies() {
     provider: policy.provider,
     coverage: policy.coverage ? `$${policy.coverage.toLocaleString()}` : "-",
     premium: policy.premium,
-    status: "active", // fallback as API does not provide status
-    sales: 0, // fallback as API does not provide sales
-    revenue: "-", // fallback as API does not provide revenue
-    created: "-", // fallback as API does not provide created_at
-    lastUpdated: "-", // fallback as API does not provide updated_at
+    status: "active", 
+    sales: 0, 
+    revenue: "-", 
+    created: "-", 
+    lastUpdated: "-", 
     description:
       typeof policy.description === "string" ? policy.description : "",
     features: policy.claim_types || [],
-    terms: "", // fallback as API does not provide terms
+    terms: "", 
   }));
 
   const getCategoryIcon = (category: string) => {
@@ -148,6 +145,8 @@ export default function ManagePolicies() {
   };
 
   const filteredPolicies = useMemo(() => {
+    if (!policies) return [];
+
     let filtered = policies.filter((policy) => {
       const matchesTab = activeTab === "all" || policy.status === activeTab;
       const matchesSearch =
@@ -158,11 +157,10 @@ export default function ManagePolicies() {
       return matchesTab && matchesSearch && matchesCategory;
     });
 
-    // Sort by creation date (newest first)
     return filtered.sort(
       (a, b) => new Date(b.created).getTime() - new Date(a.created).getTime()
     );
-  }, [activeTab, searchTerm, filterCategory]);
+  }, [policies, activeTab, searchTerm, filterCategory]);
 
   const totalPages = Math.ceil(filteredPolicies.length / itemsPerPage);
   const paginatedPolicies = filteredPolicies.slice(
@@ -630,14 +628,14 @@ export default function ManagePolicies() {
               className="space-y-4"
             >
               <TabsList className="grid w-full grid-cols-3 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                <TabsTrigger value="all" className="rounded-lg">
+                  All Policies
+                </TabsTrigger>
                 <TabsTrigger value="active" className="rounded-lg">
                   Active Policies
                 </TabsTrigger>
                 <TabsTrigger value="draft" className="rounded-lg">
                   Draft Policies
-                </TabsTrigger>
-                <TabsTrigger value="all" className="rounded-lg">
-                  All Policies
                 </TabsTrigger>
               </TabsList>
 

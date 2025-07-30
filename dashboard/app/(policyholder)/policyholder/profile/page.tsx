@@ -40,6 +40,8 @@ export default function Profile() {
   const { updateUser, isPending } = useUpdateUserMutation();
   const { printMessage } = useToast();
 
+  console.log(data);
+
   useEffect(() => {
     if (data?.data) {
       const user: ProfileResponseDto = data.data;
@@ -52,8 +54,9 @@ export default function Profile() {
         email: user.email ?? prev.email,
         phone: user.phone ?? prev.phone,
         address: user.address ?? prev.address,
+        occupation: user.occupation ?? prev.occupation,
         dateOfBirth: user.dateOfBirth ?? prev.dateOfBirth,
-        bio: user.bio,
+        bio: user.bio ?? prev.bio,
       }));
     }
   }, [data]);
@@ -165,15 +168,9 @@ export default function Profile() {
           {/* Main Content */}
           <div className="lg:col-span-3">
             <Tabs defaultValue="personal" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+              <TabsList className="grid w-full grid-cols-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                 <TabsTrigger value="personal" className="rounded-lg">
                   Personal Info
-                </TabsTrigger>
-                <TabsTrigger value="kyc" className="rounded-lg">
-                  KYC Status
-                </TabsTrigger>
-                <TabsTrigger value="notifications" className="rounded-lg">
-                  Notifications
                 </TabsTrigger>
                 <TabsTrigger value="activity" className="rounded-lg">
                   Activity
@@ -355,225 +352,6 @@ export default function Profile() {
                         disabled={!isEditing}
                         className="form-input min-h-[100px]"
                       />
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="kyc">
-                <Card className="glass-card rounded-2xl">
-                  <CardHeader>
-                    <CardTitle className="text-xl text-slate-800 dark:text-slate-100">
-                      KYC Verification Status
-                    </CardTitle>
-                    <p className="text-slate-600 dark:text-slate-400">
-                      Your identity verification status for compliance
-                    </p>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {Object.entries(kycStatus).map(([key, value]) => (
-                      <div
-                        key={key}
-                        className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-700/30 rounded-xl"
-                      >
-                        <div className="flex items-center space-x-4">
-                          <div
-                            className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                              value.status === "verified"
-                                ? "bg-gradient-to-r from-emerald-500 to-green-600"
-                                : value.status === "pending"
-                                  ? "bg-gradient-to-r from-yellow-500 to-orange-500"
-                                  : "bg-gradient-to-r from-red-500 to-pink-500"
-                            }`}
-                          >
-                            {getStatusIcon(value.status)}
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-slate-800 dark:text-slate-100 capitalize">
-                              {key.replace(/([A-Z])/g, " $1").trim()}{" "}
-                              Verification
-                            </h3>
-                            {value.date && (
-                              <p className="text-sm text-slate-600 dark:text-slate-400">
-                                Verified on{" "}
-                                {new Date(value.date).toLocaleDateString()}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <Badge
-                          className={`status-badge ${getStatusColor(
-                            value.status
-                          )}`}
-                        >
-                          {getStatusIcon(value.status)}
-                          <span className="ml-1 capitalize">
-                            {value.status}
-                          </span>
-                        </Badge>
-                      </div>
-                    ))}
-
-                    {Object.values(kycStatus).some(
-                      (v) => v.status === "pending"
-                    ) && (
-                      <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700/50 rounded-xl">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-                          <h4 className="font-semibold text-yellow-800 dark:text-yellow-200">
-                            Pending Verification
-                          </h4>
-                        </div>
-                        <p className="text-yellow-700 dark:text-yellow-300 text-sm">
-                          Some documents are still under review. This may take
-                          1-3 business days to complete.
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="notifications">
-                <Card className="glass-card rounded-2xl">
-                  <CardHeader>
-                    <CardTitle className="text-xl text-slate-800 dark:text-slate-100">
-                      Notification Preferences
-                    </CardTitle>
-                    <p className="text-slate-600 dark:text-slate-400">
-                      Choose how you want to receive updates
-                    </p>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div>
-                      <h4 className="font-semibold text-slate-800 dark:text-slate-100 mb-4">
-                        Email Notifications
-                      </h4>
-                      <div className="space-y-3">
-                        {[
-                          {
-                            key: "emailClaims",
-                            label: "Claim updates and status changes",
-                          },
-                          {
-                            key: "emailPremiums",
-                            label: "Premium payment reminders",
-                          },
-                          {
-                            key: "emailOffers",
-                            label: "New policy offers and promotions",
-                          },
-                        ].map(({ key, label }) => (
-                          <div
-                            key={key}
-                            className="flex items-center justify-between p-3 bg-slate-50/50 dark:bg-slate-700/30 rounded-lg"
-                          >
-                            <span className="text-slate-700 dark:text-slate-300">
-                              {label}
-                            </span>
-                            <Button
-                              variant={
-                                notifications[key as keyof typeof notifications]
-                                  ? "default"
-                                  : "outline"
-                              }
-                              size="sm"
-                              onClick={() =>
-                                setNotifications({
-                                  ...notifications,
-                                  [key]:
-                                    !notifications[
-                                      key as keyof typeof notifications
-                                    ],
-                                })
-                              }
-                              className="floating-button"
-                            >
-                              {notifications[key as keyof typeof notifications]
-                                ? "On"
-                                : "Off"}
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="font-semibold text-slate-800 dark:text-slate-100 mb-4">
-                        Push Notifications
-                      </h4>
-                      <div className="space-y-3">
-                        {[
-                          {
-                            key: "pushClaims",
-                            label: "Instant claim notifications",
-                          },
-                          { key: "pushPremiums", label: "Payment due alerts" },
-                          {
-                            key: "pushOffers",
-                            label: "Special offers and deals",
-                          },
-                        ].map(({ key, label }) => (
-                          <div
-                            key={key}
-                            className="flex items-center justify-between p-3 bg-slate-50/50 dark:bg-slate-700/30 rounded-lg"
-                          >
-                            <span className="text-slate-700 dark:text-slate-300">
-                              {label}
-                            </span>
-                            <Button
-                              variant={
-                                notifications[key as keyof typeof notifications]
-                                  ? "default"
-                                  : "outline"
-                              }
-                              size="sm"
-                              onClick={() =>
-                                setNotifications({
-                                  ...notifications,
-                                  [key]:
-                                    !notifications[
-                                      key as keyof typeof notifications
-                                    ],
-                                })
-                              }
-                              className="floating-button"
-                            >
-                              {notifications[key as keyof typeof notifications]
-                                ? "On"
-                                : "Off"}
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="font-semibold text-slate-800 dark:text-slate-100 mb-4">
-                        SMS Notifications
-                      </h4>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between p-3 bg-slate-50/50 dark:bg-slate-700/30 rounded-lg">
-                          <span className="text-slate-700 dark:text-slate-300">
-                            Urgent security alerts only
-                          </span>
-                          <Button
-                            variant={
-                              notifications.smsUrgent ? "default" : "outline"
-                            }
-                            size="sm"
-                            onClick={() =>
-                              setNotifications({
-                                ...notifications,
-                                smsUrgent: !notifications.smsUrgent,
-                              })
-                            }
-                            className="floating-button"
-                          >
-                            {notifications.smsUrgent ? "On" : "Off"}
-                          </Button>
-                        </div>
-                      </div>
                     </div>
                   </CardContent>
                 </Card>
