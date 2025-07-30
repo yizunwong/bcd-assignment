@@ -1,15 +1,21 @@
+import { UserResponseDtoRole } from '@/api';
+
 export const profileData = {
-  firstName: 'Sarah',
-  lastName: 'Chen',
-  email: 'sarah.chen@healthsecure.com',
-  phone: '+1 (555) 234-5678',
-  address: '456 Insurance Ave, San Francisco, CA 94102',
-  dateOfBirth: '1985-08-22',
+  id: '1',
+  role: UserResponseDtoRole.policyholder,
+  firstName: 'Alex',
+  lastName: 'Johnson',
+  email: 'alex.johnson@email.com',
+  phone: '+1 (555) 123-4567',
+  address: '123 Main Street, New York, NY 10001',
+  dateOfBirth: '1990-05-15',
+  occupation: 'Software Engineer',
+  bio: 'Blockchain enthusiast and early adopter of decentralized insurance solutions.',
+  status: 'active',
   companyName: 'HealthSecure Insurance',
   companyAddress: '123 Corporate Plaza, San Francisco, CA 94103',
   companyContactNo: '+1 (555) 222-3333',
   companyLicenseNo: 'INS-CA-789456',
-  bio: 'Experienced insurance professional with 8+ years in claims management and policy administration.'
 };
 
 export const notifications = {

@@ -9,12 +9,11 @@ import { LoginDto } from './dto/requests/login.dto';
 import { LoginResponseDto } from './dto/responses/login.dto';
 import { CommonResponseDto } from '../../common/common.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
-import { Request } from 'express';
-import { AuthUserResponseDto } from './dto/responses/auth-user.dto';
 import { parseAppMetadata, parseUserMetadata } from 'src/utils/auth-metadata';
 import { Response } from 'express';
 import { UserService } from '../user/user.service';
 import { UserRole } from 'src/enums';
+import { ProfileResponseDto } from './dto/responses/profile.dto';
 
 @Injectable()
 export class AuthService {
@@ -37,6 +36,23 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    // ✅ Get role from app_metadata
+    const appMeta = parseAppMetadata(data.user.app_metadata);
+    const metadata = parseUserMetadata(data.user.user_metadata);
+
+    // 🔒 Only check verified_at if role is insurance_admin
+    if (appMeta.role === UserRole.INSURANCE_ADMIN) {
+      const { data: adminDetails } = await supabase
+        .from('admin_details')
+        .select('verified_at')
+        .eq('user_id', data.user.id)
+        .single();
+
+      if (!adminDetails || !adminDetails.verified_at) {
+        throw new UnauthorizedException('User is not verified');
+      }
+    }
+
     res.cookie('access_token', data.session.access_token, {
       httpOnly: true,
       secure: true,
@@ -44,9 +60,6 @@ export class AuthService {
       sameSite: 'lax',
       path: '/',
     });
-
-    const metadata = parseUserMetadata(data.user.user_metadata);
-    const appMeta = parseAppMetadata(data.user.app_metadata);
 
     return new CommonResponseDto({
       statusCode: 200,
@@ -75,6 +88,11 @@ export class AuthService {
       const { data: auth, error: signUpError } = await supabase.auth.signUp({
         email: dto.email,
         password: dto.password,
+        options: {
+          data: {
+            verified_at: null,
+          },
+        },
       });
 
       if (signUpError || !auth?.user) {
@@ -134,7 +152,6 @@ export class AuthService {
       throw new UnauthorizedException('Invalid or expired token');
     }
 
-    const metadata = parseUserMetadata(data.user.user_metadata);
     const appMeta = parseAppMetadata(data.user.app_metadata);
 
     const { data: profile } = await req.supabase
@@ -147,34 +164,29 @@ export class AuthService {
       .eq('user_id', data.user.id)
       .single();
 
-    const dto = new AuthUserResponseDto({
+    const dto = new ProfileResponseDto({
       id: data.user.id,
-      email: data.user.email ?? '',
-      email_verified: metadata.email_verified ?? false,
-      username: metadata.username ?? '',
-      role: appMeta.role ?? '',
-      lastSignInAt: data.user.last_sign_in_at ?? '',
-      provider: appMeta.provider ?? '',
+      role: appMeta.role!,
       firstName: profile?.first_name ?? '',
       lastName: profile?.last_name ?? '',
+      email: data.user.email ?? '',
       phone: profile?.phone ?? '',
       bio: profile?.bio ?? '',
       status: profile?.status ?? '',
     });
 
     if (appMeta.role === UserRole.POLICYHOLDER) {
-      dto.address = profile?.policyholder_details?.address ?? null;
-      dto.dateOfBirth = profile?.policyholder_details?.date_of_birth ?? null;
-      dto.occupation = profile?.policyholder_details?.occupation ?? null;
+      dto.address = profile?.policyholder_details?.address ?? '';
+      dto.dateOfBirth = profile?.policyholder_details?.date_of_birth ?? '';
+      dto.occupation = profile?.policyholder_details?.occupation ?? '';
     }
 
     if (appMeta.role === UserRole.INSURANCE_ADMIN) {
-      dto.companyName = profile?.admin_details?.company?.name ?? null;
-      dto.companyAddress = profile?.admin_details?.company?.address ?? null;
-      dto.companyContactNo =
-        profile?.admin_details?.company?.contact_no ?? null;
+      dto.companyName = profile?.admin_details?.company?.name ?? '';
+      dto.companyAddress = profile?.admin_details?.company?.address ?? '';
+      dto.companyContactNo = profile?.admin_details?.company?.contact_no ?? '';
       dto.companyLicenseNo =
-        profile?.admin_details?.company?.license_number ?? null;
+        profile?.admin_details?.company?.license_number ?? '';
     }
 
     return new CommonResponseDto({

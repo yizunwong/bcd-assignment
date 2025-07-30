@@ -41,10 +41,18 @@ import {
   Users,
   BarChart3,
 } from "lucide-react";
+import { CompanyDetailsDtoEmployeesNumber, CompanyDetailsDtoYearsInBusiness, ProfileResponseDto } from '@/api';
+
+const roleLabels: Record<string, string> = {
+  insurance_admin: "Insurance Admin",
+  policyholder: "Policyholder",
+  system_admin: "System Admin",
+};
+
 
 export default function AdminProfile() {
   const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState(defaultProfileData);
+  const [profileData, setProfileData] = useState<ProfileResponseDto>(defaultProfileData);
   const [notifications, setNotifications] = useState(defaultNotifications);
   const { data } = useMeQuery();
   const { updateUser, isPending } = useUpdateUserMutation();
@@ -57,19 +65,18 @@ export default function AdminProfile() {
       const user = data.data;
       setProfileData((prev) => ({
         ...prev,
-        firstName: (user.firstName as string) ?? prev.firstName,
-        lastName: (user.lastName as string) ?? prev.lastName,
+        firstName: user.firstName?? prev.firstName,
+        lastName: user.lastName ?? prev.lastName,
+        role: user.role ?? prev.role,
         email: user.email ?? prev.email,
-        phone: (user.phone as string) ?? prev.phone,
-        address: (user.address as string) ?? prev.address,
-        dateOfBirth: (user.dateOfBirth as string) ?? prev.dateOfBirth,
-        companyName: (user.companyName as string) ?? prev.companyName,
-        companyAddress: (user.companyAddress as string) ?? prev.companyAddress,
-        companyContactNo:
-          (user.companyContactNo as string) ?? prev.companyContactNo,
-        companyLicenseNo:
-          (user.companyLicenseNo as string) ?? prev.companyLicenseNo,
-        bio: (user.bio as string) ?? prev.bio,
+        phone: user.phone ?? prev.phone,
+        address: user.address ?? prev.address,
+        dateOfBirth: user.dateOfBirth ?? prev.dateOfBirth,
+        companyName: user.companyName ?? prev.companyName,
+        companyAddress: user.companyAddress ?? prev.companyAddress,
+        companyContactNo: user.companyContactNo ?? prev.companyContactNo,
+        companyLicenseNo: user.companyLicenseNo ?? prev.companyLicenseNo,
+        bio: user.bio ?? prev.bio,
       }));
     }
   }, [data]);
@@ -82,11 +89,17 @@ export default function AdminProfile() {
         lastName: profileData.lastName,
         phone: profileData.phone,
         bio: profileData.bio,
+        dateOfBirth: profileData.dateOfBirth,
+        occupation: profileData.occupation,
+        address: profileData.address,
+        role: profileData.role,
         company: {
           name: profileData.companyName,
           address: profileData.companyAddress,
           contact_no: profileData.companyContactNo,
           license_number: profileData.companyLicenseNo,
+          employees_number: profileData.companyEmployeesNumber ?? CompanyDetailsDtoEmployeesNumber['1-10_employees'],
+          years_in_business: profileData.companyYearsInBusiness ?? CompanyDetailsDtoYearsInBusiness['0-1_years'],
         },
       });
       printMessage("Profile updated", "success");
@@ -152,7 +165,7 @@ export default function AdminProfile() {
                 <div className="space-y-2">
                   <Badge className="status-badge status-active">
                     <Shield className="w-3 h-3 mr-1" />
-                    Admin Access
+                    {roleLabels[profileData.role]}
                   </Badge>
                   <Badge className="status-badge status-info">
                     <Award className="w-3 h-3 mr-1" />
@@ -629,10 +642,10 @@ export default function AdminProfile() {
                               activity.type === "claim"
                                 ? "bg-gradient-to-r from-blue-500 to-cyan-500"
                                 : activity.type === "policy"
-                                ? "bg-gradient-to-r from-emerald-500 to-green-600"
-                                : activity.type === "report"
-                                ? "bg-gradient-to-r from-purple-500 to-indigo-500"
-                                : "bg-gradient-to-r from-orange-500 to-red-500"
+                                  ? "bg-gradient-to-r from-emerald-500 to-green-600"
+                                  : activity.type === "report"
+                                    ? "bg-gradient-to-r from-purple-500 to-indigo-500"
+                                    : "bg-gradient-to-r from-orange-500 to-red-500"
                             }`}
                           >
                             {activity.type === "claim" && (

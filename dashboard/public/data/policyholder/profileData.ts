@@ -1,4 +1,8 @@
+import { UserResponseDtoRole } from '@/api';
+
 export const profileData = {
+  id: '1',
+  role: UserResponseDtoRole.policyholder,
   firstName: 'Alex',
   lastName: 'Johnson',
   email: 'alex.johnson@email.com',

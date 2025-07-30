@@ -65,6 +65,7 @@ export interface AuthUserResponseDto {
   lastName?: AuthUserResponseDtoLastName;
   phone?: AuthUserResponseDtoPhone;
   bio?: AuthUserResponseDtoBio;
+  status: string;
   address?: AuthUserResponseDtoAddress;
   dateOfBirth?: AuthUserResponseDtoDateOfBirth;
   occupation?: AuthUserResponseDtoOccupation;
@@ -146,6 +147,60 @@ export interface RegisterDto {
   dateOfBirth?: string;
   occupation?: string;
   address?: string;
+}
+
+export type ProfileResponseDtoRole =
+  (typeof ProfileResponseDtoRole)[keyof typeof ProfileResponseDtoRole];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ProfileResponseDtoRole = {
+  policyholder: "policyholder",
+  insurance_admin: "insurance_admin",
+  system_admin: "system_admin",
+} as const;
+
+export type ProfileResponseDtoCompanyYearsInBusiness =
+  (typeof ProfileResponseDtoCompanyYearsInBusiness)[keyof typeof ProfileResponseDtoCompanyYearsInBusiness];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ProfileResponseDtoCompanyYearsInBusiness = {
+  "0-1_years": "0-1 years",
+  "2-5_years": "2-5 years",
+  "6-10_years": "6-10 years",
+  "11-20_years": "11-20 years",
+  "20+_years": "20+ years",
+} as const;
+
+export type ProfileResponseDtoCompanyEmployeesNumber =
+  (typeof ProfileResponseDtoCompanyEmployeesNumber)[keyof typeof ProfileResponseDtoCompanyEmployeesNumber];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ProfileResponseDtoCompanyEmployeesNumber = {
+  "1-10_employees": "1-10 employees",
+  "11-50_employees": "11-50 employees",
+  "51-200_employees": "51-200 employees",
+  "201-500_employees": "201-500 employees",
+  "500+_employees": "500+ employees",
+} as const;
+
+export interface ProfileResponseDto {
+  id: string;
+  role: ProfileResponseDtoRole;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  bio: string;
+  status: string;
+  address?: string;
+  dateOfBirth?: string;
+  occupation?: string;
+  companyName?: string;
+  companyAddress?: string;
+  companyContactNo?: string;
+  companyLicenseNo?: string;
+  companyYearsInBusiness?: ProfileResponseDtoCompanyYearsInBusiness;
+  companyEmployeesNumber?: ProfileResponseDtoCompanyEmployeesNumber;
 }
 
 export type UserResponseDtoRole =
@@ -473,7 +528,7 @@ export type AuthControllerLogin200 = CommonResponseDto &
   AuthControllerLogin200AllOf;
 
 export type AuthControllerGetMe200AllOf = {
-  data?: AuthUserResponseDto;
+  data?: ProfileResponseDto;
 };
 
 export type AuthControllerGetMe200 = CommonResponseDto &

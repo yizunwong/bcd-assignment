@@ -113,7 +113,7 @@
                     {
                       "properties": {
                         "data": {
-                          "$ref": "#/components/schemas/AuthUserResponseDto"
+                          "$ref": "#/components/schemas/ProfileResponseDto"
                         }
                       }
                     }
@@ -1774,6 +1774,91 @@
           "password",
           "confirmPassword",
           "role"
+        ]
+      },
+      "ProfileResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "policyholder",
+              "insurance_admin",
+              "system_admin"
+            ]
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "dateOfBirth": {
+            "type": "string"
+          },
+          "occupation": {
+            "type": "string"
+          },
+          "companyName": {
+            "type": "string"
+          },
+          "companyAddress": {
+            "type": "string"
+          },
+          "companyContactNo": {
+            "type": "string"
+          },
+          "companyLicenseNo": {
+            "type": "string"
+          },
+          "companyYearsInBusiness": {
+            "type": "string",
+            "enum": [
+              "0-1 years",
+              "2-5 years",
+              "6-10 years",
+              "11-20 years",
+              "20+ years"
+            ]
+          },
+          "companyEmployeesNumber": {
+            "type": "string",
+            "enum": [
+              "1-10 employees",
+              "11-50 employees",
+              "51-200 employees",
+              "201-500 employees",
+              "500+ employees"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "role",
+          "firstName",
+          "lastName",
+          "email",
+          "phone",
+          "bio",
+          "status"
         ]
       },
       "UserResponseDto": {

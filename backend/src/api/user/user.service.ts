@@ -415,6 +415,8 @@ export class UserService {
       );
     }
 
+    console.log('dto', dto);
+
     if (dto.role === UserRole.INSURANCE_ADMIN) {
       if (dto.company) {
         await this.updateOrInsertCompany(supabase, user_id, dto.company);
@@ -509,6 +511,8 @@ export class UserService {
     if (!company) {
       throw new SupabaseException('Missing company data for admin');
     }
+
+    console.log(company);
 
     // Check if admin already has a company
     const { data: existingAdmin, error: adminError } = await supabase

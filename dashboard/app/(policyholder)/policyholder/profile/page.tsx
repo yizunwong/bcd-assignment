@@ -29,10 +29,12 @@ import {
 import { useMeQuery } from "@/hooks/useAuth";
 import { useUpdateUserMutation } from "@/hooks/useUsers";
 import { useToast } from "@/components/shared/ToastProvider";
+import { ProfileResponseDto } from "@/api";
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState(initialProfileData);
+  const [profileData, setProfileData] =
+    useState<ProfileResponseDto>(initialProfileData);
   const [notifications, setNotifications] = useState(initialNotifications);
   const { data } = useMeQuery();
   const { updateUser, isPending } = useUpdateUserMutation();
@@ -40,18 +42,18 @@ export default function Profile() {
 
   useEffect(() => {
     if (data?.data) {
-      const user = data.data;
+      const user: ProfileResponseDto = data.data;
       setProfileData((prev) => ({
         ...prev,
-        firstName: (user.firstName as string) ?? prev.firstName,
-        lastName: (user.lastName as string) ?? prev.lastName,
+        id: user.id ?? prev.id,
+        role: user.role ?? prev.role,
+        firstName: user.firstName ?? prev.firstName,
+        lastName: user.lastName ?? prev.lastName,
         email: user.email ?? prev.email,
-        phone: (user.phone as string) ?? prev.phone,
-        address: (user.address as string) ?? prev.address,
-        dateOfBirth: (user.dateOfBirth as string) ?? prev.dateOfBirth,
-        occupation: (user.occupation as string) ?? prev.occupation,
-        bio: (user.bio as string) ?? prev.bio,
-        status: (user.status as string) ?? prev.status,
+        phone: user.phone ?? prev.phone,
+        address: user.address ?? prev.address,
+        dateOfBirth: user.dateOfBirth ?? prev.dateOfBirth,
+        bio: user.bio,
       }));
     }
   }, [data]);
@@ -59,6 +61,7 @@ export default function Profile() {
     if (!data?.data?.id) return;
     try {
       await updateUser(data.data.id, {
+        role: profileData.role,
         firstName: profileData.firstName,
         lastName: profileData.lastName,
         phone: profileData.phone,
