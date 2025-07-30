@@ -65,12 +65,16 @@ export class CoverageService {
       policies!inner(
         name,
         description,
-        category
+        category,
+        coverage,
+        premium,
+        provider
       )
     `,
         { count: 'exact' },
       )
-      .range(offset, offset + (query.limit || 5) - 1);
+      .range(offset, offset + (query.limit || 5) - 1)
+      .eq('user_id', req.user.id);
 
     if (query.status) {
       dbQuery = dbQuery.eq('status', query.status);

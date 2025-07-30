@@ -2390,11 +2390,23 @@
           },
           "category": {
             "type": "string"
+          },
+          "coverage": {
+            "type": "number"
+          },
+          "premium": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
           }
         },
         "required": [
           "name",
-          "category"
+          "category",
+          "coverage",
+          "premium",
+          "provider"
         ]
       },
       "CoverageResponseDto": {
