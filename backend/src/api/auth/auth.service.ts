@@ -139,7 +139,7 @@ export class AuthService {
     const { data: profile } = await req.supabase
       .from('user_details')
       .select(
-        `first_name, last_name, phone, bio,
+        `first_name, last_name, phone, bio, status,
         policyholder_details(address, date_of_birth, occupation),
         admin_details(company:companies(name, address, contact_no, license_number))`,
       )
@@ -158,6 +158,7 @@ export class AuthService {
       lastName: profile?.last_name ?? '',
       phone: profile?.phone ?? '',
       bio: profile?.bio ?? '',
+      status: profile?.status ?? '',
     });
 
     if (appMeta.role === UserRole.POLICYHOLDER) {

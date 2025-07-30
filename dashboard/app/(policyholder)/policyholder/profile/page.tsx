@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,11 +26,31 @@ import {
   kycStatus,
   activityLog,
 } from "@/public/data/policyholder/profileData";
+import { useMeQuery } from "@/hooks/useAuth";
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState(initialProfileData);
   const [notifications, setNotifications] = useState(initialNotifications);
+  const { data } = useMeQuery();
+
+  useEffect(() => {
+    if (data?.data) {
+      const user = data.data;
+      setProfileData((prev) => ({
+        ...prev,
+        firstName: (user.firstName as string) ?? prev.firstName,
+        lastName: (user.lastName as string) ?? prev.lastName,
+        email: user.email ?? prev.email,
+        phone: (user.phone as string) ?? prev.phone,
+        address: (user.address as string) ?? prev.address,
+        dateOfBirth: (user.dateOfBirth as string) ?? prev.dateOfBirth,
+        occupation: (user.occupation as string) ?? prev.occupation,
+        bio: (user.bio as string) ?? prev.bio,
+        status: (user.status as string) ?? prev.status,
+      }));
+    }
+  }, [data]);
   const handleSave = () => {
     setIsEditing(false);
     // Here you would typically save to backend
@@ -113,7 +133,8 @@ export default function Profile() {
                 </p>
                 <Badge className="status-badge status-active">
                   <Shield className="w-3 h-3 mr-1" />
-                  KYC Verified
+                  {profileData.status.charAt(0).toUpperCase() +
+                    profileData.status.slice(1)}
                 </Badge>
               </CardContent>
             </Card>
@@ -338,8 +359,8 @@ export default function Profile() {
                               value.status === "verified"
                                 ? "bg-gradient-to-r from-emerald-500 to-green-600"
                                 : value.status === "pending"
-                                ? "bg-gradient-to-r from-yellow-500 to-orange-500"
-                                : "bg-gradient-to-r from-red-500 to-pink-500"
+                                  ? "bg-gradient-to-r from-yellow-500 to-orange-500"
+                                  : "bg-gradient-to-r from-red-500 to-pink-500"
                             }`}
                           >
                             {getStatusIcon(value.status)}
@@ -557,10 +578,10 @@ export default function Profile() {
                               activity.type === "claim"
                                 ? "bg-gradient-to-r from-blue-500 to-cyan-500"
                                 : activity.type === "payment"
-                                ? "bg-gradient-to-r from-emerald-500 to-green-600"
-                                : activity.type === "policy"
-                                ? "bg-gradient-to-r from-purple-500 to-indigo-500"
-                                : "bg-gradient-to-r from-slate-500 to-slate-600"
+                                  ? "bg-gradient-to-r from-emerald-500 to-green-600"
+                                  : activity.type === "policy"
+                                    ? "bg-gradient-to-r from-purple-500 to-indigo-500"
+                                    : "bg-gradient-to-r from-slate-500 to-slate-600"
                             }`}
                           >
                             {activity.type === "claim" && (

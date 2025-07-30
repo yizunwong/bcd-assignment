@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ import {
   activityLog,
   permissions,
 } from "@/public/data/admin/profileData";
+import { useMeQuery } from "@/hooks/useAuth";
 import {
   User,
   Shield,
@@ -43,6 +44,31 @@ export default function AdminProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState(defaultProfileData);
   const [notifications, setNotifications] = useState(defaultNotifications);
+  const { data } = useMeQuery();
+
+  console.log(data);
+
+  useEffect(() => {
+    if (data?.data) {
+      const user = data.data;
+      setProfileData((prev) => ({
+        ...prev,
+        firstName: (user.firstName as string) ?? prev.firstName,
+        lastName: (user.lastName as string) ?? prev.lastName,
+        email: user.email ?? prev.email,
+        phone: (user.phone as string) ?? prev.phone,
+        address: (user.address as string) ?? prev.address,
+        dateOfBirth: (user.dateOfBirth as string) ?? prev.dateOfBirth,
+        companyName: (user.companyName as string) ?? prev.companyName,
+        companyAddress: (user.companyAddress as string) ?? prev.companyAddress,
+        companyContactNo:
+          (user.companyContactNo as string) ?? prev.companyContactNo,
+        companyLicenseNo:
+          (user.companyLicenseNo as string) ?? prev.companyLicenseNo,
+        bio: (user.bio as string) ?? prev.bio,
+      }));
+    }
+  }, [data]);
 
   const handleSave = () => {
     setIsEditing(false);
