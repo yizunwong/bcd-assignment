@@ -45,7 +45,9 @@ export function useLogout() {
 }
 
 export function useMeQuery() {
-  const query = useAuthControllerGetMe();
+  const query = useAuthControllerGetMe({
+    query: { refetchOnWindowFocus: false },
+  });
 
   return {
     ...query,
