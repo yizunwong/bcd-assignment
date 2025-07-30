@@ -48,8 +48,6 @@ export class UserService {
       throw new SupabaseException('Failed to fetch auth users', authError);
     }
 
-    console.log(authUsers.users);
-
     const merged = typedProfiles.map((profile) => {
       const auth = authUsers.users.find((u) => u.id === profile.user_id);
       return new UserResponseDto({
@@ -415,7 +413,6 @@ export class UserService {
       );
     }
 
-    console.log('dto', dto);
 
     if (dto.role === UserRole.INSURANCE_ADMIN) {
       if (dto.company) {
@@ -511,8 +508,6 @@ export class UserService {
     if (!company) {
       throw new SupabaseException('Missing company data for admin');
     }
-
-    console.log(company);
 
     // Check if admin already has a company
     const { data: existingAdmin, error: adminError } = await supabase

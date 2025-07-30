@@ -39,7 +39,13 @@ import {
   FileText,
   Download,
 } from "lucide-react";
-import { usePoliciesQuery } from "@/hooks/usePolicies";
+import {
+  usePoliciesQuery,
+  useCreatePolicyMutation,
+  useUploadPolicyDocumentsMutation,
+} from "@/hooks/usePolicies";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useMeQuery } from "@/hooks/useAuth";
 import { useToast } from '@/components/shared/ToastProvider';
 
 export default function ManagePolicies() {
@@ -50,9 +56,14 @@ export default function ManagePolicies() {
   const [selectedPolicy, setSelectedPolicy] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(15);
-  const [uploadedTermsFile, setUploadedTermsFile] = useState<File | null>(null);
+  const [uploadedTermsFiles, setUploadedTermsFiles] = useState<File[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const { printMessage } = useToast();
+
+  const { data: meData } = useMeQuery();
+  const { createPolicy, error: createError } = useCreatePolicyMutation();
+  const { uploadPolicyDocuments } = useUploadPolicyDocumentsMutation();
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const [newPolicy, setNewPolicy] = useState({
     name: "",
@@ -70,12 +81,12 @@ export default function ManagePolicies() {
     error,
   } = usePoliciesQuery({
     category: filterCategory,
+    search: debouncedSearchTerm,
     page: currentPage,
     limit: itemsPerPage,
   });
 
   useEffect(() => {
-    console.log("Policies API response:", policiesData);
   }, [policiesData]);
 
   useEffect(() => {
@@ -147,20 +158,14 @@ export default function ManagePolicies() {
   const filteredPolicies = useMemo(() => {
     if (!policies) return [];
 
-    let filtered = policies.filter((policy) => {
-      const matchesTab = activeTab === "all" || policy.status === activeTab;
-      const matchesSearch =
-        policy.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        policy.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory =
-        filterCategory === "all" || policy.category === filterCategory;
-      return matchesTab && matchesSearch && matchesCategory;
-    });
+    const filtered = policies.filter(
+      (policy) => activeTab === "all" || policy.status === activeTab
+    );
 
     return filtered.sort(
       (a, b) => new Date(b.created).getTime() - new Date(a.created).getTime()
     );
-  }, [policies, activeTab, searchTerm, filterCategory]);
+  }, [policies, activeTab]);
 
   const totalPages = Math.ceil(filteredPolicies.length / itemsPerPage);
   const paginatedPolicies = filteredPolicies.slice(
@@ -174,10 +179,34 @@ export default function ManagePolicies() {
     setCurrentPage(1);
   };
 
-  const handleCreatePolicy = () => {
-    console.log("Creating policy:", newPolicy);
+  const handleCreatePolicy = async () => {
+    try {
+      const res = await createPolicy({
+        name: newPolicy.name,
+        category: newPolicy.category,
+        provider: meData?.data?.companyName || "Unknown Provider",
+        coverage: newPolicy.coverage,
+        durationDays: newPolicy.duration,
+        premium: newPolicy.premium.toString(),
+        rating: 0,
+        description: newPolicy.description,
+        claimTypes: newPolicy.claimTypes.filter((c) => c),
+      });
+      const createdId = (res as any)?.data?.id;
+      if (createdId && uploadedTermsFiles.length) {
+        await uploadPolicyDocuments(String(createdId), {
+          files: uploadedTermsFiles,
+        });
+      }
+      printMessage((res as any)?.message || "Policy created successfully", "success");
+    } catch (err) {
+      printMessage(
+        typeof err === "string" ? err : createError || "Failed to create policy",
+        "error"
+      );
+    }
+
     setIsCreateDialogOpen(false);
-    // Reset form
     setNewPolicy({
       name: "",
       category: "",
@@ -187,7 +216,7 @@ export default function ManagePolicies() {
       description: "",
       claimTypes: [""],
     });
-    setUploadedTermsFile(null);
+    setUploadedTermsFiles([]);
   };
 
   const addClaimType = () => {
@@ -223,49 +252,36 @@ export default function ManagePolicies() {
     }
   };
 
+  const addFiles = (files: FileList) => {
+    const accepted = Array.from(files).filter(
+      (file) => file.type === "application/pdf" || file.name.endsWith(".pdf")
+    );
+    if (accepted.length + uploadedTermsFiles.length > 3) {
+      alert("You can only upload up to 3 documents.");
+      accepted.splice(3 - uploadedTermsFiles.length);
+    }
+    setUploadedTermsFiles([...uploadedTermsFiles, ...accepted]);
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
 
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
-        setUploadedTermsFile(file);
-      } else {
-        alert("Please upload a PDF file for terms and conditions.");
-      }
+    if (e.dataTransfer.files && e.dataTransfer.files.length) {
+      addFiles(e.dataTransfer.files);
     }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
-        setUploadedTermsFile(file);
-      } else {
-        alert("Please upload a PDF file for terms and conditions.");
-      }
+    if (e.target.files && e.target.files.length) {
+      addFiles(e.target.files);
     }
   };
 
-  const removeUploadedFile = () => {
-    setUploadedTermsFile(null);
+  const removeUploadedFile = (index: number) => {
+    setUploadedTermsFiles((files) => files.filter((_, i) => i !== index));
   };
-
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="section-spacing">
-        <div className="max-w-7xl mx-auto text-center py-12">
-          <Shield className="w-16 h-16 text-slate-400 mx-auto mb-4 animate-spin" />
-          <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">
-            Loading policies...
-          </h3>
-        </div>
-      </div>
-    );
-  }
 
   // Error state (in case not caught by useEffect)
   if (error) {
@@ -380,7 +396,10 @@ export default function ManagePolicies() {
                       type="number"
                       step={0.01}
                       onChange={(e) =>
-                        setNewPolicy({ ...newPolicy, premium: Number(e.target.value) })
+                        setNewPolicy({
+                          ...newPolicy,
+                          premium: Number(e.target.value),
+                        })
                       }
                       className="form-input"
                     />
@@ -392,7 +411,10 @@ export default function ManagePolicies() {
                     <Input
                       value={newPolicy.duration}
                       onChange={(e) =>
-                        setNewPolicy({ ...newPolicy, duration: Number(e.target.value) })
+                        setNewPolicy({
+                          ...newPolicy,
+                          duration: Number(e.target.value),
+                        })
                       }
                       className="form-input"
                     />
@@ -462,7 +484,7 @@ export default function ManagePolicies() {
                       Terms & Conditions Document
                     </label>
 
-                    {!uploadedTermsFile ? (
+                    {uploadedTermsFiles.length === 0 ? (
                       <div
                         className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
                           dragActive
@@ -483,49 +505,74 @@ export default function ManagePolicies() {
                               type="file"
                               className="hidden"
                               accept=".pdf"
+                              multiple
                               onChange={handleFileSelect}
                             />
                           </label>
                         </p>
                         <p className="text-sm text-slate-500 dark:text-slate-500">
-                          PDF format only • Max 10MB
+                          PDF format only • Max 10MB • up to 3 files
                         </p>
                       </div>
                     ) : (
-                      <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-600">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                            <FileText className="w-5 h-5 text-red-600 dark:text-red-400" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-slate-800 dark:text-slate-100">
-                              {uploadedTermsFile.name}
-                            </p>
-                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                              {(uploadedTermsFile.size / 1024 / 1024).toFixed(
-                                2
-                              )}{" "}
-                              MB
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 w-8 p-0"
+                      <div className="space-y-2">
+                        {uploadedTermsFiles.map((file, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-600"
                           >
-                            <Download className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={removeUploadedFile}
-                            className="h-8 w-8 p-0 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                                <FileText className="w-5 h-5 text-red-600 dark:text-red-400" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-slate-800 dark:text-slate-100">
+                                  {file.name}
+                                </p>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">
+                                  {(file.size / 1024 / 1024).toFixed(2)} MB
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0"
+                              >
+                                <Download className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => removeUploadedFile(index)}
+                                className="h-8 w-8 p-0 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                        {uploadedTermsFiles.length < 3 && (
+                          <div
+                            className="border-2 border-dashed rounded-xl p-4 text-center cursor-pointer bg-slate-50/50 dark:bg-slate-700/30"
+                            onDragEnter={handleDrag}
+                            onDragLeave={handleDrag}
+                            onDragOver={handleDrag}
+                            onDrop={handleDrop}
                           >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
+                            <label className="text-emerald-600 dark:text-emerald-400 cursor-pointer hover:text-emerald-700 dark:hover:text-emerald-300">
+                              Add more files
+                              <input
+                                type="file"
+                                className="hidden"
+                                accept=".pdf"
+                                multiple
+                                onChange={handleFileSelect}
+                              />
+                            </label>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -707,135 +754,144 @@ export default function ManagePolicies() {
 
         {/* Policies Grid */}
         <div className="grid lg:grid-cols-2 gap-6 mb-8">
-          {paginatedPolicies.map((policy) => {
-            const CategoryIcon = getCategoryIcon(policy.category);
-            return (
-              <Card
-                key={policy.id}
-                className="glass-card rounded-2xl card-hover"
-              >
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div
-                        className={`w-12 h-12 rounded-xl bg-gradient-to-r ${getCategoryColor(policy.category)} flex items-center justify-center`}
+          {isLoading ? (
+            <div className="col-span-full text-center py-12">
+              <Shield className="w-16 h-16 text-slate-400 mx-auto mb-4 animate-spin" />
+              <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">
+                Loading policies...
+              </h3>
+            </div>
+          ) : (
+            paginatedPolicies.map((policy) => {
+              const CategoryIcon = getCategoryIcon(policy.category);
+              return (
+                <Card
+                  key={policy.id}
+                  className="glass-card rounded-2xl card-hover"
+                >
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div
+                          className={`w-12 h-12 rounded-xl bg-gradient-to-r ${getCategoryColor(policy.category)} flex items-center justify-center`}
+                        >
+                          <CategoryIcon className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg text-slate-800 dark:text-slate-100">
+                            {policy.name}
+                          </CardTitle>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">
+                            {policy.provider} • {policy.id}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge
+                        className={`status-badge ${getStatusColor(policy.status)}`}
                       >
-                        <CategoryIcon className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg text-slate-800 dark:text-slate-100">
-                          {policy.name}
-                        </CardTitle>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                          {policy.provider} • {policy.id}
-                        </p>
-                      </div>
+                        {policy.status.charAt(0).toUpperCase() +
+                          policy.status.slice(1)}
+                      </Badge>
                     </div>
-                    <Badge
-                      className={`status-badge ${getStatusColor(policy.status)}`}
-                    >
-                      {policy.status.charAt(0).toUpperCase() +
-                        policy.status.slice(1)}
-                    </Badge>
-                  </div>
-                </CardHeader>
+                  </CardHeader>
 
-                <CardContent className="space-y-4">
-                  <p className="text-slate-700 dark:text-slate-300">
-                    {policy.description}
-                  </p>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Coverage
-                      </p>
-                      <p className="font-semibold text-slate-800 dark:text-slate-100">
-                        {policy.coverage}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Premium
-                      </p>
-                      <p className="font-semibold text-emerald-600 dark:text-emerald-400">
-                        {policy.premium} ETH/month
-                      </p>
-                    </div>
-                  </div>
-
-                  {policy.status === "active" && (
-                    <div className="grid grid-cols-2 gap-4 p-3 bg-slate-50/50 dark:bg-slate-700/30 rounded-lg">
-                      <div>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                          Sales
-                        </p>
-                        <p className="font-semibold text-slate-800 dark:text-slate-100">
-                          {policy.sales}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                          Revenue
-                        </p>
-                        <p className="font-semibold text-slate-800 dark:text-slate-100">
-                          {policy.revenue}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      Claim Type:
+                  <CardContent className="space-y-4">
+                    <p className="text-slate-700 dark:text-slate-300">
+                      {policy.description}
                     </p>
-                    <div className="flex flex-wrap gap-1">
-                      {policy.features.slice(0, 3).map((feature, index) => (
-                        <Badge
-                          key={index}
-                          variant="secondary"
-                          className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
-                        >
-                          {feature}
-                        </Badge>
-                      ))}
-                      {policy.features.length > 3 && (
-                        <Badge
-                          variant="secondary"
-                          className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
-                        >
-                          +{policy.features.length - 3} more
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
 
-                  <div className="flex gap-2 pt-4 border-t border-slate-100 dark:border-slate-700">
-                    <Button
-                      variant="outline"
-                      className="flex-1 floating-button"
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      View Details
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex-1 floating-button"
-                    >
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          Coverage
+                        </p>
+                        <p className="font-semibold text-slate-800 dark:text-slate-100">
+                          {policy.coverage}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          Premium
+                        </p>
+                        <p className="font-semibold text-emerald-600 dark:text-emerald-400">
+                          {policy.premium} ETH/month
+                        </p>
+                      </div>
+                    </div>
+
+                    {policy.status === "active" && (
+                      <div className="grid grid-cols-2 gap-4 p-3 bg-slate-50/50 dark:bg-slate-700/30 rounded-lg">
+                        <div>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">
+                            Sales
+                          </p>
+                          <p className="font-semibold text-slate-800 dark:text-slate-100">
+                            {policy.sales}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">
+                            Revenue
+                          </p>
+                          <p className="font-semibold text-slate-800 dark:text-slate-100">
+                            {policy.revenue}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Claim Type:
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {policy.features.slice(0, 3).map((feature, index) => (
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
+                          >
+                            {feature}
+                          </Badge>
+                        ))}
+                        {policy.features.length > 3 && (
+                          <Badge
+                            variant="secondary"
+                            className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
+                          >
+                            +{policy.features.length - 3} more
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-4 border-t border-slate-100 dark:border-slate-700">
+                      <Button
+                        variant="outline"
+                        className="flex-1 floating-button"
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        View Details
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="flex-1 floating-button"
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
         </div>
 
         {/* Pagination */}
@@ -849,7 +905,7 @@ export default function ManagePolicies() {
           className="mb-8"
         />
 
-        {filteredPolicies.length === 0 && (
+        {filteredPolicies.length === 0 && !isLoading && (
           <div className="text-center py-12">
             <Shield className="w-16 h-16 text-slate-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">

@@ -354,7 +354,6 @@ export class ClaimService {
       const newUtilizationRate =
         policy.coverage > 0 ? (totalApprovedAmount / policy.coverage) * 100 : 0;
 
-      console.log('newUtilizationRate', newUtilizationRate);
       // Update the coverage utilization_rate
       const { error: updateCoverageError } = await req.supabase
         .from('coverage')
@@ -478,13 +477,9 @@ export class ClaimService {
     policyId: number,
     req: AuthenticatedRequest,
   ) {
-    console.log('Attaching claim types to policy:', {
-      claimTypeNames,
-      policyId,
-    });
+
     for (const rawName of claimTypeNames) {
       const name = rawName.toLowerCase();
-      console.log('Processing claim type:', name);
       // Check if claim type already exists
       const { data: existingType, error: lookupError } = await req.supabase
         .from('claim_types')
