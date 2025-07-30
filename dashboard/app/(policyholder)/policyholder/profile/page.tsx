@@ -47,6 +47,7 @@ export default function Profile() {
         dateOfBirth: (user.dateOfBirth as string) ?? prev.dateOfBirth,
         occupation: (user.occupation as string) ?? prev.occupation,
         bio: (user.bio as string) ?? prev.bio,
+        status: (user.status as string) ?? prev.status,
       }));
     }
   }, [data]);
@@ -132,7 +133,8 @@ export default function Profile() {
                 </p>
                 <Badge className="status-badge status-active">
                   <Shield className="w-3 h-3 mr-1" />
-                  KYC Verified
+                  {profileData.status.charAt(0).toUpperCase() +
+                    profileData.status.slice(1)}
                 </Badge>
               </CardContent>
             </Card>
@@ -357,8 +359,8 @@ export default function Profile() {
                               value.status === "verified"
                                 ? "bg-gradient-to-r from-emerald-500 to-green-600"
                                 : value.status === "pending"
-                                ? "bg-gradient-to-r from-yellow-500 to-orange-500"
-                                : "bg-gradient-to-r from-red-500 to-pink-500"
+                                  ? "bg-gradient-to-r from-yellow-500 to-orange-500"
+                                  : "bg-gradient-to-r from-red-500 to-pink-500"
                             }`}
                           >
                             {getStatusIcon(value.status)}
@@ -576,10 +578,10 @@ export default function Profile() {
                               activity.type === "claim"
                                 ? "bg-gradient-to-r from-blue-500 to-cyan-500"
                                 : activity.type === "payment"
-                                ? "bg-gradient-to-r from-emerald-500 to-green-600"
-                                : activity.type === "policy"
-                                ? "bg-gradient-to-r from-purple-500 to-indigo-500"
-                                : "bg-gradient-to-r from-slate-500 to-slate-600"
+                                  ? "bg-gradient-to-r from-emerald-500 to-green-600"
+                                  : activity.type === "policy"
+                                    ? "bg-gradient-to-r from-purple-500 to-indigo-500"
+                                    : "bg-gradient-to-r from-slate-500 to-slate-600"
                             }`}
                           >
                             {activity.type === "claim" && (

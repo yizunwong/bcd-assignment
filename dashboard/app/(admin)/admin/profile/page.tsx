@@ -46,6 +46,8 @@ export default function AdminProfile() {
   const [notifications, setNotifications] = useState(defaultNotifications);
   const { data } = useMeQuery();
 
+  console.log(data);
+
   useEffect(() => {
     if (data?.data) {
       const user = data.data;

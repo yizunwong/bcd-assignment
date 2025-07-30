@@ -6,7 +6,8 @@ export const profileData = {
   address: '123 Main Street, New York, NY 10001',
   dateOfBirth: '1990-05-15',
   occupation: 'Software Engineer',
-  bio: 'Blockchain enthusiast and early adopter of decentralized insurance solutions.'
+  bio: 'Blockchain enthusiast and early adopter of decentralized insurance solutions.',
+  status: 'active'
 };
 
 export const notifications = {

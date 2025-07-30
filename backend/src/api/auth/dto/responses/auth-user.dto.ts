@@ -35,6 +35,9 @@ export class AuthUserResponseDto {
   @ApiProperty({ required: false })
   bio?: string | null;
 
+  @ApiProperty({ example: 'active' })
+  status?: string;
+
   // Policyholder specific fields
   @ApiProperty({ required: false })
   address?: string | null;
