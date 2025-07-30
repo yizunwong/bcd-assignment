@@ -39,9 +39,10 @@ export class AuthController {
     return this.authService.register(dto);
   }
 
+  @UseGuards(AuthGuard)
   @Post('logout')
   async logout(
-    @Req() req: Request,
+    @Req() req: AuthenticatedRequest,
     @Res({ passthrough: true }) res: Response,
   ) {
     return this.authService.signOut(req, res);
@@ -51,7 +52,7 @@ export class AuthController {
   @Get('me')
   @ApiCommonResponse(AuthUserResponseDto, false, 'User login')
   async getMe(
-    @Request() req: AuthenticatedRequest,
+    @Req() req: AuthenticatedRequest,
   ): Promise<CommonResponseDto<AuthUserResponseDto>> {
     return this.authService.getMe(req);
   }
