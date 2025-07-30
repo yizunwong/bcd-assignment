@@ -16,6 +16,8 @@ import {
   permissions,
 } from "@/public/data/admin/profileData";
 import { useMeQuery } from "@/hooks/useAuth";
+import { useUpdateUserMutation } from "@/hooks/useUsers";
+import { useToast } from "@/components/shared/ToastProvider";
 import {
   User,
   Shield,
@@ -45,6 +47,8 @@ export default function AdminProfile() {
   const [profileData, setProfileData] = useState(defaultProfileData);
   const [notifications, setNotifications] = useState(defaultNotifications);
   const { data } = useMeQuery();
+  const { updateUser, isPending } = useUpdateUserMutation();
+  const { printMessage } = useToast();
 
   console.log(data);
 
@@ -70,9 +74,27 @@ export default function AdminProfile() {
     }
   }, [data]);
 
-  const handleSave = () => {
-    setIsEditing(false);
-    // Here you would typically save to backend
+  const handleSave = async () => {
+    if (!data?.data?.id) return;
+    try {
+      await updateUser(data.data.id, {
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        phone: profileData.phone,
+        bio: profileData.bio,
+        company: {
+          name: profileData.companyName,
+          address: profileData.companyAddress,
+          contact_no: profileData.companyContactNo,
+          license_number: profileData.companyLicenseNo,
+        },
+      });
+      printMessage("Profile updated", "success");
+      setIsEditing(false);
+    } catch (err) {
+      console.error(err);
+      printMessage("Update failed", "error");
+    }
   };
 
   const handleCancel = () => {
@@ -229,6 +251,7 @@ export default function AdminProfile() {
                         </Button>
                         <Button
                           onClick={handleSave}
+                          disabled={isPending}
                           className="gradient-accent text-white floating-button"
                         >
                           <Save className="w-4 h-4 mr-2" />

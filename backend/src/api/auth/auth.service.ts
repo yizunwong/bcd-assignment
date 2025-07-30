@@ -9,6 +9,7 @@ import { LoginDto } from './dto/requests/login.dto';
 import { LoginResponseDto } from './dto/responses/login.dto';
 import { CommonResponseDto } from '../../common/common.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
+import { Request } from 'express';
 import { AuthUserResponseDto } from './dto/responses/auth-user.dto';
 import { parseAppMetadata, parseUserMetadata } from 'src/utils/auth-metadata';
 import { Response } from 'express';
@@ -183,8 +184,13 @@ export class AuthService {
     });
   }
 
-  async signOut(req: AuthenticatedRequest, res: Response) {
-    const { error } = await req.supabase.auth.signOut();
+  async signOut(req: Request, res: Response) {
+    const token = (req as any).cookies?.access_token as string | undefined;
+
+    if (token) {
+      const supabase = this.supabaseService.createClientWithToken(token);
+      await supabase.auth.signOut();
+    }
 
     // Clear the access_token cookie
     res.clearCookie('access_token', {
@@ -193,10 +199,6 @@ export class AuthService {
       secure: true,
       sameSite: 'lax',
     });
-
-    if (error) {
-      throw new UnauthorizedException('Failed to sign out: ' + error.message);
-    }
 
     return new CommonResponseDto({
       statusCode: 200,
