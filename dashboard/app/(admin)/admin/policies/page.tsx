@@ -39,7 +39,11 @@ import {
   FileText,
   Download,
 } from "lucide-react";
-import { usePoliciesQuery, useCreatePolicyMutation } from "@/hooks/usePolicies";
+import {
+  usePoliciesQuery,
+  useCreatePolicyMutation,
+  useUploadPolicyDocumentsMutation,
+} from "@/hooks/usePolicies";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useMeQuery } from "@/hooks/useAuth";
 import { useToast } from '@/components/shared/ToastProvider';
@@ -52,12 +56,13 @@ export default function ManagePolicies() {
   const [selectedPolicy, setSelectedPolicy] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(15);
-  const [uploadedTermsFile, setUploadedTermsFile] = useState<File | null>(null);
+  const [uploadedTermsFiles, setUploadedTermsFiles] = useState<File[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const { printMessage } = useToast();
 
   const { data: meData } = useMeQuery();
   const { createPolicy, error: createError } = useCreatePolicyMutation();
+  const { uploadPolicyDocuments } = useUploadPolicyDocumentsMutation();
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const [newPolicy, setNewPolicy] = useState({
@@ -177,7 +182,7 @@ export default function ManagePolicies() {
 
   const handleCreatePolicy = async () => {
     try {
-      await createPolicy({
+      const res = await createPolicy({
         name: newPolicy.name,
         category: newPolicy.category,
         provider: meData?.data?.companyName || "Unknown Provider",
@@ -188,7 +193,13 @@ export default function ManagePolicies() {
         description: newPolicy.description,
         claimTypes: newPolicy.claimTypes.filter((c) => c),
       });
-      printMessage("Policy created successfully", "success");
+      const createdId = (res as any)?.data?.id;
+      if (createdId && uploadedTermsFiles.length) {
+        await uploadPolicyDocuments(String(createdId), {
+          files: uploadedTermsFiles,
+        });
+      }
+      printMessage((res as any)?.message || "Policy created successfully", "success");
     } catch (err) {
       printMessage(
         typeof err === "string" ? err : createError || "Failed to create policy",
@@ -206,7 +217,7 @@ export default function ManagePolicies() {
       description: "",
       claimTypes: [""],
     });
-    setUploadedTermsFile(null);
+    setUploadedTermsFiles([]);
   };
 
   const addClaimType = () => {
@@ -242,49 +253,36 @@ export default function ManagePolicies() {
     }
   };
 
+  const addFiles = (files: FileList) => {
+    const accepted = Array.from(files).filter(
+      (file) => file.type === "application/pdf" || file.name.endsWith(".pdf")
+    );
+    if (accepted.length + uploadedTermsFiles.length > 3) {
+      alert("You can only upload up to 3 documents.");
+      accepted.splice(3 - uploadedTermsFiles.length);
+    }
+    setUploadedTermsFiles([...uploadedTermsFiles, ...accepted]);
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
 
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
-        setUploadedTermsFile(file);
-      } else {
-        alert("Please upload a PDF file for terms and conditions.");
-      }
+    if (e.dataTransfer.files && e.dataTransfer.files.length) {
+      addFiles(e.dataTransfer.files);
     }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
-        setUploadedTermsFile(file);
-      } else {
-        alert("Please upload a PDF file for terms and conditions.");
-      }
+    if (e.target.files && e.target.files.length) {
+      addFiles(e.target.files);
     }
   };
 
-  const removeUploadedFile = () => {
-    setUploadedTermsFile(null);
+  const removeUploadedFile = (index: number) => {
+    setUploadedTermsFiles((files) => files.filter((_, i) => i !== index));
   };
-
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="section-spacing">
-        <div className="max-w-7xl mx-auto text-center py-12">
-          <Shield className="w-16 h-16 text-slate-400 mx-auto mb-4 animate-spin" />
-          <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">
-            Loading policies...
-          </h3>
-        </div>
-      </div>
-    );
-  }
 
   // Error state (in case not caught by useEffect)
   if (error) {
@@ -481,7 +479,7 @@ export default function ManagePolicies() {
                       Terms & Conditions Document
                     </label>
 
-                    {!uploadedTermsFile ? (
+                    {uploadedTermsFiles.length === 0 ? (
                       <div
                         className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
                           dragActive
@@ -502,49 +500,70 @@ export default function ManagePolicies() {
                               type="file"
                               className="hidden"
                               accept=".pdf"
+                              multiple
                               onChange={handleFileSelect}
                             />
                           </label>
                         </p>
                         <p className="text-sm text-slate-500 dark:text-slate-500">
-                          PDF format only • Max 10MB
+                          PDF format only • Max 10MB • up to 3 files
                         </p>
                       </div>
-                    ) : (
-                      <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-600">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                            <FileText className="w-5 h-5 text-red-600 dark:text-red-400" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-slate-800 dark:text-slate-100">
-                              {uploadedTermsFile.name}
-                            </p>
-                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                              {(uploadedTermsFile.size / 1024 / 1024).toFixed(
-                                2
-                              )}{" "}
-                              MB
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 w-8 p-0"
+                      ) : (
+                      <div className="space-y-2">
+                        {uploadedTermsFiles.map((file, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-600"
                           >
-                            <Download className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={removeUploadedFile}
-                            className="h-8 w-8 p-0 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                                <FileText className="w-5 h-5 text-red-600 dark:text-red-400" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-slate-800 dark:text-slate-100">
+                                  {file.name}
+                                </p>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">
+                                  {(file.size / 1024 / 1024).toFixed(2)} MB
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                <Download className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => removeUploadedFile(index)}
+                                className="h-8 w-8 p-0 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                        {uploadedTermsFiles.length < 3 && (
+                          <div
+                            className="border-2 border-dashed rounded-xl p-4 text-center cursor-pointer bg-slate-50/50 dark:bg-slate-700/30"
+                            onDragEnter={handleDrag}
+                            onDragLeave={handleDrag}
+                            onDragOver={handleDrag}
+                            onDrop={handleDrop}
                           >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
+                            <label className="text-emerald-600 dark:text-emerald-400 cursor-pointer hover:text-emerald-700 dark:hover:text-emerald-300">
+                              Add more files
+                              <input
+                                type="file"
+                                className="hidden"
+                                accept=".pdf"
+                                multiple
+                                onChange={handleFileSelect}
+                              />
+                            </label>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -726,7 +745,15 @@ export default function ManagePolicies() {
 
         {/* Policies Grid */}
         <div className="grid lg:grid-cols-2 gap-6 mb-8">
-          {paginatedPolicies.map((policy) => {
+          {isLoading ? (
+            <div className="col-span-full text-center py-12">
+              <Shield className="w-16 h-16 text-slate-400 mx-auto mb-4 animate-spin" />
+              <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">
+                Loading policies...
+              </h3>
+            </div>
+          ) : (
+            paginatedPolicies.map((policy) => {
             const CategoryIcon = getCategoryIcon(policy.category);
             return (
               <Card
@@ -854,7 +881,8 @@ export default function ManagePolicies() {
                 </CardContent>
               </Card>
             );
-          })}
+          })
+          )}
         </div>
 
         {/* Pagination */}
