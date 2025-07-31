@@ -58,7 +58,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { users, roles } from "@/public/data/system-admin/usersData";
-import { useCreateUserMutation } from "@/hooks/useUsers";
+import { useCreateUserMutation, useUserStatsQuery } from "@/hooks/useUsers";
 import { useToast } from "@/components/shared/ToastProvider";
 
 const ITEMS_PER_PAGE = 10;
@@ -76,6 +76,8 @@ export default function UserRoleManagement() {
   const [selectedRole, setSelectedRole] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [pageTransition, setPageTransition] = useState(false);
+
+  const { data: userStats } = useUserStatsQuery();
 
   const [newUserData, setNewUserData] = useState({
     email: "",
@@ -645,28 +647,28 @@ export default function UserRoleManagement() {
         <div className="stats-grid">
           <StatsCard
             title="Total Users"
-            value="6"
+            value={userStats?.data?.totalUsers?.toString() ?? "0"}
             change="+12 this month"
             changeType="positive"
             icon={Users}
           />
           <StatsCard
             title="Active Users"
-            value="5"
+            value={userStats?.data?.activeUsers?.toString() ?? "0"}
             change="98.2% uptime"
             changeType="positive"
             icon={CheckCircle}
           />
           <StatsCard
             title="Policyholders"
-            value="3"
+            value={userStats?.data?.policyholders?.toString() ?? "0"}
             change=""
             changeType="neutral"
             icon={User}
           />
           <StatsCard
             title="Insurance Admins"
-            value="2"
+            value={userStats?.data?.insuranceAdmins?.toString() ?? "0"}
             change=""
             changeType="neutral"
             icon={Shield}
