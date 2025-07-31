@@ -2338,11 +2338,6 @@
             "example": 1,
             "description": "ID of the policy this coverage is linked to"
           },
-          "user_id": {
-            "type": "string",
-            "example": "a3e1f2b4-1234-4c56-8e7d-123456789abc",
-            "description": "UUID of the user who owns this coverage"
-          },
           "status": {
             "type": "string",
             "example": "active",
@@ -2371,7 +2366,6 @@
         },
         "required": [
           "policy_id",
-          "user_id",
           "status",
           "utilization_rate",
           "start_date",
@@ -2456,11 +2450,6 @@
             "type": "number",
             "example": 1,
             "description": "ID of the policy this coverage is linked to"
-          },
-          "user_id": {
-            "type": "string",
-            "example": "a3e1f2b4-1234-4c56-8e7d-123456789abc",
-            "description": "UUID of the user who owns this coverage"
           },
           "status": {
             "type": "string",

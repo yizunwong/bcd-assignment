@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
   Shield,
@@ -16,7 +15,6 @@ import {
   CreditCard,
   Clock,
   Star,
-  AlertCircle,
   Eye,
   EyeOff,
   Wallet,
@@ -28,18 +26,24 @@ import {
   Sprout,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useCreateCoverageMutation } from '@/hooks/useCoverage';
+import { useToast } from '@/components/shared/ToastProvider';
 
 export default function PaymentSummary() {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(2);
+  const { printMessage } = useToast();
+  const [currentStep] = useState(2);
   const [tokenAmount, setTokenAmount] = useState('');
   const [showTokenDetails, setShowTokenDetails] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('ETH');
 
+  // Coverage creation mutation
+  const { createCoverage } = useCreateCoverageMutation();
+
   // Mock policy data - in real app, this would come from URL params or API
   const policyData = {
-    id: 1,
+    id: 50,
     name: 'Comprehensive Health Coverage',
     category: 'health',
     provider: 'HealthSecure',
@@ -95,11 +99,40 @@ export default function PaymentSummary() {
   const handlePayment = async () => {
     setIsProcessing(true);
 
-    // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    try {
+      // Calculate dates
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setFullYear(endDate.getFullYear() + 1); // 12 months duration
+      const nextPaymentDate = new Date();
+      nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1); // Next month
 
-    // Redirect to confirmation page
-    router.push('/policyholder/payment/confirmation');
+      // Create coverage data
+      const coverageData = {
+        policy_id: policyData.id,
+        status: 'active' as const,
+        utilization_rate: 0,
+        start_date: startDate.toISOString().split('T')[0], // YYYY-MM-DD format
+        end_date: endDate.toISOString().split('T')[0],
+        next_payment_date: nextPaymentDate.toISOString().split('T')[0],
+      };
+
+      // Save to coverage table
+      await createCoverage(coverageData);
+
+      // Simulate payment processing
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      printMessage('Payment successful! Coverage created.', 'success');
+
+      // Redirect to confirmation page
+      router.push('/policyholder/payment/confirmation');
+    } catch (error) {
+      console.error('Payment failed:', error);
+      printMessage('Payment failed. Please try again.', 'error');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const steps = [
