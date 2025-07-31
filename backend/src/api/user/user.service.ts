@@ -14,18 +14,28 @@ import {
   AdminDetails,
   PolicyholderDetails,
 } from 'src/enums';
+import { FindUsersQueryDto } from './dto/responses/user-query.dto';
 import { CompanyDetailsDto } from '../auth/dto/requests/register.dto';
 
 @Injectable()
 export class UserService {
   constructor(private readonly supabaseService: SupabaseService) {}
 
-  async getAllUsers(): Promise<CommonResponseDto<UserResponseDto[]>> {
+  async getAllUsers(
+    query: FindUsersQueryDto,
+  ): Promise<CommonResponseDto<UserResponseDto[]>> {
+    const { role, status, search } = query;
     const supabase = this.supabaseService.createClientWithToken();
 
-    const { data: profiles, error: profileError } = await supabase
+    let profileQuery = supabase
       .from('user_details')
       .select('user_id, first_name, last_name, status, phone');
+
+    if (status) {
+      profileQuery = profileQuery.eq('status', status);
+    }
+
+    const { data: profiles, error: profileError } = await profileQuery;
 
     if (profileError || !profiles) {
       throw new SupabaseException(
@@ -64,11 +74,21 @@ export class UserService {
       });
     });
 
+    const filtered = merged.filter((u) => {
+      const matchRole = role ? u.role === role : true;
+      const matchStatus = status ? u.status === status : true;
+      const matchSearch = search
+        ? u.name.toLowerCase().includes(search.toLowerCase()) ||
+          u.email.toLowerCase().includes(search.toLowerCase())
+        : true;
+      return matchRole && matchStatus && matchSearch;
+    });
+
     return new CommonResponseDto<UserResponseDto[]>({
       statusCode: 200,
       message: 'Users retrieved successfully',
-      data: merged,
-      count: merged.length,
+      data: filtered,
+      count: filtered.length,
     });
   }
 

@@ -4,13 +4,14 @@ import {
   useUserControllerCreate,
   useUserControllerUpdate,
   useUserControllerGetStats,
+  type UserControllerFindAllParams,
   type CreateUserDto,
   type UpdateUserDto,
 } from "@/api";
 import { parseError } from "../utils/parseError";
 
-export function useUsersQuery() {
-  const query = useUserControllerFindAll();
+export function useUsersQuery(filters: UserControllerFindAllParams) {
+  const query = useUserControllerFindAll(filters);
   return {
     ...query,
     error: parseError(query.error),

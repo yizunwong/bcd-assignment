@@ -51,11 +51,10 @@ import {
   Building,
   FileText,
   Key,
-  Lock,
-  Unlock,
   UserCheck,
   UserX,
   Loader2,
+  Briefcase,
 } from "lucide-react";
 import { roles } from "@/public/data/system-admin/usersData";
 import {
@@ -86,7 +85,12 @@ export default function UserRoleManagement() {
   const [pageTransition, setPageTransition] = useState(false);
 
   const { data: userStats } = useUserStatsQuery();
-  const { data: usersData } = useUsersQuery();
+  const filters = {
+    role: filterRole === "all" ? undefined : filterRole,
+    status: filterStatus === "all" ? undefined : filterStatus,
+    search: searchTerm || undefined,
+  };
+  const { data: usersData } = useUsersQuery(filters);
 
   const users = useMemo(
     () =>
@@ -102,8 +106,6 @@ export default function UserRoleManagement() {
           typeof u.joinedAt === "string" ? u.joinedAt.split("T")[0] : "",
         policies: 0,
         claims: 0,
-        twoFactorEnabled: false,
-        kycStatus: u.kycStatus ?? "pending",
         location: u.location ?? "",
         loginAttempts: u.loginAttempts ?? 0,
         notes: u.notes ?? "",
@@ -146,6 +148,9 @@ export default function UserRoleManagement() {
     location: "",
     company: "",
     notes: "",
+    dateOfBirth: "",
+    occupation: "",
+    address: "",
   });
 
   // Data moved to public/data/system-admin/usersData.ts
@@ -191,25 +196,17 @@ export default function UserRoleManagement() {
     }
   };
 
-  const filteredUsers = useMemo(() => {
-    let filtered = users.filter((user) => {
-      const matchesSearch =
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesRole = filterRole === "all" || user.role === filterRole;
-      const matchesStatus =
-        filterStatus === "all" || user.status === filterStatus;
-      return matchesSearch && matchesRole && matchesStatus;
-    });
+  const sortedUsers = useMemo(
+    () =>
+      [...users].sort(
+        (a, b) =>
+          new Date(b.joinDate).getTime() - new Date(a.joinDate).getTime()
+      ),
+    [users]
+  );
 
-    // Sort by join date (newest first)
-    return filtered.sort(
-      (a, b) => new Date(b.joinDate).getTime() - new Date(a.joinDate).getTime()
-    );
-  }, [users, searchTerm, filterRole, filterStatus]);
-
-  const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
-  const paginatedUsers = filteredUsers.slice(
+  const totalPages = Math.ceil(sortedUsers.length / ITEMS_PER_PAGE);
+  const paginatedUsers = sortedUsers.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
@@ -259,6 +256,9 @@ export default function UserRoleManagement() {
       location: user.location,
       company: user.company || "",
       notes: user.notes || "",
+      dateOfBirth: user.dateOfBirth || "",
+      occupation: user.occupation || "",
+      address: user.address || "",
     });
     setIsEditDialogOpen(true);
   };
@@ -831,12 +831,6 @@ export default function UserRoleManagement() {
                                   {user.status.replace("-", " ")}
                                 </span>
                               </Badge>
-                              {user.twoFactorEnabled && (
-                                <Badge className="status-badge bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                                  <Lock className="w-3 h-3 mr-1" />
-                                  2FA
-                                </Badge>
-                              )}
                             </div>
                             <p className="text-slate-600 dark:text-slate-400">
                               {user.email}
@@ -919,12 +913,12 @@ export default function UserRoleManagement() {
               totalPages={totalPages}
               onPageChange={handlePageChange}
               showInfo={true}
-              totalItems={filteredUsers.length}
+              totalItems={sortedUsers.length}
               itemsPerPage={ITEMS_PER_PAGE}
               className="mb-8"
             />
 
-            {filteredUsers.length === 0 && !pageTransition && (
+            {sortedUsers.length === 0 && !pageTransition && (
               <div className="text-center py-12">
                 <Users className="w-16 h-16 text-slate-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">
@@ -1092,6 +1086,39 @@ export default function UserRoleManagement() {
                           </div>
                         </div>
                       )}
+                      {selectedUser.dateOfBirth && (
+                        <div className="flex items-center space-x-3">
+                          <Calendar className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                          <div>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">Date of Birth</p>
+                            <p className="font-medium text-slate-800 dark:text-slate-100">
+                              {selectedUser.dateOfBirth}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {selectedUser.occupation && (
+                        <div className="flex items-center space-x-3">
+                          <Briefcase className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                          <div>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">Occupation</p>
+                            <p className="font-medium text-slate-800 dark:text-slate-100">
+                              {selectedUser.occupation}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {selectedUser.address && (
+                        <div className="flex items-start space-x-3">
+                          <MapPin className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                          <div>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">Address</p>
+                            <p className="font-medium text-slate-800 dark:text-slate-100">
+                              {selectedUser.address}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1157,25 +1184,6 @@ export default function UserRoleManagement() {
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-3">
-                        <Lock className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                        <div>
-                          <p className="text-sm text-slate-600 dark:text-slate-400">
-                            Two-Factor Auth
-                          </p>
-                          <Badge
-                            className={`status-badge ${
-                              selectedUser.twoFactorEnabled
-                                ? "status-active"
-                                : "status-pending"
-                            }`}
-                          >
-                            {selectedUser.twoFactorEnabled
-                              ? "Enabled"
-                              : "Disabled"}
-                          </Badge>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -1204,22 +1212,6 @@ export default function UserRoleManagement() {
                     </p>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
                       Failed Logins
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <Badge
-                      className={`status-badge ${
-                        selectedUser.kycStatus === "verified"
-                          ? "status-active"
-                          : selectedUser.kycStatus === "pending"
-                          ? "status-pending"
-                          : "status-error"
-                      }`}
-                    >
-                      {selectedUser.kycStatus}
-                    </Badge>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                      KYC Status
                     </p>
                   </div>
                 </div>
@@ -1444,6 +1436,50 @@ export default function UserRoleManagement() {
                     }
                     className="form-input"
                   />
+                </div>
+              )}
+
+              {editUserData.role === "policyholder" && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Date of Birth
+                      </label>
+                      <Input
+                        type="date"
+                        value={editUserData.dateOfBirth}
+                        onChange={(e) =>
+                          setEditUserData({ ...editUserData, dateOfBirth: e.target.value })
+                        }
+                        className="form-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Occupation
+                      </label>
+                      <Input
+                        value={editUserData.occupation}
+                        onChange={(e) =>
+                          setEditUserData({ ...editUserData, occupation: e.target.value })
+                        }
+                        className="form-input"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      Address
+                    </label>
+                    <Input
+                      value={editUserData.address}
+                      onChange={(e) =>
+                        setEditUserData({ ...editUserData, address: e.target.value })
+                      }
+                      className="form-input"
+                    />
+                  </div>
                 </div>
               )}
 
