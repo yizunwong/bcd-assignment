@@ -43,7 +43,9 @@ import {
   usePoliciesQuery,
   useCreatePolicyMutation,
   useUploadPolicyDocumentsMutation,
+  useCategoryCountsQuery,
 } from "@/hooks/usePolicies";
+import { policyCategories } from "@/utils/policyCategories";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useMeQuery } from "@/hooks/useAuth";
 import { useToast } from '@/components/shared/ToastProvider';
@@ -64,6 +66,9 @@ export default function ManagePolicies() {
   const { createPolicy, error: createError } = useCreatePolicyMutation();
   const { uploadPolicyDocuments } = useUploadPolicyDocumentsMutation();
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  const { data: categoryCountsData } = useCategoryCountsQuery();
+  const categoryCounts = categoryCountsData?.data || {};
 
   const [newPolicy, setNewPolicy] = useState({
     name: "",
@@ -666,6 +671,37 @@ export default function ManagePolicies() {
               </p>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Policy Categories */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          {policyCategories.map((category) => (
+            <Card
+              key={category.id}
+              className={`glass-card rounded-2xl cursor-pointer card-hover ${
+                filterCategory === category.id ? "ring-2 ring-emerald-500" : ""
+              }`}
+              onClick={() =>
+                handleFilterChange(() => setFilterCategory(category.id))
+              }
+            >
+              <CardContent className="flex items-center p-6">
+                <div
+                  className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${category.color} flex items-center justify-center mr-4`}
+                >
+                  <category.icon className="w-8 h-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                    {category.name}
+                  </h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    {categoryCounts[category.id] ?? 0} policies
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {/* Tabs and Filters */}

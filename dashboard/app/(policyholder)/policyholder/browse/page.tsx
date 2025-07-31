@@ -22,10 +22,9 @@ import {
   Filter,
   Star,
 } from "lucide-react";
-import {
-  policyCategories,
-  policies,
-} from "@/public/data/policyholder/browseData";
+import { policies } from "@/public/data/policyholder/browseData";
+import { policyCategories } from "@/utils/policyCategories";
+import { useCategoryCountsQuery } from "@/hooks/usePolicies";
 import PolicyDetailsDialog, {
   Policy,
 } from "@/components/shared/PolicyDetailsDialog";
@@ -41,6 +40,8 @@ export default function BrowsePolicies() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showDetails, setShowDetails] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
+  const { data: categoryCountsData } = useCategoryCountsQuery();
+  const categoryCounts = categoryCountsData?.data || {};
   const filteredPolicies = useMemo(() => {
     let filtered = policies.filter((policy) => {
       const matchesSearch =
@@ -142,8 +143,7 @@ export default function BrowsePolicies() {
                     {category.name}
                   </h3>
                   <p className="text-sm text-slate-600 dark:text-slate-400">
-                    {policies.filter((p) => p.category === category.id).length}{" "}
-                    policies available
+                    {categoryCounts[category.id] ?? 0} policies available
                   </p>
                 </div>
               </CardContent>
