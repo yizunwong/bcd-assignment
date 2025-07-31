@@ -57,8 +57,16 @@ import {
   UserX,
   Loader2,
 } from "lucide-react";
-import { users, roles } from "@/public/data/system-admin/usersData";
-import { useCreateUserMutation, useUserStatsQuery } from "@/hooks/useUsers";
+import { roles } from "@/public/data/system-admin/usersData";
+import {
+  useCreateUserMutation,
+  useUserStatsQuery,
+  useUsersQuery,
+} from "@/hooks/useUsers";
+import {
+  CompanyDetailsDtoYearsInBusiness,
+  CompanyDetailsDtoEmployeesNumber,
+} from "@/api";
 import { useToast } from "@/components/shared/ToastProvider";
 
 const ITEMS_PER_PAGE = 10;
@@ -78,6 +86,26 @@ export default function UserRoleManagement() {
   const [pageTransition, setPageTransition] = useState(false);
 
   const { data: userStats } = useUserStatsQuery();
+  const { data: usersData } = useUsersQuery();
+
+  const users = useMemo(
+    () =>
+      (usersData?.data || []).map((u: any) => ({
+        id: u.user_id,
+        name: u.name,
+        email: u.email,
+        phone: u.phone ?? "",
+        role: u.role === "insurance_admin" ? "admin" : u.role,
+        status: u.status,
+        lastLogin: typeof u.lastLogin === "string" ? u.lastLogin : null,
+        joinDate:
+          typeof u.joinedAt === "string" ? u.joinedAt.split("T")[0] : "",
+        policies: 0,
+        claims: 0,
+        twoFactorEnabled: false,
+      })),
+    [usersData]
+  );
 
   const [newUserData, setNewUserData] = useState({
     email: "",
@@ -93,8 +121,8 @@ export default function UserRoleManagement() {
       contact_no: "",
       website: "",
       license_number: "",
-      years_in_business: "",
-      employees_number: "",
+      years_in_business: Object.values(CompanyDetailsDtoYearsInBusiness)[0],
+      employees_number: Object.values(CompanyDetailsDtoEmployeesNumber)[0],
     },
     dateOfBirth: "",
     occupation: "",
@@ -173,7 +201,7 @@ export default function UserRoleManagement() {
     return filtered.sort(
       (a, b) => new Date(b.joinDate).getTime() - new Date(a.joinDate).getTime()
     );
-  }, [searchTerm, filterRole, filterStatus]);
+  }, [users, searchTerm, filterRole, filterStatus]);
 
   const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
   const paginatedUsers = filteredUsers.slice(
@@ -309,8 +337,8 @@ export default function UserRoleManagement() {
         contact_no: "",
         website: "",
         license_number: "",
-        years_in_business: "",
-        employees_number: "",
+        years_in_business: Object.values(CompanyDetailsDtoYearsInBusiness)[0],
+        employees_number: Object.values(CompanyDetailsDtoEmployeesNumber)[0],
       },
       dateOfBirth: "",
       occupation: "",
@@ -545,34 +573,48 @@ export default function UserRoleManagement() {
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                           Years In Business
                         </label>
-                        <Input
+                        <Select
                           value={newUserData.company.years_in_business}
-                          onChange={(e) =>
+                          onValueChange={(value) =>
                             setNewUserData({
                               ...newUserData,
-                              company: { ...newUserData.company, years_in_business: e.target.value },
+                              company: { ...newUserData.company, years_in_business: value },
                             })
                           }
-                          placeholder="0-1 years"
-                          className="form-input"
-                        />
+                        >
+                          <SelectTrigger className="form-input">
+                            <SelectValue placeholder="Select years" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.values(CompanyDetailsDtoYearsInBusiness).map((v) => (
+                              <SelectItem key={v} value={v}>{v}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                         Employees Number
                       </label>
-                      <Input
+                      <Select
                         value={newUserData.company.employees_number}
-                        onChange={(e) =>
+                        onValueChange={(value) =>
                           setNewUserData({
                             ...newUserData,
-                            company: { ...newUserData.company, employees_number: e.target.value },
+                            company: { ...newUserData.company, employees_number: value },
                           })
                         }
-                        placeholder="1-10 employees"
-                        className="form-input"
-                      />
+                      >
+                        <SelectTrigger className="form-input">
+                          <SelectValue placeholder="Select employee count" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.values(CompanyDetailsDtoEmployeesNumber).map((v) => (
+                            <SelectItem key={v} value={v}>{v}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 )}
