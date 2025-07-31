@@ -103,6 +103,11 @@ export default function UserRoleManagement() {
         policies: 0,
         claims: 0,
         twoFactorEnabled: false,
+        kycStatus: u.kycStatus ?? "pending",
+        location: u.location ?? "",
+        loginAttempts: u.loginAttempts ?? 0,
+        notes: u.notes ?? "",
+        activityLog: u.activityLog ?? [],
       })),
     [usersData]
   );
@@ -969,22 +974,21 @@ export default function UserRoleManagement() {
                           Key Permissions:
                         </p>
                         <div className="space-y-1">
-                          {role.permissions
-                            .slice(0, 4)
-                            .map((permission, index) => (
-                              <div
-                                key={index}
-                                className="flex items-center space-x-2 text-sm"
-                              >
-                                <CheckCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                                <span className="text-slate-600 dark:text-slate-400">
-                                  {permission.name}
-                                </span>
-                              </div>
-                            ))}
-                          {role.permissions.length > 4 && (
+                          {(role.permissions?.slice(0, 4) || []).map(
+                            (permission, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center space-x-2 text-sm"
+                            >
+                              <CheckCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                              <span className="text-slate-600 dark:text-slate-400">
+                                {permission.name}
+                              </span>
+                            </div>
+                          ))}
+                          {(role.permissions?.length || 0) > 4 && (
                             <p className="text-xs text-slate-500 dark:text-slate-500 ml-5">
-                              +{role.permissions.length - 4} more permissions
+                              +{(role.permissions?.length || 0) - 4} more permissions
                             </p>
                           )}
                         </div>
@@ -1238,9 +1242,8 @@ export default function UserRoleManagement() {
                     Recent Activity
                   </h4>
                   <div className="space-y-2">
-                    {selectedUser.activityLog
-                      .slice(0, 5)
-                      .map((activity: any, index: number) => (
+                    {(selectedUser.activityLog?.slice(0, 5) || []).map(
+                      (activity: any, index: number) => (
                         <div
                           key={index}
                           className="flex items-center justify-between p-3 bg-slate-50/50 dark:bg-slate-700/30 rounded-lg"
