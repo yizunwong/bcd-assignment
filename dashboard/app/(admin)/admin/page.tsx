@@ -5,7 +5,11 @@ import { StatsCard } from "@/components/shared/StatsCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import ClaimReviewDialog from "@/components/shared/ClaimReviewDialog";
-import { recentClaims, topPolicies } from "@/public/data/admin/dashboardData";
+import {
+  useClaimControllerFindAll,
+  useClaimControllerGetStats,
+} from "@/api";
+import { topPolicies } from "@/public/data/admin/dashboardData";
 import {
   Shield,
   Users,
@@ -20,6 +24,11 @@ import {
 } from "lucide-react";
 
 export default function AdminDashboard() {
+  const { data: recentClaimsData } = useClaimControllerFindAll(undefined, {
+    query: { limit: 4, page: 1 },
+  });
+  const recentClaims = recentClaimsData?.data ?? [];
+  const { data: stats } = useClaimControllerGetStats({ query: {} });
   return (
     <div className="section-spacing">
       <div className="max-w-7xl mx-auto">
@@ -49,8 +58,8 @@ export default function AdminDashboard() {
           />
           <StatsCard
             title="Pending Claims"
-            value="23"
-            change="3 urgent reviews"
+            value={(stats?.data?.pending ?? 0).toString()}
+            change=""
             changeType="neutral"
             icon={AlertCircle}
           />
@@ -84,7 +93,7 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="element-spacing">
-                  {recentClaims.map((claim) => (
+                  {recentClaims.map((claim: any) => (
                     <div
                       key={claim.id}
                       className="flex items-center justify-between p-4 rounded-xl bg-slate-50/50 dark:bg-slate-700/30 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors"
@@ -102,11 +111,11 @@ export default function AdminDashboard() {
                               variant="secondary"
                               className="bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
                             >
-                              {claim.type}
+                              {claim.claim_type}
                             </Badge>
                           </div>
                           <p className="text-sm text-slate-600 dark:text-slate-400">
-                            {claim.submittedBy} • {claim.date}
+                            {new Date(claim.submitted_date).toLocaleDateString()}
                           </p>
                         </div>
                       </div>

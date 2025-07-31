@@ -762,6 +762,35 @@
         ]
       }
     },
+    "/claim/stats": {
+      "get": {
+        "operationId": "ClaimController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get claim statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/CommonResponseDto" },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/ClaimStatsDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [ { "supabase-auth": [] } ],
+        "tags": [ "Claim" ]
+      }
+    },
     "/claim/{id}/file": {
       "delete": {
         "operationId": "ClaimController_removeFile",
@@ -2624,6 +2653,15 @@
               "format": "binary"
             }
           }
+        }
+      },
+      "ClaimStatsDto": {
+        "type": "object",
+        "properties": {
+          "pending": { "type": "number" },
+          "underReview": { "type": "number" },
+          "approved": { "type": "number" },
+          "rejected": { "type": "number" }
         }
       },
       "CreateReviewDto": {
