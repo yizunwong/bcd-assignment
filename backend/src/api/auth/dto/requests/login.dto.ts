@@ -15,4 +15,10 @@ export class LoginDto {
   @IsString({ message: 'Password must be a string' })
   @IsNotEmpty({ message: 'Password is required' })
   password!: string;
+
+  @ApiProperty({
+    required: false,
+    description: 'Keep the session for 30 days when checked',
+  })
+  rememberMe?: boolean;
 }
