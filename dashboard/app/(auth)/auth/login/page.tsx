@@ -26,7 +26,11 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login({ email: formData.email, password: formData.password });
+      await login({
+        email: formData.email,
+        password: formData.password,
+        rememberMe: formData.rememberMe,
+      });
       printMessage("Logged in successfully", "success");
       router.push("/");
       router.refresh();

@@ -84,6 +84,8 @@ export interface LoginDto {
   email: string;
   /** Password for the user */
   password: string;
+  /** Remember me for 30 days */
+  rememberMe?: boolean;
 }
 
 export type CompanyDetailsDtoYearsInBusiness =

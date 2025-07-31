@@ -52,14 +52,23 @@ export class AuthService {
         throw new UnauthorizedException('User is not verified');
       }
     }
-
     res.cookie('access_token', data.session.access_token, {
       httpOnly: true,
       secure: true,
-      maxAge: 60 * 60 * 1000, // 1 hour
+      maxAge: 60 * 60 * 1000,
       sameSite: 'lax',
       path: '/',
     });
+
+    if (body.rememberMe) {
+      res.cookie('refresh_token', data.session.refresh_token, {
+        httpOnly: true,
+        secure: true,
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+        sameSite: 'lax',
+        path: '/',
+      });
+    }
 
     return new CommonResponseDto({
       statusCode: 200,
@@ -190,8 +199,14 @@ export class AuthService {
   async signOut(req: AuthenticatedRequest, res: Response) {
     const { error } = await req.supabase.auth.signOut();
 
-    // Clear the access_token cookie
+    // Clear the auth cookies
     res.clearCookie('access_token', {
+      path: '/',
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+    });
+    res.clearCookie('refresh_token', {
       path: '/',
       httpOnly: true,
       secure: true,

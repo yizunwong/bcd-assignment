@@ -1648,6 +1648,10 @@
           "password": {
             "type": "string",
             "description": "Password for the user"
+          },
+          "rememberMe": {
+            "type": "boolean",
+            "description": "Keep the session for 30 days when checked"
           }
         },
         "required": [

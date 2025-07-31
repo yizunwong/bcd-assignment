@@ -29,10 +29,12 @@ import {
 import { useMeQuery } from "@/hooks/useAuth";
 import { useUpdateUserMutation } from "@/hooks/useUsers";
 import { useToast } from "@/components/shared/ToastProvider";
+import ConfirmationDialog from "@/components/shared/ConfirmationDialog";
 import { ProfileResponseDto } from "@/api";
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [profileData, setProfileData] =
     useState<ProfileResponseDto>(initialProfileData);
   const [notifications, setNotifications] = useState(initialNotifications);
@@ -73,9 +75,11 @@ export default function Profile() {
       });
       printMessage("Profile updated", "success");
       setIsEditing(false);
+      setConfirmOpen(false);
     } catch (err) {
       console.error(err);
       printMessage("Update failed", "error");
+      setConfirmOpen(false);
     }
   };
 
@@ -201,7 +205,7 @@ export default function Profile() {
                           Cancel
                         </Button>
                         <Button
-                          onClick={handleSave}
+                          onClick={() => setConfirmOpen(true)}
                           disabled={isPending}
                           className="gradient-accent text-white floating-button"
                         >
@@ -415,5 +419,12 @@ export default function Profile() {
         </div>
       </div>
     </div>
+    <ConfirmationDialog
+      open={confirmOpen}
+      title="Save Changes"
+      description="Are you sure you want to save these changes?"
+      onCancel={() => setConfirmOpen(false)}
+      onConfirm={handleSave}
+    />
   );
 }
