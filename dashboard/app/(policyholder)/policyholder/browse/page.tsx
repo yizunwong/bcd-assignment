@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,23 +14,20 @@ import {
 } from "@/components/ui/select";
 import { Pagination } from "@/components/shared/Pagination";
 import {
-  Heart,
-  Plane,
-  Sprout,
   Shield,
   Search,
   Filter,
   Star,
 } from "lucide-react";
-import {
-  policyCategories,
-  policies,
-} from "@/public/data/policyholder/browseData";
+import { policyCategories } from "@/public/data/policyholder/browseData";
 import PolicyDetailsDialog, {
   Policy,
 } from "@/components/shared/PolicyDetailsDialog";
 import Link from "next/link";
 import { logEvent } from "@/lib/analytics";
+import { usePoliciesQuery, useCategoryCountsQuery } from "@/hooks/usePolicies";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useToast } from "@/components/shared/ToastProvider";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -41,46 +38,66 @@ export default function BrowsePolicies() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showDetails, setShowDetails] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
-  const filteredPolicies = useMemo(() => {
-    let filtered = policies.filter((policy) => {
-      const matchesSearch =
-        policy.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        policy.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory =
-        selectedCategory === "all" || policy.category === selectedCategory;
-      return matchesSearch && matchesCategory;
-    });
+  const { printMessage } = useToast();
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-    // Sort policies
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case "popular":
-          return b.popular ? 1 : -1;
-        case "rating":
-          return b.rating - a.rating;
-        case "price-low":
-          return (
-            parseFloat(a.premium.split(" ")[0]) -
-            parseFloat(b.premium.split(" ")[0])
-          );
-        case "price-high":
-          return (
-            parseFloat(b.premium.split(" ")[0]) -
-            parseFloat(a.premium.split(" ")[0])
-          );
-        default:
-          return 0;
-      }
-    });
+  const sortParams = useMemo(() => {
+    switch (sortBy) {
+      case "popular":
+        return { sortBy: "popularity", sortOrder: "desc" as const };
+      case "rating":
+        return { sortBy: "rating", sortOrder: "desc" as const };
+      case "price-low":
+        return { sortBy: "premium", sortOrder: "asc" as const };
+      case "price-high":
+        return { sortBy: "premium", sortOrder: "desc" as const };
+      default:
+        return { sortBy: "id", sortOrder: "asc" as const };
+    }
+  }, [sortBy]);
 
-    return filtered;
-  }, [searchTerm, selectedCategory, sortBy]);
+  const { data: categoryCountsData } = useCategoryCountsQuery();
 
-  const totalPages = Math.ceil(filteredPolicies.length / ITEMS_PER_PAGE);
-  const paginatedPolicies = filteredPolicies.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  const {
+    data: policiesData,
+    isLoading,
+    error,
+  } = usePoliciesQuery({
+    category: selectedCategory === "all" ? undefined : selectedCategory,
+    search: debouncedSearchTerm,
+    page: currentPage,
+    limit: ITEMS_PER_PAGE,
+    sortBy: sortParams.sortBy,
+    sortOrder: sortParams.sortOrder,
+  });
+
+  useEffect(() => {
+    if (error) {
+      printMessage(
+        "Failed to load policies: " +
+          (typeof error === "string" ? error : "Unknown error"),
+        "error"
+      );
+    }
+  }, [error, printMessage]);
+
+  const policies = useMemo<Policy[]>(() => {
+    return (policiesData?.data || []).map((policy) => ({
+      id: policy.id,
+      name: policy.name,
+      category: policy.category,
+      provider: policy.provider,
+      coverage: policy.coverage ? `$${policy.coverage.toLocaleString()}` : "-",
+      premium: `${policy.premium} ETH/month`,
+      rating: policy.rating,
+      features: policy.claim_types || [],
+      popular: policy.popular,
+      description:
+        typeof policy.description === "string" ? policy.description : "",
+    }));
+  }, [policiesData]);
+
+  const totalPages = Math.ceil((policiesData?.count || 0) / ITEMS_PER_PAGE);
 
   // Reset to page 1 when filters change
   const handleFilterChange = (filterFn: () => void) => {
@@ -142,8 +159,7 @@ export default function BrowsePolicies() {
                     {category.name}
                   </h3>
                   <p className="text-sm text-slate-600 dark:text-slate-400">
-                    {policies.filter((p) => p.category === category.id).length}{" "}
-                    policies available
+                    {(categoryCountsData?.data?.[category.id] || 0)} policies available
                   </p>
                 </div>
               </CardContent>
@@ -206,13 +222,11 @@ export default function BrowsePolicies() {
         {/* Results Summary */}
         <div className="mb-6">
           <p className="text-slate-600 dark:text-slate-400">
-            Showing {paginatedPolicies.length} of {filteredPolicies.length}{" "}
-            policies
+            Showing {policies.length} of {policiesData?.count || 0} policies
             {selectedCategory !== "all" && (
               <span>
                 {" "}
-                in{" "}
-                {policyCategories.find((c) => c.id === selectedCategory)?.name}
+                in {policyCategories.find((c) => c.id === selectedCategory)?.name}
               </span>
             )}
           </p>
@@ -220,7 +234,7 @@ export default function BrowsePolicies() {
 
         {/* Policy Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {paginatedPolicies.map((policy) => {
+          {policies.map((policy) => {
             const categoryInfo = policyCategories.find(
               (cat) => cat.id === policy.category
             );
@@ -340,12 +354,12 @@ export default function BrowsePolicies() {
           totalPages={totalPages}
           onPageChange={setCurrentPage}
           showInfo={true}
-          totalItems={filteredPolicies.length}
+          totalItems={policiesData?.count || 0}
           itemsPerPage={ITEMS_PER_PAGE}
           className="mt-8"
         />
 
-        {filteredPolicies.length === 0 && (
+        {policies.length === 0 && !isLoading && (
           <div className="text-center py-12">
             <Shield className="w-16 h-16 text-slate-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">
