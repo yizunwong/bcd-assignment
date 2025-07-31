@@ -115,7 +115,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="section-spacing">
+    <><div className="section-spacing">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="page-header">
@@ -223,15 +223,12 @@ export default function Profile() {
                         </label>
                         <Input
                           value={profileData.firstName}
-                          onChange={(e) =>
-                            setProfileData({
-                              ...profileData,
-                              firstName: e.target.value,
-                            })
-                          }
+                          onChange={(e) => setProfileData({
+                            ...profileData,
+                            firstName: e.target.value,
+                          })}
                           disabled={!isEditing}
-                          className="form-input"
-                        />
+                          className="form-input" />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -239,15 +236,12 @@ export default function Profile() {
                         </label>
                         <Input
                           value={profileData.lastName}
-                          onChange={(e) =>
-                            setProfileData({
-                              ...profileData,
-                              lastName: e.target.value,
-                            })
-                          }
+                          onChange={(e) => setProfileData({
+                            ...profileData,
+                            lastName: e.target.value,
+                          })}
                           disabled={!isEditing}
-                          className="form-input"
-                        />
+                          className="form-input" />
                       </div>
                     </div>
 
@@ -258,15 +252,12 @@ export default function Profile() {
                         </label>
                         <Input
                           value={profileData.email}
-                          onChange={(e) =>
-                            setProfileData({
-                              ...profileData,
-                              email: e.target.value,
-                            })
-                          }
+                          onChange={(e) => setProfileData({
+                            ...profileData,
+                            email: e.target.value,
+                          })}
                           disabled={!isEditing}
-                          className="form-input"
-                        />
+                          className="form-input" />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -274,15 +265,12 @@ export default function Profile() {
                         </label>
                         <Input
                           value={profileData.phone}
-                          onChange={(e) =>
-                            setProfileData({
-                              ...profileData,
-                              phone: e.target.value,
-                            })
-                          }
+                          onChange={(e) => setProfileData({
+                            ...profileData,
+                            phone: e.target.value,
+                          })}
                           disabled={!isEditing}
-                          className="form-input"
-                        />
+                          className="form-input" />
                       </div>
                     </div>
 
@@ -292,15 +280,12 @@ export default function Profile() {
                       </label>
                       <Input
                         value={profileData.address}
-                        onChange={(e) =>
-                          setProfileData({
-                            ...profileData,
-                            address: e.target.value,
-                          })
-                        }
+                        onChange={(e) => setProfileData({
+                          ...profileData,
+                          address: e.target.value,
+                        })}
                         disabled={!isEditing}
-                        className="form-input"
-                      />
+                        className="form-input" />
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-6">
@@ -311,15 +296,12 @@ export default function Profile() {
                         <Input
                           type="date"
                           value={profileData.dateOfBirth}
-                          onChange={(e) =>
-                            setProfileData({
-                              ...profileData,
-                              dateOfBirth: e.target.value,
-                            })
-                          }
+                          onChange={(e) => setProfileData({
+                            ...profileData,
+                            dateOfBirth: e.target.value,
+                          })}
                           disabled={!isEditing}
-                          className="form-input"
-                        />
+                          className="form-input" />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -327,15 +309,12 @@ export default function Profile() {
                         </label>
                         <Input
                           value={profileData.occupation}
-                          onChange={(e) =>
-                            setProfileData({
-                              ...profileData,
-                              occupation: e.target.value,
-                            })
-                          }
+                          onChange={(e) => setProfileData({
+                            ...profileData,
+                            occupation: e.target.value,
+                          })}
                           disabled={!isEditing}
-                          className="form-input"
-                        />
+                          className="form-input" />
                       </div>
                     </div>
 
@@ -345,15 +324,12 @@ export default function Profile() {
                       </label>
                       <Textarea
                         value={profileData.bio}
-                        onChange={(e) =>
-                          setProfileData({
-                            ...profileData,
-                            bio: e.target.value,
-                          })
-                        }
+                        onChange={(e) => setProfileData({
+                          ...profileData,
+                          bio: e.target.value,
+                        })}
                         disabled={!isEditing}
-                        className="form-input min-h-[100px]"
-                      />
+                        className="form-input min-h-[100px]" />
                     </div>
                   </CardContent>
                 </Card>
@@ -377,15 +353,13 @@ export default function Profile() {
                           className="flex items-center space-x-4 p-4 bg-slate-50/50 dark:bg-slate-700/30 rounded-xl"
                         >
                           <div
-                            className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                              activity.type === "claim"
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center ${activity.type === "claim"
                                 ? "bg-gradient-to-r from-blue-500 to-cyan-500"
                                 : activity.type === "payment"
                                   ? "bg-gradient-to-r from-emerald-500 to-green-600"
                                   : activity.type === "policy"
                                     ? "bg-gradient-to-r from-purple-500 to-indigo-500"
-                                    : "bg-gradient-to-r from-slate-500 to-slate-600"
-                            }`}
+                                    : "bg-gradient-to-r from-slate-500 to-slate-600"}`}
                           >
                             {activity.type === "claim" && (
                               <Shield className="w-5 h-5 text-white" />
@@ -418,13 +392,11 @@ export default function Profile() {
           </div>
         </div>
       </div>
-    </div>
-    <ConfirmationDialog
-      open={confirmOpen}
-      title="Save Changes"
-      description="Are you sure you want to save these changes?"
-      onCancel={() => setConfirmOpen(false)}
-      onConfirm={handleSave}
-    />
+    </div><ConfirmationDialog
+        open={confirmOpen}
+        title="Save Changes"
+        description="Are you sure you want to save these changes?"
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={handleSave} /></>
   );
 }
