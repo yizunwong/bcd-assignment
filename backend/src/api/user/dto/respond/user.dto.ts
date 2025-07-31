@@ -1,5 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { UserRole, AdminDetails, PolicyholderDetails } from 'src/enums';
+import {
+  UserRole,
+  AdminDetails,
+  PolicyholderDetails,
+  UserStatus,
+} from 'src/enums';
 
 export class UserResponseDto {
   @ApiProperty()
@@ -20,8 +25,8 @@ export class UserResponseDto {
   @ApiProperty({ required: false, nullable: true })
   bio!: string | null;
 
-  @ApiProperty({ example: 'active' })
-  status!: string;
+  @ApiProperty({ example: 'active', enum: UserStatus })
+  status!: UserStatus;
 
   @ApiProperty({ required: false })
   lastLogin!: string | null | undefined;

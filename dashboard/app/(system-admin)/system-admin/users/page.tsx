@@ -67,6 +67,7 @@ import {
   CompanyDetailsDtoEmployeesNumber,
 } from "@/api";
 import { useToast } from "@/components/shared/ToastProvider";
+import { useDebounce } from '@/hooks/useDebounce';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -81,16 +82,22 @@ export default function UserRoleManagement() {
   const [isRoleConfigDialogOpen, setIsRoleConfigDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [selectedRole, setSelectedRole] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [pageTransition, setPageTransition] = useState(false);
-
   const { data: userStats } = useUserStatsQuery();
-  const filters = {
-    role: filterRole === "all" ? undefined : filterRole,
-    status: filterStatus === "all" ? undefined : filterStatus,
-    search: searchTerm || undefined,
-  };
-  const { data: usersData } = useUsersQuery(filters);
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  const hasFilters =
+    filterRole !== "all" || filterStatus !== "all" || !!searchTerm;
+
+  const filters = hasFilters
+    ? {
+        ...(filterRole !== "all" && { role: filterRole }),
+        ...(filterStatus !== "all" && { status: filterStatus }),
+        ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
+      }
+    : {};
+
+  const { data: usersData, isLoading: isLoading } = useUsersQuery(filters);
 
   const users = useMemo(
     () =>
@@ -264,11 +271,9 @@ export default function UserRoleManagement() {
   };
 
   const handleSaveUser = async () => {
-    setIsLoading(true);
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
     console.log("Saving user:", editUserData);
-    setIsLoading(false);
     setIsEditDialogOpen(false);
   };
 
@@ -283,20 +288,16 @@ export default function UserRoleManagement() {
   };
 
   const toggleUserStatus = async (userId: string) => {
-    setIsLoading(true);
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 500));
     console.log("Toggling status for user:", userId);
-    setIsLoading(false);
   };
 
   const resetUserPassword = async (userId: string) => {
-    setIsLoading(true);
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 800));
     console.log("Resetting password for user:", userId);
-    setIsLoading(false);
-  };
+   };
 
   const handleCreateUser = async () => {
     try {
@@ -390,7 +391,10 @@ export default function UserRoleManagement() {
                     <Input
                       value={newUserData.firstName}
                       onChange={(e) =>
-                        setNewUserData({ ...newUserData, firstName: e.target.value })
+                        setNewUserData({
+                          ...newUserData,
+                          firstName: e.target.value,
+                        })
                       }
                       placeholder="First name"
                       className="form-input"
@@ -403,7 +407,10 @@ export default function UserRoleManagement() {
                     <Input
                       value={newUserData.lastName}
                       onChange={(e) =>
-                        setNewUserData({ ...newUserData, lastName: e.target.value })
+                        setNewUserData({
+                          ...newUserData,
+                          lastName: e.target.value,
+                        })
                       }
                       placeholder="Last name"
                       className="form-input"
@@ -419,7 +426,10 @@ export default function UserRoleManagement() {
                       type="email"
                       value={newUserData.email}
                       onChange={(e) =>
-                        setNewUserData({ ...newUserData, email: e.target.value })
+                        setNewUserData({
+                          ...newUserData,
+                          email: e.target.value,
+                        })
                       }
                       placeholder="Enter email"
                       className="form-input"
@@ -433,7 +443,10 @@ export default function UserRoleManagement() {
                       type="password"
                       value={newUserData.password}
                       onChange={(e) =>
-                        setNewUserData({ ...newUserData, password: e.target.value })
+                        setNewUserData({
+                          ...newUserData,
+                          password: e.target.value,
+                        })
                       }
                       placeholder="Enter password"
                       className="form-input"
@@ -461,7 +474,10 @@ export default function UserRoleManagement() {
                     <Input
                       value={newUserData.phone}
                       onChange={(e) =>
-                        setNewUserData({ ...newUserData, phone: e.target.value })
+                        setNewUserData({
+                          ...newUserData,
+                          phone: e.target.value,
+                        })
                       }
                       placeholder="Phone number"
                       className="form-input"
@@ -481,9 +497,13 @@ export default function UserRoleManagement() {
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="policyholder">Policyholder</SelectItem>
+                        <SelectItem value="policyholder">
+                          Policyholder
+                        </SelectItem>
                         <SelectItem value="admin">Insurance Admin</SelectItem>
-                        <SelectItem value="system-admin">System Administrator</SelectItem>
+                        <SelectItem value="system-admin">
+                          System Administrator
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -500,7 +520,10 @@ export default function UserRoleManagement() {
                         onChange={(e) =>
                           setNewUserData({
                             ...newUserData,
-                            company: { ...newUserData.company, name: e.target.value },
+                            company: {
+                              ...newUserData.company,
+                              name: e.target.value,
+                            },
                           })
                         }
                         placeholder="Company name"
@@ -516,7 +539,10 @@ export default function UserRoleManagement() {
                         onChange={(e) =>
                           setNewUserData({
                             ...newUserData,
-                            company: { ...newUserData.company, address: e.target.value },
+                            company: {
+                              ...newUserData.company,
+                              address: e.target.value,
+                            },
                           })
                         }
                         placeholder="Address"
@@ -533,7 +559,10 @@ export default function UserRoleManagement() {
                           onChange={(e) =>
                             setNewUserData({
                               ...newUserData,
-                              company: { ...newUserData.company, contact_no: e.target.value },
+                              company: {
+                                ...newUserData.company,
+                                contact_no: e.target.value,
+                              },
                             })
                           }
                           placeholder="Contact number"
@@ -549,7 +578,10 @@ export default function UserRoleManagement() {
                           onChange={(e) =>
                             setNewUserData({
                               ...newUserData,
-                              company: { ...newUserData.company, website: e.target.value },
+                              company: {
+                                ...newUserData.company,
+                                website: e.target.value,
+                              },
                             })
                           }
                           placeholder="Website"
@@ -567,7 +599,10 @@ export default function UserRoleManagement() {
                           onChange={(e) =>
                             setNewUserData({
                               ...newUserData,
-                              company: { ...newUserData.company, license_number: e.target.value },
+                              company: {
+                                ...newUserData.company,
+                                license_number: e.target.value,
+                              },
                             })
                           }
                           placeholder="License number"
@@ -583,7 +618,10 @@ export default function UserRoleManagement() {
                           onValueChange={(value) =>
                             setNewUserData({
                               ...newUserData,
-                              company: { ...newUserData.company, years_in_business: value },
+                              company: {
+                                ...newUserData.company,
+                                years_in_business: value as CompanyDetailsDtoYearsInBusiness
+                              },
                             })
                           }
                         >
@@ -591,8 +629,12 @@ export default function UserRoleManagement() {
                             <SelectValue placeholder="Select years" />
                           </SelectTrigger>
                           <SelectContent>
-                            {Object.values(CompanyDetailsDtoYearsInBusiness).map((v) => (
-                              <SelectItem key={v} value={v}>{v}</SelectItem>
+                            {Object.values(
+                              CompanyDetailsDtoYearsInBusiness
+                            ).map((v) => (
+                              <SelectItem key={v} value={v}>
+                                {v}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -607,7 +649,10 @@ export default function UserRoleManagement() {
                         onValueChange={(value) =>
                           setNewUserData({
                             ...newUserData,
-                            company: { ...newUserData.company, employees_number: value },
+                            company: {
+                              ...newUserData.company,
+                              employees_number: value as CompanyDetailsDtoEmployeesNumber,
+                            },
                           })
                         }
                       >
@@ -615,9 +660,13 @@ export default function UserRoleManagement() {
                           <SelectValue placeholder="Select employee count" />
                         </SelectTrigger>
                         <SelectContent>
-                          {Object.values(CompanyDetailsDtoEmployeesNumber).map((v) => (
-                            <SelectItem key={v} value={v}>{v}</SelectItem>
-                          ))}
+                          {Object.values(CompanyDetailsDtoEmployeesNumber).map(
+                            (v) => (
+                              <SelectItem key={v} value={v}>
+                                {v}
+                              </SelectItem>
+                            )
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -635,7 +684,10 @@ export default function UserRoleManagement() {
                           type="date"
                           value={newUserData.dateOfBirth}
                           onChange={(e) =>
-                            setNewUserData({ ...newUserData, dateOfBirth: e.target.value })
+                            setNewUserData({
+                              ...newUserData,
+                              dateOfBirth: e.target.value,
+                            })
                           }
                           className="form-input"
                         />
@@ -647,7 +699,10 @@ export default function UserRoleManagement() {
                         <Input
                           value={newUserData.occupation}
                           onChange={(e) =>
-                            setNewUserData({ ...newUserData, occupation: e.target.value })
+                            setNewUserData({
+                              ...newUserData,
+                              occupation: e.target.value,
+                            })
                           }
                           placeholder="Occupation"
                           className="form-input"
@@ -661,7 +716,10 @@ export default function UserRoleManagement() {
                       <Input
                         value={newUserData.address}
                         onChange={(e) =>
-                          setNewUserData({ ...newUserData, address: e.target.value })
+                          setNewUserData({
+                            ...newUserData,
+                            address: e.target.value,
+                          })
                         }
                         placeholder="Address"
                         className="form-input"
@@ -761,8 +819,10 @@ export default function UserRoleManagement() {
                     <SelectContent>
                       <SelectItem value="all">All Roles</SelectItem>
                       <SelectItem value="policyholder">Policyholder</SelectItem>
-                      <SelectItem value="admin">Insurance Admin</SelectItem>
-                      <SelectItem value="system-admin">System Admin</SelectItem>
+                      <SelectItem value="insurance_admin">
+                        Insurance Admin
+                      </SelectItem>
+                      <SelectItem value="system_admin">System Admin</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select
@@ -777,8 +837,7 @@ export default function UserRoleManagement() {
                     <SelectContent>
                       <SelectItem value="all">All Status</SelectItem>
                       <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="suspended">Suspended</SelectItem>
+                      <SelectItem value="deactivated">Deactivated</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -786,7 +845,7 @@ export default function UserRoleManagement() {
             </Card>
 
             {/* Loading State */}
-            {pageTransition && (
+            {isLoading && (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
                 <span className="ml-2 text-slate-600 dark:text-slate-400">
@@ -918,14 +977,14 @@ export default function UserRoleManagement() {
               className="mb-8"
             />
 
-            {sortedUsers.length === 0 && !pageTransition && (
+            {sortedUsers.length === 0 && !isLoading && (
               <div className="text-center py-12">
-                <Users className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                <Shield className="w-16 h-16 text-slate-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">
                   No users found
                 </h3>
                 <p className="text-slate-500 dark:text-slate-500">
-                  Try adjusting your search criteria
+                  Try adjusting your search criteria or create a new user
                 </p>
               </div>
             )}
@@ -970,19 +1029,21 @@ export default function UserRoleManagement() {
                         <div className="space-y-1">
                           {(role.permissions?.slice(0, 4) || []).map(
                             (permission, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center space-x-2 text-sm"
-                            >
-                              <CheckCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                              <span className="text-slate-600 dark:text-slate-400">
-                                {permission.name}
-                              </span>
-                            </div>
-                          ))}
+                              <div
+                                key={index}
+                                className="flex items-center space-x-2 text-sm"
+                              >
+                                <CheckCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                                <span className="text-slate-600 dark:text-slate-400">
+                                  {permission.name}
+                                </span>
+                              </div>
+                            )
+                          )}
                           {(role.permissions?.length || 0) > 4 && (
                             <p className="text-xs text-slate-500 dark:text-slate-500 ml-5">
-                              +{(role.permissions?.length || 0) - 4} more permissions
+                              +{(role.permissions?.length || 0) - 4} more
+                              permissions
                             </p>
                           )}
                         </div>
@@ -1090,7 +1151,9 @@ export default function UserRoleManagement() {
                         <div className="flex items-center space-x-3">
                           <Calendar className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                           <div>
-                            <p className="text-sm text-slate-600 dark:text-slate-400">Date of Birth</p>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">
+                              Date of Birth
+                            </p>
                             <p className="font-medium text-slate-800 dark:text-slate-100">
                               {selectedUser.dateOfBirth}
                             </p>
@@ -1101,7 +1164,9 @@ export default function UserRoleManagement() {
                         <div className="flex items-center space-x-3">
                           <Briefcase className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                           <div>
-                            <p className="text-sm text-slate-600 dark:text-slate-400">Occupation</p>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">
+                              Occupation
+                            </p>
                             <p className="font-medium text-slate-800 dark:text-slate-100">
                               {selectedUser.occupation}
                             </p>
@@ -1112,7 +1177,9 @@ export default function UserRoleManagement() {
                         <div className="flex items-start space-x-3">
                           <MapPin className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                           <div>
-                            <p className="text-sm text-slate-600 dark:text-slate-400">Address</p>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">
+                              Address
+                            </p>
                             <p className="font-medium text-slate-800 dark:text-slate-100">
                               {selectedUser.address}
                             </p>
@@ -1250,7 +1317,8 @@ export default function UserRoleManagement() {
                             </p>
                           </div>
                         </div>
-                      ))}
+                      )
+                    )}
                   </div>
                 </div>
 
@@ -1450,7 +1518,10 @@ export default function UserRoleManagement() {
                         type="date"
                         value={editUserData.dateOfBirth}
                         onChange={(e) =>
-                          setEditUserData({ ...editUserData, dateOfBirth: e.target.value })
+                          setEditUserData({
+                            ...editUserData,
+                            dateOfBirth: e.target.value,
+                          })
                         }
                         className="form-input"
                       />
@@ -1462,7 +1533,10 @@ export default function UserRoleManagement() {
                       <Input
                         value={editUserData.occupation}
                         onChange={(e) =>
-                          setEditUserData({ ...editUserData, occupation: e.target.value })
+                          setEditUserData({
+                            ...editUserData,
+                            occupation: e.target.value,
+                          })
                         }
                         className="form-input"
                       />
@@ -1475,7 +1549,10 @@ export default function UserRoleManagement() {
                     <Input
                       value={editUserData.address}
                       onChange={(e) =>
-                        setEditUserData({ ...editUserData, address: e.target.value })
+                        setEditUserData({
+                          ...editUserData,
+                          address: e.target.value,
+                        })
                       }
                       className="form-input"
                     />
@@ -1578,6 +1655,8 @@ export default function UserRoleManagement() {
                     )}
                   </div>
                 </div>
+
+                
 
                 {/* Role Settings */}
                 <div>

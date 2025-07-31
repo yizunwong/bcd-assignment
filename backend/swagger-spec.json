@@ -136,7 +136,42 @@
     "/users": {
       "get": {
         "operationId": "UserController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "role",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "policyholder",
+                "insurance_admin",
+                "system_admin"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "deactivated"
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search keyword for name or email",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Get all users",
@@ -1895,7 +1930,11 @@
           },
           "status": {
             "type": "string",
-            "example": "active"
+            "example": "active",
+            "enum": [
+              "active",
+              "deactivated"
+            ]
           },
           "lastLogin": {
             "type": "object"

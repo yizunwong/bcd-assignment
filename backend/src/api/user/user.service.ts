@@ -158,7 +158,7 @@ export class UserService {
         UserRole.POLICYHOLDER,
       phone: profile.phone ?? null,
       bio: profile.bio ?? null,
-      status: profile.status ?? UserStatus.ACTIVE,
+      status: profile.status as UserStatus,
       lastLogin: authUser.user.last_sign_in_at,
       joinedAt: authUser.user.created_at,
     };
@@ -432,7 +432,6 @@ export class UserService {
         profileError,
       );
     }
-
 
     if (dto.role === UserRole.INSURANCE_ADMIN) {
       if (dto.company) {
