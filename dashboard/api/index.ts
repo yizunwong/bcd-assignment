@@ -362,6 +362,13 @@ export interface ClaimResponseDto {
   claim_documents: ClaimDocumentResponseDto[];
 }
 
+export interface ClaimStatsDto {
+  pending: number;
+  underReview: number;
+  approved: number;
+  rejected: number;
+}
+
 /**
  * Priority of the claim
  */
@@ -648,6 +655,13 @@ export type ClaimControllerRemoveFile200AllOf = {
 
 export type ClaimControllerRemoveFile200 = CommonResponseDto &
   ClaimControllerRemoveFile200AllOf;
+
+export type ClaimControllerGetStats200AllOf = {
+  data?: ClaimStatsDto;
+};
+
+export type ClaimControllerGetStats200 = CommonResponseDto &
+  ClaimControllerGetStats200AllOf;
 
 export type PolicyControllerFindAllParams = {
   page?: number;
@@ -2507,6 +2521,147 @@ export const useClaimControllerRemoveFile = <
 
   return useMutation(mutationOptions, queryClient);
 };
+
+export const claimControllerGetStats = (signal?: AbortSignal) => {
+  return customFetcher<ClaimControllerGetStats200>({
+    url: `/claim/stats`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getClaimControllerGetStatsQueryKey = () => {
+  return [`/claim/stats`] as const;
+};
+
+export const getClaimControllerGetStatsQueryOptions = <
+  TData = Awaited<ReturnType<typeof claimControllerGetStats>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof claimControllerGetStats>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getClaimControllerGetStatsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof claimControllerGetStats>>
+  > = ({ signal }) => claimControllerGetStats(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof claimControllerGetStats>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ClaimControllerGetStatsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof claimControllerGetStats>>
+>;
+export type ClaimControllerGetStatsQueryError = unknown;
+
+export function useClaimControllerGetStats<
+  TData = Awaited<ReturnType<typeof claimControllerGetStats>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof claimControllerGetStats>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof claimControllerGetStats>>,
+          TError,
+          Awaited<ReturnType<typeof claimControllerGetStats>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useClaimControllerGetStats<
+  TData = Awaited<ReturnType<typeof claimControllerGetStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof claimControllerGetStats>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof claimControllerGetStats>>,
+          TError,
+          Awaited<ReturnType<typeof claimControllerGetStats>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useClaimControllerGetStats<
+  TData = Awaited<ReturnType<typeof claimControllerGetStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof claimControllerGetStats>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useClaimControllerGetStats<
+  TData = Awaited<ReturnType<typeof claimControllerGetStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof claimControllerGetStats>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getClaimControllerGetStatsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
 
 export const policyControllerCreate = (
   createPolicyDto: CreatePolicyDto,

@@ -12,6 +12,7 @@ import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { FindClaimsQueryDto } from './dto/responses/claims-query.dto';
 import { FileService } from '../file/file.service';
 import { ClaimResponseDto } from './dto/responses/claim.dto';
+import { ClaimStatsDto } from './dto/responses/claim-stats.dto';
 import { CommonResponseDto } from 'src/common/common.dto';
 @Injectable()
 export class ClaimService {
@@ -469,6 +470,39 @@ export class ClaimService {
       statusCode: 200,
       message: 'Claim document removed successfully',
       data,
+    });
+  }
+
+  async getStats(
+    req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto<ClaimStatsDto>> {
+    const supabase = req.supabase;
+    const statuses = ['pending', 'under-review', 'approved', 'rejected'];
+    const counts: Record<string, number> = {};
+
+    for (const status of statuses) {
+      const { count, error } = await supabase
+        .from('claims')
+        .select('id', { head: true, count: 'exact' })
+        .eq('status', status);
+
+      if (error) {
+        throw new InternalServerErrorException(
+          `Failed to count ${status} claims`,
+        );
+      }
+      counts[status] = count || 0;
+    }
+
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Claim statistics retrieved successfully',
+      data: new ClaimStatsDto({
+        pending: counts['pending'],
+        underReview: counts['under-review'],
+        approved: counts['approved'],
+        rejected: counts['rejected'],
+      }),
     });
   }
 

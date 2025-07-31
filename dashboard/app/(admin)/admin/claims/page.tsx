@@ -14,7 +14,11 @@ import {
 } from "@/components/ui/select";
 import ClaimReviewDialog from "@/components/shared/ClaimReviewDialog";
 import { Pagination } from "@/components/shared/Pagination";
-import { claims } from "@/public/data/admin/claimsData";
+import {
+  useClaimControllerFindAll,
+  useClaimControllerUpdateClaimStatus,
+  useClaimControllerGetStats,
+} from "@/api";
 import {
   FileText,
   Search,
@@ -38,24 +42,31 @@ export default function ClaimsReview() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
+  const { data: claimsData } = useClaimControllerFindAll(undefined, {
+    query: {},
+  });
+  const claims = claimsData?.data ?? [];
+
+  const { data: stats } = useClaimControllerGetStats({ query: {} });
+  const updateStatus = useClaimControllerUpdateClaimStatus();
+
   const filteredClaims = useMemo(() => {
-    let filtered = claims.filter((claim) => {
+    let filtered = claims.filter((claim: any) => {
       const matchesStatus =
         filterStatus === "all" || claim.status === filterStatus;
       const matchesSearch =
-        claim.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        claim.claimant.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        claim.type.toLowerCase().includes(searchTerm.toLowerCase());
+        claim.id.toString().includes(searchTerm.toLowerCase()) ||
+        claim.claim_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (claim.description || "").toLowerCase().includes(searchTerm.toLowerCase());
       return matchesStatus && matchesSearch;
     });
 
-    // Sort by submitted date (newest first)
     return filtered.sort(
-      (a, b) =>
-        new Date(b.submittedDate).getTime() -
-        new Date(a.submittedDate).getTime()
+      (a: any, b: any) =>
+        new Date(b.submitted_date).getTime() -
+        new Date(a.submitted_date).getTime()
     );
-  }, [searchTerm, filterStatus]);
+  }, [searchTerm, filterStatus, claims]);
 
   const totalPages = Math.ceil(filteredClaims.length / ITEMS_PER_PAGE);
   const paginatedClaims = filteredClaims.slice(
@@ -113,11 +124,11 @@ export default function ClaimsReview() {
   };
 
   const handleApprove = (claimId: string) => {
-    console.log("Approving claim:", claimId);
+    updateStatus.mutate({ id: String(claimId), status: "approved" });
   };
 
   const handleReject = (claimId: string) => {
-    console.log("Rejecting claim:", claimId);
+    updateStatus.mutate({ id: String(claimId), status: "rejected" });
   };
 
   return (
@@ -149,7 +160,7 @@ export default function ClaimsReview() {
                 <Badge className="status-badge status-pending">Pending</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {claims.filter((c) => c.status === "pending").length}
+                {stats?.data?.pending ?? 0}
               </h3>
               <p className="text-slate-600 dark:text-slate-400">
                 Pending Review
@@ -166,7 +177,7 @@ export default function ClaimsReview() {
                 <Badge className="status-badge status-info">Review</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {claims.filter((c) => c.status === "under-review").length}
+                {stats?.data?.underReview ?? 0}
               </h3>
               <p className="text-slate-600 dark:text-slate-400">Under Review</p>
             </CardContent>
@@ -181,7 +192,7 @@ export default function ClaimsReview() {
                 <Badge className="status-badge status-active">Approved</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {claims.filter((c) => c.status === "approved").length}
+                {stats?.data?.approved ?? 0}
               </h3>
               <p className="text-slate-600 dark:text-slate-400">Approved</p>
             </CardContent>
@@ -196,7 +207,7 @@ export default function ClaimsReview() {
                 <Badge className="status-badge status-error">Rejected</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {claims.filter((c) => c.status === "rejected").length}
+                {stats?.data?.rejected ?? 0}
               </h3>
               <p className="text-slate-600 dark:text-slate-400">Rejected</p>
             </CardContent>
@@ -267,7 +278,7 @@ export default function ClaimsReview() {
                         {claim.id}
                       </h3>
                       <p className="text-slate-600 dark:text-slate-400">
-                        {claim.policyName}
+                        {claim.claim_type}
                       </p>
                     </div>
                   </div>
@@ -292,22 +303,9 @@ export default function ClaimsReview() {
 
                 <div className="grid md:grid-cols-4 gap-4 mb-4">
                   <div className="flex items-center space-x-2">
-                    <User className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                    <div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Claimant
-                      </p>
-                      <p className="font-medium text-slate-800 dark:text-slate-100">
-                        {claim.claimant}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
                     <DollarSign className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                     <div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Amount
-                      </p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">Amount</p>
                       <p className="font-medium text-slate-800 dark:text-slate-100">
                         {claim.amount}
                       </p>
@@ -316,11 +314,9 @@ export default function ClaimsReview() {
                   <div className="flex items-center space-x-2">
                     <Calendar className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                     <div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Submitted
-                      </p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">Submitted</p>
                       <p className="font-medium text-slate-800 dark:text-slate-100">
-                        {new Date(claim.submittedDate).toLocaleDateString()}
+                        {new Date(claim.submitted_date).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -331,7 +327,7 @@ export default function ClaimsReview() {
                         Type
                       </p>
                       <p className="font-medium text-slate-800 dark:text-slate-100">
-                        {claim.type}
+                        {claim.claim_type}
                       </p>
                     </div>
                   </div>

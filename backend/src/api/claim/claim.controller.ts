@@ -21,6 +21,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { FindClaimsQueryDto } from './dto/responses/claims-query.dto';
 import { ClaimResponseDto } from './dto/responses/claim.dto';
+import { ClaimStatsDto } from './dto/responses/claim-stats.dto';
 import { ApiCommonResponse, CommonResponseDto } from 'src/common/common.dto';
 import { ApiBearerAuth, ApiConsumes, ApiParam } from '@nestjs/swagger';
 import { UploadDocDto } from '../file/requests/document-upload.dto';
@@ -60,6 +61,19 @@ export class ClaimController {
     @Query() query: FindClaimsQueryDto,
   ): Promise<CommonResponseDto<ClaimResponseDto[]>> {
     return this.claimService.findAll(req, query);
+  }
+
+  @Get('stats')
+  @UseGuards(AuthGuard)
+  @ApiCommonResponse(
+    ClaimStatsDto,
+    false,
+    'Get claim statistics',
+  )
+  getStats(
+    @Req() req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto<ClaimStatsDto>> {
+    return this.claimService.getStats(req);
   }
 
   @Get(':id')
