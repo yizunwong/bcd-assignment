@@ -52,15 +52,10 @@ export class AuthService {
         throw new UnauthorizedException('User is not verified');
       }
     }
-
-    const maxAge = body.rememberMe
-      ? 30 * 24 * 60 * 60 * 1000 // 30 days
-      : 60 * 60 * 1000; // 1 hour
-
     res.cookie('access_token', data.session.access_token, {
       httpOnly: true,
       secure: true,
-      maxAge,
+      maxAge: 60 * 60 * 1000,
       sameSite: 'lax',
       path: '/',
     });
@@ -69,7 +64,7 @@ export class AuthService {
       res.cookie('refresh_token', data.session.refresh_token, {
         httpOnly: true,
         secure: true,
-        maxAge,
+        maxAge: 30 * 24 * 60 * 60 * 1000,
         sameSite: 'lax',
         path: '/',
       });
