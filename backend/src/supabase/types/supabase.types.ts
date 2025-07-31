@@ -121,57 +121,57 @@ export type Database = {
       claims: {
         Row: {
           amount: number;
-          claim_priority: Database['public']['Enums']['claim_priority'];
-          claim_type: string;
           claimed_date: string | null;
           description: string | null;
           id: number;
           policy_id: number | null;
+          priority: Database['public']['Enums']['claim_priority'];
           processed_date: string | null;
           status: Database['public']['Enums']['claim_status'];
           submitted_date: string;
+          type: string;
           user_id: string | null;
         };
         Insert: {
           amount?: number;
-          claim_priority?: Database['public']['Enums']['claim_priority'];
-          claim_type: string;
           claimed_date?: string | null;
           description?: string | null;
           id?: number;
           policy_id?: number | null;
+          priority?: Database['public']['Enums']['claim_priority'];
           processed_date?: string | null;
           status?: Database['public']['Enums']['claim_status'];
           submitted_date: string;
+          type: string;
           user_id?: string | null;
         };
         Update: {
           amount?: number;
-          claim_priority?: Database['public']['Enums']['claim_priority'];
-          claim_type?: string;
           claimed_date?: string | null;
           description?: string | null;
           id?: number;
           policy_id?: number | null;
+          priority?: Database['public']['Enums']['claim_priority'];
           processed_date?: string | null;
           status?: Database['public']['Enums']['claim_status'];
           submitted_date?: string;
+          type?: string;
           user_id?: string | null;
         };
         Relationships: [
-          {
-            foreignKeyName: 'claims_claim_type_fkey';
-            columns: ['claim_type'];
-            isOneToOne: false;
-            referencedRelation: 'claim_types';
-            referencedColumns: ['name'];
-          },
           {
             foreignKeyName: 'claims_policy_id_fkey';
             columns: ['policy_id'];
             isOneToOne: false;
             referencedRelation: 'policies';
             referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'claims_type_fkey';
+            columns: ['type'];
+            isOneToOne: false;
+            referencedRelation: 'claim_types';
+            referencedColumns: ['name'];
           },
         ];
       };

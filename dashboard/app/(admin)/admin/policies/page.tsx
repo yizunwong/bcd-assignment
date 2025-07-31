@@ -187,7 +187,7 @@ export default function ManagePolicies() {
         provider: meData?.data?.companyName || "Unknown Provider",
         coverage: newPolicy.coverage,
         durationDays: newPolicy.duration,
-        premium: newPolicy.premium.toString(),
+        premium: newPolicy.premium,
         rating: 0,
         description: newPolicy.description,
         claimTypes: newPolicy.claimTypes.filter((c) => c),

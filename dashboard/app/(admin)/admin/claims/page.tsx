@@ -56,7 +56,7 @@ export default function ClaimsReview() {
         filterStatus === "all" || claim.status === filterStatus;
       const matchesSearch =
         claim.id.toString().includes(searchTerm.toLowerCase()) ||
-        claim.claim_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        claim.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (claim.description || "").toLowerCase().includes(searchTerm.toLowerCase());
       return matchesStatus && matchesSearch;
     });
@@ -123,11 +123,11 @@ export default function ClaimsReview() {
     }
   };
 
-  const handleApprove = (claimId: string) => {
+  const handleApprove = (claimId: number) => {
     updateStatus.mutate({ id: String(claimId), status: "approved" });
   };
 
-  const handleReject = (claimId: string) => {
+  const handleReject = (claimId: number) => {
     updateStatus.mutate({ id: String(claimId), status: "rejected" });
   };
 
@@ -278,7 +278,7 @@ export default function ClaimsReview() {
                         {claim.id}
                       </h3>
                       <p className="text-slate-600 dark:text-slate-400">
-                        {claim.claim_type}
+                        {claim.type}
                       </p>
                     </div>
                   </div>
@@ -327,7 +327,7 @@ export default function ClaimsReview() {
                         Type
                       </p>
                       <p className="font-medium text-slate-800 dark:text-slate-100">
-                        {claim.claim_type}
+                        {claim.type}
                       </p>
                     </div>
                   </div>

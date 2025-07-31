@@ -468,7 +468,7 @@
               "type": "string",
               "enum": [
                 "id",
-                "claim_type",
+                "type",
                 "amount",
                 "status",
                 "submitted_date"
@@ -551,6 +551,43 @@
         "responses": {
           "201": {
             "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Claim"
+        ]
+      }
+    },
+    "/claim/stats": {
+      "get": {
+        "operationId": "ClaimController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get claim statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/ClaimStatsDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -760,35 +797,6 @@
         "tags": [
           "Claim"
         ]
-      }
-    },
-    "/claim/stats": {
-      "get": {
-        "operationId": "ClaimController_getStats",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Get claim statistics",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    { "$ref": "#/components/schemas/CommonResponseDto" },
-                    {
-                      "properties": {
-                        "data": {
-                          "$ref": "#/components/schemas/ClaimStatsDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [ { "supabase-auth": [] } ],
-        "tags": [ "Claim" ]
       }
     },
     "/claim/{id}/file": {
@@ -2133,7 +2141,7 @@
             "example": 1,
             "description": "ID of the policy associated with the claim"
           },
-          "claim_type": {
+          "type": {
             "type": "string",
             "example": "accident",
             "description": "Type of the claim"
@@ -2161,7 +2169,7 @@
         },
         "required": [
           "policy_id",
-          "claim_type",
+          "type",
           "priority",
           "amount"
         ]
@@ -2210,7 +2218,7 @@
           "id": {
             "type": "number"
           },
-          "claim_type": {
+          "type": {
             "type": "string"
           },
           "amount": {
@@ -2220,9 +2228,12 @@
             "type": "string"
           },
           "description": {
-            "type": "object"
+            "type": "string"
           },
           "submitted_date": {
+            "type": "string"
+          },
+          "priority": {
             "type": "string"
           },
           "claim_documents": {
@@ -2234,12 +2245,36 @@
         },
         "required": [
           "id",
-          "claim_type",
+          "type",
           "amount",
           "status",
           "description",
           "submitted_date",
+          "priority",
           "claim_documents"
+        ]
+      },
+      "ClaimStatsDto": {
+        "type": "object",
+        "properties": {
+          "pending": {
+            "type": "number"
+          },
+          "underReview": {
+            "type": "number"
+          },
+          "approved": {
+            "type": "number"
+          },
+          "rejected": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "pending",
+          "underReview",
+          "approved",
+          "rejected"
         ]
       },
       "UpdateClaimDto": {
@@ -2250,7 +2285,7 @@
             "example": 1,
             "description": "ID of the policy associated with the claim"
           },
-          "claim_type": {
+          "type": {
             "type": "string",
             "example": "accident",
             "description": "Type of the claim"
@@ -2653,15 +2688,6 @@
               "format": "binary"
             }
           }
-        }
-      },
-      "ClaimStatsDto": {
-        "type": "object",
-        "properties": {
-          "pending": { "type": "number" },
-          "underReview": { "type": "number" },
-          "approved": { "type": "number" },
-          "rejected": { "type": "number" }
         }
       },
       "CreateReviewDto": {

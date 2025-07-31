@@ -21,7 +21,7 @@ export class CreateClaimDto {
   })
   @IsString({ message: 'Claim type must be a string' })
   @IsNotEmpty({ message: 'Claim type is required' })
-  claim_type!: string;
+  type!: string;
 
   @ApiProperty({
     example: ClaimPriority.MEDIUM,
@@ -48,5 +48,4 @@ export class CreateClaimDto {
   @IsOptional()
   @IsString({ message: 'Description must be a string' })
   description?: string;
-
 }

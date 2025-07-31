@@ -65,11 +65,7 @@ export class ClaimController {
 
   @Get('stats')
   @UseGuards(AuthGuard)
-  @ApiCommonResponse(
-    ClaimStatsDto,
-    false,
-    'Get claim statistics',
-  )
+  @ApiCommonResponse(ClaimStatsDto, false, 'Get claim statistics')
   getStats(
     @Req() req: AuthenticatedRequest,
   ): Promise<CommonResponseDto<ClaimStatsDto>> {

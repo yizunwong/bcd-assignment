@@ -35,7 +35,7 @@ export class ClaimService {
         {
           policy_id: createClaimDto.policy_id,
           user_id: user_id,
-          claim_type: createClaimDto.claim_type,
+          type: createClaimDto.type,
           priority: createClaimDto.priority,
           amount: createClaimDto.amount,
           status: 'pending',
@@ -108,7 +108,7 @@ export class ClaimService {
   ): Promise<CommonResponseDto<ClaimResponseDto[]>> {
     if (
       query.sortBy &&
-      !['id', 'claim_type', 'amount', 'status', 'submitted_date'].includes(
+      !['id', 'type', 'amount', 'status', 'submitted_date'].includes(
         query.sortBy,
       )
     ) {
@@ -126,12 +126,12 @@ export class ClaimService {
       });
 
     if (query.category) {
-      dbQuery = dbQuery.eq('claim_type', query.category);
+      dbQuery = dbQuery.eq('type', query.category);
     }
 
     if (query.search) {
       dbQuery = dbQuery.or(
-        `claim_type.ilike.%${query.search}%,description.ilike.%${query.search}%`,
+        `type.ilike.%${query.search}%,description.ilike.%${query.search}%`,
       );
     }
 
@@ -165,6 +165,7 @@ export class ClaimService {
     let urlIndex = 0;
     const enrichedClaims: ClaimResponseDto[] = data.map((claim) => ({
       ...claim,
+      description: claim.description || '',
       claim_documents: Array.isArray(claim.claim_documents)
         ? claim.claim_documents.map((doc) => ({
             id: doc.id,
@@ -219,11 +220,12 @@ export class ClaimService {
 
     const claim: ClaimResponseDto = {
       id: data.id,
-      claim_type: data.claim_type,
+      type: data.type,
       amount: data.amount,
       status: data.status,
-      description: data.description,
+      description: data.description || '',
       submitted_date: data.submitted_date,
+      priority: data.priority,
       claim_documents: enrichedDocuments,
     };
 
@@ -251,7 +253,7 @@ export class ClaimService {
       .update({
         policy_id: updateClaimDto.policy_id,
         user_id: user_id,
-        claim_type: updateClaimDto.claim_type,
+        type: updateClaimDto.type,
         priority: updateClaimDto.priority,
         amount: updateClaimDto.amount,
         status: updateClaimDto.status as 'pending' | 'approved' | 'rejected',
@@ -477,9 +479,8 @@ export class ClaimService {
     req: AuthenticatedRequest,
   ): Promise<CommonResponseDto<ClaimStatsDto>> {
     const supabase = req.supabase;
-    const statuses = ['pending', 'under-review', 'approved', 'rejected'];
     const counts: Record<string, number> = {};
-
+    const statuses = Object.values(ClaimStatus);
     for (const status of statuses) {
       const { count, error } = await supabase
         .from('claims')
@@ -511,7 +512,6 @@ export class ClaimService {
     policyId: number,
     req: AuthenticatedRequest,
   ) {
-
     for (const rawName of claimTypeNames) {
       const name = rawName.toLowerCase();
       // Check if claim type already exists

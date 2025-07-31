@@ -23,7 +23,7 @@ export class ClaimResponseDto {
   id!: number;
 
   @ApiProperty()
-  claim_type!: string;
+  type!: string;
 
   @ApiProperty()
   amount!: number;
@@ -32,10 +32,13 @@ export class ClaimResponseDto {
   status!: string;
 
   @ApiProperty()
-  description!: string | null;
+  description!: string;
 
   @ApiProperty()
   submitted_date!: string;
+
+  @ApiProperty()
+  priority!: string;
 
   @ApiProperty({ type: [ClaimDocumentResponseDto] })
   claim_documents!: ClaimDocumentResponseDto[];

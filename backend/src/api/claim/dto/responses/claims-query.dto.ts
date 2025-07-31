@@ -18,10 +18,10 @@ export class FindClaimsQueryDto extends PaginatedQueryDto {
 
   @ApiPropertyOptional({
     default: 'id',
-    enum: ['id', 'claim_type', 'amount', 'status', 'submitted_date'],
+    enum: ['id', 'type', 'amount', 'status', 'submitted_date'],
   })
   @IsOptional()
-  @IsIn(['id', 'claim_type', 'amount', 'status', 'submitted_date'])
+  @IsIn(['id', 'type', 'amount', 'status', 'submitted_date'])
   sortBy: string = 'id';
 
   @ApiPropertyOptional({ default: 'asc', enum: ['asc', 'desc'] })
