@@ -2524,7 +2524,7 @@
             "type": "number"
           },
           "premium": {
-            "type": "string"
+            "type": "number"
           },
           "provider": {
             "type": "string"
