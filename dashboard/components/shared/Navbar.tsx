@@ -192,14 +192,16 @@ export function Navbar({ role }: NavbarProps) {
                   {/* Dropdown Menu */}
                   {isUserMenuOpen && (
                     <div className="absolute right-0 mt-2 w-48 glass-card rounded-xl shadow-lg border border-white/20 dark:border-slate-700/50 py-2 z-50">
-                      <Link
-                        href={getProfileLink()}
-                        className="flex items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors"
-                        onClick={() => setIsUserMenuOpen(false)}
-                      >
-                        <User className="w-4 h-4 mr-3" />
-                        Profile
-                      </Link>
+                      {role !== "system-admin" && (
+                        <Link
+                          href={getProfileLink()}
+                          className="flex items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          <User className="w-4 h-4 mr-3" />
+                          Profile
+                        </Link>
+                      )}
                       <Link
                         href={isRolePage ? "/" : getDashboardLink()}
                         className="flex items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors"
@@ -295,7 +297,7 @@ export function Navbar({ role }: NavbarProps) {
                       <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
                     </span>
                   </Button>
-
+                  {role !== "system-admin"} && (
                   <Link href={getProfileLink()}>
                     <Button
                       variant="ghost"
@@ -306,7 +308,7 @@ export function Navbar({ role }: NavbarProps) {
                       Profile
                     </Button>
                   </Link>
-
+                  )
                   <Link href={isRolePage ? "/" : getDashboardLink()}>
                     <Button
                       variant="ghost"
@@ -317,7 +319,6 @@ export function Navbar({ role }: NavbarProps) {
                       {isRolePage ? "Home" : "Dashboard"}
                     </Button>
                   </Link>
-
                   <Button
                     variant="ghost"
                     size="sm"
