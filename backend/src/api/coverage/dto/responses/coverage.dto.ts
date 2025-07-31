@@ -9,6 +9,15 @@ export class CoveragePolicyDto {
 
   @ApiProperty()
   category!: string;
+
+  @ApiProperty()
+  coverage!: number;
+
+  @ApiProperty()
+  premium!: string;
+
+  @ApiProperty()
+  provider!: string;
 }
 
 export class CoverageResponseDto {

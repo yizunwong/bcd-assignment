@@ -14,22 +14,12 @@ import { CommonResponseDto } from 'src/common/common.dto';
 @Injectable()
 export class CoverageService {
   async create(dto: CreateCoverageDto, req: AuthenticatedRequest) {
-    //Get user from request (from Bearer token)
-    const { data: userData, error: userError } =
-      await req.supabase.auth.getUser();
-
-    if (userError || !userData?.user) {
-      throw new UnauthorizedException('Invalid or expired token');
-    }
-
-    const user_id = userData.user.id;
-
     //Insert into coverage table
     const { data: coverage, error: coverageError } = await req.supabase
       .from('coverage')
       .insert({
         policy_id: dto.policy_id,
-        user_id: user_id,
+        user_id: req.user.id,
         status: dto.status,
         utilization_rate: dto.utilization_rate,
         start_date: dto.start_date,
@@ -65,12 +55,16 @@ export class CoverageService {
       policies!inner(
         name,
         description,
-        category
+        category,
+        coverage,
+        premium,
+        provider
       )
     `,
         { count: 'exact' },
       )
-      .range(offset, offset + (query.limit || 5) - 1);
+      .range(offset, offset + (query.limit || 5) - 1)
+      .eq('user_id', req.user.id);
 
     if (query.status) {
       dbQuery = dbQuery.eq('status', query.status);

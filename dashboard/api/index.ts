@@ -455,8 +455,6 @@ export interface UpdatePolicyDto {
 export interface CreateCoverageDto {
   /** ID of the policy this coverage is linked to */
   policy_id: number;
-  /** UUID of the user who owns this coverage */
-  user_id: string;
   /** Status of the coverage */
   status: string;
   /** Utilization rate of the coverage */
@@ -475,6 +473,9 @@ export interface CoveragePolicyDto {
   name: string;
   description?: CoveragePolicyDtoDescription;
   category: string;
+  coverage: number;
+  premium: string;
+  provider: string;
 }
 
 export type CoverageResponseDtoPolicyId = { [key: string]: unknown };
@@ -498,8 +499,6 @@ export interface CoverageResponseDto {
 export interface UpdateCoverageDto {
   /** ID of the policy this coverage is linked to */
   policy_id?: number;
-  /** UUID of the user who owns this coverage */
-  user_id?: string;
   /** Status of the coverage */
   status?: string;
   /** Utilization rate of the coverage */

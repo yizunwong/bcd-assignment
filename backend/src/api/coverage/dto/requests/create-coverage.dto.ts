@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsInt,
-  IsUUID,
   IsNumber,
   IsDateString,
   IsNotEmpty,
@@ -23,14 +22,6 @@ export class CreateCoverageDto {
   @IsInt({ message: 'policy_id must be an integer' })
   @IsNotEmpty({ message: 'policy_id is required' })
   policy_id!: number;
-
-  @ApiProperty({
-    example: 'a3e1f2b4-1234-4c56-8e7d-123456789abc',
-    description: 'UUID of the user who owns this coverage',
-  })
-  @IsUUID('4', { message: 'user_id must be a valid UUID' })
-  @IsNotEmpty({ message: 'user_id is required' })
-  user_id!: string;
 
   @ApiProperty({
     example: 'active',
