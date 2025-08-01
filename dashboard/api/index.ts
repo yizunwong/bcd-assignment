@@ -31,28 +31,6 @@ export interface CommonResponseDto {
   count?: number;
 }
 
-export type AuthUserResponseDtoFirstName = { [key: string]: unknown };
-
-export type AuthUserResponseDtoLastName = { [key: string]: unknown };
-
-export type AuthUserResponseDtoPhone = { [key: string]: unknown };
-
-export type AuthUserResponseDtoBio = { [key: string]: unknown };
-
-export type AuthUserResponseDtoAddress = { [key: string]: unknown };
-
-export type AuthUserResponseDtoDateOfBirth = { [key: string]: unknown };
-
-export type AuthUserResponseDtoOccupation = { [key: string]: unknown };
-
-export type AuthUserResponseDtoCompanyName = { [key: string]: unknown };
-
-export type AuthUserResponseDtoCompanyAddress = { [key: string]: unknown };
-
-export type AuthUserResponseDtoCompanyContactNo = { [key: string]: unknown };
-
-export type AuthUserResponseDtoCompanyLicenseNo = { [key: string]: unknown };
-
 export interface AuthUserResponseDto {
   id: string;
   email: string;
@@ -61,18 +39,18 @@ export interface AuthUserResponseDto {
   role: string;
   lastSignInAt: string;
   provider: string;
-  firstName?: AuthUserResponseDtoFirstName;
-  lastName?: AuthUserResponseDtoLastName;
-  phone?: AuthUserResponseDtoPhone;
-  bio?: AuthUserResponseDtoBio;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  bio?: string;
   status: string;
-  address?: AuthUserResponseDtoAddress;
-  dateOfBirth?: AuthUserResponseDtoDateOfBirth;
-  occupation?: AuthUserResponseDtoOccupation;
-  companyName?: AuthUserResponseDtoCompanyName;
-  companyAddress?: AuthUserResponseDtoCompanyAddress;
-  companyContactNo?: AuthUserResponseDtoCompanyContactNo;
-  companyLicenseNo?: AuthUserResponseDtoCompanyLicenseNo;
+  address?: string;
+  dateOfBirth?: string;
+  occupation?: string;
+  companyName?: string;
+  companyAddress?: string;
+  companyContactNo?: string;
+  companyLicenseNo?: string;
 }
 
 export interface LoginResponseDto {
@@ -335,7 +313,7 @@ export const CreateClaimDtoPriority = {
 
 export interface CreateClaimDto {
   /** ID of the policy associated with the claim */
-  policy_id: number;
+  coverage_id: number;
   /** Type of the claim */
   type: string;
   /** Priority of the claim */
@@ -392,7 +370,7 @@ export const UpdateClaimDtoPriority = {
 
 export interface UpdateClaimDto {
   /** ID of the policy associated with the claim */
-  policy_id?: number;
+  coverage_id?: number;
   /** Type of the claim */
   type?: string;
   /** Priority of the claim */
@@ -417,9 +395,19 @@ export const ClaimStatus = {
   claimed: "claimed",
 } as const;
 
+export type CreatePolicyDtoCategory =
+  (typeof CreatePolicyDtoCategory)[keyof typeof CreatePolicyDtoCategory];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreatePolicyDtoCategory = {
+  health: "health",
+  travel: "travel",
+  crop: "crop",
+} as const;
+
 export interface CreatePolicyDto {
   name: string;
-  category: string;
+  category: CreatePolicyDtoCategory;
   provider: string;
   coverage: number;
   durationDays: number;
@@ -455,9 +443,25 @@ export interface PolicyResponseDto {
   policy_documents: PolicyDocumentResponseDto[];
 }
 
+export interface PolicyCategoryCountStatsDto {
+  travel: number;
+  health: number;
+  crop: number;
+}
+
+export type UpdatePolicyDtoCategory =
+  (typeof UpdatePolicyDtoCategory)[keyof typeof UpdatePolicyDtoCategory];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdatePolicyDtoCategory = {
+  health: "health",
+  travel: "travel",
+  crop: "crop",
+} as const;
+
 export interface UpdatePolicyDto {
   name?: string;
-  category?: string;
+  category?: UpdatePolicyDtoCategory;
   provider?: string;
   coverage?: number;
   durationDays?: number;
@@ -705,15 +709,28 @@ export type PolicyControllerFindAllParams = {
   /**
    * Filter by policy category
    */
-  category?: string;
+  category?: PolicyControllerFindAllCategory;
   /**
    * Search keyword for name or description
    */
   search?: string;
   sortBy?: PolicyControllerFindAllSortBy;
   sortOrder?: PolicyControllerFindAllSortOrder;
+  /**
+   * Filter by creator user id
+   */
   userId?: string;
 };
+
+export type PolicyControllerFindAllCategory =
+  (typeof PolicyControllerFindAllCategory)[keyof typeof PolicyControllerFindAllCategory];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PolicyControllerFindAllCategory = {
+  health: "health",
+  travel: "travel",
+  crop: "crop",
+} as const;
 
 export type PolicyControllerFindAllSortBy =
   (typeof PolicyControllerFindAllSortBy)[keyof typeof PolicyControllerFindAllSortBy];
@@ -724,7 +741,7 @@ export const PolicyControllerFindAllSortBy = {
   name: "name",
   rating: "rating",
   premium: "premium",
-  popularity: "popularity",
+  sales: "sales",
 } as const;
 
 export type PolicyControllerFindAllSortOrder =
@@ -764,13 +781,20 @@ export type PolicyControllerRemove200AllOf = {
 export type PolicyControllerRemove200 = CommonResponseDto &
   PolicyControllerRemove200AllOf;
 
+export type PolicyControllerGetCategoryCounts200AllOf = {
+  data?: PolicyCategoryCountStatsDto;
+};
+
+export type PolicyControllerGetCategoryCounts200 = CommonResponseDto &
+  PolicyControllerGetCategoryCounts200AllOf;
+
 export type CoverageControllerFindAllParams = {
   page?: number;
   limit?: number;
   /**
    * Filter by policy category
    */
-  category?: string;
+  category?: CoverageControllerFindAllCategory;
   /**
    * Search keyword for policy name or description
    */
@@ -779,6 +803,16 @@ export type CoverageControllerFindAllParams = {
   sortBy?: CoverageControllerFindAllSortBy;
   sortOrder?: CoverageControllerFindAllSortOrder;
 };
+
+export type CoverageControllerFindAllCategory =
+  (typeof CoverageControllerFindAllCategory)[keyof typeof CoverageControllerFindAllCategory];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CoverageControllerFindAllCategory = {
+  health: "health",
+  travel: "travel",
+  crop: "crop",
+} as const;
 
 export type CoverageControllerFindAllStatus =
   (typeof CoverageControllerFindAllStatus)[keyof typeof CoverageControllerFindAllStatus];
@@ -3484,7 +3518,7 @@ export function usePolicyControllerGetSummary<
 }
 
 export const policyControllerGetCategoryCounts = (signal?: AbortSignal) => {
-  return customFetcher<void>({
+  return customFetcher<PolicyControllerGetCategoryCounts200>({
     url: `/policy/browse/categories`,
     method: "GET",
     signal,

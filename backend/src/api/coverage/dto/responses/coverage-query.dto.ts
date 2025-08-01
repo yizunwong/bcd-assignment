@@ -2,12 +2,16 @@ import { IsEnum, IsIn, IsOptional, IsString } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { PaginatedQueryDto } from 'src/common/paginated-query.dto';
 import { CoverageStatus } from '../requests/create-coverage.dto';
+import { PolicyCategory } from 'src/enums';
 
 export class FindCoverageQueryDto extends PaginatedQueryDto {
-  @ApiPropertyOptional({ description: 'Filter by policy category' })
+  @ApiPropertyOptional({
+    description: 'Filter by policy category',
+    enum: PolicyCategory,
+  })
   @IsOptional()
-  @IsString()
-  category?: string;
+  @IsEnum(PolicyCategory)
+  category?: PolicyCategory;
 
   @ApiPropertyOptional({
     description: 'Search keyword for policy name or description',

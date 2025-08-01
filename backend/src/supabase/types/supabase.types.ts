@@ -298,7 +298,7 @@ export type Database = {
       };
       policies: {
         Row: {
-          category: string;
+          category: Database['public']['Enums']['policy_category'];
           coverage: number;
           created_by: string;
           description: string | null;
@@ -312,7 +312,7 @@ export type Database = {
           sales: number;
         };
         Insert: {
-          category: string;
+          category?: Database['public']['Enums']['policy_category'];
           coverage: number;
           created_by: string;
           description?: string | null;
@@ -326,7 +326,7 @@ export type Database = {
           sales?: number;
         };
         Update: {
-          category?: string;
+          category?: Database['public']['Enums']['policy_category'];
           coverage?: number;
           created_by?: string;
           description?: string | null;
@@ -577,6 +577,7 @@ export type Database = {
         | '51-200 employees'
         | '201-500 employees'
         | '500+ employees';
+      policy_category: 'health' | 'crop' | 'travel';
       role: 'admin' | 'user';
       user_status: 'active' | 'deactivated';
       years_in_business:
@@ -725,6 +726,7 @@ export const Constants = {
         '201-500 employees',
         '500+ employees',
       ],
+      policy_category: ['health', 'crop', 'travel'],
       role: ['admin', 'user'],
       user_status: ['active', 'deactivated'],
       years_in_business: [

@@ -27,6 +27,12 @@ export enum NumberOfEmployees {
   OVER_500 = '500+ employees',
 }
 
+export enum PolicyCategory {
+  HEALTH = 'health',
+  TRAVEL = 'travel',
+  CROP = 'crop',
+}
+
 export type AdminDetails = Partial<
   Database['public']['Tables']['admin_details']['Row']
 > & {

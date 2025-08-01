@@ -13,12 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Pagination } from "@/components/shared/Pagination";
-import {
-  Shield,
-  Search,
-  Filter,
-  Star,
-} from "lucide-react";
+import { Shield, Search, Filter, Star } from "lucide-react";
 import { policyCategories } from "@/public/data/policyholder/browseData";
 import PolicyDetailsDialog, {
   Policy,
@@ -28,6 +23,7 @@ import { logEvent } from "@/lib/analytics";
 import { usePoliciesQuery, useCategoryCountsQuery } from "@/hooks/usePolicies";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useToast } from "@/components/shared/ToastProvider";
+import { PolicyControllerFindAllCategory, PolicyControllerFindAllSortBy } from "@/api";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -44,15 +40,30 @@ export default function BrowsePolicies() {
   const sortParams = useMemo(() => {
     switch (sortBy) {
       case "popular":
-        return { sortBy: "popularity", sortOrder: "desc" as const };
+        return {
+          sortBy: PolicyControllerFindAllSortBy.id,
+          sortOrder: "desc" as const,
+        };
       case "rating":
-        return { sortBy: "rating", sortOrder: "desc" as const };
+        return {
+          sortBy: PolicyControllerFindAllSortBy.rating,
+          sortOrder: "desc" as const,
+        };
       case "price-low":
-        return { sortBy: "premium", sortOrder: "asc" as const };
+        return {
+          sortBy: PolicyControllerFindAllSortBy.premium,
+          sortOrder: "asc" as const,
+        };
       case "price-high":
-        return { sortBy: "premium", sortOrder: "desc" as const };
+        return {
+          sortBy: PolicyControllerFindAllSortBy.premium,
+          sortOrder: "desc" as const,
+        };
       default:
-        return { sortBy: "id", sortOrder: "asc" as const };
+        return {
+          sortBy: PolicyControllerFindAllSortBy.id,
+          sortOrder: "asc" as const,
+        };
     }
   }, [sortBy]);
 
@@ -85,15 +96,16 @@ export default function BrowsePolicies() {
     return (policiesData?.data || []).map((policy) => ({
       id: policy.id,
       name: policy.name,
-      category: policy.category,
+      category: policy.category as PolicyControllerFindAllCategory,
       provider: policy.provider,
       coverage: policy.coverage ? `$${policy.coverage.toLocaleString()}` : "-",
       premium: `${policy.premium} ETH/month`,
       rating: policy.rating,
-      features: policy.claim_types || [],
+      features: policy.claim_types ?? [],
       popular: policy.popular,
       description:
         typeof policy.description === "string" ? policy.description : "",
+      sales: policy.sales,
     }));
   }, [policiesData]);
 
@@ -136,35 +148,39 @@ export default function BrowsePolicies() {
 
         {/* Policy Categories */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
-          {policyCategories.map((category) => (
-            <Card
-              key={category.id}
-              className={`glass-card rounded-2xl cursor-pointer card-hover ${
-                selectedCategory === category.id
-                  ? "ring-2 ring-emerald-500"
-                  : ""
-              }`}
-              onClick={() =>
-                handleFilterChange(() => setSelectedCategory(category.id))
-              }
-            >
-              <CardContent className="flex items-center p-6">
-                <div
-                  className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${category.color} flex items-center justify-center mr-4`}
-                >
-                  <category.icon className="w-8 h-8 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-                    {category.name}
-                  </h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    {(categoryCountsData?.data?.[category.id] || 0)} policies available
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          {policyCategories.map((category) => {
+            const count = categoryCountsData[category.id] ?? 0;
+
+            return (
+              <Card
+                key={category.id}
+                className={`glass-card rounded-2xl cursor-pointer card-hover ${
+                  selectedCategory === category.id
+                    ? "ring-2 ring-emerald-500"
+                    : ""
+                }`}
+                onClick={() =>
+                  handleFilterChange(() => setSelectedCategory(category.id))
+                }
+              >
+                <CardContent className="flex items-center p-6">
+                  <div
+                    className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${category.color} flex items-center justify-center mr-4`}
+                  >
+                    <category.icon className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                      {category.name}
+                    </h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                      {count} policies available
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {/* Search and Filters */}
@@ -226,7 +242,8 @@ export default function BrowsePolicies() {
             {selectedCategory !== "all" && (
               <span>
                 {" "}
-                in {policyCategories.find((c) => c.id === selectedCategory)?.name}
+                in{" "}
+                {policyCategories.find((c) => c.id === selectedCategory)?.name}
               </span>
             )}
           </p>
@@ -243,7 +260,7 @@ export default function BrowsePolicies() {
                 key={policy.id}
                 className="glass-card rounded-2xl card-hover relative overflow-hidden"
               >
-                {policy.popular && (
+                {policy.sales && (
                   <Badge className="absolute top-4 right-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white">
                     Popular
                   </Badge>
@@ -300,30 +317,32 @@ export default function BrowsePolicies() {
                     </div>
                   </div>
 
-                  <div className="mb-6">
-                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      Key Features:
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {policy.features.slice(0, 3).map((feature, index) => (
-                        <Badge
-                          key={index}
-                          variant="secondary"
-                          className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
-                        >
-                          {feature}
-                        </Badge>
-                      ))}
-                      {policy.features.length > 3 && (
-                        <Badge
-                          variant="secondary"
-                          className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
-                        >
-                          +{policy.features.length - 3} more
-                        </Badge>
-                      )}
+                  {policy.features && policy.features.length > 0 && (
+                    <div className="mb-6">
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Key Features:
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {policy.features.slice(0, 3).map((feature, index) => (
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
+                          >
+                            {feature}
+                          </Badge>
+                        ))}
+                        {policy.features.length > 3 && (
+                          <Badge
+                            variant="secondary"
+                            className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
+                          >
+                            +{policy.features.length - 3} more
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <div className="flex gap-2">
                     <Button

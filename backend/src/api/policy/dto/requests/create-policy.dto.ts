@@ -10,8 +10,10 @@ import {
   IsUUID,
   ValidateNested,
   IsDecimal,
+  IsEnum,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
+import { PolicyCategory } from 'src/enums';
 
 export class CreateDocumentsDto {
   @ApiProperty({ example: 'Policy Terms', description: 'Document name' })
@@ -68,10 +70,10 @@ export class CreatePolicyDto {
   @IsNotEmpty()
   name!: string;
 
-  @ApiProperty({ example: 'health' })
-  @IsString()
+  @ApiProperty({ example: 'health', enum: PolicyCategory })
+  @IsEnum(PolicyCategory)
   @IsNotEmpty()
-  category!: string;
+  category!: PolicyCategory;
 
   @ApiProperty({ example: 'HealthSecure' })
   @IsString()
