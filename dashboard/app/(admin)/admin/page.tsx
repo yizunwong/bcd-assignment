@@ -24,8 +24,9 @@ import {
 } from "lucide-react";
 
 export default function AdminDashboard() {
-  const { data: recentClaimsData } = useClaimControllerFindAll(undefined, {
-    query: { limit: 4, page: 1 },
+  const { data: recentClaimsData } = useClaimControllerFindAll({
+    limit: 4,
+    page: 1,
   });
   const recentClaims = recentClaimsData?.data ?? [];
   const { data: stats } = useClaimControllerGetStats({ query: {} });

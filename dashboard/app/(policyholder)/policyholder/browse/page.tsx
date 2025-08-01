@@ -23,13 +23,19 @@ import { logEvent } from "@/lib/analytics";
 import { usePoliciesQuery, useCategoryCountsQuery } from "@/hooks/usePolicies";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useToast } from "@/components/shared/ToastProvider";
-import { PolicyControllerFindAllCategory, PolicyControllerFindAllSortBy } from "@/api";
+import {
+  PolicyControllerFindAllCategory,
+  PolicyControllerFindAllSortBy,
+  PolicyCategoryCountStatsDto,
+} from "@/api";
 
 const ITEMS_PER_PAGE = 6;
 
 export default function BrowsePolicies() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState<
+    PolicyControllerFindAllCategory | "all"
+  >("all");
   const [sortBy, setSortBy] = useState("popular");
   const [currentPage, setCurrentPage] = useState(1);
   const [showDetails, setShowDetails] = useState(false);
@@ -74,7 +80,10 @@ export default function BrowsePolicies() {
     isLoading,
     error,
   } = usePoliciesQuery({
-    category: selectedCategory === "all" ? undefined : selectedCategory,
+    category:
+      selectedCategory === "all"
+        ? undefined
+        : (selectedCategory as PolicyControllerFindAllCategory),
     search: debouncedSearchTerm,
     page: currentPage,
     limit: ITEMS_PER_PAGE,
@@ -148,8 +157,11 @@ export default function BrowsePolicies() {
 
         {/* Policy Categories */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
-          {policyCategories.map((category) => {
-            const count = categoryCountsData[category.id] ?? 0;
+            {policyCategories.map((category) => {
+              const count =
+                categoryCountsData?.data?.[
+                  category.id as keyof PolicyCategoryCountStatsDto
+                ] ?? 0;
 
             return (
               <Card
@@ -160,7 +172,11 @@ export default function BrowsePolicies() {
                     : ""
                 }`}
                 onClick={() =>
-                  handleFilterChange(() => setSelectedCategory(category.id))
+                  handleFilterChange(() =>
+                    setSelectedCategory(
+                      category.id as PolicyControllerFindAllCategory
+                    )
+                  )
                 }
               >
                 <CardContent className="flex items-center p-6">
@@ -201,7 +217,11 @@ export default function BrowsePolicies() {
               <Select
                 value={selectedCategory}
                 onValueChange={(value) =>
-                  handleFilterChange(() => setSelectedCategory(value))
+                  handleFilterChange(() =>
+                    setSelectedCategory(
+                      value as PolicyControllerFindAllCategory | 'all'
+                    )
+                  )
                 }
               >
                 <SelectTrigger className="w-full md:w-48 form-input">

@@ -51,14 +51,17 @@ import {
 import { useDebounce } from "@/hooks/useDebounce";
 import { useMeQuery } from "@/hooks/useAuth";
 import { useToast } from "@/components/shared/ToastProvider";
-import { PolicyControllerFindAllCategory } from "@/api";
+import {
+  PolicyControllerFindAllCategory,
+  CreatePolicyDtoCategory,
+} from "@/api";
 
 export default function ManagePolicies() {
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterCategory, setFilterCategory] = useState(
-    PolicyControllerFindAllCategory.health
-  );
+  const [filterCategory, setFilterCategory] = useState<
+    PolicyControllerFindAllCategory | "all"
+  >(PolicyControllerFindAllCategory.health);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState<any>(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -74,7 +77,15 @@ export default function ManagePolicies() {
   const { uploadPolicyDocuments } = useUploadPolicyDocumentsMutation();
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  const [newPolicy, setNewPolicy] = useState({
+  const [newPolicy, setNewPolicy] = useState<{
+    name: string;
+    category: '' | PolicyControllerFindAllCategory;
+    coverage: number;
+    premium: number;
+    duration: number;
+    description: string;
+    claimTypes: string[];
+  }>({
     name: "",
     category: "",
     coverage: 0,
@@ -89,7 +100,10 @@ export default function ManagePolicies() {
     isLoading,
     error,
   } = usePoliciesQuery({
-    category: filterCategory,
+    category:
+      filterCategory === 'all'
+        ? undefined
+        : (filterCategory as PolicyControllerFindAllCategory),
     search: debouncedSearchTerm,
     page: currentPage,
     limit: itemsPerPage,
@@ -110,7 +124,7 @@ export default function ManagePolicies() {
   const policies: Policy[] = (policiesData?.data || []).map((policy) => ({
     id: policy.id,
     name: policy.name,
-    category: policy.category,
+    category: policy.category as PolicyControllerFindAllCategory,
     provider: policy.provider,
     coverage: policy.coverage ? `$${policy.coverage.toLocaleString()}` : "-",
     premium: policy.premium,
@@ -171,9 +185,11 @@ export default function ManagePolicies() {
       (policy) => activeTab === "all" || policy.status === activeTab
     );
 
-    return filtered.sort(
-      (a, b) => new Date(b.created).getTime() - new Date(a.created).getTime()
-    );
+    return filtered.sort((a, b) => {
+      const dateA = a.created ? new Date(a.created) : new Date(0);
+      const dateB = b.created ? new Date(b.created) : new Date(0);
+      return dateB.getTime() - dateA.getTime();
+    });
   }, [policies, activeTab]);
 
   const totalPages = Math.ceil(filteredPolicies.length / itemsPerPage);
@@ -205,9 +221,9 @@ export default function ManagePolicies() {
 
   const handleCreatePolicy = async () => {
     try {
-      const res = await createPolicy({
-        name: newPolicy.name,
-        category: newPolicy.category,
+        const res = await createPolicy({
+          name: newPolicy.name,
+          category: newPolicy.category as CreatePolicyDtoCategory,
         provider: meData?.data?.companyName || "Unknown Provider",
         coverage: newPolicy.coverage,
         durationDays: newPolicy.duration,
@@ -380,11 +396,14 @@ export default function ManagePolicies() {
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                       Category
                     </label>
-                    <Select
-                      value={newPolicy.category}
-                      onValueChange={(value) =>
-                        setNewPolicy({ ...newPolicy, category: value })
-                      }
+                      <Select
+                        value={newPolicy.category}
+                        onValueChange={(value) =>
+                          setNewPolicy({
+                            ...newPolicy,
+                            category: value as PolicyControllerFindAllCategory,
+                          })
+                        }
                     >
                       <SelectTrigger className="form-input">
                         <SelectValue placeholder="Select category" />
@@ -664,7 +683,10 @@ export default function ManagePolicies() {
                 <Badge className="status-badge status-info">Total</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {policies.reduce((sum, p) => sum + p.sales, 0)}
+                {policies.reduce(
+                  (sum, p) => sum + Number(p.sales ?? 0),
+                  0
+                )}
               </h3>
               <p className="text-slate-600 dark:text-slate-400">Total Sales</p>
             </CardContent>
@@ -735,9 +757,13 @@ export default function ManagePolicies() {
                   </div>
                   <Select
                     value={filterCategory}
-                    onValueChange={(value) =>
-                      handleFilterChange(() => setFilterCategory(value))
-                    }
+                      onValueChange={(value) =>
+                        handleFilterChange(() =>
+                          setFilterCategory(
+                            value as PolicyControllerFindAllCategory | 'all'
+                          )
+                        )
+                      }
                   >
                     <SelectTrigger className="w-full md:w-48 form-input">
                       <Filter className="w-4 h-4 mr-2" />
