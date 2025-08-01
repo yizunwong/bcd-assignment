@@ -712,6 +712,7 @@ export type PolicyControllerFindAllParams = {
   search?: string;
   sortBy?: PolicyControllerFindAllSortBy;
   sortOrder?: PolicyControllerFindAllSortOrder;
+  userId?: string;
 };
 
 export type PolicyControllerFindAllSortBy =

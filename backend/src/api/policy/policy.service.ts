@@ -131,8 +131,8 @@ export class PolicyService {
     let dbQuery = req.supabase
       .from('policies')
       .select(
-        `*, 
-     policy_documents(*), 
+        `*,
+     policy_documents(*),
      policy_claim_type:policy_claim_type(
        claim_type:claim_types(name)
      )`,
@@ -141,8 +141,11 @@ export class PolicyService {
       .range(offset, offset + (query.limit || 5) - 1)
       .order(query.sortBy || 'id', {
         ascending: (query.sortOrder || 'asc') === 'asc',
-      })
-      .eq('created_by', req.user.id);
+      });
+
+    if (query.userId) {
+      dbQuery = dbQuery.eq('created_by', query.userId);
+    }
 
     if (query.category && query.category !== 'all') {
       dbQuery = dbQuery.eq('category', query.category);

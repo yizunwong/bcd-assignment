@@ -28,4 +28,9 @@ export class FindPoliciesQueryDto extends PaginatedQueryDto {
   @IsOptional()
   @IsIn(['asc', 'desc'])
   sortOrder: 'asc' | 'desc' = 'asc';
+
+  @ApiPropertyOptional({ description: 'Filter by creator user id' })
+  @IsOptional()
+  @IsString()
+  userId?: string;
 }

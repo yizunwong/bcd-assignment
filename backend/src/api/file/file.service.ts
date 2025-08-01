@@ -77,8 +77,7 @@ export class FileService {
     filePath: string,
   ): Promise<void> {
     try {
-
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from(this.BUCKET)
         .remove([filePath]);
 
@@ -90,7 +89,6 @@ export class FileService {
           'Failed to remove file from storage: ' + error.message,
         );
       }
-
     } catch (error) {
       if (error instanceof Error) {
         console.error('Caught error during file removal:', error.message);

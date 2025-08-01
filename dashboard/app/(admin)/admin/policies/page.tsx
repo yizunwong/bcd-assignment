@@ -39,6 +39,8 @@ import {
   FileText,
   Download,
 } from "lucide-react";
+import PolicyDetailsDialog, { Policy } from "@/components/shared/PolicyDetailsDialog";
+import EditPolicyDialog from "@/components/shared/EditPolicyDialog";
 import {
   usePoliciesQuery,
   useCreatePolicyMutation,
@@ -54,6 +56,8 @@ export default function ManagePolicies() {
   const [filterCategory, setFilterCategory] = useState("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState<any>(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(15);
   const [uploadedTermsFiles, setUploadedTermsFiles] = useState<File[]>([]);
@@ -84,6 +88,7 @@ export default function ManagePolicies() {
     search: debouncedSearchTerm,
     page: currentPage,
     limit: itemsPerPage,
+    userId: meData?.id,
   });
 
   useEffect(() => {
@@ -98,7 +103,7 @@ export default function ManagePolicies() {
     }
   }, [error]);
 
-  const policies = (policiesData?.data || []).map((policy) => ({
+  const policies: Policy[] = (policiesData?.data || []).map((policy) => ({
     id: policy.id,
     name: policy.name,
     category: policy.category,
@@ -177,6 +182,21 @@ export default function ManagePolicies() {
   const handleFilterChange = (filterFn: () => void) => {
     filterFn();
     setCurrentPage(1);
+  };
+
+  const openDetails = (policy: Policy) => {
+    setSelectedPolicy(policy);
+    setShowDetails(true);
+  };
+
+  const openEdit = (policy: Policy) => {
+    setSelectedPolicy(policy);
+    setShowEdit(true);
+  };
+
+  const closeDialogs = () => {
+    setShowDetails(false);
+    setShowEdit(false);
   };
 
   const handleCreatePolicy = async () => {
@@ -869,6 +889,7 @@ export default function ManagePolicies() {
                       <Button
                         variant="outline"
                         className="flex-1 floating-button"
+                        onClick={() => openDetails(policy)}
                       >
                         <Eye className="w-4 h-4 mr-2" />
                         View Details
@@ -876,6 +897,7 @@ export default function ManagePolicies() {
                       <Button
                         variant="outline"
                         className="flex-1 floating-button"
+                        onClick={() => openEdit(policy)}
                       >
                         <Edit className="w-4 h-4 mr-2" />
                         Edit
@@ -915,6 +937,21 @@ export default function ManagePolicies() {
               Try adjusting your search criteria or create a new policy
             </p>
           </div>
+        )}
+
+        {selectedPolicy && (
+          <PolicyDetailsDialog
+            policy={selectedPolicy}
+            open={showDetails}
+            onClose={closeDialogs}
+          />
+        )}
+        {selectedPolicy && (
+          <EditPolicyDialog
+            policy={selectedPolicy}
+            open={showEdit}
+            onClose={closeDialogs}
+          />
         )}
       </div>
     </div>

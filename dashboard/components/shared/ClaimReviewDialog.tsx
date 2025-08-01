@@ -18,7 +18,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { FileText, CheckCircle, X } from 'lucide-react';
+import { FileText } from 'lucide-react';
 
 import type { ReactNode } from 'react';
 
@@ -29,18 +29,15 @@ interface ClaimReviewDialogProps {
 
 export function ClaimReviewDialog({ claim, trigger }: ClaimReviewDialogProps) {
   const [open, setOpen] = useState(false);
-  const adjusters = ['Alice Brown', 'David Lee', 'Monica Garcia'];
   const [reviewForm, setReviewForm] = useState({
     status: claim.status || '',
     notes: '',
-    adjuster: '',
     reason: '',
     payment: '',
   });
   const [errors, setErrors] = useState({
     status: '',
     notes: '',
-    adjuster: '',
     reason: '',
     payment: '',
   });
@@ -48,7 +45,6 @@ export function ClaimReviewDialog({ claim, trigger }: ClaimReviewDialogProps) {
   const validateForm = () => {
     const newErrors: any = {};
     if (!reviewForm.status) newErrors.status = 'Status is required';
-    if (!reviewForm.adjuster) newErrors.adjuster = 'Select an adjuster';
     if (!reviewForm.notes) newErrors.notes = 'Assessment notes are required';
     if (
       (reviewForm.status === 'rejected' || reviewForm.status === 'under-review') &&
@@ -67,30 +63,9 @@ export function ClaimReviewDialog({ claim, trigger }: ClaimReviewDialogProps) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleApprove = () => {
-    setReviewForm({ ...reviewForm, status: 'approved' });
-    if (!validateForm()) return;
-    console.log('Approving claim:', claim.id, reviewForm);
-    setOpen(false);
-  };
-
-  const handleReject = () => {
-    setReviewForm({ ...reviewForm, status: 'rejected' });
-    if (!validateForm()) return;
-    console.log('Rejecting claim:', claim.id, reviewForm);
-    setOpen(false);
-  };
-
   const handleSaveChanges = () => {
     if (!validateForm()) return;
     console.log('Saving claim:', claim.id, reviewForm);
-    setOpen(false);
-  };
-
-  const handleRequestInfo = () => {
-    setReviewForm({ ...reviewForm, status: 'under-review' });
-    if (!validateForm()) return;
-    console.log('Requesting additional info for', claim.id);
     setOpen(false);
   };
 
@@ -103,11 +78,10 @@ export function ClaimReviewDialog({ claim, trigger }: ClaimReviewDialogProps) {
           setReviewForm({
             status: claim.status || '',
             notes: '',
-            adjuster: '',
             reason: '',
             payment: '',
           });
-          setErrors({ status: '', notes: '', adjuster: '', reason: '', payment: '' });
+          setErrors({ status: '', notes: '', reason: '', payment: '' });
         }
       }}
     >
@@ -229,20 +203,6 @@ export function ClaimReviewDialog({ claim, trigger }: ClaimReviewDialogProps) {
                 </Select>
                 {errors.status && <p className="text-sm text-red-600 mt-1">{errors.status}</p>}
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Claims Adjuster</label>
-                <Select value={reviewForm.adjuster} onValueChange={(value) => setReviewForm({ ...reviewForm, adjuster: value })}>
-                  <SelectTrigger className="form-input">
-                    <SelectValue placeholder="Assign adjuster" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {adjusters.map((adj) => (
-                      <SelectItem key={adj} value={adj}>{adj}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.adjuster && <p className="text-sm text-red-600 mt-1">{errors.adjuster}</p>}
-              </div>
             </div>
 
             <div>
@@ -279,16 +239,7 @@ export function ClaimReviewDialog({ claim, trigger }: ClaimReviewDialogProps) {
           </div>
 
           <div className="responsive-stack pt-4 border-t border-slate-200 dark:border-slate-700">
-            <Button variant="outline" onClick={() => setOpen(false)} className="flex-1">Cancel</Button>
-            <Button variant="outline" onClick={handleRequestInfo} className="flex-1">Request Info</Button>
-            <Button variant="outline" onClick={handleReject} className="flex-1 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20">
-              <X className="w-4 h-4 mr-2" />
-              Reject Claim
-            </Button>
-            <Button onClick={handleApprove} className="flex-1 gradient-accent text-white floating-button">
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Approve Claim
-            </Button>
+            <Button variant="outline" onClick={() => setOpen(false)} className="flex-1">Close</Button>
             <Button onClick={handleSaveChanges} className="flex-1 gradient-accent text-white floating-button">
               Save Changes
             </Button>
