@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
+import { Connect } from "./Connect";
 import {
   Shield,
   Menu,
@@ -14,7 +15,6 @@ import {
   Home,
   Search,
   FileText,
-  Wallet,
   BarChart3,
   Plus,
   Gift,
@@ -47,7 +47,6 @@ export function Navbar({ role }: NavbarProps) {
       { href: "/policyholder/browse", label: "Browse Policies", icon: Search },
       { href: "/policyholder/coverage", label: "My Coverage", icon: Shield },
       { href: "/policyholder/claims", label: "Claims", icon: FileText },
-      { href: "/policyholder/wallet", label: "Wallet", icon: Wallet },
     ],
     admin: [
       { href: "/admin", label: "Dashboard", icon: BarChart3 },
@@ -160,6 +159,7 @@ export function Navbar({ role }: NavbarProps) {
 
           {/* Right Side Actions */}
           <div className="hidden md:flex items-center space-x-2 lg:space-x-3 xl:space-x-4 flex-shrink-0">
+            {role === "policyholder" && <Connect />}
             <ThemeToggle />
 
             {role && (
@@ -272,6 +272,7 @@ export function Navbar({ role }: NavbarProps) {
         {isOpen && (
           <div className="md:hidden border-t border-white/20 dark:border-slate-700/50 py-4">
             <div className="flex flex-col space-y-4">
+              {role === "policyholder" && <Connect />}
               {navigationLinks.map((link, index) => (
                 <Link
                   key={index}

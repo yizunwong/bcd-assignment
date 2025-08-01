@@ -31,7 +31,6 @@ import {
   allTransactions,
 } from "@/public/data/policyholder/walletData";
 import WalletSection from "@/components/shared/WalletSectiom";
-import { Connect } from "@/components/shared/Connect";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -128,9 +127,6 @@ export default function WalletPage() {
                 Manage your crypto assets and transaction history
               </p>
             </div>
-          </div>
-          <div className="ml-auto">
-            <Connect />
           </div>
         </div>
 
