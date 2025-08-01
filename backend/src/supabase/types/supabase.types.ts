@@ -309,6 +309,7 @@ export type Database = {
           premium: number;
           provider: string;
           rating: number;
+          sales: number;
         };
         Insert: {
           category: string;
@@ -322,6 +323,7 @@ export type Database = {
           premium: number;
           provider: string;
           rating: number;
+          sales?: number;
         };
         Update: {
           category?: string;
@@ -335,6 +337,7 @@ export type Database = {
           premium?: number;
           provider?: string;
           rating?: number;
+          sales?: number;
         };
         Relationships: [];
       };
