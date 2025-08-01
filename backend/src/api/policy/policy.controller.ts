@@ -23,6 +23,7 @@ import { ApiCommonResponse, CommonResponseDto } from 'src/common/common.dto';
 import { PolicyResponseDto } from './dto/responses/policy.dto';
 import { FindPoliciesQueryDto } from './dto/responses/policy-query.dto';
 import { UploadDocDto } from '../file/requests/document-upload.dto';
+import { PolicyCategoryCountStatsDto } from './dto/responses/policy-category.dto';
 
 @Controller('policy')
 @ApiBearerAuth('supabase-auth')
@@ -84,7 +85,10 @@ export class PolicyController {
   @Get('/browse/categories')
   @UseGuards(AuthGuard)
   @ApiBearerAuth('supabase-auth')
-  async getCategoryCounts(@Req() req: AuthenticatedRequest) {
+  @ApiCommonResponse(PolicyCategoryCountStatsDto, false, 'Get category counts')
+  async getCategoryCounts(
+    @Req() req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto<PolicyCategoryCountStatsDto>> {
     return this.policyService.getPolicyCountByCategory(req);
   }
 

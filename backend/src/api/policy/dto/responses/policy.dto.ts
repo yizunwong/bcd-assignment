@@ -1,4 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsEnum } from 'class-validator';
+import { PolicyCategory } from 'src/enums';
 
 export class PolicyDocumentResponseDto {
   @ApiProperty()
@@ -24,7 +26,8 @@ export class PolicyResponseDto {
   name!: string;
 
   @ApiProperty()
-  category!: string;
+  @IsEnum(PolicyCategory)
+  category!: PolicyCategory;
 
   @ApiProperty()
   provider!: string;

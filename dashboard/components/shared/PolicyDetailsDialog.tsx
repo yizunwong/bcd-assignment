@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Star, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { PolicyControllerFindAllCategory } from '@/api';
 
 export interface Policy {
   id: string | number;
   name: string;
-  category?: string;
+  category: PolicyControllerFindAllCategory;
   provider?: string;
   coverage?: string | number;
   premium?: string | number;
@@ -24,7 +25,6 @@ export interface Policy {
   documents?: { name: string; url: string }[];
   reviews?: { user: string; rating: number; comment: string }[];
   rating?: number;
-  status?: 'active' | 'inactive' | string;
 }
 
 export interface PolicyDetailsDialogProps {
@@ -51,7 +51,6 @@ function formatDate(value?: Date | string) {
 }
 
 export default function PolicyDetailsDialog({ policy, open, onClose }: PolicyDetailsDialogProps) {
-  const statusClass = policy.status === 'active' ? 'status-active' : 'status-warning';
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -64,11 +63,6 @@ export default function PolicyDetailsDialog({ policy, open, onClose }: PolicyDet
             <DialogTitle className="text-lg font-semibold truncate">
               {policy.name}
             </DialogTitle>
-            {policy.status && (
-              <Badge className={cn('status-badge', statusClass)}>{
-                policy.status.charAt(0).toUpperCase() + policy.status.slice(1)
-              }</Badge>
-            )}
           </div>
         </DialogHeader>
         <div className="space-y-6 mt-4">

@@ -39,6 +39,10 @@ import {
   FileText,
   Download,
 } from "lucide-react";
+import PolicyDetailsDialog, {
+  Policy,
+} from "@/components/shared/PolicyDetailsDialog";
+import EditPolicyDialog from "@/components/shared/EditPolicyDialog";
 import {
   usePoliciesQuery,
   useCreatePolicyMutation,
@@ -46,14 +50,19 @@ import {
 } from "@/hooks/usePolicies";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useMeQuery } from "@/hooks/useAuth";
-import { useToast } from '@/components/shared/ToastProvider';
+import { useToast } from "@/components/shared/ToastProvider";
+import { PolicyControllerFindAllCategory } from "@/api";
 
 export default function ManagePolicies() {
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterCategory, setFilterCategory] = useState(
+    PolicyControllerFindAllCategory.health
+  );
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState<any>(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(15);
   const [uploadedTermsFiles, setUploadedTermsFiles] = useState<File[]>([]);
@@ -84,10 +93,10 @@ export default function ManagePolicies() {
     search: debouncedSearchTerm,
     page: currentPage,
     limit: itemsPerPage,
+    userId: meData?.data?.id,
   });
 
-  useEffect(() => {
-  }, [policiesData]);
+  useEffect(() => {}, [policiesData]);
 
   useEffect(() => {
     if (error) {
@@ -98,25 +107,25 @@ export default function ManagePolicies() {
     }
   }, [error]);
 
-  const policies = (policiesData?.data || []).map((policy) => ({
+  const policies: Policy[] = (policiesData?.data || []).map((policy) => ({
     id: policy.id,
     name: policy.name,
     category: policy.category,
     provider: policy.provider,
     coverage: policy.coverage ? `$${policy.coverage.toLocaleString()}` : "-",
     premium: policy.premium,
-    status: "active", 
-    sales: policy.sales, 
-    revenue: "-", 
-    created: "-", 
-    lastUpdated: "-", 
+    status: "active",
+    sales: policy.sales,
+    revenue: "-",
+    created: "-",
+    lastUpdated: "-",
     description:
       typeof policy.description === "string" ? policy.description : "",
     features: policy.claim_types || [],
-    terms: "", 
+    terms: "",
   }));
 
-  const getCategoryIcon = (category: string) => {
+  const getCategoryIcon = (category: PolicyControllerFindAllCategory) => {
     switch (category) {
       case "health":
         return Heart;
@@ -179,6 +188,21 @@ export default function ManagePolicies() {
     setCurrentPage(1);
   };
 
+  const openDetails = (policy: Policy) => {
+    setSelectedPolicy(policy);
+    setShowDetails(true);
+  };
+
+  const openEdit = (policy: Policy) => {
+    setSelectedPolicy(policy);
+    setShowEdit(true);
+  };
+
+  const closeDialogs = () => {
+    setShowDetails(false);
+    setShowEdit(false);
+  };
+
   const handleCreatePolicy = async () => {
     try {
       const res = await createPolicy({
@@ -198,10 +222,15 @@ export default function ManagePolicies() {
           files: uploadedTermsFiles,
         });
       }
-      printMessage((res as any)?.message || "Policy created successfully", "success");
+      printMessage(
+        (res as any)?.message || "Policy created successfully",
+        "success"
+      );
     } catch (err) {
       printMessage(
-        typeof err === "string" ? err : createError || "Failed to create policy",
+        typeof err === "string"
+          ? err
+          : createError || "Failed to create policy",
         "error"
       );
     }
@@ -609,9 +638,6 @@ export default function ManagePolicies() {
                 </div>
                 <Badge className="status-badge status-active">Active</Badge>
               </div>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {policies.filter((p) => p.status === "active").length}
-              </h3>
               <p className="text-slate-600 dark:text-slate-400">
                 Active Policies
               </p>
@@ -626,12 +652,6 @@ export default function ManagePolicies() {
                 </div>
                 <Badge className="status-badge status-pending">Draft</Badge>
               </div>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {policies.filter((p) => p.status === "draft").length}
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400">
-                Draft Policies
-              </p>
             </CardContent>
           </Card>
 
@@ -786,12 +806,6 @@ export default function ManagePolicies() {
                           </p>
                         </div>
                       </div>
-                      <Badge
-                        className={`status-badge ${getStatusColor(policy.status)}`}
-                      >
-                        {policy.status.charAt(0).toUpperCase() +
-                          policy.status.slice(1)}
-                      </Badge>
                     </div>
                   </CardHeader>
 
@@ -819,56 +833,57 @@ export default function ManagePolicies() {
                       </div>
                     </div>
 
-                    {policy.status === "active" && (
-                      <div className="grid grid-cols-2 gap-4 p-3 bg-slate-50/50 dark:bg-slate-700/30 rounded-lg">
-                        <div>
-                          <p className="text-sm text-slate-600 dark:text-slate-400">
-                            Sales
-                          </p>
-                          <p className="font-semibold text-slate-800 dark:text-slate-100">
-                            {policy.sales}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-slate-600 dark:text-slate-400">
-                            Revenue
-                          </p>
-                          <p className="font-semibold text-slate-800 dark:text-slate-100">
-                            {policy.revenue}
-                          </p>
+                    <div className="grid grid-cols-2 gap-4 p-3 bg-slate-50/50 dark:bg-slate-700/30 rounded-lg">
+                      <div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          Sales
+                        </p>
+                        <p className="font-semibold text-slate-800 dark:text-slate-100">
+                          {policy.sales}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          Revenue
+                        </p>
+                        <p className="font-semibold text-slate-800 dark:text-slate-100">
+                          {policy.revenue}
+                        </p>
+                      </div>
+                    </div>
+
+                    {policy.features && policy.features.length > 0 && (
+                      <div>
+                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                          Claim Type:
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {policy.features.slice(0, 3).map((feature, index) => (
+                            <Badge
+                              key={index}
+                              variant="secondary"
+                              className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
+                            >
+                              {feature}
+                            </Badge>
+                          ))}
+                          {policy.features.length > 3 && (
+                            <Badge
+                              variant="secondary"
+                              className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
+                            >
+                              +{policy.features.length - 3} more
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     )}
-
-                    <div>
-                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                        Claim Type:
-                      </p>
-                      <div className="flex flex-wrap gap-1">
-                        {policy.features.slice(0, 3).map((feature, index) => (
-                          <Badge
-                            key={index}
-                            variant="secondary"
-                            className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
-                          >
-                            {feature}
-                          </Badge>
-                        ))}
-                        {policy.features.length > 3 && (
-                          <Badge
-                            variant="secondary"
-                            className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
-                          >
-                            +{policy.features.length - 3} more
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
 
                     <div className="flex gap-2 pt-4 border-t border-slate-100 dark:border-slate-700">
                       <Button
                         variant="outline"
                         className="flex-1 floating-button"
+                        onClick={() => openDetails(policy)}
                       >
                         <Eye className="w-4 h-4 mr-2" />
                         View Details
@@ -876,6 +891,7 @@ export default function ManagePolicies() {
                       <Button
                         variant="outline"
                         className="flex-1 floating-button"
+                        onClick={() => openEdit(policy)}
                       >
                         <Edit className="w-4 h-4 mr-2" />
                         Edit
@@ -915,6 +931,21 @@ export default function ManagePolicies() {
               Try adjusting your search criteria or create a new policy
             </p>
           </div>
+        )}
+
+        {selectedPolicy && (
+          <PolicyDetailsDialog
+            policy={selectedPolicy}
+            open={showDetails}
+            onClose={closeDialogs}
+          />
+        )}
+        {selectedPolicy && (
+          <EditPolicyDialog
+            policy={selectedPolicy}
+            open={showEdit}
+            onClose={closeDialogs}
+          />
         )}
       </div>
     </div>

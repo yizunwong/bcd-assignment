@@ -14,6 +14,8 @@ import { CommonResponseDto } from 'src/common/common.dto';
 import { PolicyResponseDto } from './dto/responses/policy.dto';
 import { FindPoliciesQueryDto } from './dto/responses/policy-query.dto';
 import { ClaimService } from '../claim/claim.service';
+import { PolicyCategoryCountStatsDto } from './dto/responses/policy-category.dto';
+import { PolicyCategory } from 'src/enums';
 
 @Injectable()
 export class PolicyService {
@@ -131,8 +133,8 @@ export class PolicyService {
     let dbQuery = req.supabase
       .from('policies')
       .select(
-        `*, 
-     policy_documents(*), 
+        `*,
+     policy_documents(*),
      policy_claim_type:policy_claim_type(
        claim_type:claim_types(name)
      )`,
@@ -141,10 +143,13 @@ export class PolicyService {
       .range(offset, offset + (query.limit || 5) - 1)
       .order(query.sortBy || 'id', {
         ascending: (query.sortOrder || 'asc') === 'asc',
-      })
-      .eq('created_by', req.user.id);
+      });
 
-    if (query.category && query.category !== 'all') {
+    if (query.userId) {
+      dbQuery = dbQuery.eq('created_by', query.userId);
+    }
+
+    if (query.category) {
       dbQuery = dbQuery.eq('category', query.category);
     }
 
@@ -195,6 +200,7 @@ export class PolicyService {
 
       return {
         ...rest,
+        category: policy.category as PolicyCategory,
         policy_documents: Array.isArray(policy.policy_documents)
           ? policy.policy_documents.map((doc) => ({
               id: doc.id,
@@ -336,18 +342,22 @@ export class PolicyService {
       throw new InternalServerErrorException('Failed to fetch categories');
     }
 
-    const categoryCounts: Record<string, number> = {};
+    const categoryCounts: PolicyCategoryCountStatsDto = {
+      travel: 0,
+      health: 0,
+      crop: 0,
+    };
 
     for (const policy of data) {
       const category = policy.category || 'Unknown';
       categoryCounts[category] = (categoryCounts[category] || 0) + 1;
     }
 
-    return {
+    return new CommonResponseDto({
       statusCode: 200,
-      message: 'Policy categories counted successfully',
+      message: 'Category counts fetched successfully',
       data: categoryCounts,
-    };
+    });
   }
   async update(id: number, dto: UpdatePolicyDto, req: AuthenticatedRequest) {
     const supabase = req.supabase;

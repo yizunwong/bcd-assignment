@@ -16,7 +16,6 @@ import ClaimReviewDialog from "@/components/shared/ClaimReviewDialog";
 import { Pagination } from "@/components/shared/Pagination";
 import {
   useClaimControllerFindAll,
-  useClaimControllerUpdateClaimStatus,
   useClaimControllerGetStats,
 } from "@/api";
 import {
@@ -48,7 +47,6 @@ export default function ClaimsReview() {
   const claims = claimsData?.data ?? [];
 
   const { data: stats } = useClaimControllerGetStats({ query: {} });
-  const updateStatus = useClaimControllerUpdateClaimStatus();
 
   const filteredClaims = useMemo(() => {
     let filtered = claims.filter((claim: any) => {
@@ -123,13 +121,6 @@ export default function ClaimsReview() {
     }
   };
 
-  const handleApprove = (claimId: number) => {
-    updateStatus.mutate({ id: String(claimId), status: "approved" });
-  };
-
-  const handleReject = (claimId: number) => {
-    updateStatus.mutate({ id: String(claimId), status: "rejected" });
-  };
 
   return (
     <div className="section-spacing">
@@ -350,28 +341,7 @@ export default function ClaimsReview() {
                     />
                   </div>
 
-                  {(claim.status === "pending" ||
-                    claim.status === "under-review") && (
-                    <div className="flex space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleReject(claim.id)}
-                        className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20"
-                      >
-                        <X className="w-4 h-4 mr-1" />
-                        Reject
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => handleApprove(claim.id)}
-                        className="gradient-accent text-white floating-button"
-                      >
-                        <CheckCircle className="w-4 h-4 mr-1" />
-                        Approve
-                      </Button>
-                    </div>
-                  )}
+                  {(claim.status === "pending" || claim.status === "under-review") && null}
                 </div>
               </CardContent>
             </Card>
