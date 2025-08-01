@@ -19,6 +19,7 @@ export interface Policy {
   revenue?: string | number;
   created?: Date | string;
   lastUpdated?: Date | string;
+  status?: string;
   description?: string;
   features?: string[];
   terms?: string;

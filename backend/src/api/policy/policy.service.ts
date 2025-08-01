@@ -223,7 +223,10 @@ export class PolicyService {
     });
   }
 
-  async findOne(id: number, req: AuthenticatedRequest) {
+  async findOne(
+    id: number,
+    req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto<PolicyResponseDto & { reviews: unknown[] }>> {
     // Step 1: Get the policy + claim types
     const { data: policy, error: policyError } = await req.supabase
       .from('policies')
@@ -272,13 +275,14 @@ export class PolicyService {
       throw new InternalServerErrorException('Failed to fetch reviews');
     }
 
-    const { policy_claim_type, ...rest } = policy;
+    const { policy_claim_type, category, ...rest } = policy;
 
-    return new CommonResponseDto({
+    return new CommonResponseDto<PolicyResponseDto & { reviews: unknown[] }>({
       statusCode: 200,
       message: 'Policy retrieved successfully',
       data: {
         ...rest,
+        category: category as PolicyCategory,
         policy_documents: enrichedDocuments,
         reviews: reviews || [],
         claim_types:

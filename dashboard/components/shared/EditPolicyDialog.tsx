@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Plus, Save, X } from 'lucide-react';
+import { PolicyControllerFindAllCategory } from '@/api';
 import type { Policy } from './PolicyDetailsDialog';
 
 export interface EditPolicyDialogProps {
@@ -90,10 +91,15 @@ export default function EditPolicyDialog({
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Category
               </label>
-              <Select
-                value={formData.category}
-                onValueChange={(value) => setFormData({ ...formData, category: value })}
-              >
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      category: value as PolicyControllerFindAllCategory,
+                    })
+                  }
+                >
                 <SelectTrigger className="form-input">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>

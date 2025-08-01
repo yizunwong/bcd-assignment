@@ -3,7 +3,16 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Shield, ArrowRight, User, Building, DollarSign, Eye } from "lucide-react";
+import {
+  ArrowLeft,
+  Shield,
+  ArrowRight,
+  User,
+  Building,
+  DollarSign,
+  Eye,
+  CheckCircle,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import useAuth from "@/hooks/useAuth";

@@ -65,6 +65,7 @@ import {
 import {
   CompanyDetailsDtoYearsInBusiness,
   CompanyDetailsDtoEmployeesNumber,
+  UserControllerFindAllParams,
 } from "@/api";
 import { useToast } from "@/components/shared/ToastProvider";
 import { useDebounce } from '@/hooks/useDebounce';
@@ -97,7 +98,9 @@ export default function UserRoleManagement() {
       }
     : {};
 
-  const { data: usersData, isLoading: isLoading } = useUsersQuery(filters);
+  const { data: usersData, isLoading: isLoading } = useUsersQuery(
+    filters as UserControllerFindAllParams
+  );
 
   const users = useMemo(
     () =>
