@@ -4,6 +4,7 @@ import { CreateReviewDto } from './dto/create-review.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { AuthGuard } from '../auth/auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { CommonResponseDto } from 'src/common/common.dto';
 
 @Controller('reviews')
 @ApiBearerAuth('supabase-auth')
@@ -16,7 +17,7 @@ export class ReviewsController {
     @Param('id') id: string,
     @Body() reviewDto: CreateReviewDto,
     @Req() req: AuthenticatedRequest,
-  ) {
+  ): Promise<CommonResponseDto> {
     return this.reviewsService.leavePolicyReview(+id, reviewDto, req);
   }
 

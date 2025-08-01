@@ -3,7 +3,6 @@
 import { useAccount, useBalance } from "wagmi";
 import { formatUnits } from "viem";
 import styled from "styled-components";
-import { Connect } from "./Connect";
 import { useEffect, useState } from "react";
 
 const WalletSection = () => {
@@ -95,7 +94,6 @@ const WalletSection = () => {
               : "Loading..."}
           </p>
         </div>
-        <Connect />
       </div>
     </StyledWrapper>
   );

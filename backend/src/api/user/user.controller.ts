@@ -17,7 +17,6 @@ import { RolesGuard } from '../auth/role.guard';
 import { ApiCommonResponse, CommonResponseDto } from 'src/common/common.dto';
 import { UserResponseDto } from './dto/respond/user.dto';
 import { UserStatsResponseDto } from './dto/respond/user-stats.dto';
-import { UserRole, UserStatus } from 'src/enums';
 import { FindUsersQueryDto } from './dto/responses/user-query.dto';
 
 @ApiTags('Users')
