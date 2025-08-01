@@ -121,7 +121,7 @@ export class PolicyService {
     req: AuthenticatedRequest,
     query: FindPoliciesQueryDto,
   ): Promise<CommonResponseDto<PolicyResponseDto[]>> {
-    const sortableFields = ['id', 'name', 'rating', 'premium', 'popularity'];
+    const sortableFields = ['id', 'name', 'rating', 'premium', 'popular'];
     if (query.sortBy && !sortableFields.includes(query.sortBy)) {
       throw new BadRequestException(`Invalid sortBy field: ${query.sortBy}`);
     }

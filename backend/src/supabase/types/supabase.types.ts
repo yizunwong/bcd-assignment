@@ -122,48 +122,48 @@ export type Database = {
         Row: {
           amount: number;
           claimed_date: string | null;
+          coverage_id: number;
           description: string | null;
           id: number;
-          policy_id: number | null;
           priority: Database['public']['Enums']['claim_priority'];
           processed_date: string | null;
           status: Database['public']['Enums']['claim_status'];
           submitted_date: string;
           type: string;
-          user_id: string | null;
+          user_id: string;
         };
         Insert: {
           amount?: number;
           claimed_date?: string | null;
+          coverage_id: number;
           description?: string | null;
           id?: number;
-          policy_id?: number | null;
           priority?: Database['public']['Enums']['claim_priority'];
           processed_date?: string | null;
           status?: Database['public']['Enums']['claim_status'];
           submitted_date: string;
           type: string;
-          user_id?: string | null;
+          user_id: string;
         };
         Update: {
           amount?: number;
           claimed_date?: string | null;
+          coverage_id?: number;
           description?: string | null;
           id?: number;
-          policy_id?: number | null;
           priority?: Database['public']['Enums']['claim_priority'];
           processed_date?: string | null;
           status?: Database['public']['Enums']['claim_status'];
           submitted_date?: string;
           type?: string;
-          user_id?: string | null;
+          user_id?: string;
         };
         Relationships: [
           {
-            foreignKeyName: 'claims_policy_id_fkey';
-            columns: ['policy_id'];
+            foreignKeyName: 'claims_coverage_id_fkey';
+            columns: ['coverage_id'];
             isOneToOne: false;
-            referencedRelation: 'policies';
+            referencedRelation: 'coverage';
             referencedColumns: ['id'];
           },
           {
@@ -245,30 +245,30 @@ export type Database = {
           end_date: string;
           id: number;
           next_payment_date: string;
-          policy_id: number | null;
+          policy_id: number;
           start_date: string;
           status: Database['public']['Enums']['coverage_status'];
-          user_id: string | null;
+          user_id: string;
           utilization_rate: number;
         };
         Insert: {
           end_date: string;
           id?: number;
           next_payment_date: string;
-          policy_id?: number | null;
+          policy_id: number;
           start_date: string;
           status?: Database['public']['Enums']['coverage_status'];
-          user_id?: string | null;
+          user_id: string;
           utilization_rate?: number;
         };
         Update: {
           end_date?: string;
           id?: number;
           next_payment_date?: string;
-          policy_id?: number | null;
+          policy_id?: number;
           start_date?: string;
           status?: Database['public']['Enums']['coverage_status'];
-          user_id?: string | null;
+          user_id?: string;
           utilization_rate?: number;
         };
         Relationships: [

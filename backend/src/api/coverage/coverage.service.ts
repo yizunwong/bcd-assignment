@@ -216,6 +216,7 @@ export class CoverageService {
       .from('coverage')
       .select(
         `
+      id,
       policy_id,
       policy:policy_id (
         id,
@@ -231,7 +232,6 @@ export class CoverageService {
       throw new InternalServerErrorException('Failed to fetch coverages');
     }
 
-    const activePolicyIds = coverages.map((c) => c.policy_id);
     const activePolicyCount = coverages.length;
 
     // 2. Sum approved claims for active policies only (SQL-side filter)
@@ -241,7 +241,10 @@ export class CoverageService {
         .select('amount')
         .eq('user_id', userId)
         .eq('status', 'approved')
-        .in('policy_id', activePolicyIds);
+        .in(
+          'coverage_id',
+          coverages.map((c) => c.id),
+        );
 
     if (approvedClaimsError) {
       throw new InternalServerErrorException('Failed to fetch approved claims');

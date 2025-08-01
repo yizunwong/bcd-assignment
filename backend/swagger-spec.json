@@ -2136,7 +2136,7 @@
       "CreateClaimDto": {
         "type": "object",
         "properties": {
-          "policy_id": {
+          "coverage_id": {
             "type": "number",
             "example": 1,
             "description": "ID of the policy associated with the claim"
@@ -2168,7 +2168,7 @@
           }
         },
         "required": [
-          "policy_id",
+          "coverage_id",
           "type",
           "priority",
           "amount"
@@ -2280,7 +2280,7 @@
       "UpdateClaimDto": {
         "type": "object",
         "properties": {
-          "policy_id": {
+          "coverage_id": {
             "type": "number",
             "example": 1,
             "description": "ID of the policy associated with the claim"

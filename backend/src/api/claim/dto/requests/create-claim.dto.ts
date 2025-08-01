@@ -13,7 +13,7 @@ export class CreateClaimDto {
     description: 'ID of the policy associated with the claim',
   })
   @IsNotEmpty({ message: 'Policy ID is required' })
-  policy_id!: number;
+  coverage_id!: number;
 
   @ApiProperty({
     example: 'accident',

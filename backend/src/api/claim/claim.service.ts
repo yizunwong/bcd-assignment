@@ -33,7 +33,7 @@ export class ClaimService {
       .from('claims')
       .insert([
         {
-          policy_id: createClaimDto.policy_id,
+          coverage_id: createClaimDto.coverage_id,
           user_id: user_id,
           type: createClaimDto.type,
           priority: createClaimDto.priority,
@@ -251,7 +251,7 @@ export class ClaimService {
     const { data, error } = await req.supabase
       .from('claims')
       .update({
-        policy_id: updateClaimDto.policy_id,
+        coverage_id: updateClaimDto.coverage_id,
         user_id: user_id,
         type: updateClaimDto.type,
         priority: updateClaimDto.priority,
@@ -315,14 +315,14 @@ export class ClaimService {
       if (!claim || claimError) {
         throw new Error('Failed to fetch claim for utilization update');
       }
-      if (claim.policy_id == null || claim.user_id == null) {
+      if (claim.coverage_id == null || claim.user_id == null) {
         throw new Error('Claim is missing policy_id or user_id');
       }
       // Fetch the coverage for this user and policy
       const { data: coverage, error: coverageError } = await req.supabase
         .from('coverage')
         .select('*')
-        .eq('policy_id', claim.policy_id)
+        .eq('id', claim.coverage_id)
         .eq('user_id', claim.user_id)
         .single();
       if (!coverage || coverageError) {
@@ -332,7 +332,7 @@ export class ClaimService {
       const { data: policy, error: policyError } = await req.supabase
         .from('policies')
         .select('coverage')
-        .eq('id', claim.policy_id)
+        .eq('id', coverage.policy_id)
         .single();
       if (!policy || policyError || typeof policy.coverage !== 'number') {
         throw new Error('Failed to fetch policy for utilization update');
@@ -342,7 +342,7 @@ export class ClaimService {
         await req.supabase
           .from('claims')
           .select('amount')
-          .eq('policy_id', claim.policy_id)
+          .eq('coverage_id', coverage.id)
           .eq('user_id', claim.user_id)
           .eq('status', 'approved');
       if (!approvedClaims || approvedClaimsError) {
