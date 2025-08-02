@@ -425,6 +425,15 @@ export interface PolicyDocumentResponseDto {
   signedUrl: string;
 }
 
+export type ReviewRespondDtoComment = { [key: string]: unknown };
+
+export interface ReviewRespondDto {
+  id: number;
+  /** Rating from 1 to 5 */
+  rating: number;
+  comment?: ReviewRespondDtoComment;
+}
+
 export type PolicyResponseDtoDescription = { [key: string]: unknown };
 
 export interface PolicyResponseDto {
@@ -441,6 +450,7 @@ export interface PolicyResponseDto {
   claim_types: string[];
   sales: number;
   policy_documents: PolicyDocumentResponseDto[];
+  reviews: ReviewRespondDto[];
 }
 
 export interface PolicyCategoryCountStatsDto {

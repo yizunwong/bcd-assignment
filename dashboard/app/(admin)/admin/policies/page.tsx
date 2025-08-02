@@ -61,7 +61,7 @@ export default function ManagePolicies() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState<
     PolicyControllerFindAllCategory | "all"
-  >(PolicyControllerFindAllCategory.health);
+  >("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState<any>(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -79,7 +79,7 @@ export default function ManagePolicies() {
 
   const [newPolicy, setNewPolicy] = useState<{
     name: string;
-    category: '' | PolicyControllerFindAllCategory;
+    category: "" | PolicyControllerFindAllCategory;
     coverage: number;
     premium: number;
     duration: number;
@@ -101,7 +101,7 @@ export default function ManagePolicies() {
     error,
   } = usePoliciesQuery({
     category:
-      filterCategory === 'all'
+      filterCategory === "all"
         ? undefined
         : (filterCategory as PolicyControllerFindAllCategory),
     search: debouncedSearchTerm,
@@ -221,9 +221,9 @@ export default function ManagePolicies() {
 
   const handleCreatePolicy = async () => {
     try {
-        const res = await createPolicy({
-          name: newPolicy.name,
-          category: newPolicy.category as CreatePolicyDtoCategory,
+      const res = await createPolicy({
+        name: newPolicy.name,
+        category: newPolicy.category as CreatePolicyDtoCategory,
         provider: meData?.data?.companyName || "Unknown Provider",
         coverage: newPolicy.coverage,
         durationDays: newPolicy.duration,
@@ -396,14 +396,14 @@ export default function ManagePolicies() {
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                       Category
                     </label>
-                      <Select
-                        value={newPolicy.category}
-                        onValueChange={(value) =>
-                          setNewPolicy({
-                            ...newPolicy,
-                            category: value as PolicyControllerFindAllCategory,
-                          })
-                        }
+                    <Select
+                      value={newPolicy.category}
+                      onValueChange={(value) =>
+                        setNewPolicy({
+                          ...newPolicy,
+                          category: value as PolicyControllerFindAllCategory,
+                        })
+                      }
                     >
                       <SelectTrigger className="form-input">
                         <SelectValue placeholder="Select category" />
@@ -683,10 +683,7 @@ export default function ManagePolicies() {
                 <Badge className="status-badge status-info">Total</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {policies.reduce(
-                  (sum, p) => sum + Number(p.sales ?? 0),
-                  0
-                )}
+                {policies.reduce((sum, p) => sum + Number(p.sales ?? 0), 0)}
               </h3>
               <p className="text-slate-600 dark:text-slate-400">Total Sales</p>
             </CardContent>
@@ -757,13 +754,13 @@ export default function ManagePolicies() {
                   </div>
                   <Select
                     value={filterCategory}
-                      onValueChange={(value) =>
-                        handleFilterChange(() =>
-                          setFilterCategory(
-                            value as PolicyControllerFindAllCategory | 'all'
-                          )
+                    onValueChange={(value) =>
+                      handleFilterChange(() =>
+                        setFilterCategory(
+                          value as PolicyControllerFindAllCategory | "all"
                         )
-                      }
+                      )
+                    }
                   >
                     <SelectTrigger className="w-full md:w-48 form-input">
                       <Filter className="w-4 h-4 mr-2" />

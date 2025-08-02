@@ -33,6 +33,8 @@ export enum PolicyCategory {
   CROP = 'crop',
 }
 
+export type PolicyCategoryQuery = 'all' | keyof typeof PolicyCategory;
+
 export type AdminDetails = Partial<
   Database['public']['Tables']['admin_details']['Row']
 > & {
