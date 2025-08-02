@@ -5,6 +5,18 @@ export enum UserStatus {
   DEACTIVATED = 'deactivated',
 }
 
+export enum ClaimStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  CLAIMED = 'claimed',
+}
+
+export enum PolicyStatus {
+  ACTIVE = 'active',
+  DEACTIVATED = 'deactivated',
+}
+
 export enum UserRole {
   POLICYHOLDER = 'policyholder',
   INSURANCE_ADMIN = 'insurance_admin',

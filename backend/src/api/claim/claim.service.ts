@@ -5,7 +5,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ClaimStatus, UpdateClaimDto } from './dto/requests/update-claim.dto';
+import { UpdateClaimDto } from './dto/requests/update-claim.dto';
 import { CreateClaimDto } from './dto/requests/create-claim.dto';
 import { UploadClaimDocDto } from './dto/requests/upload-claim-doc.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
@@ -14,6 +14,7 @@ import { FileService } from '../file/file.service';
 import { ClaimResponseDto } from './dto/responses/claim.dto';
 import { ClaimStatsDto } from './dto/responses/claim-stats.dto';
 import { CommonResponseDto } from 'src/common/common.dto';
+import { ClaimStatus } from 'src/enums';
 @Injectable()
 export class ClaimService {
   constructor(private readonly fileService: FileService) {}
@@ -34,7 +35,7 @@ export class ClaimService {
       .insert([
         {
           coverage_id: createClaimDto.coverage_id,
-          user_id: user_id,
+          submitted_by: user_id,
           type: createClaimDto.type,
           priority: createClaimDto.priority,
           amount: createClaimDto.amount,
@@ -119,14 +120,14 @@ export class ClaimService {
 
     let dbQuery = req.supabase
       .from('claims')
-      .select('*, claim_documents(*)', { count: 'exact' })
+      .select('*, claim_documents(*), user_details(*)', { count: 'exact' })
       .range(offset, offset + (query.limit || 5) - 1)
       .order(query.sortBy || 'id', {
         ascending: (query.sortOrder || 'asc') === 'asc',
       });
 
-    if (query.category) {
-      dbQuery = dbQuery.eq('type', query.category);
+    if (query.status) {
+      dbQuery = dbQuery.eq('status', query.status);
     }
 
     if (query.search) {
@@ -165,6 +166,8 @@ export class ClaimService {
     let urlIndex = 0;
     const enrichedClaims: ClaimResponseDto[] = data.map((claim) => ({
       ...claim,
+      submitted_by:
+        `${claim.user_details?.first_name ?? ''} ${claim.user_details?.last_name ?? ''}`.trim(),
       description: claim.description || '',
       claim_documents: Array.isArray(claim.claim_documents)
         ? claim.claim_documents.map((doc) => ({
@@ -226,6 +229,7 @@ export class ClaimService {
       description: data.description || '',
       submitted_date: data.submitted_date,
       priority: data.priority,
+      submitted_by: data.submitted_by,
       claim_documents: enrichedDocuments,
     };
 
@@ -305,7 +309,7 @@ export class ClaimService {
       );
     }
 
-    if (status === ClaimStatus.Approved) {
+    if (status === ClaimStatus.APPROVED) {
       // Fetch the claim to get policy_id and user_id
       const { data: claim, error: claimError } = await req.supabase
         .from('claims')
@@ -315,7 +319,7 @@ export class ClaimService {
       if (!claim || claimError) {
         throw new Error('Failed to fetch claim for utilization update');
       }
-      if (claim.coverage_id == null || claim.user_id == null) {
+      if (claim.coverage_id == null || claim.submitted_by == null) {
         throw new Error('Claim is missing policy_id or user_id');
       }
       // Fetch the coverage for this user and policy
@@ -323,7 +327,7 @@ export class ClaimService {
         .from('coverage')
         .select('*')
         .eq('id', claim.coverage_id)
-        .eq('user_id', claim.user_id)
+        .eq('submitted_by', claim.submitted_by)
         .single();
       if (!coverage || coverageError) {
         throw new Error('Failed to fetch coverage for utilization update');
@@ -343,7 +347,7 @@ export class ClaimService {
           .from('claims')
           .select('amount')
           .eq('coverage_id', coverage.id)
-          .eq('user_id', claim.user_id)
+          .eq('user_id', claim.submitted_by)
           .eq('status', 'approved');
       if (!approvedClaims || approvedClaimsError) {
         throw new Error(
@@ -500,7 +504,7 @@ export class ClaimService {
       message: 'Claim statistics retrieved successfully',
       data: new ClaimStatsDto({
         pending: counts['pending'],
-        underReview: counts['under-review'],
+        claimed: counts['claimed'],
         approved: counts['approved'],
         rejected: counts['rejected'],
       }),

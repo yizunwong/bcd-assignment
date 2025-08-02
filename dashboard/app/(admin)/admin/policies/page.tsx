@@ -41,8 +41,8 @@ import {
 } from "lucide-react";
 import PolicyDetailsDialog, {
   Policy,
-} from "@/components/shared/PolicyDetailsDialog";
-import EditPolicyDialog from "@/components/shared/EditPolicyDialog";
+} from "@/app/(admin)/admin/policies/components/PolicyDetailsDialog";
+import EditPolicyDialog from "@/app/(admin)/admin/policies/components/EditPolicyDialog";
 import {
   usePoliciesQuery,
   useCreatePolicyMutation,
@@ -96,8 +96,7 @@ export default function ManagePolicies() {
     claimTypes: [""],
   });
 
-  const hasFilters =
-    filterCategory !== "all" || !!debouncedSearchTerm;
+  const hasFilters = filterCategory !== "all" || !!debouncedSearchTerm;
 
   const filters = hasFilters
     ? {

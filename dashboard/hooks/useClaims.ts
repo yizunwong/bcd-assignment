@@ -12,6 +12,7 @@ import {
   type CreateClaimDto,
   type UpdateClaimDto,
   ClaimStatus,
+  useClaimControllerGetStats,
 } from "@/api";
 import { parseError } from "../utils/parseError";
 
@@ -37,6 +38,14 @@ export function useCreateClaimMutation() {
     ...mutation,
     createClaim: (data: CreateClaimDto) => mutation.mutateAsync({ data }),
     error: parseError(mutation.error),
+  };
+}
+
+export function useClaimStatsQuery() {
+  const query = useClaimControllerGetStats();
+  return {
+    ...query,
+    error: parseError(query.error),
   };
 }
 

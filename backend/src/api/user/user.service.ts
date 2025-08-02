@@ -276,9 +276,9 @@ export class UserService {
           user_id,
           status: status,
           bio: bio ?? null,
-          first_name: firstName ?? null,
-          last_name: lastName ?? null,
-          phone: dto.phone ?? null,
+          first_name: firstName,
+          last_name: lastName,
+          phone: dto.phone,
         },
       ])
       .select()

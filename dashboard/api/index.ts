@@ -345,12 +345,13 @@ export interface ClaimResponseDto {
   description: string;
   submitted_date: string;
   priority: string;
+  submitted_by: string;
   claim_documents: ClaimDocumentResponseDto[];
 }
 
 export interface ClaimStatsDto {
   pending: number;
-  underReview: number;
+  claimed: number;
   approved: number;
   rejected: number;
 }
@@ -632,9 +633,9 @@ export type ClaimControllerFindAllParams = {
   page?: number;
   limit?: number;
   /**
-   * Filter by claim type (category)
+   * Filter by claim status
    */
-  category?: string;
+  status?: string;
   /**
    * Search keyword for claim_type or description
    */

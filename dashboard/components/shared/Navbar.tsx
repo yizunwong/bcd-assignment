@@ -52,9 +52,7 @@ export function Navbar({ role }: NavbarProps) {
       { href: "/admin", label: "Dashboard", icon: BarChart3 },
       { href: "/admin/claims", label: "Claims Review", icon: FileText },
       { href: "/admin/policies", label: "Manage Policies", icon: Plus },
-      { href: "/admin/offers", label: "Seasonal Offers", icon: Gift },
       { href: "/admin/reports", label: "Reports", icon: Download },
-      { href: "/admin/settings", label: "Settings", icon: Settings },
     ],
     "system-admin": [
       { href: "/system-admin", label: "Monitoring", icon: Monitor },

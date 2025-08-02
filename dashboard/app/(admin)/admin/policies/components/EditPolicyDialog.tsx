@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Plus, Save, X } from 'lucide-react';
-import { PolicyControllerFindAllCategory } from '@/api';
-import type { Policy } from './PolicyDetailsDialog';
+} from "@/components/ui/dialog";
+import { Plus, Save, X } from "lucide-react";
+import { PolicyControllerFindAllCategory } from "@/api";
+import type { Policy } from "./PolicyDetailsDialog";
 
 export interface EditPolicyDialogProps {
   policy: Policy;
@@ -45,7 +45,7 @@ export default function EditPolicyDialog({
   const addFeature = () => {
     setFormData({
       ...formData,
-      features: [...(formData.features || []), ''],
+      features: [...(formData.features || []), ""],
     });
   };
 
@@ -82,7 +82,9 @@ export default function EditPolicyDialog({
               </label>
               <Input
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 className="form-input"
                 placeholder="Enter policy name"
               />
@@ -91,15 +93,15 @@ export default function EditPolicyDialog({
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Category
               </label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) =>
-                    setFormData({
-                      ...formData,
-                      category: value as PolicyControllerFindAllCategory,
-                    })
-                  }
-                >
+              <Select
+                value={formData.category}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    category: value as PolicyControllerFindAllCategory,
+                  })
+                }
+              >
                 <SelectTrigger className="form-input">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
@@ -118,7 +120,9 @@ export default function EditPolicyDialog({
               </label>
               <Input
                 value={formData.coverage as any}
-                onChange={(e) => setFormData({ ...formData, coverage: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, coverage: e.target.value })
+                }
                 placeholder="e.g., $100,000"
                 className="form-input"
               />
@@ -129,7 +133,9 @@ export default function EditPolicyDialog({
               </label>
               <Input
                 value={formData.premium as any}
-                onChange={(e) => setFormData({ ...formData, premium: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, premium: e.target.value })
+                }
                 placeholder="e.g., 0.8 ETH/month"
                 className="form-input"
               />
@@ -140,8 +146,10 @@ export default function EditPolicyDialog({
               Description
             </label>
             <Textarea
-              value={formData.description || ''}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              value={formData.description || ""}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
               className="form-input min-h-[100px]"
               placeholder="Describe the policy coverage and benefits"
             />
@@ -172,7 +180,12 @@ export default function EditPolicyDialog({
                   )}
                 </div>
               ))}
-              <Button type="button" variant="outline" onClick={addFeature} className="w-full">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addFeature}
+                className="w-full"
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Feature
               </Button>
@@ -183,8 +196,10 @@ export default function EditPolicyDialog({
               Terms & Conditions
             </label>
             <Textarea
-              value={formData.terms || ''}
-              onChange={(e) => setFormData({ ...formData, terms: e.target.value })}
+              value={formData.terms || ""}
+              onChange={(e) =>
+                setFormData({ ...formData, terms: e.target.value })
+              }
               className="form-input min-h-[100px]"
               placeholder="Enter policy terms and conditions"
             />
@@ -193,7 +208,10 @@ export default function EditPolicyDialog({
             <Button variant="outline" onClick={onClose} className="flex-1">
               Cancel
             </Button>
-            <Button onClick={handleSave} className="flex-1 gradient-accent text-white floating-button">
+            <Button
+              onClick={handleSave}
+              className="flex-1 gradient-accent text-white floating-button"
+            >
               <Save className="w-4 h-4 mr-2" />
               Save Changes
             </Button>

@@ -16,15 +16,15 @@ import { ToPhone } from 'src/common/to-phone';
 import { UserRole } from 'src/enums';
 
 export class CreateUserDto {
-  @ApiProperty({ example: 'John', required: false })
-  @IsOptional()
+  @ApiProperty({ example: 'John' })
+  @IsNotEmpty()
   @IsString()
-  firstName?: string;
+  firstName!: string;
 
-  @ApiProperty({ example: 'Doe', required: false })
-  @IsOptional()
+  @ApiProperty({ example: 'Doe' })
+  @IsNotEmpty()
   @IsString()
-  lastName?: string;
+  lastName!: string;
 
   @ApiProperty({ example: 'alex.johnson@example.com' })
   @IsEmail()

@@ -102,14 +102,14 @@ export class RegisterDto {
 
   // 👤 Personal Info
   @ApiProperty({ example: 'Alex', required: false })
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  firstName?: string;
+  firstName!: string;
 
   @ApiProperty({ example: 'Johnson', required: false })
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  lastName?: string;
+  lastName!: string;
 
   @ApiProperty({ example: 'policyholder', enum: UserRole })
   @IsNotEmpty()

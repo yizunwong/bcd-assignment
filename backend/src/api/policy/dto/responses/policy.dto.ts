@@ -57,6 +57,9 @@ export class PolicyResponseDto {
   @ApiProperty()
   sales!: number;
 
+  @ApiProperty()
+  status!: string;
+
   @ApiProperty({ type: [PolicyDocumentResponseDto] })
   policy_documents?: PolicyDocumentResponseDto[];
 

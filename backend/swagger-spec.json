@@ -442,10 +442,10 @@
             }
           },
           {
-            "name": "category",
+            "name": "status",
             "required": false,
             "in": "query",
-            "description": "Filter by claim type (category)",
+            "description": "Filter by claim status",
             "schema": {
               "type": "string"
             }
@@ -2104,6 +2104,8 @@
           }
         },
         "required": [
+          "firstName",
+          "lastName",
           "email",
           "password",
           "role"
@@ -2273,6 +2275,9 @@
           "priority": {
             "type": "string"
           },
+          "submitted_by": {
+            "type": "string"
+          },
           "claim_documents": {
             "type": "array",
             "items": {
@@ -2288,6 +2293,7 @@
           "description",
           "submitted_date",
           "priority",
+          "submitted_by",
           "claim_documents"
         ]
       },
@@ -2297,7 +2303,7 @@
           "pending": {
             "type": "number"
           },
-          "underReview": {
+          "claimed": {
             "type": "number"
           },
           "approved": {
@@ -2309,7 +2315,7 @@
         },
         "required": [
           "pending",
-          "underReview",
+          "claimed",
           "approved",
           "rejected"
         ]
@@ -2523,6 +2529,9 @@
           "sales": {
             "type": "number"
           },
+          "status": {
+            "type": "string"
+          },
           "policy_documents": {
             "type": "array",
             "items": {
@@ -2548,6 +2557,7 @@
           "popular",
           "claim_types",
           "sales",
+          "status",
           "policy_documents",
           "reviews"
         ]

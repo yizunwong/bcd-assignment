@@ -40,6 +40,9 @@ export class ClaimResponseDto {
   @ApiProperty()
   priority!: string;
 
+  @ApiProperty()
+  submitted_by!: string;
+
   @ApiProperty({ type: [ClaimDocumentResponseDto] })
   claim_documents!: ClaimDocumentResponseDto[];
 }

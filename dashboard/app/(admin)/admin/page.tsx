@@ -4,11 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatsCard } from "@/components/shared/StatsCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import ClaimReviewDialog from "@/components/shared/ClaimReviewDialog";
-import {
-  useClaimControllerFindAll,
-  useClaimControllerGetStats,
-} from "@/api";
+import ClaimReviewDialog from "@/app/(admin)/admin/claims/components/ClaimReviewDialog";
+import { useClaimControllerFindAll, useClaimControllerGetStats } from "@/api";
 import { topPolicies } from "@/public/data/admin/dashboardData";
 import {
   Shield,
@@ -116,7 +113,9 @@ export default function AdminDashboard() {
                             </Badge>
                           </div>
                           <p className="text-sm text-slate-600 dark:text-slate-400">
-                            {new Date(claim.submitted_date).toLocaleDateString()}
+                            {new Date(
+                              claim.submitted_date
+                            ).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
@@ -130,8 +129,8 @@ export default function AdminDashboard() {
                               claim.status === "approved"
                                 ? "status-active"
                                 : claim.status === "pending"
-                                ? "status-pending"
-                                : "status-info"
+                                  ? "status-pending"
+                                  : "status-info"
                             }`}
                           >
                             {claim.status === "approved" && (

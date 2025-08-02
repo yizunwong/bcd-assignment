@@ -17,7 +17,7 @@ import { Shield, Search, Filter, Star } from "lucide-react";
 import { policyCategories } from "@/public/data/policyholder/browseData";
 import PolicyDetailsDialog, {
   Policy,
-} from "@/components/shared/PolicyDetailsDialog";
+} from "@/app/(admin)/admin/policies/components/PolicyDetailsDialog";
 import Link from "next/link";
 import { logEvent } from "@/lib/analytics";
 import { usePoliciesQuery, useCategoryCountsQuery } from "@/hooks/usePolicies";
@@ -76,8 +76,7 @@ export default function BrowsePolicies() {
 
   const { data: categoryCountsData } = useCategoryCountsQuery();
 
-  const hasFilters =
-    selectedCategory !== "all" || !!debouncedSearchTerm;
+  const hasFilters = selectedCategory !== "all" || !!debouncedSearchTerm;
 
   const filters = hasFilters
     ? {
@@ -166,11 +165,11 @@ export default function BrowsePolicies() {
 
         {/* Policy Categories */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
-            {policyCategories.map((category) => {
-              const count =
-                categoryCountsData?.data?.[
-                  category.id as keyof PolicyCategoryCountStatsDto
-                ] ?? 0;
+          {policyCategories.map((category) => {
+            const count =
+              categoryCountsData?.data?.[
+                category.id as keyof PolicyCategoryCountStatsDto
+              ] ?? 0;
 
             return (
               <Card
@@ -228,7 +227,7 @@ export default function BrowsePolicies() {
                 onValueChange={(value) =>
                   handleFilterChange(() =>
                     setSelectedCategory(
-                      value as PolicyControllerFindAllCategory | 'all'
+                      value as PolicyControllerFindAllCategory | "all"
                     )
                   )
                 }

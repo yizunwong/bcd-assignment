@@ -5,7 +5,7 @@ export class ClaimStatsDto {
   pending!: number;
 
   @ApiProperty()
-  underReview!: number;
+  claimed!: number;
 
   @ApiProperty()
   approved!: number;

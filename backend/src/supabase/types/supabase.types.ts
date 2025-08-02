@@ -128,9 +128,9 @@ export type Database = {
           priority: Database['public']['Enums']['claim_priority'];
           processed_date: string | null;
           status: Database['public']['Enums']['claim_status'];
+          submitted_by: string;
           submitted_date: string;
           type: string;
-          user_id: string;
         };
         Insert: {
           amount?: number;
@@ -141,9 +141,9 @@ export type Database = {
           priority?: Database['public']['Enums']['claim_priority'];
           processed_date?: string | null;
           status?: Database['public']['Enums']['claim_status'];
+          submitted_by: string;
           submitted_date: string;
           type: string;
-          user_id: string;
         };
         Update: {
           amount?: number;
@@ -154,9 +154,9 @@ export type Database = {
           priority?: Database['public']['Enums']['claim_priority'];
           processed_date?: string | null;
           status?: Database['public']['Enums']['claim_status'];
+          submitted_by?: string;
           submitted_date?: string;
           type?: string;
-          user_id?: string;
         };
         Relationships: [
           {
@@ -165,6 +165,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: 'coverage';
             referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'claims_submitted_by_fkey1';
+            columns: ['submitted_by'];
+            isOneToOne: false;
+            referencedRelation: 'user_details';
+            referencedColumns: ['user_id'];
           },
           {
             foreignKeyName: 'claims_type_fkey';
@@ -309,7 +316,7 @@ export type Database = {
           premium: number;
           provider: string;
           rating: number;
-          sales: number;
+          status: Database['public']['Enums']['policy_status'];
         };
         Insert: {
           category?: Database['public']['Enums']['policy_category'];
@@ -323,7 +330,7 @@ export type Database = {
           premium: number;
           provider: string;
           rating: number;
-          sales?: number;
+          status?: Database['public']['Enums']['policy_status'];
         };
         Update: {
           category?: Database['public']['Enums']['policy_category'];
@@ -337,7 +344,7 @@ export type Database = {
           premium?: number;
           provider?: string;
           rating?: number;
-          sales?: number;
+          status?: Database['public']['Enums']['policy_status'];
         };
         Relationships: [];
       };
@@ -530,24 +537,24 @@ export type Database = {
       user_details: {
         Row: {
           bio: string | null;
-          first_name: string | null;
-          last_name: string | null;
+          first_name: string;
+          last_name: string;
           phone: string | null;
           status: Database['public']['Enums']['user_status'];
           user_id: string;
         };
         Insert: {
           bio?: string | null;
-          first_name?: string | null;
-          last_name?: string | null;
+          first_name: string;
+          last_name: string;
           phone?: string | null;
           status?: Database['public']['Enums']['user_status'];
           user_id: string;
         };
         Update: {
           bio?: string | null;
-          first_name?: string | null;
-          last_name?: string | null;
+          first_name?: string;
+          last_name?: string;
           phone?: string | null;
           status?: Database['public']['Enums']['user_status'];
           user_id?: string;
@@ -578,6 +585,7 @@ export type Database = {
         | '201-500 employees'
         | '500+ employees';
       policy_category: 'health' | 'crop' | 'travel';
+      policy_status: 'active' | 'deactivated';
       role: 'admin' | 'user';
       user_status: 'active' | 'deactivated';
       years_in_business:
@@ -727,6 +735,7 @@ export const Constants = {
         '500+ employees',
       ],
       policy_category: ['health', 'crop', 'travel'],
+      policy_status: ['active', 'deactivated'],
       role: ['admin', 'user'],
       user_status: ['active', 'deactivated'],
       years_in_business: [

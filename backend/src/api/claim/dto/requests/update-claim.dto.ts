@@ -1,13 +1,8 @@
 import { PartialType, ApiProperty } from '@nestjs/swagger';
 import { CreateClaimDto } from './create-claim.dto';
 import { IsEnum, IsInt, IsNotEmpty } from 'class-validator';
+import { ClaimStatus } from 'src/enums';
 
-export enum ClaimStatus {
-  Pending = 'pending',
-  Approved = 'approved',
-  Rejected = 'rejected',
-  Claimed = 'claimed',
-}
 export class UpdateClaimDto extends PartialType(CreateClaimDto) {
   @ApiProperty({
     example: 1,
