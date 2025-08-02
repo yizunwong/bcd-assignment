@@ -2652,6 +2652,9 @@
           "sales": {
             "type": "number"
           },
+          "revenue": {
+            "type": "number"
+          },
           "status": {
             "type": "string"
           },
@@ -2680,6 +2683,7 @@
           "popular",
           "claim_types",
           "sales",
+          "revenue",
           "status",
           "policy_documents",
           "reviews"

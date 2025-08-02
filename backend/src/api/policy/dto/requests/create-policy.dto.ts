@@ -9,7 +9,6 @@ import {
   Min,
   IsUUID,
   ValidateNested,
-  IsDecimal,
   IsEnum,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
@@ -88,7 +87,8 @@ export class CreatePolicyDto {
   durationDays!: number;
 
   @ApiProperty({ example: '0.8' })
-  @IsDecimal()
+  @Transform(({ value }: { value: unknown }) => parseFloat(value as string))
+  @IsNumber()
   @IsNotEmpty()
   premium!: number;
 

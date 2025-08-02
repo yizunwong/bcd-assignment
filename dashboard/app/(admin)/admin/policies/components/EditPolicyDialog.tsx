@@ -14,6 +14,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -35,6 +36,7 @@ export default function EditPolicyDialog({
   onSave,
 }: EditPolicyDialogProps) {
   const [formData, setFormData] = useState<Policy>({ ...policy });
+  console.log("formData", formData);
 
   useEffect(() => {
     if (open) {
@@ -73,6 +75,9 @@ export default function EditPolicyDialog({
       >
         <DialogHeader>
           <DialogTitle>Edit Policy</DialogTitle>
+          <DialogDescription>
+            Edit the details of the policy.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-6">
           <div className="grid md:grid-cols-2 gap-6">
@@ -119,9 +124,10 @@ export default function EditPolicyDialog({
                 Coverage Amount
               </label>
               <Input
-                value={formData.coverage as any}
+                type="number"
+                value={formData.coverage}
                 onChange={(e) =>
-                  setFormData({ ...formData, coverage: e.target.value })
+                  setFormData({ ...formData, coverage: Number(e.target.value) })
                 }
                 placeholder="e.g., $100,000"
                 className="form-input"
@@ -132,9 +138,14 @@ export default function EditPolicyDialog({
                 Premium
               </label>
               <Input
-                value={formData.premium as any}
+                value={formData.premium}
+                type="number"
+                step={0.01}
                 onChange={(e) =>
-                  setFormData({ ...formData, premium: e.target.value })
+                  setFormData({
+                    ...formData,
+                    premium: parseFloat(e.target.value),
+                  })
                 }
                 placeholder="e.g., 0.8 ETH/month"
                 className="form-input"

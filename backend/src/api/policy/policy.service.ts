@@ -186,12 +186,22 @@ export class PolicyService {
 
     const { data: coverageCounts } =
       await req.supabase.rpc('count_policy_sales');
+    const { data: revenueCounts } = await req.supabase.rpc(
+      'calculate_policy_revenue',
+    );
 
     const coverageMap = new Map<number, number>();
+    const revenueMap = new Map<number, number>();
 
     coverageCounts?.forEach((row: { policy_id: number; sales: number }) => {
       coverageMap.set(row.policy_id, row.sales);
     });
+
+    revenueCounts?.forEach(
+      (row: { policy_id: number; total_revenue: number }) => {
+        revenueMap.set(row.policy_id, row.total_revenue);
+      },
+    );
 
     const signedUrls = await this.fileService.getSignedUrls(
       req.supabase,
@@ -217,6 +227,7 @@ export class PolicyService {
         claim_types:
           policy_claim_type?.map((link) => link.claim_type.name) || [],
         sales: coverageMap.get(policy.id) || 0,
+        revenue: revenueMap.get(policy.id) || 0,
       };
     });
 
