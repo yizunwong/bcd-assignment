@@ -5,8 +5,8 @@ import { StatsCard } from "@/components/shared/StatsCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import ClaimReviewDialog from "@/app/(admin)/admin/claims/components/ClaimReviewDialog";
-import { useClaimControllerFindAll, useClaimControllerGetStats } from "@/api";
-import { topPolicies } from "@/public/data/admin/dashboardData";
+import { useClaimControllerFindAll } from "@/api";
+import { useAdminDashboardSummary } from "@/hooks/useDashboard";
 import {
   Shield,
   Users,
@@ -26,7 +26,8 @@ export default function AdminDashboard() {
     page: 1,
   });
   const recentClaims = recentClaimsData?.data ?? [];
-  const { data: stats } = useClaimControllerGetStats({ query: {} });
+  const { data: dashboard } = useAdminDashboardSummary();
+  const summary = dashboard?.data;
   return (
     <div className="section-spacing">
       <div className="max-w-7xl mx-auto">
@@ -49,14 +50,14 @@ export default function AdminDashboard() {
         <div className="stats-grid">
           <StatsCard
             title="Active Policies"
-            value="1,247"
-            change="+8.2% from last month"
-            changeType="positive"
+            value={(summary?.activePolicies ?? 0).toString()}
+            change=""
+            changeType="neutral"
             icon={Shield}
           />
           <StatsCard
             title="Pending Claims"
-            value={(stats?.data?.pending ?? 0).toString()}
+            value={(summary?.pendingClaims ?? 0).toString()}
             change=""
             changeType="neutral"
             icon={AlertCircle}
@@ -195,9 +196,9 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="element-spacing">
-                  {topPolicies.map((policy, index) => (
+                  {(summary?.topPolicies ?? []).map((policy) => (
                     <div
-                      key={index}
+                      key={policy.id}
                       className="flex items-start justify-between"
                     >
                       <div className="flex-1 min-w-0">
@@ -205,13 +206,8 @@ export default function AdminDashboard() {
                           {policy.name}
                         </p>
                         <p className="text-xs text-slate-600 dark:text-slate-400">
-                          {policy.sales} sales • {policy.revenue}
+                          {policy.sales} sales
                         </p>
-                      </div>
-                      <div className="text-right ml-2">
-                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                          {policy.trend}
-                        </span>
                       </div>
                     </div>
                   ))}

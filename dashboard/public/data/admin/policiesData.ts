@@ -56,7 +56,7 @@ export const policies = [
       provider: 'MediChain',
       coverage: '$250,000',
       premium: '1.5 ETH/month',
-      status: 'draft',
+      status: 'deactivated',
       sales: 0,
       revenue: '0 ETH',
       created: '2024-12-01',
@@ -248,7 +248,7 @@ export const policies = [
       provider: 'TeleHealth Pro',
       coverage: '$120,000',
       premium: '0.6 ETH/month',
-      status: 'draft',
+      status: 'deactivated',
       sales: 0,
       revenue: '0 ETH',
       created: '2024-11-01',
@@ -296,7 +296,7 @@ export const policies = [
       provider: 'EmergencyMed',
       coverage: '$150,000',
       premium: '0.9 ETH/month',
-      status: 'draft',
+      status: 'deactivated',
       sales: 0,
       revenue: '0 ETH',
       created: '2024-11-15',
@@ -344,8 +344,7 @@ export const policies = [
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'status-active';
-      case 'draft': return 'status-pending';
-      case 'inactive': return 'bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300';
+      case 'deactivated': return 'status-pending';
       default: return 'bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300';
     }
   };

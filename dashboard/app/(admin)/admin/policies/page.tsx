@@ -107,16 +107,20 @@ export default function ManagePolicies() {
       }
     : {};
 
+  const params: PolicyControllerFindAllParams = {
+    ...(filters as PolicyControllerFindAllParams),
+    page: currentPage,
+    limit: itemsPerPage,
+  };
+  if (meData?.data?.id) {
+    params.userId = meData.data.id;
+  }
+
   const {
     data: policiesData,
     isLoading,
     error,
-  } = usePoliciesQuery({
-    ...(filters as PolicyControllerFindAllParams),
-    page: currentPage,
-    limit: itemsPerPage,
-    userId: meData?.data?.id,
-  });
+  } = usePoliciesQuery(params);
 
   useEffect(() => {}, [policiesData]);
 
@@ -136,11 +140,11 @@ export default function ManagePolicies() {
     provider: policy.provider,
     coverage: policy.coverage ? `$${policy.coverage.toLocaleString()}` : "-",
     premium: policy.premium,
-    status: "active",
+    status: policy.status,
     sales: policy.sales,
     revenue: "-",
-    created: "-",
-    lastUpdated: "-",
+    created: undefined,
+    lastUpdated: undefined,
     description:
       typeof policy.description === "string" ? policy.description : "",
     features: policy.claim_types || [],
@@ -177,10 +181,8 @@ export default function ManagePolicies() {
     switch (status) {
       case "active":
         return "status-active";
-      case "draft":
+      case "deactivated":
         return "status-pending";
-      case "inactive":
-        return "bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300";
       default:
         return "bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300";
     }
@@ -732,8 +734,8 @@ export default function ManagePolicies() {
                 <TabsTrigger value="active" className="rounded-lg">
                   Active Policies
                 </TabsTrigger>
-                <TabsTrigger value="draft" className="rounded-lg">
-                  Draft Policies
+                <TabsTrigger value="deactivated" className="rounded-lg">
+                  Deactivated Policies
                 </TabsTrigger>
               </TabsList>
 

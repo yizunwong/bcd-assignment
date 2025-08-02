@@ -23,8 +23,24 @@ import { FileText } from "lucide-react";
 import type { ReactNode } from "react";
 import { ClaimResponseDto } from "@/api";
 
+interface ClaimWithDetails extends ClaimResponseDto {
+  policy?: {
+    id: number;
+    name: string;
+    provider: string;
+    coverage: number;
+    premium: number;
+  };
+  policyholder_details?: {
+    user_id: string;
+    date_of_birth: string;
+    occupation?: string | null;
+    address?: string | null;
+  };
+}
+
 interface ClaimReviewDialogProps {
-  claim: ClaimResponseDto;
+  claim: ClaimWithDetails;
   trigger?: ReactNode;
 }
 
@@ -155,6 +171,34 @@ export function ClaimReviewDialog({ claim, trigger }: ClaimReviewDialogProps) {
                     </span>
                   </div>
                 )}
+                {claim.policy && (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600 dark:text-slate-400">
+                        Policy:
+                      </span>
+                      <span className="text-slate-800 dark:text-slate-100">
+                        {claim.policy.name}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600 dark:text-slate-400">
+                        Coverage:
+                      </span>
+                      <span className="text-slate-800 dark:text-slate-100">
+                        {claim.policy.coverage}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600 dark:text-slate-400">
+                        Premium:
+                      </span>
+                      <span className="text-slate-800 dark:text-slate-100">
+                        {claim.policy.premium}
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
             <div>
@@ -169,6 +213,36 @@ export function ClaimReviewDialog({ claim, trigger }: ClaimReviewDialogProps) {
                     </span>
                     <span className="text-slate-800 dark:text-slate-100">
                       {claim.submitted_by}
+                    </span>
+                  </div>
+                )}
+                {claim.policyholder_details?.date_of_birth && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-600 dark:text-slate-400">
+                      Date of Birth:
+                    </span>
+                    <span className="text-slate-800 dark:text-slate-100">
+                      {claim.policyholder_details.date_of_birth}
+                    </span>
+                  </div>
+                )}
+                {claim.policyholder_details?.occupation && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-600 dark:text-slate-400">
+                      Occupation:
+                    </span>
+                    <span className="text-slate-800 dark:text-slate-100">
+                      {claim.policyholder_details.occupation}
+                    </span>
+                  </div>
+                )}
+                {claim.policyholder_details?.address && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-600 dark:text-slate-400">
+                      Address:
+                    </span>
+                    <span className="text-slate-800 dark:text-slate-100">
+                      {claim.policyholder_details.address}
                     </span>
                   </div>
                 )}
