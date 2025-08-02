@@ -297,4 +297,53 @@ export class CoverageService {
       },
     };
   }
+
+  async getDashboardSummary(req: AuthenticatedRequest) {
+    const { data: userData, error: userError } =
+      await req.supabase.auth.getUser();
+
+    if (userError || !userData?.user) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    const userId = userData.user.id;
+
+    const { data: coverages, error: coverageError } = await req.supabase
+      .from('coverage')
+      .select('id, status, policies:policy_id (coverage)')
+      .eq('user_id', userId);
+
+    if (coverageError) {
+      throw new InternalServerErrorException('Failed to fetch coverages');
+    }
+
+    const activeCoverage = coverages.filter(
+      (c) => c.status === 'active',
+    ).length;
+    const totalCoverage = coverages.reduce(
+      (sum, c) => sum + (c.policies?.coverage || 0),
+      0,
+    );
+
+    const { data: pendingClaims, error: pendingClaimsError } =
+      await req.supabase
+        .from('claims')
+        .select('id')
+        .eq('submitted_by', userId)
+        .eq('status', 'pending');
+
+    if (pendingClaimsError) {
+      throw new InternalServerErrorException('Failed to fetch pending claims');
+    }
+
+    return {
+      statusCode: 200,
+      message: 'Dashboard summary retrieved successfully',
+      data: {
+        activeCoverage,
+        totalCoverage,
+        pendingClaims: pendingClaims.length,
+      },
+    };
+  }
 }

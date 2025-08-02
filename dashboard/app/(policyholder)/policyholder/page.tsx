@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StatsCard } from "@/components/shared/StatsCard";
+import { usePolicyholderDashboardSummaryQuery } from "@/hooks/useDashboard";
 import {
   Shield,
   Clock,
@@ -20,6 +21,7 @@ import {
 } from "@/public/data/policyholder/dashboardData";
 
 export default function PolicyholderDashboard() {
+  const { data: summary } = usePolicyholderDashboardSummaryQuery();
   return (
     <div className="section-spacing">
       <div className="max-w-7xl mx-auto">
@@ -42,23 +44,17 @@ export default function PolicyholderDashboard() {
         <div className="stats-grid">
           <StatsCard
             title="Active Policies"
-            value="3"
-            change="+1 this month"
-            changeType="positive"
+            value={(summary?.data?.activeCoverage ?? 0).toString()}
             icon={Shield}
           />
           <StatsCard
             title="Total Coverage"
-            value="$175,000"
-            change="+$25,000"
-            changeType="positive"
+            value={`$${(summary?.data?.totalCoverage ?? 0).toLocaleString()}`}
             icon={TrendingUp}
           />
           <StatsCard
             title="Pending Claims"
-            value="1"
-            change="Processing"
-            changeType="neutral"
+            value={(summary?.data?.pendingClaims ?? 0).toString()}
             icon={Clock}
           />
           <StatsCard
