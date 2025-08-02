@@ -30,6 +30,7 @@ import {
   usePolicyholderSummaryQuery,
 } from '@/hooks/useCoverage';
 import { useToast } from '@/components/shared/ToastProvider';
+import type { CoverageControllerFindAllParams } from '@/api';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -89,12 +90,21 @@ export default function MyCoverage() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
 
+  const hasFilters = filterStatus !== 'all';
+
+  const filters = hasFilters
+    ? {
+        ...(filterStatus !== 'all' && { status: filterStatus }),
+      }
+    : {};
+
   // Fetch coverage data
   const {
     data: coverageResponse,
     isLoading: isLoadingCoverage,
     error: coverageError,
   } = useCoverageListQuery({
+    ...(filters as CoverageControllerFindAllParams),
     limit: 100, // Get all coverage for this user
   });
 

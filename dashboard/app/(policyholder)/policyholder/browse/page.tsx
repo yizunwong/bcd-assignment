@@ -27,6 +27,7 @@ import {
   PolicyControllerFindAllCategory,
   PolicyControllerFindAllSortBy,
   PolicyCategoryCountStatsDto,
+  PolicyControllerFindAllParams,
 } from "@/api";
 
 const ITEMS_PER_PAGE = 6;
@@ -75,16 +76,24 @@ export default function BrowsePolicies() {
 
   const { data: categoryCountsData } = useCategoryCountsQuery();
 
+  const hasFilters =
+    selectedCategory !== "all" || !!debouncedSearchTerm;
+
+  const filters = hasFilters
+    ? {
+        ...(selectedCategory !== "all" && {
+          category: selectedCategory as PolicyControllerFindAllCategory,
+        }),
+        ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
+      }
+    : {};
+
   const {
     data: policiesData,
     isLoading,
     error,
   } = usePoliciesQuery({
-    category:
-      selectedCategory === "all"
-        ? undefined
-        : (selectedCategory as PolicyControllerFindAllCategory),
-    search: debouncedSearchTerm,
+    ...(filters as PolicyControllerFindAllParams),
     page: currentPage,
     limit: ITEMS_PER_PAGE,
     sortBy: sortParams.sortBy,
