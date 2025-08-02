@@ -75,11 +75,6 @@ export class CreatePolicyDto {
   @IsNotEmpty()
   category!: PolicyCategory;
 
-  @ApiProperty({ example: 'HealthSecure' })
-  @IsString()
-  @IsNotEmpty()
-  provider!: string;
-
   @ApiProperty({ example: 100000 })
   @Transform(({ value }: { value: unknown }) => parseInt(value as string, 10))
   @IsNumber()

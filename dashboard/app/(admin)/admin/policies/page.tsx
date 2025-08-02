@@ -47,6 +47,7 @@ import {
   usePoliciesQuery,
   useCreatePolicyMutation,
   useUploadPolicyDocumentsMutation,
+  usePolicyStatsQuery,
 } from "@/hooks/usePolicies";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useMeQuery } from "@/hooks/useAuth";
@@ -76,6 +77,7 @@ export default function ManagePolicies() {
   const { data: meData } = useMeQuery();
   const { createPolicy, error: createError } = useCreatePolicyMutation();
   const { uploadPolicyDocuments } = useUploadPolicyDocumentsMutation();
+  const { data: statsData } = usePolicyStatsQuery();
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const [newPolicy, setNewPolicy] = useState<{
@@ -234,7 +236,6 @@ export default function ManagePolicies() {
       const res = await createPolicy({
         name: newPolicy.name,
         category: newPolicy.category as CreatePolicyDtoCategory,
-        provider: meData?.data?.companyName || "Unknown Provider",
         coverage: newPolicy.coverage,
         durationDays: newPolicy.duration,
         premium: newPolicy.premium,
@@ -667,6 +668,9 @@ export default function ManagePolicies() {
                 </div>
                 <Badge className="status-badge status-active">Active</Badge>
               </div>
+              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
+                {statsData?.data?.activePolicies ?? 0}
+              </h3>
               <p className="text-slate-600 dark:text-slate-400">
                 Active Policies
               </p>
@@ -679,8 +683,14 @@ export default function ManagePolicies() {
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
                   <Edit className="w-6 h-6 text-white" />
                 </div>
-                <Badge className="status-badge status-pending">Draft</Badge>
+                <Badge className="status-badge status-pending">Deactivated</Badge>
               </div>
+              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
+                {statsData?.data?.deactivatedPolicies ?? 0}
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400">
+                Deactivated Policies
+              </p>
             </CardContent>
           </Card>
 
@@ -693,7 +703,7 @@ export default function ManagePolicies() {
                 <Badge className="status-badge status-info">Total</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {policies.reduce((sum, p) => sum + Number(p.sales ?? 0), 0)}
+                {statsData?.data?.totalSales ?? 0}
               </h3>
               <p className="text-slate-600 dark:text-slate-400">Total Sales</p>
             </CardContent>
@@ -708,7 +718,7 @@ export default function ManagePolicies() {
                 <Badge className="status-badge status-active">Revenue</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                1,341
+                {statsData?.data?.totalRevenue ?? 0}
               </h3>
               <p className="text-slate-600 dark:text-slate-400">
                 Total ETH Revenue

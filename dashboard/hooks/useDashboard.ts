@@ -1,16 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
-import { customFetcher } from "@/api/fetch";
+import { useDashboardControllerGetSummary } from '@/api';
+import { parseError } from '@/utils/parseError';
 
-export interface DashboardSummary {
-  activePolicies: number;
-  pendingClaims: number;
-  topPolicies: { id: number; name: string; sales: number }[];
+
+export function useAdminDashboardSummaryQuery() {
+  const query = useDashboardControllerGetSummary();
+  return {
+    ...query,
+    error: parseError(query.error),
+  };
 }
 
-export function useAdminDashboardSummary() {
-  return useQuery<{ data: DashboardSummary }>({
-    queryKey: ["admin-dashboard-summary"],
-    queryFn: () =>
-      customFetcher<{ data: DashboardSummary }>({ url: "/dashboard", method: "GET" }),
-  });
-}

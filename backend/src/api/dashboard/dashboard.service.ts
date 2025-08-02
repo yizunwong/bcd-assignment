@@ -32,6 +32,27 @@ export class DashboardService {
       throw new InternalServerErrorException('Failed to fetch policy sales');
     }
 
+    const { data: activeUsersData, error: activeUsersError } =
+      await supabase.rpc('count_active_users_by_company');
+    if (activeUsersError) {
+      throw new InternalServerErrorException('Failed to count active users');
+    }
+    const activeUsers = (activeUsersData || []).reduce(
+      (sum: number, row: { active_users: number }) => sum + row.active_users,
+      0,
+    );
+
+    const { data: revenueData, error: revenueError } = await supabase.rpc(
+      'calculate_policy_revenue',
+    );
+    if (revenueError) {
+      throw new InternalServerErrorException('Failed to calculate revenue');
+    }
+    const totalRevenue = (revenueData || []).reduce(
+      (sum: number, row: { total_revenue: number }) => sum + row.total_revenue,
+      0,
+    );
+
     const sorted = (salesData || [])
       .sort((a: { sales: number }, b: { sales: number }) => b.sales - a.sales)
       .slice(0, 5);
@@ -62,6 +83,8 @@ export class DashboardService {
       data: new DashboardSummaryDto({
         activePolicies: activeCount || 0,
         pendingClaims: pendingCount || 0,
+        activeUsers,
+        totalRevenue,
         topPolicies,
       }),
     });

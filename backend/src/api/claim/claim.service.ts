@@ -122,7 +122,15 @@ export class ClaimService {
       .from('claims')
       .select(
         `*, claim_documents(*), user_details(*), policyholder_details(*), coverage:coverage_id(
-          policy:policy_id(id,name,provider,coverage,premium)
+          policy:policy_id(
+            id,
+            name,
+            coverage,
+            premium,
+            admin_details:admin_details!policies_created_by_fkey1(
+              company:companies(name)
+            )
+          )
         )`,
         { count: 'exact' },
       )
@@ -195,7 +203,8 @@ export class ClaimService {
           ? {
               id: claim.coverage.policy.id,
               name: claim.coverage.policy.name,
-              provider: claim.coverage.policy.provider,
+              provider:
+                claim.coverage.policy.admin_details?.company?.name || '',
               coverage: claim.coverage.policy.coverage,
               premium: claim.coverage.policy.premium,
             }
@@ -219,7 +228,15 @@ export class ClaimService {
       .from('claims')
       .select(
         `*, claim_documents(*), user_details(*), policyholder_details(*), coverage:coverage_id(
-          policy:policy_id(id,name,provider,coverage,premium)
+          policy:policy_id(
+            id,
+            name,
+            coverage,
+            premium,
+            admin_details:admin_details!policies_created_by_fkey1(
+              company:companies(name)
+            )
+          )
         )`,
       )
       .eq('id', id)
@@ -265,7 +282,7 @@ export class ClaimService {
         ? {
             id: data.coverage.policy.id,
             name: data.coverage.policy.name,
-            provider: data.coverage.policy.provider,
+            provider: data.coverage.policy.admin_details?.company?.name || '',
             coverage: data.coverage.policy.coverage,
             premium: data.coverage.policy.premium,
           }

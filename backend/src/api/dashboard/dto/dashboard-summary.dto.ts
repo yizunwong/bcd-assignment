@@ -22,6 +22,12 @@ export class DashboardSummaryDto {
   @ApiProperty()
   pendingClaims!: number;
 
+  @ApiProperty()
+  activeUsers!: number;
+
+  @ApiProperty()
+  totalRevenue!: number;
+
   @ApiProperty({ type: [TopPolicyDto] })
   topPolicies!: TopPolicyDto[];
 

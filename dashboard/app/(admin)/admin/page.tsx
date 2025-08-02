@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import ClaimReviewDialog from "@/app/(admin)/admin/claims/components/ClaimReviewDialog";
 import { useClaimControllerFindAll } from "@/api";
-import { useAdminDashboardSummary } from "@/hooks/useDashboard";
+import { useAdminDashboardSummaryQuery } from "@/hooks/useDashboard";
 import {
   Shield,
   Users,
@@ -19,6 +19,7 @@ import {
   Eye,
   X,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function AdminDashboard() {
   const { data: recentClaimsData } = useClaimControllerFindAll({
@@ -26,8 +27,9 @@ export default function AdminDashboard() {
     page: 1,
   });
   const recentClaims = recentClaimsData?.data ?? [];
-  const { data: dashboard } = useAdminDashboardSummary();
+  const { data: dashboard } = useAdminDashboardSummaryQuery();
   const summary = dashboard?.data;
+  const router = useRouter();
   return (
     <div className="section-spacing">
       <div className="max-w-7xl mx-auto">
@@ -51,29 +53,21 @@ export default function AdminDashboard() {
           <StatsCard
             title="Active Policies"
             value={(summary?.activePolicies ?? 0).toString()}
-            change=""
-            changeType="neutral"
             icon={Shield}
           />
           <StatsCard
             title="Pending Claims"
             value={(summary?.pendingClaims ?? 0).toString()}
-            change=""
-            changeType="neutral"
             icon={AlertCircle}
           />
           <StatsCard
             title="Total Revenue"
-            value="2,450 ETH"
-            change="+15.3% from last month"
-            changeType="positive"
+            value={(summary?.totalRevenue ?? 0).toString()}
             icon={DollarSign}
           />
           <StatsCard
             title="Active Users"
-            value="3,891"
-            change="+12.1% from last month"
-            changeType="positive"
+            value={(summary?.activeUsers ?? 0).toString()}
             icon={Users}
           />
         </div>
@@ -166,13 +160,21 @@ export default function AdminDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="element-spacing">
-                <Button className="w-full justify-start gradient-accent text-white floating-button">
+                <Button
+                  className="w-full justify-start gradient-accent text-white floating-button"
+                  onClick={() => {
+                    router.push("/admin/claims");
+                  }}
+                >
                   <FileText className="w-4 h-4 mr-2" />
                   Review Claims
                 </Button>
                 <Button
                   variant="outline"
                   className="w-full justify-start floating-button"
+                  onClick={() => {
+                    router.push("/admin/policies");
+                  }}
                 >
                   <Shield className="w-4 h-4 mr-2" />
                   Create New Policy
@@ -180,6 +182,9 @@ export default function AdminDashboard() {
                 <Button
                   variant="outline"
                   className="w-full justify-start floating-button"
+                  onClick={() => {
+                    router.push("/admin/reports");
+                  }}
                 >
                   <TrendingUp className="w-4 h-4 mr-2" />
                   Generate Report
