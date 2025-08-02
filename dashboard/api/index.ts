@@ -251,8 +251,8 @@ export const CreateUserDtoRole = {
 } as const;
 
 export interface CreateUserDto {
-  firstName?: string;
-  lastName?: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   role: CreateUserDtoRole;
@@ -337,6 +337,25 @@ export interface ClaimDocumentResponseDto {
   signedUrl: string;
 }
 
+export type PolicyHolderDetailsDtoOccupation = { [key: string]: unknown };
+
+export type PolicyHolderDetailsDtoAddress = { [key: string]: unknown };
+
+export interface PolicyHolderDetailsDto {
+  user_id: string;
+  date_of_birth: string;
+  occupation?: PolicyHolderDetailsDtoOccupation;
+  address?: PolicyHolderDetailsDtoAddress;
+}
+
+export interface PolicySummaryDto {
+  id: number;
+  name: string;
+  provider: string;
+  coverage: number;
+  premium: number;
+}
+
 export interface ClaimResponseDto {
   id: number;
   type: string;
@@ -347,6 +366,8 @@ export interface ClaimResponseDto {
   priority: string;
   submitted_by: string;
   claim_documents: ClaimDocumentResponseDto[];
+  policyholder_details?: PolicyHolderDetailsDto;
+  policy?: PolicySummaryDto;
 }
 
 export interface ClaimStatsDto {
@@ -409,7 +430,6 @@ export const CreatePolicyDtoCategory = {
 export interface CreatePolicyDto {
   name: string;
   category: CreatePolicyDtoCategory;
-  provider: string;
   coverage: number;
   durationDays: number;
   premium: number;
@@ -450,8 +470,16 @@ export interface PolicyResponseDto {
   description?: PolicyResponseDtoDescription;
   claim_types: string[];
   sales: number;
+  status: string;
   policy_documents: PolicyDocumentResponseDto[];
   reviews: ReviewRespondDto[];
+}
+
+export interface PolicyStatsDto {
+  activePolicies: number;
+  deactivatedPolicies: number;
+  totalSales: number;
+  totalRevenue: number;
 }
 
 export interface PolicyCategoryCountStatsDto {
@@ -473,7 +501,6 @@ export const UpdatePolicyDtoCategory = {
 export interface UpdatePolicyDto {
   name?: string;
   category?: UpdatePolicyDtoCategory;
-  provider?: string;
   coverage?: number;
   durationDays?: number;
   premium?: number;
@@ -550,6 +577,20 @@ export interface CreateReviewDto {
   /** Rating from 1 to 5 */
   rating: number;
   comment?: string;
+}
+
+export interface TopPolicyDto {
+  id: number;
+  name: string;
+  sales: number;
+}
+
+export interface DashboardSummaryDto {
+  activePolicies: number;
+  pendingClaims: number;
+  activeUsers: number;
+  totalRevenue: number;
+  topPolicies: TopPolicyDto[];
 }
 
 export type AuthControllerLogin200AllOf = {
@@ -792,6 +833,13 @@ export type PolicyControllerRemove200AllOf = {
 export type PolicyControllerRemove200 = CommonResponseDto &
   PolicyControllerRemove200AllOf;
 
+export type PolicyControllerGetStats200AllOf = {
+  data?: PolicyStatsDto;
+};
+
+export type PolicyControllerGetStats200 = CommonResponseDto &
+  PolicyControllerGetStats200AllOf;
+
 export type PolicyControllerGetCategoryCounts200AllOf = {
   data?: PolicyCategoryCountStatsDto;
 };
@@ -868,6 +916,13 @@ export type CoverageControllerFindOne200AllOf = {
 
 export type CoverageControllerFindOne200 = CommonResponseDto &
   CoverageControllerFindOne200AllOf;
+
+export type DashboardControllerGetSummary200AllOf = {
+  data?: DashboardSummaryDto;
+};
+
+export type DashboardControllerGetSummary200 = CommonResponseDto &
+  DashboardControllerGetSummary200AllOf;
 
 export const authControllerLogin = (
   loginDto: LoginDto,
@@ -3368,6 +3423,148 @@ export const usePolicyControllerRemove = <TError = unknown, TContext = unknown>(
   return useMutation(mutationOptions, queryClient);
 };
 
+export const policyControllerGetStats = (signal?: AbortSignal) => {
+  return customFetcher<PolicyControllerGetStats200>({
+    url: `/policy/stats`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getPolicyControllerGetStatsQueryKey = () => {
+  return [`/policy/stats`] as const;
+};
+
+export const getPolicyControllerGetStatsQueryOptions = <
+  TData = Awaited<ReturnType<typeof policyControllerGetStats>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof policyControllerGetStats>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getPolicyControllerGetStatsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof policyControllerGetStats>>
+  > = ({ signal }) => policyControllerGetStats(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof policyControllerGetStats>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type PolicyControllerGetStatsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof policyControllerGetStats>>
+>;
+export type PolicyControllerGetStatsQueryError = unknown;
+
+export function usePolicyControllerGetStats<
+  TData = Awaited<ReturnType<typeof policyControllerGetStats>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetStats>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof policyControllerGetStats>>,
+          TError,
+          Awaited<ReturnType<typeof policyControllerGetStats>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePolicyControllerGetStats<
+  TData = Awaited<ReturnType<typeof policyControllerGetStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetStats>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof policyControllerGetStats>>,
+          TError,
+          Awaited<ReturnType<typeof policyControllerGetStats>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePolicyControllerGetStats<
+  TData = Awaited<ReturnType<typeof policyControllerGetStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetStats>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function usePolicyControllerGetStats<
+  TData = Awaited<ReturnType<typeof policyControllerGetStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetStats>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getPolicyControllerGetStatsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
 export const policyControllerGetSummary = (
   userId: string,
   signal?: AbortSignal,
@@ -4612,3 +4809,145 @@ export const useCompanyControllerUpload = <
 
   return useMutation(mutationOptions, queryClient);
 };
+
+export const dashboardControllerGetSummary = (signal?: AbortSignal) => {
+  return customFetcher<DashboardControllerGetSummary200>({
+    url: `/dashboard`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getDashboardControllerGetSummaryQueryKey = () => {
+  return [`/dashboard`] as const;
+};
+
+export const getDashboardControllerGetSummaryQueryOptions = <
+  TData = Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getDashboardControllerGetSummaryQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof dashboardControllerGetSummary>>
+  > = ({ signal }) => dashboardControllerGetSummary(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type DashboardControllerGetSummaryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof dashboardControllerGetSummary>>
+>;
+export type DashboardControllerGetSummaryQueryError = unknown;
+
+export function useDashboardControllerGetSummary<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardControllerGetSummary>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useDashboardControllerGetSummary<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardControllerGetSummary>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useDashboardControllerGetSummary<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useDashboardControllerGetSummary<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getDashboardControllerGetSummaryQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}

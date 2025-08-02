@@ -11,6 +11,7 @@ import { UpdateCoverageDto } from './dto/requests/update-coverage.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { CommonResponseDto } from 'src/common/common.dto';
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return */
 @Injectable()
 export class CoverageService {
   async create(dto: CreateCoverageDto, req: AuthenticatedRequest) {
@@ -58,7 +59,9 @@ export class CoverageService {
         category,
         coverage,
         premium,
-        provider
+        admin_details:admin_details!policies_created_by_fkey1(
+          company:companies(name)
+        )
       )
     `,
         { count: 'exact' },
@@ -96,10 +99,20 @@ export class CoverageService {
       throw new InternalServerErrorException('Failed to fetch coverage data');
     }
 
+    const enriched = data.map((c: any) => ({
+      ...c,
+      policies: c.policies
+        ? {
+            ...c.policies,
+            provider: c.policies.admin_details?.company?.name || '',
+          }
+        : c.policies,
+    }));
+
     return new CommonResponseDto<CoverageResponseDto[]>({
       statusCode: 200,
       message: 'Coverage retrieved successfully',
-      data: data,
+      data: enriched,
       count: count || 0,
     });
   }

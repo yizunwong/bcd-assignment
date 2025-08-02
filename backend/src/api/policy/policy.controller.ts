@@ -21,6 +21,7 @@ import { ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiCommonResponse, CommonResponseDto } from 'src/common/common.dto';
 import { PolicyResponseDto } from './dto/responses/policy.dto';
+import { PolicyStatsDto } from './dto/responses/policy-stats.dto';
 import { FindPoliciesQueryDto } from './dto/responses/policy-query.dto';
 import { UploadDocDto } from '../file/requests/document-upload.dto';
 import { PolicyCategoryCountStatsDto } from './dto/responses/policy-category.dto';
@@ -70,6 +71,15 @@ export class PolicyController {
     @Req() req: AuthenticatedRequest,
   ): Promise<CommonResponseDto<PolicyResponseDto>> {
     return this.policyService.findOne(+id, req);
+  }
+
+  @Get('stats')
+  @UseGuards(AuthGuard)
+  @ApiCommonResponse(PolicyStatsDto, false, 'Get policy stats')
+  getStats(
+    @Req() req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto<PolicyStatsDto>> {
+    return this.policyService.getStats(req);
   }
 
   @Get('dashboard/policyholder/:userId/summary')

@@ -1176,6 +1176,43 @@
         ]
       }
     },
+    "/policy/stats": {
+      "get": {
+        "operationId": "PolicyController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get policy stats",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/PolicyStatsDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Policy"
+        ]
+      }
+    },
     "/policy/dashboard/policyholder/{userId}/summary": {
       "get": {
         "operationId": "PolicyController_getSummary",
@@ -2485,10 +2522,6 @@
               "crop"
             ]
           },
-          "provider": {
-            "type": "string",
-            "example": "HealthSecure"
-          },
           "coverage": {
             "type": "number",
             "example": 100000
@@ -2524,7 +2557,6 @@
         "required": [
           "name",
           "category",
-          "provider",
           "coverage",
           "durationDays",
           "premium",
@@ -2653,6 +2685,29 @@
           "reviews"
         ]
       },
+      "PolicyStatsDto": {
+        "type": "object",
+        "properties": {
+          "activePolicies": {
+            "type": "number"
+          },
+          "deactivatedPolicies": {
+            "type": "number"
+          },
+          "totalSales": {
+            "type": "number"
+          },
+          "totalRevenue": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "activePolicies",
+          "deactivatedPolicies",
+          "totalSales",
+          "totalRevenue"
+        ]
+      },
       "PolicyCategoryCountStatsDto": {
         "type": "object",
         "properties": {
@@ -2687,10 +2742,6 @@
               "travel",
               "crop"
             ]
-          },
-          "provider": {
-            "type": "string",
-            "example": "HealthSecure"
           },
           "coverage": {
             "type": "number",
@@ -2931,6 +2982,12 @@
           "pendingClaims": {
             "type": "number"
           },
+          "activeUsers": {
+            "type": "number"
+          },
+          "totalRevenue": {
+            "type": "number"
+          },
           "topPolicies": {
             "type": "array",
             "items": {
@@ -2941,6 +2998,8 @@
         "required": [
           "activePolicies",
           "pendingClaims",
+          "activeUsers",
+          "totalRevenue",
           "topPolicies"
         ]
       }
