@@ -123,15 +123,6 @@ export default function MyCoverage() {
     return transformed;
   }, [coverageResponse]);
 
-  // Handle errors
-  if (coverageError) {
-    printMessage('Failed to load coverage data', 'error');
-  }
-
-  if (summaryError) {
-    printMessage('Failed to load summary data', 'error');
-  }
-
   const filteredPolicies = useMemo(() => {
     let filtered = allPolicies;
 

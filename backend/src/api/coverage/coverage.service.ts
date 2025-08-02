@@ -252,7 +252,7 @@ export class CoverageService {
       await req.supabase
         .from('claims')
         .select('amount')
-        .eq('user_id', userId)
+        .eq('submitted_by', userId)
         .eq('status', 'approved')
         .in(
           'coverage_id',
@@ -260,6 +260,7 @@ export class CoverageService {
         );
 
     if (approvedClaimsError) {
+      console.error(approvedClaimsError);
       throw new InternalServerErrorException('Failed to fetch approved claims');
     }
 
@@ -272,7 +273,7 @@ export class CoverageService {
     const { data: claims, error: claimsError } = await req.supabase
       .from('claims')
       .select('status')
-      .eq('user_id', userId);
+      .eq('submitted_by', userId);
 
     if (claimsError) {
       throw new InternalServerErrorException('Failed to fetch claims');
