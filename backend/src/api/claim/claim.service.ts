@@ -120,7 +120,12 @@ export class ClaimService {
 
     let dbQuery = req.supabase
       .from('claims')
-      .select('*, claim_documents(*), user_details(*)', { count: 'exact' })
+      .select(
+        `*, claim_documents(*), user_details(*), policyholder_details(*), coverage:coverage_id(
+          policy:policy_id(id,name,provider,coverage,premium)
+        )`,
+        { count: 'exact' },
+      )
       .range(offset, offset + (query.limit || 5) - 1)
       .order(query.sortBy || 'id', {
         ascending: (query.sortOrder || 'asc') === 'asc',
@@ -164,20 +169,39 @@ export class ClaimService {
     );
 
     let urlIndex = 0;
-    const enrichedClaims: ClaimResponseDto[] = data.map((claim) => ({
-      ...claim,
-      submitted_by:
-        `${claim.user_details?.first_name ?? ''} ${claim.user_details?.last_name ?? ''}`.trim(),
-      description: claim.description || '',
-      claim_documents: Array.isArray(claim.claim_documents)
+    const enrichedClaims: ClaimResponseDto[] = data.map((claim) => {
+      const documents = Array.isArray(claim.claim_documents)
         ? claim.claim_documents.map((doc) => ({
             id: doc.id,
             name: doc.name,
             claim_id: doc.claim_id,
             signedUrl: signedUrls[urlIndex++] || '',
           }))
-        : [],
-    }));
+        : [];
+
+      return {
+        id: claim.id,
+        type: claim.type,
+        amount: claim.amount,
+        status: claim.status,
+        description: claim.description || '',
+        submitted_date: claim.submitted_date,
+        priority: claim.priority,
+        submitted_by:
+          `${claim.user_details?.first_name ?? ''} ${claim.user_details?.last_name ?? ''}`.trim(),
+        claim_documents: documents,
+        policyholder_details: claim.policyholder_details || undefined,
+        policy: claim.coverage?.policy
+          ? {
+              id: claim.coverage.policy.id,
+              name: claim.coverage.policy.name,
+              provider: claim.coverage.policy.provider,
+              coverage: claim.coverage.policy.coverage,
+              premium: claim.coverage.policy.premium,
+            }
+          : undefined,
+      };
+    });
 
     return new CommonResponseDto<ClaimResponseDto[]>({
       statusCode: 200,
@@ -193,7 +217,11 @@ export class ClaimService {
   ): Promise<CommonResponseDto<ClaimResponseDto>> {
     const { data, error } = await req.supabase
       .from('claims')
-      .select('*, claim_documents(*)')
+      .select(
+        `*, claim_documents(*), user_details(*), policyholder_details(*), coverage:coverage_id(
+          policy:policy_id(id,name,provider,coverage,premium)
+        )`,
+      )
       .eq('id', id)
       .single();
 
@@ -229,8 +257,19 @@ export class ClaimService {
       description: data.description || '',
       submitted_date: data.submitted_date,
       priority: data.priority,
-      submitted_by: data.submitted_by,
+      submitted_by:
+        `${data.user_details?.first_name ?? ''} ${data.user_details?.last_name ?? ''}`.trim(),
       claim_documents: enrichedDocuments,
+      policyholder_details: data.policyholder_details || undefined,
+      policy: data.coverage?.policy
+        ? {
+            id: data.coverage.policy.id,
+            name: data.coverage.policy.name,
+            provider: data.coverage.policy.provider,
+            coverage: data.coverage.policy.coverage,
+            premium: data.coverage.policy.premium,
+          }
+        : undefined,
     };
 
     return new CommonResponseDto({
