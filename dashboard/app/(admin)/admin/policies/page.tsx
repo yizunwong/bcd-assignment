@@ -54,6 +54,7 @@ import { useToast } from "@/components/shared/ToastProvider";
 import {
   PolicyControllerFindAllCategory,
   CreatePolicyDtoCategory,
+  PolicyControllerFindAllParams,
 } from "@/api";
 
 export default function ManagePolicies() {
@@ -95,16 +96,24 @@ export default function ManagePolicies() {
     claimTypes: [""],
   });
 
+  const hasFilters =
+    filterCategory !== "all" || !!debouncedSearchTerm;
+
+  const filters = hasFilters
+    ? {
+        ...(filterCategory !== "all" && {
+          category: filterCategory as PolicyControllerFindAllCategory,
+        }),
+        ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
+      }
+    : {};
+
   const {
     data: policiesData,
     isLoading,
     error,
   } = usePoliciesQuery({
-    category:
-      filterCategory === "all"
-        ? undefined
-        : (filterCategory as PolicyControllerFindAllCategory),
-    search: debouncedSearchTerm,
+    ...(filters as PolicyControllerFindAllParams),
     page: currentPage,
     limit: itemsPerPage,
     userId: meData?.data?.id,
