@@ -26,17 +26,16 @@ export class DashboardService {
       throw new InternalServerErrorException('Failed to count pending claims');
     }
 
-    const { data: salesData, error: salesError } = await supabase.rpc(
-      'count_policy_sales',
-    );
+    const { data: salesData, error: salesError } =
+      await supabase.rpc('count_policy_sales');
     if (salesError) {
       throw new InternalServerErrorException('Failed to fetch policy sales');
     }
 
     const sorted = (salesData || [])
-      .sort((a: any, b: any) => b.sales - a.sales)
+      .sort((a: { sales: number }, b: { sales: number }) => b.sales - a.sales)
       .slice(0, 5);
-    const ids = sorted.map((s: any) => s.policy_id);
+    const ids = sorted.map((s) => s.policy_id);
 
     let topPolicies: TopPolicyDto[] = [];
     if (ids.length) {
@@ -48,13 +47,12 @@ export class DashboardService {
         throw new InternalServerErrorException('Failed to fetch policies');
       }
       topPolicies = sorted.map(
-        (s: any): TopPolicyDto => (
+        (s: { policy_id: number; sales: number }): TopPolicyDto =>
           new TopPolicyDto({
             id: s.policy_id,
             name: policies.find((p) => p.id === s.policy_id)?.name || '',
             sales: s.sales,
-          })
-        ),
+          }),
       );
     }
 

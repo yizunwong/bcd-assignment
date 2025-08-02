@@ -1622,6 +1622,43 @@
           "Company"
         ]
       }
+    },
+    "/dashboard": {
+      "get": {
+        "operationId": "DashboardController_getSummary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get dashboard summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/DashboardSummaryDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Dashboard"
+        ]
+      }
     }
   },
   "info": {
@@ -2251,6 +2288,54 @@
           "signedUrl"
         ]
       },
+      "PolicyHolderDetailsDto": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "date_of_birth": {
+            "type": "string"
+          },
+          "occupation": {
+            "type": "object"
+          },
+          "address": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "user_id",
+          "date_of_birth"
+        ]
+      },
+      "PolicySummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "coverage": {
+            "type": "number"
+          },
+          "premium": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "provider",
+          "coverage",
+          "premium"
+        ]
+      },
       "ClaimResponseDto": {
         "type": "object",
         "properties": {
@@ -2283,6 +2368,12 @@
             "items": {
               "$ref": "#/components/schemas/ClaimDocumentResponseDto"
             }
+          },
+          "policyholder_details": {
+            "$ref": "#/components/schemas/PolicyHolderDetailsDto"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/PolicySummaryDto"
           }
         },
         "required": [
@@ -2810,6 +2901,47 @@
         },
         "required": [
           "rating"
+        ]
+      },
+      "TopPolicyDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sales": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "sales"
+        ]
+      },
+      "DashboardSummaryDto": {
+        "type": "object",
+        "properties": {
+          "activePolicies": {
+            "type": "number"
+          },
+          "pendingClaims": {
+            "type": "number"
+          },
+          "topPolicies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TopPolicyDto"
+            }
+          }
+        },
+        "required": [
+          "activePolicies",
+          "pendingClaims",
+          "topPolicies"
         ]
       }
     }
