@@ -48,6 +48,7 @@ import {
   useCreatePolicyMutation,
   useUploadPolicyDocumentsMutation,
   usePolicyStatsQuery,
+  useUpdatePolicyMutation,
 } from "@/hooks/usePolicies";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useMeQuery } from "@/hooks/useAuth";
@@ -78,6 +79,7 @@ export default function ManagePolicies() {
   const { createPolicy, error: createError } = useCreatePolicyMutation();
   const { uploadPolicyDocuments } = useUploadPolicyDocumentsMutation();
   const { data: statsData } = usePolicyStatsQuery();
+  const { updatePolicy, error: updateError } = useUpdatePolicyMutation();
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const [newPolicy, setNewPolicy] = useState<{
@@ -144,7 +146,9 @@ export default function ManagePolicies() {
     premium: policy.premium,
     status: policy.status,
     sales: policy.sales,
-    revenue: "-",
+    revenue: policy.revenue
+      ? `$${policy.revenue.toLocaleString()}`
+      : "-",
     created: undefined,
     lastUpdated: undefined,
     description:
@@ -273,6 +277,29 @@ export default function ManagePolicies() {
       claimTypes: [""],
     });
     setUploadedTermsFiles([]);
+  };
+
+  const handleUpdatePolicy = async (policy: Policy) => {
+    const parseNumber = (value: string | number | undefined) =>
+      typeof value === "string" ? Number(value.replace(/[^\d.]/g, "")) : value || 0;
+    try {
+      await updatePolicy(String(policy.id), {
+        name: policy.name,
+        category: policy.category as PolicyControllerFindAllCategory,
+        coverage: parseNumber(policy.coverage),
+        premium: parseNumber(policy.premium),
+        description: policy.description,
+        claimTypes: policy.features || [],
+      });
+      printMessage("Policy updated successfully", "success");
+    } catch (err) {
+      printMessage(
+        typeof err === "string"
+          ? err
+          : updateError || "Failed to update policy",
+        "error"
+      );
+    }
   };
 
   const addClaimType = () => {
@@ -988,6 +1015,7 @@ export default function ManagePolicies() {
             policy={selectedPolicy}
             open={showEdit}
             onClose={closeDialogs}
+            onSave={handleUpdatePolicy}
           />
         )}
       </div>
