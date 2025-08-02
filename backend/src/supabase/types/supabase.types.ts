@@ -321,7 +321,6 @@ export type Database = {
           name: string;
           popular: boolean;
           premium: number;
-          provider: string;
           rating: number;
           status: Database['public']['Enums']['policy_status'];
         };
@@ -335,7 +334,6 @@ export type Database = {
           name: string;
           popular: boolean;
           premium: number;
-          provider: string;
           rating: number;
           status?: Database['public']['Enums']['policy_status'];
         };
@@ -349,7 +347,6 @@ export type Database = {
           name?: string;
           popular?: boolean;
           premium?: number;
-          provider?: string;
           rating?: number;
           status?: Database['public']['Enums']['policy_status'];
         };
