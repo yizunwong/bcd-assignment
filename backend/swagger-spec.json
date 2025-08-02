@@ -2459,6 +2459,28 @@
           "signedUrl"
         ]
       },
+      "ReviewRespondDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 1
+          },
+          "rating": {
+            "type": "number",
+            "example": 5,
+            "description": "Rating from 1 to 5"
+          },
+          "comment": {
+            "type": "object",
+            "example": "Great policy!"
+          }
+        },
+        "required": [
+          "id",
+          "rating"
+        ]
+      },
       "PolicyResponseDto": {
         "type": "object",
         "properties": {
@@ -2506,6 +2528,12 @@
             "items": {
               "$ref": "#/components/schemas/PolicyDocumentResponseDto"
             }
+          },
+          "reviews": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewRespondDto"
+            }
           }
         },
         "required": [
@@ -2520,7 +2548,8 @@
           "popular",
           "claim_types",
           "sales",
-          "policy_documents"
+          "policy_documents",
+          "reviews"
         ]
       },
       "PolicyCategoryCountStatsDto": {

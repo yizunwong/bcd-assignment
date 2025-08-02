@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum } from 'class-validator';
+import { ReviewRespondDto } from 'src/api/reviews/dto/repsonses/review.dto';
 import { PolicyCategory } from 'src/enums';
 
 export class PolicyDocumentResponseDto {
@@ -57,5 +58,8 @@ export class PolicyResponseDto {
   sales!: number;
 
   @ApiProperty({ type: [PolicyDocumentResponseDto] })
-  policy_documents!: PolicyDocumentResponseDto[];
+  policy_documents?: PolicyDocumentResponseDto[];
+
+  @ApiProperty({ type: [ReviewRespondDto] })
+  reviews?: ReviewRespondDto[];
 }

@@ -226,7 +226,7 @@ export class PolicyService {
   async findOne(
     id: number,
     req: AuthenticatedRequest,
-  ): Promise<CommonResponseDto<PolicyResponseDto & { reviews: unknown[] }>> {
+  ): Promise<CommonResponseDto<PolicyResponseDto>> {
     // Step 1: Get the policy + claim types
     const { data: policy, error: policyError } = await req.supabase
       .from('policies')
@@ -277,7 +277,7 @@ export class PolicyService {
 
     const { policy_claim_type, category, ...rest } = policy;
 
-    return new CommonResponseDto<PolicyResponseDto & { reviews: unknown[] }>({
+    return new CommonResponseDto<PolicyResponseDto>({
       statusCode: 200,
       message: 'Policy retrieved successfully',
       data: {

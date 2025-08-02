@@ -3,9 +3,9 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { CreateReviewDto } from './dto/create-review.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { CommonResponseDto } from 'src/common/common.dto';
+import { CreateReviewDto } from './dto/requests/create-review.dto';
 
 @Injectable()
 export class ReviewsService {

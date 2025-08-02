@@ -6,8 +6,8 @@ import { SupabaseService } from 'src/supabase/supabase.service';
 import { Database } from 'src/supabase/types/supabase.types';
 import { parseAppMetadata } from 'src/utils/auth-metadata';
 import { CommonResponseDto } from 'src/common/common.dto';
-import { UserResponseDto } from './dto/respond/user.dto';
-import { UserStatsResponseDto } from './dto/respond/user-stats.dto';
+import { UserResponseDto } from './dto/responses/user.dto';
+import { UserStatsResponseDto } from './dto/responses/user-stats.dto';
 import {
   UserRole,
   UserStatus,

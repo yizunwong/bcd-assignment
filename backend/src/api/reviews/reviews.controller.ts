@@ -1,10 +1,10 @@
 import { Controller, Post, Body, Param, Req, UseGuards } from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
-import { CreateReviewDto } from './dto/create-review.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { AuthGuard } from '../auth/auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { CommonResponseDto } from 'src/common/common.dto';
+import { CreateReviewDto } from './dto/requests/create-review.dto';
 
 @Controller('reviews')
 @ApiBearerAuth('supabase-auth')
