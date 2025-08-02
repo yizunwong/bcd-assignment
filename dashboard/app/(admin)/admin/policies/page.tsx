@@ -142,13 +142,11 @@ export default function ManagePolicies() {
     name: policy.name,
     category: policy.category as PolicyControllerFindAllCategory,
     provider: policy.provider,
-    coverage: policy.coverage ? `$${policy.coverage.toLocaleString()}` : "-",
+    coverage: policy.coverage,
     premium: policy.premium,
     status: policy.status,
     sales: policy.sales,
-    revenue: policy.revenue
-      ? `$${policy.revenue.toLocaleString()}`
-      : "-",
+    revenue: policy.revenue,
     created: undefined,
     lastUpdated: undefined,
     description:
@@ -484,7 +482,7 @@ export default function ManagePolicies() {
                       onChange={(e) =>
                         setNewPolicy({
                           ...newPolicy,
-                          premium: Number(e.target.value),
+                          premium: parseFloat(e.target.value),
                         })
                       }
                       className="form-input"
@@ -710,7 +708,9 @@ export default function ManagePolicies() {
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
                   <Edit className="w-6 h-6 text-white" />
                 </div>
-                <Badge className="status-badge status-pending">Deactivated</Badge>
+                <Badge className="status-badge status-pending">
+                  Deactivated
+                </Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
                 {statsData?.data?.deactivatedPolicies ?? 0}
@@ -890,7 +890,7 @@ export default function ManagePolicies() {
                           Coverage
                         </p>
                         <p className="font-semibold text-slate-800 dark:text-slate-100">
-                          {policy.coverage}
+                          RM {policy.coverage}
                         </p>
                       </div>
                       <div>

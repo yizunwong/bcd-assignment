@@ -186,8 +186,9 @@ export class PolicyService {
 
     const { data: coverageCounts } =
       await req.supabase.rpc('count_policy_sales');
-    const { data: revenueCounts } =
-      await req.supabase.rpc('calculate_policy_revenue');
+    const { data: revenueCounts } = await req.supabase.rpc(
+      'calculate_policy_revenue',
+    );
 
     const coverageMap = new Map<number, number>();
     const revenueMap = new Map<number, number>();
