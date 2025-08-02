@@ -174,6 +174,13 @@ export type Database = {
             referencedColumns: ['user_id'];
           },
           {
+            foreignKeyName: 'claims_submitted_by_fkey2';
+            columns: ['submitted_by'];
+            isOneToOne: false;
+            referencedRelation: 'policyholder_details';
+            referencedColumns: ['user_id'];
+          },
+          {
             foreignKeyName: 'claims_type_fkey';
             columns: ['type'];
             isOneToOne: false;
