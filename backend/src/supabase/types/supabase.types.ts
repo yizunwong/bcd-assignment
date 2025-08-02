@@ -353,7 +353,15 @@ export type Database = {
           rating?: number;
           status?: Database['public']['Enums']['policy_status'];
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: 'policies_created_by_fkey1';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'admin_details';
+            referencedColumns: ['user_id'];
+          },
+        ];
       };
       policy_claim_type: {
         Row: {
@@ -573,6 +581,13 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      calculate_policy_revenue: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          policy_id: number;
+          total_revenue: number;
+        }[];
+      };
       count_policy_sales: {
         Args: Record<PropertyKey, never>;
         Returns: {
