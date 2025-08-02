@@ -585,6 +585,13 @@ export type Database = {
           total_revenue: number;
         }[];
       };
+      count_active_users_by_company: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          company_id: number;
+          active_users: number;
+        }[];
+      };
       count_policy_sales: {
         Args: Record<PropertyKey, never>;
         Returns: {
