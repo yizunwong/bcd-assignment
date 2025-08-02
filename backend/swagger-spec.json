@@ -1032,6 +1032,43 @@
         ]
       }
     },
+    "/policy/stats": {
+      "get": {
+        "operationId": "PolicyController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get policy stats",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/PolicyStatsDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Policy"
+        ]
+      }
+    },
     "/policy/{id}": {
       "get": {
         "operationId": "PolicyController_findOne",
@@ -1157,43 +1194,6 @@
                       "properties": {
                         "data": {
                           "$ref": "#/components/schemas/PolicyResponseDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "supabase-auth": []
-          }
-        ],
-        "tags": [
-          "Policy"
-        ]
-      }
-    },
-    "/policy/stats": {
-      "get": {
-        "operationId": "PolicyController_getStats",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Get policy stats",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/CommonResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "data": {
-                          "$ref": "#/components/schemas/PolicyStatsDto"
                         }
                       }
                     }

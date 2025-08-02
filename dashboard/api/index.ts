@@ -3423,148 +3423,6 @@ export const usePolicyControllerRemove = <TError = unknown, TContext = unknown>(
   return useMutation(mutationOptions, queryClient);
 };
 
-export const policyControllerGetStats = (signal?: AbortSignal) => {
-  return customFetcher<PolicyControllerGetStats200>({
-    url: `/policy/stats`,
-    method: "GET",
-    signal,
-  });
-};
-
-export const getPolicyControllerGetStatsQueryKey = () => {
-  return [`/policy/stats`] as const;
-};
-
-export const getPolicyControllerGetStatsQueryOptions = <
-  TData = Awaited<ReturnType<typeof policyControllerGetStats>>,
-  TError = unknown,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<
-      Awaited<ReturnType<typeof policyControllerGetStats>>,
-      TError,
-      TData
-    >
-  >;
-}) => {
-  const { query: queryOptions } = options ?? {};
-
-  const queryKey =
-    queryOptions?.queryKey ?? getPolicyControllerGetStatsQueryKey();
-
-  const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof policyControllerGetStats>>
-  > = ({ signal }) => policyControllerGetStats(signal);
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof policyControllerGetStats>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type PolicyControllerGetStatsQueryResult = NonNullable<
-  Awaited<ReturnType<typeof policyControllerGetStats>>
->;
-export type PolicyControllerGetStatsQueryError = unknown;
-
-export function usePolicyControllerGetStats<
-  TData = Awaited<ReturnType<typeof policyControllerGetStats>>,
-  TError = unknown,
->(
-  options: {
-    query: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof policyControllerGetStats>>,
-        TError,
-        TData
-      >
-    > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof policyControllerGetStats>>,
-          TError,
-          Awaited<ReturnType<typeof policyControllerGetStats>>
-        >,
-        "initialData"
-      >;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-export function usePolicyControllerGetStats<
-  TData = Awaited<ReturnType<typeof policyControllerGetStats>>,
-  TError = unknown,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof policyControllerGetStats>>,
-        TError,
-        TData
-      >
-    > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof policyControllerGetStats>>,
-          TError,
-          Awaited<ReturnType<typeof policyControllerGetStats>>
-        >,
-        "initialData"
-      >;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-export function usePolicyControllerGetStats<
-  TData = Awaited<ReturnType<typeof policyControllerGetStats>>,
-  TError = unknown,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof policyControllerGetStats>>,
-        TError,
-        TData
-      >
-    >;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-
-export function usePolicyControllerGetStats<
-  TData = Awaited<ReturnType<typeof policyControllerGetStats>>,
-  TError = unknown,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof policyControllerGetStats>>,
-        TError,
-        TData
-      >
-    >;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-} {
-  const queryOptions = getPolicyControllerGetStatsQueryOptions(options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
-    TData,
-    TError
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey;
-
-  return query;
-}
-
 export const policyControllerGetSummary = (
   userId: string,
   signal?: AbortSignal,
@@ -3714,6 +3572,148 @@ export function usePolicyControllerGetSummary<
     userId,
     options,
   );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const policyControllerGetStats = (signal?: AbortSignal) => {
+  return customFetcher<PolicyControllerGetStats200>({
+    url: `/policy/stats`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getPolicyControllerGetStatsQueryKey = () => {
+  return [`/policy/stats`] as const;
+};
+
+export const getPolicyControllerGetStatsQueryOptions = <
+  TData = Awaited<ReturnType<typeof policyControllerGetStats>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof policyControllerGetStats>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getPolicyControllerGetStatsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof policyControllerGetStats>>
+  > = ({ signal }) => policyControllerGetStats(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof policyControllerGetStats>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type PolicyControllerGetStatsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof policyControllerGetStats>>
+>;
+export type PolicyControllerGetStatsQueryError = unknown;
+
+export function usePolicyControllerGetStats<
+  TData = Awaited<ReturnType<typeof policyControllerGetStats>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetStats>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof policyControllerGetStats>>,
+          TError,
+          Awaited<ReturnType<typeof policyControllerGetStats>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePolicyControllerGetStats<
+  TData = Awaited<ReturnType<typeof policyControllerGetStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetStats>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof policyControllerGetStats>>,
+          TError,
+          Awaited<ReturnType<typeof policyControllerGetStats>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePolicyControllerGetStats<
+  TData = Awaited<ReturnType<typeof policyControllerGetStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetStats>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function usePolicyControllerGetStats<
+  TData = Awaited<ReturnType<typeof policyControllerGetStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetStats>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getPolicyControllerGetStatsQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

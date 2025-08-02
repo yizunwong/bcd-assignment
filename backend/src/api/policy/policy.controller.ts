@@ -63,6 +63,15 @@ export class PolicyController {
     return this.policyService.findAll(req, query);
   }
 
+  @Get('stats')
+  @UseGuards(AuthGuard)
+  @ApiCommonResponse(PolicyStatsDto, false, 'Get policy stats')
+  getStats(
+    @Req() req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto<PolicyStatsDto>> {
+    return this.policyService.getStats(req);
+  }
+
   @Get(':id')
   @UseGuards(AuthGuard)
   @ApiCommonResponse(PolicyResponseDto, false, 'Get policy with signed URLs')
@@ -71,15 +80,6 @@ export class PolicyController {
     @Req() req: AuthenticatedRequest,
   ): Promise<CommonResponseDto<PolicyResponseDto>> {
     return this.policyService.findOne(+id, req);
-  }
-
-  @Get('stats')
-  @UseGuards(AuthGuard)
-  @ApiCommonResponse(PolicyStatsDto, false, 'Get policy stats')
-  getStats(
-    @Req() req: AuthenticatedRequest,
-  ): Promise<CommonResponseDto<PolicyStatsDto>> {
-    return this.policyService.getStats(req);
   }
 
   @Get('dashboard/policyholder/:userId/summary')

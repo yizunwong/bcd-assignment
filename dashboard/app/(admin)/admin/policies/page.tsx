@@ -236,7 +236,6 @@ export default function ManagePolicies() {
       const res = await createPolicy({
         name: newPolicy.name,
         category: newPolicy.category as CreatePolicyDtoCategory,
-        provider: meData?.data?.companyName || "Unknown Provider",
         coverage: newPolicy.coverage,
         durationDays: newPolicy.duration,
         premium: newPolicy.premium,
