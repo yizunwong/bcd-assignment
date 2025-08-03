@@ -151,7 +151,7 @@ export class DashboardService {
       throw new InternalServerErrorException('Failed to fetch pending claims');
     }
 
-    return {
+    return new CommonResponseDto<PolicyholderDashboardDto>({
       statusCode: 200,
       message: 'Policyholder dashboard summary retrieved successfully',
       data: new PolicyholderDashboardDto({
@@ -162,6 +162,6 @@ export class DashboardService {
           (c) => new ActiveCoverageDto(c),
         ),
       }),
-    };
+    });
   }
 }
