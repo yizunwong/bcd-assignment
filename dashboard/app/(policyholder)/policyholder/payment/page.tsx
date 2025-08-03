@@ -29,6 +29,8 @@ import Link from "next/link";
 import { useCreateCoverageMutation } from "@/hooks/useCoverage";
 import { usePolicyQuery } from "@/hooks/usePolicies";
 import { useToast } from "@/components/shared/ToastProvider";
+import { usePaymentMutation } from "@/hooks/usePayment";
+import { CreateCoverageDto } from '@/api';
 
 export default function PaymentSummary() {
   const router = useRouter();
@@ -40,6 +42,7 @@ export default function PaymentSummary() {
   const [paymentMethod, setPaymentMethod] = useState("ETH");
 
   // Coverage creation mutation
+  const { makePayment } = usePaymentMutation();
   const { createCoverage } = useCreateCoverageMutation();
 
   const searchParams = useSearchParams();
@@ -102,25 +105,10 @@ export default function PaymentSummary() {
     return <div className="p-8">Loading...</div>;
   }
 
-  const handleTokenPayment = async () => {
+  const handleTokenPayment = async (coverageData: CreateCoverageDto) => {
     setIsProcessing(true);
 
     try {
-      const startDate = new Date();
-      const endDate = new Date();
-      endDate.setFullYear(endDate.getFullYear() + 1);
-      const nextPaymentDate = new Date();
-      nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
-
-      const coverageData = {
-        policy_id: policyData.id,
-        status: "active" as const,
-        utilization_rate: 0,
-        start_date: startDate.toISOString().split("T")[0],
-        end_date: endDate.toISOString().split("T")[0],
-        next_payment_date: nextPaymentDate.toISOString().split("T")[0],
-      };
-
       await createCoverage(coverageData);
 
       await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -136,16 +124,17 @@ export default function PaymentSummary() {
     }
   };
 
-  const handleStripePayment = async () => {
+  const handleStripePayment = async (coverageData: CreateCoverageDto) => {
     setIsProcessing(true);
     try {
-      const response = await fetch("http://localhost:3000/payments/intent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: policyData.total, currency: "usd" }),
+      const response = await makePayment({
+        amount: policyData.total,
+        currency: "usd",
       });
-      const data = await response.json();
-      if (data?.data?.clientSecret) {
+
+      await createCoverage(coverageData);
+
+      if (response?.data?.clientSecret) {
         printMessage("Stripe payment initialized", "success");
         router.push("/policyholder/payment/confirmation");
       } else {
@@ -160,11 +149,26 @@ export default function PaymentSummary() {
   };
 
   const handlePayment = async () => {
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setFullYear(endDate.getFullYear() + 1);
+    const nextPaymentDate = new Date();
+    nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
+
+    const coverageData = {
+      policy_id: policyData.id,
+      status: "active" as const,
+      utilization_rate: 0,
+      start_date: startDate.toISOString().split("T")[0],
+      end_date: endDate.toISOString().split("T")[0],
+      next_payment_date: nextPaymentDate.toISOString().split("T")[0],
+    };
+
     if (paymentMethod === "STRIPE") {
-      await handleStripePayment();
+      await handleStripePayment(coverageData);
       return;
     }
-    await handleTokenPayment();
+    await handleTokenPayment(coverageData);
   };
 
   const steps = [
