@@ -19,6 +19,7 @@ import {
   policies,
   recentActivity,
 } from "@/public/data/policyholder/dashboardData";
+import { formatValue } from "@/utils/formatHelper";
 
 export default function PolicyholderDashboard() {
   const { data: summary } = usePolicyholderDashboardSummaryQuery();
@@ -49,7 +50,9 @@ export default function PolicyholderDashboard() {
           />
           <StatsCard
             title="Total Coverage"
-            value={`$${(summary?.data?.totalCoverage ?? 0).toLocaleString()}`}
+            value={formatValue(summary?.data?.totalCoverage, {
+              currency: typeof summary?.data?.totalCoverage === "number",
+            })}
             icon={TrendingUp}
           />
           <StatsCard
@@ -82,42 +85,48 @@ export default function PolicyholderDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="element-spacing">
-                  {policies.map((policy, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-4 rounded-xl bg-slate-50/50 dark:bg-slate-700/30 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors"
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-teal-500 flex items-center justify-center">
-                          <Shield className="w-6 h-6 text-white" />
+                  {summary?.data?.activeCoverageObject.map(
+                    (coverage, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-4 rounded-xl bg-slate-50/50 dark:bg-slate-700/30 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors"
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-teal-500 flex items-center justify-center">
+                            <Shield className="w-6 h-6 text-white" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-slate-800 dark:text-slate-100">
+                              {coverage.policy?.name}
+                            </h3>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">
+                              Coverage:{" "}
+                              {formatValue(coverage.policy?.coverage, {
+                                currency:
+                                  typeof coverage.policy?.coverage === "number",
+                              })}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-slate-800 dark:text-slate-100">
-                            {policy.name}
-                          </h3>
-                          <p className="text-sm text-slate-600 dark:text-slate-400">
-                            Coverage: {policy.coverage}
+                        <div className="text-right">
+                          <Badge
+                            className={`status-badge ${
+                              coverage.status === "Active"
+                                ? "status-active"
+                                : coverage.status === "Claimed"
+                                  ? "status-info"
+                                  : "status-pending"
+                            }`}
+                          >
+                            {coverage.status}
+                          </Badge>
+                          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                            Expires: {coverage.end_date}
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <Badge
-                          className={`status-badge ${
-                            policy.status === "Active"
-                              ? "status-active"
-                              : policy.status === "Claimed"
-                              ? "status-info"
-                              : "status-pending"
-                          }`}
-                        >
-                          {policy.status}
-                        </Badge>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                          Expires: {policy.expires}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -179,8 +188,8 @@ export default function PolicyholderDashboard() {
                           activity.status === "completed"
                             ? "bg-emerald-100 dark:bg-emerald-900/30"
                             : activity.status === "pending"
-                            ? "bg-yellow-100 dark:bg-yellow-900/30"
-                            : "bg-blue-100 dark:bg-blue-900/30"
+                              ? "bg-yellow-100 dark:bg-yellow-900/30"
+                              : "bg-blue-100 dark:bg-blue-900/30"
                         }`}
                       >
                         {activity.status === "completed" ? (

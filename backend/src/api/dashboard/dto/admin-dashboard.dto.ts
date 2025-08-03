@@ -15,7 +15,7 @@ export class TopPolicyDto {
   }
 }
 
-export class DashboardSummaryDto {
+export class AdminDashoboardDto {
   @ApiProperty()
   activePolicies!: number;
 
@@ -31,7 +31,7 @@ export class DashboardSummaryDto {
   @ApiProperty({ type: [TopPolicyDto] })
   topPolicies!: TopPolicyDto[];
 
-  constructor(init?: Partial<DashboardSummaryDto>) {
+  constructor(init?: Partial<AdminDashoboardDto>) {
     Object.assign(this, init);
   }
 }

@@ -25,11 +25,11 @@ export class PolicyHolderDetailsDto {
   @ApiProperty()
   date_of_birth!: string;
 
-  @ApiProperty({ required: false })
-  occupation?: string | null;
+  @ApiProperty()
+  occupation!: string;
 
-  @ApiProperty({ required: false })
-  address?: string | null;
+  @ApiProperty()
+  address!: string;
 }
 
 export class PolicySummaryDto {
@@ -77,9 +77,9 @@ export class ClaimResponseDto {
   @ApiProperty({ type: [ClaimDocumentResponseDto] })
   claim_documents!: ClaimDocumentResponseDto[];
 
-  @ApiProperty({ type: PolicyHolderDetailsDto, required: false })
-  policyholder_details?: PolicyHolderDetailsDto;
+  @ApiProperty({ type: PolicyHolderDetailsDto })
+  policyholder_details!: PolicyHolderDetailsDto;
 
-  @ApiProperty({ type: PolicySummaryDto, required: false })
-  policy?: PolicySummaryDto;
+  @ApiProperty({ type: PolicySummaryDto })
+  policy!: PolicySummaryDto;
 }

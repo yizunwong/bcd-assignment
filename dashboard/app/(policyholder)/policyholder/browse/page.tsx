@@ -29,6 +29,7 @@ import {
   PolicyCategoryCountStatsDto,
   PolicyControllerFindAllParams,
 } from "@/api";
+import { formatValue } from "@/utils/formatHelper";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -120,7 +121,7 @@ export default function BrowsePolicies() {
       rating: policy.rating,
       features: policy.claim_types ?? [],
       popular: policy.popular,
-      revenue : policy.revenue ?? 0,
+      revenue: policy.revenue ?? 0,
       description:
         typeof policy.description === "string" ? policy.description : "",
       sales: policy.sales,
@@ -341,7 +342,9 @@ export default function BrowsePolicies() {
                           Coverage
                         </span>
                         <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                          {policy.coverage}
+                          {formatValue(policy?.coverage, {
+                            currency: typeof policy?.coverage === "number",
+                          })}
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -349,7 +352,7 @@ export default function BrowsePolicies() {
                           Premium
                         </span>
                         <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-                          {policy.premium}
+                          {policy.premium} ETH/month
                         </span>
                       </div>
                     </div>

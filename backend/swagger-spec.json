@@ -1560,25 +1560,6 @@
         ]
       }
     },
-    "/dashboard/policyholder": {
-      "get": {
-        "operationId": "DashboardController_getPolicyholderSummary",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "supabase-auth": []
-          }
-        ],
-        "tags": [
-          "Dashboard"
-        ]
-      }
-    },
     "/claim-type-extractor": {
       "post": {
         "operationId": "PdfClaimExtractorController_extract",
@@ -1685,7 +1666,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Get dashboard summary",
+            "description": "Get admin dashboard summary",
             "content": {
               "application/json": {
                 "schema": {
@@ -1696,7 +1677,44 @@
                     {
                       "properties": {
                         "data": {
-                          "$ref": "#/components/schemas/DashboardSummaryDto"
+                          "$ref": "#/components/schemas/AdminDashoboardDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/dashboard/policyholder": {
+      "get": {
+        "operationId": "DashboardController_getPolicyholderSummary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get policyholder dashboard summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/PolicyholderDashboardDto"
                         }
                       }
                     }
@@ -2354,15 +2372,17 @@
             "type": "string"
           },
           "occupation": {
-            "type": "object"
+            "type": "string"
           },
           "address": {
-            "type": "object"
+            "type": "string"
           }
         },
         "required": [
           "user_id",
-          "date_of_birth"
+          "date_of_birth",
+          "occupation",
+          "address"
         ]
       },
       "PolicySummaryDto": {
@@ -2441,7 +2461,9 @@
           "submitted_date",
           "priority",
           "submitted_by",
-          "claim_documents"
+          "claim_documents",
+          "policyholder_details",
+          "policy"
         ]
       },
       "ClaimStatsDto": {
@@ -2996,7 +3018,7 @@
           "sales"
         ]
       },
-      "DashboardSummaryDto": {
+      "AdminDashoboardDto": {
         "type": "object",
         "properties": {
           "activePolicies": {
@@ -3024,6 +3046,91 @@
           "activeUsers",
           "totalRevenue",
           "topPolicies"
+        ]
+      },
+      "PolicyDetailsDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "coverage": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "coverage"
+        ]
+      },
+      "ActiveCoverageDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "policy_id": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "utilization_rate": {
+            "type": "number"
+          },
+          "start_date": {
+            "type": "string"
+          },
+          "end_date": {
+            "type": "string"
+          },
+          "next_payment_date": {
+            "type": "string"
+          },
+          "policy": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PolicyDetailsDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "policy_id",
+          "status",
+          "utilization_rate",
+          "start_date",
+          "end_date",
+          "next_payment_date",
+          "policy"
+        ]
+      },
+      "PolicyholderDashboardDto": {
+        "type": "object",
+        "properties": {
+          "activeCoverage": {
+            "type": "number"
+          },
+          "totalCoverage": {
+            "type": "number"
+          },
+          "pendingClaims": {
+            "type": "number"
+          },
+          "activeCoverageObject": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActiveCoverageDto"
+            }
+          }
+        },
+        "required": [
+          "activeCoverage",
+          "totalCoverage",
+          "pendingClaims",
+          "activeCoverageObject"
         ]
       }
     }

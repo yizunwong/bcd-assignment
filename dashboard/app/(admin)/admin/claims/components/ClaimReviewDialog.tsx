@@ -24,18 +24,18 @@ import type { ReactNode } from "react";
 import { ClaimResponseDto } from "@/api";
 
 interface ClaimWithDetails extends ClaimResponseDto {
-  policy?: {
+  policy: {
     id: number;
     name: string;
     provider: string;
     coverage: number;
     premium: number;
   };
-  policyholder_details?: {
+  policyholder_details: {
     user_id: string;
     date_of_birth: string;
-    occupation?: string | null;
-    address?: string | null;
+    occupation: string;
+    address: string;
   };
 }
 

@@ -1,4 +1,4 @@
-import { useDashboardControllerGetSummary, type CommonResponseDto } from '@/api';
+import { useDashboardControllerGetPolicyholderSummary, useDashboardControllerGetSummary, type CommonResponseDto } from '@/api';
 import { customFetcher } from '@/api/fetch';
 import { useQuery } from '@tanstack/react-query';
 import { parseError } from '@/utils/parseError';
@@ -18,18 +18,7 @@ export function useAdminDashboardSummaryQuery() {
 }
 
 export function usePolicyholderDashboardSummaryQuery() {
-  const query = useQuery<
-    CommonResponseDto & { data: PolicyholderDashboardData }
-  >({
-    queryKey: ['policyholder-dashboard'],
-    queryFn: ({ signal }) =>
-      customFetcher({
-        url: '/dashboard/policyholder',
-        method: 'GET',
-        signal,
-      }),
-  });
-
+const query = useDashboardControllerGetPolicyholderSummary();
   return {
     ...query,
     error: parseError(query.error),
