@@ -3313,7 +3313,7 @@ export function usePolicyControllerGetStats<
   return query;
 }
 
-export const policyControllerFindOne = (id: string, signal?: AbortSignal) => {
+export const policyControllerFindOne = (id: number, signal?: AbortSignal) => {
   return customFetcher<PolicyControllerFindOne200>({
     url: `/policy/${id}`,
     method: "GET",
@@ -3321,7 +3321,7 @@ export const policyControllerFindOne = (id: string, signal?: AbortSignal) => {
   });
 };
 
-export const getPolicyControllerFindOneQueryKey = (id: string) => {
+export const getPolicyControllerFindOneQueryKey = (id: number) => {
   return [`/policy/${id}`] as const;
 };
 
@@ -3329,7 +3329,7 @@ export const getPolicyControllerFindOneQueryOptions = <
   TData = Awaited<ReturnType<typeof policyControllerFindOne>>,
   TError = unknown,
 >(
-  id: string,
+  id: number,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3370,7 +3370,7 @@ export function usePolicyControllerFindOne<
   TData = Awaited<ReturnType<typeof policyControllerFindOne>>,
   TError = unknown,
 >(
-  id: string,
+  id: number,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -3396,7 +3396,7 @@ export function usePolicyControllerFindOne<
   TData = Awaited<ReturnType<typeof policyControllerFindOne>>,
   TError = unknown,
 >(
-  id: string,
+  id: number,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3422,7 +3422,7 @@ export function usePolicyControllerFindOne<
   TData = Awaited<ReturnType<typeof policyControllerFindOne>>,
   TError = unknown,
 >(
-  id: string,
+  id: number,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3441,7 +3441,7 @@ export function usePolicyControllerFindOne<
   TData = Awaited<ReturnType<typeof policyControllerFindOne>>,
   TError = unknown,
 >(
-  id: string,
+  id: number,
   options?: {
     query?: Partial<
       UseQueryOptions<

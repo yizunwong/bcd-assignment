@@ -183,7 +183,7 @@ export default function HelpPage() {
         id: "payment-methods",
         question: "What payment methods are accepted?",
         answer:
-          "We accept multiple payment methods including: 1) Cryptocurrency (ETH, USDC, DAI, and others), 2) Credit/debit cards, 3) Bank transfers, and 4) PayPal. Cryptocurrency payments offer the fastest processing and lowest fees, but all methods are fully supported.",
+          "We accept multiple payment methods including: 1) Cryptocurrency (ETH, USDC, DAI, and others), 2) Credit/debit cards. Cryptocurrency payments offer the fastest processing and lowest fees, but all methods are fully supported.",
       },
       {
         id: "premium-frequency",

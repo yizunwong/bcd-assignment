@@ -11,6 +11,7 @@ import {
   Query,
   UploadedFiles,
   UseInterceptors,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { PolicyService } from './policy.service';
 import { CreatePolicyDto } from './dto/requests/create-policy.dto';
@@ -76,7 +77,7 @@ export class PolicyController {
   @UseGuards(AuthGuard)
   @ApiCommonResponse(PolicyResponseDto, false, 'Get policy with signed URLs')
   findOne(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Req() req: AuthenticatedRequest,
   ): Promise<CommonResponseDto<PolicyResponseDto>> {
     return this.policyService.findOne(+id, req);

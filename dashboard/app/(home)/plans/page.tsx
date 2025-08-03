@@ -303,10 +303,8 @@ export default function PlansPage() {
     {
       title: "Payment Methods",
       details: [
-        "Cryptocurrency (ETH, USDC, DAI)",
+        "Cryptocurrency (ETH)",
         "Credit/Debit Card",
-        "Bank Transfer",
-        "PayPal",
       ],
     },
     {

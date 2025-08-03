@@ -23,7 +23,7 @@ export function usePoliciesQuery(params?: PolicyControllerFindAllParams) {
   };
 }
 
-export function usePolicyQuery(id: string) {
+export function usePolicyQuery(id: number) {
   const query = usePolicyControllerFindOne(id);
   return {
     ...query,
