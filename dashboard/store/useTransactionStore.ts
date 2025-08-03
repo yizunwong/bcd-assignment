@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 export interface TransactionInfo {
-  policyId: string;
+  policyId: number;
   transactionId: string;
   blockHash: string;
   amount: number;
@@ -19,7 +19,7 @@ interface TransactionState {
 }
 
 const initialData: TransactionInfo = {
-  policyId: "",
+  policyId: 1,
   transactionId: "",
   blockHash: "",
   amount: 0,

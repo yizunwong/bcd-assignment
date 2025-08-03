@@ -23,7 +23,6 @@ import {
 import {
   profileData as initialProfileData,
   notifications as initialNotifications,
-  kycStatus,
   activityLog,
 } from "@/public/data/policyholder/profileData";
 import { useMeQuery } from "@/hooks/useAuth";

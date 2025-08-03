@@ -24,12 +24,6 @@ export const notifications = {
   smsUrgent: true
 };
 
-export const kycStatus = {
-  identity: { status: 'verified', date: '2024-01-15' },
-  address: { status: 'verified', date: '2024-01-15' },
-  income: { status: 'pending', date: null },
-  documents: { status: 'verified', date: '2024-01-16' }
-};
 
 export const activityLog = [
   { date: '2024-12-20', action: 'Submitted claim CL-002', type: 'claim' },

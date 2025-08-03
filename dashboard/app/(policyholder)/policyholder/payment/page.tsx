@@ -59,7 +59,7 @@ export default function PaymentSummary() {
 
   const searchParams = useSearchParams();
   const policyId = searchParams.get("policy") ?? "";
-  const { data: policy } = usePolicyQuery(policyId);
+  const { data: policy } = usePolicyQuery(Number(policyId));
 
   const policyData = useMemo(() => {
     if (!policy?.data) return null;
@@ -93,7 +93,7 @@ export default function PaymentSummary() {
     const setupStripe = () => {
       if (!stripeRef.current) {
         stripeRef.current = window.Stripe(
-          process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "",
+          process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
         );
       }
       const elements = stripeRef.current.elements();
@@ -157,7 +157,7 @@ export default function PaymentSummary() {
 
       const txId = `TX-${Date.now()}`;
       const blockHash = `0x${Array.from({ length: 40 }, () =>
-        Math.floor(Math.random() * 16).toString(16),
+        Math.floor(Math.random() * 16).toString(16)
       ).join("")}`;
       setTransaction({
         policyId: policyData.id,
@@ -191,9 +191,12 @@ export default function PaymentSummary() {
       });
       const clientSecret = response?.data?.clientSecret;
       if (clientSecret && stripeRef.current && cardElementRef.current) {
-        const result = await stripeRef.current.confirmCardPayment(clientSecret, {
-          payment_method: { card: cardElementRef.current },
-        });
+        const result = await stripeRef.current.confirmCardPayment(
+          clientSecret,
+          {
+            payment_method: { card: cardElementRef.current },
+          }
+        );
 
         if (result.error || result.paymentIntent?.status !== "succeeded") {
           printMessage("Payment failed. Please try again.", "error");
@@ -202,7 +205,7 @@ export default function PaymentSummary() {
 
           const txId = `PI-${Date.now()}`;
           const blockHash = `0x${Array.from({ length: 40 }, () =>
-            Math.floor(Math.random() * 16).toString(16),
+            Math.floor(Math.random() * 16).toString(16)
           ).join("")}`;
           setTransaction({
             policyId: policyData.id,
@@ -450,8 +453,8 @@ export default function PaymentSummary() {
                   <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">
                     Payment Method
                   </h3>
-                  <div className="grid grid-cols-4 gap-4">
-                    {["ETH", "USDC", "DAI", "STRIPE"].map((method) => (
+                  <div className="grid grid-cols-2 gap-4">
+                    {["ETH", "STRIPE"].map((method) => (
                       <button
                         key={method}
                         onClick={() => setPaymentMethod(method)}

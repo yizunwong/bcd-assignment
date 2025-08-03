@@ -15,10 +15,7 @@ import {
   FileText,
 } from "lucide-react";
 import Link from "next/link";
-import {
-  policies,
-  recentActivity,
-} from "@/public/data/policyholder/dashboardData";
+import { recentActivity } from "@/public/data/policyholder/dashboardData";
 import { formatValue } from "@/utils/formatHelper";
 
 export default function PolicyholderDashboard() {
