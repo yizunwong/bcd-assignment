@@ -30,7 +30,8 @@ import { useCreateCoverageMutation } from "@/hooks/useCoverage";
 import { usePolicyQuery } from "@/hooks/usePolicies";
 import { useToast } from "@/components/shared/ToastProvider";
 import { usePaymentMutation } from "@/hooks/usePayment";
-import { CreateCoverageDto } from '@/api';
+import { CreateCoverageDto } from "@/api";
+import { useTransactionStore } from "@/store/useTransactionStore";
 
 declare global {
   interface Window {
@@ -54,6 +55,7 @@ export default function PaymentSummary() {
   // Coverage creation mutation
   const { makePayment } = usePaymentMutation();
   const { createCoverage } = useCreateCoverageMutation();
+  const setTransaction = useTransactionStore((state) => state.setData);
 
   const searchParams = useSearchParams();
   const policyId = searchParams.get("policy") ?? "";
@@ -157,23 +159,21 @@ export default function PaymentSummary() {
       const blockHash = `0x${Array.from({ length: 40 }, () =>
         Math.floor(Math.random() * 16).toString(16),
       ).join("")}`;
-      const params = new URLSearchParams({
-        policy: policyData.id,
+      setTransaction({
+        policyId: policyData.id,
         transactionId: txId,
         blockHash,
-        amount: policyData.total.toString(),
-        usdAmount: (Number(policyData.total) * 3500).toFixed(2),
+        amount: policyData.total,
+        usdAmount: Number((Number(policyData.total) * 3500).toFixed(2)),
         paymentMethod,
         timestamp: new Date().toISOString(),
         status: "confirmed",
-        confirmations: "1",
+        confirmations: 1,
       });
 
       printMessage("Payment successful! Coverage created.", "success");
 
-      router.push(
-        `/policyholder/payment/confirmation?${params.toString()}`,
-      );
+      router.push("/policyholder/payment/confirmation");
     } catch (error) {
       console.error("Payment failed:", error);
       printMessage("Payment failed. Please try again.", "error");
@@ -204,22 +204,20 @@ export default function PaymentSummary() {
           const blockHash = `0x${Array.from({ length: 40 }, () =>
             Math.floor(Math.random() * 16).toString(16),
           ).join("")}`;
-          const params = new URLSearchParams({
-            policy: policyData.id,
+          setTransaction({
+            policyId: policyData.id,
             transactionId: txId,
             blockHash,
-            amount: policyData.total.toString(),
-            usdAmount: (Number(policyData.total) * 3500).toFixed(2),
+            amount: policyData.total,
+            usdAmount: Number((Number(policyData.total) * 3500).toFixed(2)),
             paymentMethod,
             timestamp: new Date().toISOString(),
             status: "confirmed",
-            confirmations: "1",
+            confirmations: 1,
           });
 
           printMessage("Stripe payment successful", "success");
-          router.push(
-            `/policyholder/payment/confirmation?${params.toString()}`,
-          );
+          router.push("/policyholder/payment/confirmation");
         }
       } else {
         printMessage("Payment failed. Please try again.", "error");

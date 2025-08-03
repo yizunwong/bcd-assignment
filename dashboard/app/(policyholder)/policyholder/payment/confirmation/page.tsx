@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { usePolicyQuery } from "@/hooks/usePolicies";
+import { useTransactionStore } from "@/store/useTransactionStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,20 +35,19 @@ import Link from "next/link";
 export default function PaymentConfirmation() {
   const [copied, setCopied] = useState(false);
   const [currentStep] = useState(3);
-  const searchParams = useSearchParams();
-  const policyId = searchParams.get("policy") ?? "";
-  const { data: policy } = usePolicyQuery(policyId);
+  const transaction = useTransactionStore((state) => state.data);
+  const { data: policy } = usePolicyQuery(transaction.policyId);
 
   const transactionData = {
-    id: searchParams.get("transactionId") ?? "",
-    blockHash: searchParams.get("blockHash") ?? "",
-    amount: `${searchParams.get("amount") ?? "0"} ETH`,
-    usdAmount: `$${Number(searchParams.get("usdAmount") ?? 0).toFixed(2)}`,
-    paymentMethod: searchParams.get("paymentMethod") ?? "",
-    timestamp: searchParams.get("timestamp") ?? new Date().toISOString(),
+    id: transaction.transactionId,
+    blockHash: transaction.blockHash,
+    amount: `${transaction.amount} ETH`,
+    usdAmount: `$${transaction.usdAmount.toFixed(2)}`,
+    paymentMethod: transaction.paymentMethod,
+    timestamp: transaction.timestamp || new Date().toISOString(),
     networkFee: "0.02 ETH",
-    status: searchParams.get("status") ?? "",
-    confirmations: Number(searchParams.get("confirmations") ?? 0),
+    status: transaction.status,
+    confirmations: transaction.confirmations,
   };
 
   const policyData = policy?.data
@@ -139,7 +138,7 @@ export default function PaymentConfirmation() {
     },
   ];
 
-  if (!policyData) {
+  if (!policyData || !transaction.transactionId) {
     return <div className="p-8">Loading...</div>;
   }
 
