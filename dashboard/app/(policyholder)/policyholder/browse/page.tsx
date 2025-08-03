@@ -29,6 +29,7 @@ import {
   PolicyCategoryCountStatsDto,
   PolicyControllerFindAllParams,
 } from "@/api";
+import { formatValue } from "@/utils/formatHelper";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -120,7 +121,7 @@ export default function BrowsePolicies() {
       rating: policy.rating,
       features: policy.claim_types ?? [],
       popular: policy.popular,
-      revenue : policy.revenue ?? 0,
+      revenue: policy.revenue ?? 0,
       description:
         typeof policy.description === "string" ? policy.description : "",
       sales: policy.sales,
@@ -280,120 +281,131 @@ export default function BrowsePolicies() {
 
         {/* Policy Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {policies.map((policy) => {
-            const categoryInfo = policyCategories.find(
-              (cat) => cat.id === policy.category
-            );
-            return (
-              <Card
-                key={policy.id}
-                className="glass-card rounded-2xl card-hover relative overflow-hidden"
-              >
-                {policy.sales && (
-                  <Badge className="absolute top-4 right-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white">
-                    Popular
-                  </Badge>
-                )}
-
-                <CardHeader className="pb-4">
-                  <div className="flex items-center mb-3">
-                    <div
-                      className={`w-12 h-12 rounded-xl bg-gradient-to-r ${categoryInfo?.color} flex items-center justify-center mr-3`}
-                    >
-                      {categoryInfo && (
-                        <categoryInfo.icon className="w-6 h-6 text-white" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <CardTitle className="text-lg text-slate-800 dark:text-slate-100">
-                        {policy.name}
-                      </CardTitle>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        {policy.provider}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center mb-2">
-                    <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 ml-1">
-                      {policy.rating}
-                    </span>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="pt-0">
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-                    {policy.description}
-                  </p>
-
-                  <div className="space-y-3 mb-6">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-slate-600 dark:text-slate-400">
-                        Coverage
-                      </span>
-                      <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                        {policy.coverage}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-slate-600 dark:text-slate-400">
-                        Premium
-                      </span>
-                      <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-                        {policy.premium}
-                      </span>
-                    </div>
-                  </div>
-
-                  {policy.features && policy.features.length > 0 && (
-                    <div className="mb-6">
-                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                        Key Features:
-                      </p>
-                      <div className="flex flex-wrap gap-1">
-                        {policy.features.slice(0, 3).map((feature, index) => (
-                          <Badge
-                            key={index}
-                            variant="secondary"
-                            className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
-                          >
-                            {feature}
-                          </Badge>
-                        ))}
-                        {policy.features.length > 3 && (
-                          <Badge
-                            variant="secondary"
-                            className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
-                          >
-                            +{policy.features.length - 3} more
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
+          {isLoading ? (
+            <div className="col-span-full text-center py-12">
+              <Shield className="w-16 h-16 text-slate-400 mx-auto mb-4 animate-spin" />
+              <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">
+                Loading policies...
+              </h3>
+            </div>
+          ) : (
+            policies.map((policy) => {
+              const categoryInfo = policyCategories.find(
+                (cat) => cat.id === policy.category
+              );
+              return (
+                <Card
+                  key={policy.id}
+                  className="glass-card rounded-2xl card-hover relative overflow-hidden"
+                >
+                  {policy.popular && (
+                    <Badge className="absolute top-4 right-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white">
+                      Popular
+                    </Badge>
                   )}
 
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      className="flex-1 floating-button"
-                      onClick={() => openDetails(policy)}
-                    >
-                      Details
-                    </Button>
-                    <Link
-                      href={`/policyholder/payment?policy=${policy.id}`}
-                      className="flex-1"
-                    >
-                      <Button className="w-full gradient-accent text-white floating-button">
-                        Buy with Token
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center mb-3">
+                      <div
+                        className={`w-12 h-12 rounded-xl bg-gradient-to-r ${categoryInfo?.color} flex items-center justify-center mr-3`}
+                      >
+                        {categoryInfo && (
+                          <categoryInfo.icon className="w-6 h-6 text-white" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <CardTitle className="text-lg text-slate-800 dark:text-slate-100">
+                          {policy.name}
+                        </CardTitle>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          {policy.provider}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center mb-2">
+                      <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300 ml-1">
+                        {policy.rating}
+                      </span>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="pt-0">
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                      {policy.description}
+                    </p>
+
+                    <div className="space-y-3 mb-6">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-slate-600 dark:text-slate-400">
+                          Coverage
+                        </span>
+                        <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                          {formatValue(policy?.coverage, {
+                            currency: typeof policy?.coverage === "number",
+                          })}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-slate-600 dark:text-slate-400">
+                          Premium
+                        </span>
+                        <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                          {policy.premium} ETH/month
+                        </span>
+                      </div>
+                    </div>
+
+                    {policy.features && policy.features.length > 0 && (
+                      <div className="mb-6">
+                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                          Key Features:
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {policy.features.slice(0, 3).map((feature, index) => (
+                            <Badge
+                              key={index}
+                              variant="secondary"
+                              className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
+                            >
+                              {feature}
+                            </Badge>
+                          ))}
+                          {policy.features.length > 3 && (
+                            <Badge
+                              variant="secondary"
+                              className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
+                            >
+                              +{policy.features.length - 3} more
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1 floating-button"
+                        onClick={() => openDetails(policy)}
+                      >
+                        Details
                       </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                      <Link
+                        href={`/policyholder/payment?policy=${policy.id}`}
+                        className="flex-1"
+                      >
+                        <Button className="w-full gradient-accent text-white floating-button">
+                          Buy with Token
+                        </Button>
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
         </div>
 
         {/* Pagination */}

@@ -1,13 +1,21 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { CommonResponseDto } from 'src/common/common.dto';
-import { DashboardSummaryDto, TopPolicyDto } from './dto/dashboard-summary.dto';
+import { AdminDashoboardDto, TopPolicyDto } from './dto/admin-dashboard.dto';
+import {
+  ActiveCoverageDto,
+  PolicyholderDashboardDto,
+} from './dto/policyholder-dashboard.dto';
 
 @Injectable()
 export class DashboardService {
   async getAdminSummary(
     req: AuthenticatedRequest,
-  ): Promise<CommonResponseDto<DashboardSummaryDto>> {
+  ): Promise<CommonResponseDto<AdminDashoboardDto>> {
     const supabase = req.supabase;
 
     const { count: activeCount, error: activeError } = await supabase
@@ -77,10 +85,10 @@ export class DashboardService {
       );
     }
 
-    return new CommonResponseDto<DashboardSummaryDto>({
+    return new CommonResponseDto<AdminDashoboardDto>({
       statusCode: 200,
       message: 'Dashboard summary retrieved successfully',
-      data: new DashboardSummaryDto({
+      data: new AdminDashoboardDto({
         activePolicies: activeCount || 0,
         pendingClaims: pendingCount || 0,
         activeUsers,
@@ -88,5 +96,72 @@ export class DashboardService {
         topPolicies,
       }),
     });
+  }
+
+  async getPolicyholderSummary(req: AuthenticatedRequest) {
+    const { data: userData, error: userError } =
+      await req.supabase.auth.getUser();
+
+    if (userError || !userData?.user) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    const userId = userData.user.id;
+
+    const { data: activeCoverages, error: coverageError } = await req.supabase
+      .from('coverage')
+      .select(
+        `
+      id,
+      policy_id,
+      status,
+      utilization_rate,
+      start_date,
+      end_date,
+      next_payment_date,
+      policy:policy_id (
+        name,
+        coverage
+      )
+    `,
+      )
+      .eq('user_id', userId)
+      .eq('status', 'active'); // ✅ Filter active at DB level
+
+    if (coverageError) {
+      throw new InternalServerErrorException(
+        'Failed to fetch active coverages',
+      );
+    }
+
+    const activeCoverage = activeCoverages.length;
+    const totalCoverage = activeCoverages.reduce(
+      (sum, c) => sum + (c.policy?.coverage || 0),
+      0,
+    );
+
+    const { data: pendingClaims, error: pendingClaimsError } =
+      await req.supabase
+        .from('claims')
+        .select('id')
+        .eq('submitted_by', userId)
+        .eq('status', 'pending');
+
+    if (pendingClaimsError) {
+      throw new InternalServerErrorException('Failed to fetch pending claims');
+    }
+
+    return {
+      statusCode: 200,
+      message: 'Policyholder dashboard summary retrieved successfully',
+      data: new PolicyholderDashboardDto({
+        activeCoverage,
+        totalCoverage,
+        pendingClaims: pendingClaims.length,
+        activeCoverageObject: activeCoverages.map(
+          (c) => new ActiveCoverageDto(c),
+        ),
+      }),
+    };
   }
 }

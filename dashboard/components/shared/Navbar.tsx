@@ -25,6 +25,7 @@ import {
   AlertTriangle,
   Users,
   ChevronDown,
+  Wallet,
 } from "lucide-react";
 import useAuth from "@/hooks/useAuth";
 import { useToast } from "./ToastProvider";
@@ -198,6 +199,16 @@ export function Navbar({ role }: NavbarProps) {
                         >
                           <User className="w-4 h-4 mr-3" />
                           Profile
+                        </Link>
+                      )}
+                      {pathname.startsWith("/policyholder") && (
+                        <Link
+                          href="/policyholder/wallet"
+                          className="flex items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          <Wallet className="w-4 h-4 mr-3" />
+                          Wallet
                         </Link>
                       )}
                       <Link

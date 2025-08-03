@@ -337,15 +337,11 @@ export interface ClaimDocumentResponseDto {
   signedUrl: string;
 }
 
-export type PolicyHolderDetailsDtoOccupation = { [key: string]: unknown };
-
-export type PolicyHolderDetailsDtoAddress = { [key: string]: unknown };
-
 export interface PolicyHolderDetailsDto {
   user_id: string;
   date_of_birth: string;
-  occupation?: PolicyHolderDetailsDtoOccupation;
-  address?: PolicyHolderDetailsDtoAddress;
+  occupation: string;
+  address: string;
 }
 
 export interface PolicySummaryDto {
@@ -366,8 +362,8 @@ export interface ClaimResponseDto {
   priority: string;
   submitted_by: string;
   claim_documents: ClaimDocumentResponseDto[];
-  policyholder_details?: PolicyHolderDetailsDto;
-  policy?: PolicySummaryDto;
+  policyholder_details: PolicyHolderDetailsDto;
+  policy: PolicySummaryDto;
 }
 
 export interface ClaimStatsDto {
@@ -586,12 +582,41 @@ export interface TopPolicyDto {
   sales: number;
 }
 
-export interface DashboardSummaryDto {
+export interface AdminDashoboardDto {
   activePolicies: number;
   pendingClaims: number;
   activeUsers: number;
   totalRevenue: number;
   topPolicies: TopPolicyDto[];
+}
+
+export interface PolicyDetailsDto {
+  name: string;
+  coverage: number;
+}
+
+/**
+ * @nullable
+ */
+export type ActiveCoverageDtoPolicy = PolicyDetailsDto | null;
+
+export interface ActiveCoverageDto {
+  id: number;
+  policy_id: number;
+  status: string;
+  utilization_rate: number;
+  start_date: string;
+  end_date: string;
+  next_payment_date: string;
+  /** @nullable */
+  policy: ActiveCoverageDtoPolicy;
+}
+
+export interface PolicyholderDashboardDto {
+  activeCoverage: number;
+  totalCoverage: number;
+  pendingClaims: number;
+  activeCoverageObject: ActiveCoverageDto[];
 }
 
 export type AuthControllerLogin200AllOf = {
@@ -919,11 +944,18 @@ export type CoverageControllerFindOne200 = CommonResponseDto &
   CoverageControllerFindOne200AllOf;
 
 export type DashboardControllerGetSummary200AllOf = {
-  data?: DashboardSummaryDto;
+  data?: AdminDashoboardDto;
 };
 
 export type DashboardControllerGetSummary200 = CommonResponseDto &
   DashboardControllerGetSummary200AllOf;
+
+export type DashboardControllerGetPolicyholderSummary200AllOf = {
+  data?: PolicyholderDashboardDto;
+};
+
+export type DashboardControllerGetPolicyholderSummary200 = CommonResponseDto &
+  DashboardControllerGetPolicyholderSummary200AllOf;
 
 export const authControllerLogin = (
   loginDto: LoginDto,
@@ -4411,9 +4443,7 @@ export const useCoverageControllerRemove = <
   return useMutation(mutationOptions, queryClient);
 };
 
-export const coverageControllerGetPolicyholderSummary = (
-  signal?: AbortSignal,
-) => {
+export const coverageControllerGetCoverageStats = (signal?: AbortSignal) => {
   return customFetcher<void>({
     url: `/coverage/policyholder/summary`,
     method: "GET",
@@ -4421,17 +4451,17 @@ export const coverageControllerGetPolicyholderSummary = (
   });
 };
 
-export const getCoverageControllerGetPolicyholderSummaryQueryKey = () => {
+export const getCoverageControllerGetCoverageStatsQueryKey = () => {
   return [`/coverage/policyholder/summary`] as const;
 };
 
-export const getCoverageControllerGetPolicyholderSummaryQueryOptions = <
-  TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+export const getCoverageControllerGetCoverageStatsQueryOptions = <
+  TData = Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
   TError = unknown,
 >(options?: {
   query?: Partial<
     UseQueryOptions<
-      Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+      Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
       TError,
       TData
     >
@@ -4440,42 +4470,41 @@ export const getCoverageControllerGetPolicyholderSummaryQueryOptions = <
   const { query: queryOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ??
-    getCoverageControllerGetPolicyholderSummaryQueryKey();
+    queryOptions?.queryKey ?? getCoverageControllerGetCoverageStatsQueryKey();
 
   const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>
-  > = ({ signal }) => coverageControllerGetPolicyholderSummary(signal);
+    Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>
+  > = ({ signal }) => coverageControllerGetCoverageStats(signal);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+    Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type CoverageControllerGetPolicyholderSummaryQueryResult = NonNullable<
-  Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>
+export type CoverageControllerGetCoverageStatsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>
 >;
-export type CoverageControllerGetPolicyholderSummaryQueryError = unknown;
+export type CoverageControllerGetCoverageStatsQueryError = unknown;
 
-export function useCoverageControllerGetPolicyholderSummary<
-  TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+export function useCoverageControllerGetCoverageStats<
+  TData = Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
   TError = unknown,
 >(
   options: {
     query: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+        Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
         TError,
         TData
       >
     > &
       Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+          Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
           TError,
-          Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>
+          Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>
         >,
         "initialData"
       >;
@@ -4484,23 +4513,23 @@ export function useCoverageControllerGetPolicyholderSummary<
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
-export function useCoverageControllerGetPolicyholderSummary<
-  TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+export function useCoverageControllerGetCoverageStats<
+  TData = Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
   TError = unknown,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+        Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
         TError,
         TData
       >
     > &
       Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+          Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
           TError,
-          Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>
+          Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>
         >,
         "initialData"
       >;
@@ -4509,14 +4538,14 @@ export function useCoverageControllerGetPolicyholderSummary<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
-export function useCoverageControllerGetPolicyholderSummary<
-  TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+export function useCoverageControllerGetCoverageStats<
+  TData = Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
   TError = unknown,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+        Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
         TError,
         TData
       >
@@ -4527,14 +4556,14 @@ export function useCoverageControllerGetPolicyholderSummary<
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
-export function useCoverageControllerGetPolicyholderSummary<
-  TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+export function useCoverageControllerGetCoverageStats<
+  TData = Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
   TError = unknown,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+        Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
         TError,
         TData
       >
@@ -4545,7 +4574,7 @@ export function useCoverageControllerGetPolicyholderSummary<
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions =
-    getCoverageControllerGetPolicyholderSummaryQueryOptions(options);
+    getCoverageControllerGetCoverageStatsQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,
@@ -4942,6 +4971,152 @@ export function useDashboardControllerGetSummary<
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions = getDashboardControllerGetSummaryQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const dashboardControllerGetPolicyholderSummary = (
+  signal?: AbortSignal,
+) => {
+  return customFetcher<DashboardControllerGetPolicyholderSummary200>({
+    url: `/dashboard/policyholder`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getDashboardControllerGetPolicyholderSummaryQueryKey = () => {
+  return [`/dashboard/policyholder`] as const;
+};
+
+export const getDashboardControllerGetPolicyholderSummaryQueryOptions = <
+  TData = Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getDashboardControllerGetPolicyholderSummaryQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>
+  > = ({ signal }) => dashboardControllerGetPolicyholderSummary(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type DashboardControllerGetPolicyholderSummaryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>
+>;
+export type DashboardControllerGetPolicyholderSummaryQueryError = unknown;
+
+export function useDashboardControllerGetPolicyholderSummary<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useDashboardControllerGetPolicyholderSummary<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useDashboardControllerGetPolicyholderSummary<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useDashboardControllerGetPolicyholderSummary<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions =
+    getDashboardControllerGetPolicyholderSummaryQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

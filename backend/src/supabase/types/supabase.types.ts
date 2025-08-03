@@ -427,21 +427,21 @@ export type Database = {
       };
       policyholder_details: {
         Row: {
-          address: string | null;
+          address: string;
           date_of_birth: string;
-          occupation: string | null;
+          occupation: string;
           user_id: string;
         };
         Insert: {
-          address?: string | null;
+          address: string;
           date_of_birth: string;
-          occupation?: string | null;
+          occupation: string;
           user_id: string;
         };
         Update: {
-          address?: string | null;
+          address?: string;
           date_of_birth?: string;
-          occupation?: string | null;
+          occupation?: string;
           user_id?: string;
         };
         Relationships: [

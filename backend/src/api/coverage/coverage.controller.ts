@@ -72,7 +72,7 @@ export class CoverageController {
 
   @Get('policyholder/summary')
   @UseGuards(AuthGuard)
-  async getPolicyholderSummary(@Req() req: AuthenticatedRequest) {
-    return this.coverageService.getPolicyholderSummary(req);
+  async getCoverageStats(@Req() req: AuthenticatedRequest) {
+    return this.coverageService.getCoverageStats(req);
   }
 }

@@ -215,7 +215,7 @@ export class CoverageService {
     };
   }
 
-  async getPolicyholderSummary(req: AuthenticatedRequest) {
+  async getCoverageStats(req: AuthenticatedRequest) {
     const { data: userData, error: userError } =
       await req.supabase.auth.getUser();
 
@@ -245,7 +245,7 @@ export class CoverageService {
       throw new InternalServerErrorException('Failed to fetch coverages');
     }
 
-    const activePolicyCount = coverages.length;
+    const activeCoverage = coverages.length;
 
     // 2. Sum approved claims for active policies only (SQL-side filter)
     const { data: approvedClaims, error: approvedClaimsError } =
@@ -288,9 +288,9 @@ export class CoverageService {
 
     return {
       statusCode: 200,
-      message: 'Policyholder summary retrieved successfully',
+      message: 'Coverage stats retrieved successfully',
       data: {
-        activePolicyCount,
+        activeCoverage,
         totalCoverageValue,
         totalClaims,
         approvalRate,

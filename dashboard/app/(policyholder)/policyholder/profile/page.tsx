@@ -29,8 +29,8 @@ import {
 import { useMeQuery } from "@/hooks/useAuth";
 import { useUpdateUserMutation } from "@/hooks/useUsers";
 import { useToast } from "@/components/shared/ToastProvider";
-import ConfirmationDialog from "@/app/(admin)/admin/policies/components/ConfirmationDialog";
 import { ProfileResponseDto } from "@/api";
+import ConfirmationDialog from '@/components/shared/ConfirmationDialog';
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);

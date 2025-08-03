@@ -199,16 +199,13 @@ export class ClaimService {
           `${claim.user_details?.first_name ?? ''} ${claim.user_details?.last_name ?? ''}`.trim(),
         claim_documents: documents,
         policyholder_details: claim.policyholder_details || undefined,
-        policy: claim.coverage?.policy
-          ? {
-              id: claim.coverage.policy.id,
-              name: claim.coverage.policy.name,
-              provider:
-                claim.coverage.policy.admin_details?.company?.name || '',
-              coverage: claim.coverage.policy.coverage,
-              premium: claim.coverage.policy.premium,
-            }
-          : undefined,
+        policy: {
+          id: claim.coverage?.policy?.id,
+          name: claim.coverage?.policy?.name,
+          coverage: claim.coverage?.policy?.coverage,
+          premium: claim.coverage?.policy?.premium,
+          provider: claim.coverage?.policy?.admin_details?.company?.name,
+        },
       };
     });
 
@@ -278,15 +275,13 @@ export class ClaimService {
         `${data.user_details?.first_name ?? ''} ${data.user_details?.last_name ?? ''}`.trim(),
       claim_documents: enrichedDocuments,
       policyholder_details: data.policyholder_details || undefined,
-      policy: data.coverage?.policy
-        ? {
-            id: data.coverage.policy.id,
-            name: data.coverage.policy.name,
-            provider: data.coverage.policy.admin_details?.company?.name || '',
-            coverage: data.coverage.policy.coverage,
-            premium: data.coverage.policy.premium,
-          }
-        : undefined,
+      policy: {
+        id: data.coverage?.policy?.id || 0,
+        name: data.coverage?.policy?.name || '',
+        provider: data.coverage?.policy?.admin_details?.company?.name || '',
+        coverage: data.coverage?.policy?.coverage || 0,
+        premium: data.coverage?.policy?.premium || 0,
+      },
     };
 
     return new CommonResponseDto({

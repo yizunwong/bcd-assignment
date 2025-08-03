@@ -11,9 +11,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Star, Download } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 import { PolicyControllerFindAllCategory } from "@/api";
+import { formatDate, formatValue } from '@/utils/formatHelper';
 
 export interface Policy {
   id: string | number;
@@ -22,6 +21,7 @@ export interface Policy {
   provider?: string;
   coverage: number;
   premium: number;
+  popular?: boolean;
   sales?: number | string;
   revenue: number;
   created?: Date | string;
@@ -39,29 +39,6 @@ export interface PolicyDetailsDialogProps {
   policy: Policy;
   open: boolean;
   onClose: () => void;
-}
-
-const currency = new Intl.NumberFormat("ms-MY", {
-  style: "currency",
-  currency: "MYR",
-});
-const numberFormatter = new Intl.NumberFormat("ms-MY");
-
-function formatValue(value?: string | number, opts?: { currency?: boolean }) {
-  if (value === undefined || value === null) return "-";
-  if (typeof value === "number") {
-    return opts?.currency
-      ? currency.format(value)
-      : numberFormatter.format(value);
-  }
-  return value;
-}
-
-function formatDate(value?: Date | string) {
-  if (!value) return "";
-  const date = typeof value === "string" ? new Date(value) : value;
-  if (isNaN(date.getTime())) return "";
-  return format(date, "PPP");
 }
 
 export default function PolicyDetailsDialog({

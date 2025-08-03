@@ -254,112 +254,123 @@ export default function ClaimsReview() {
 
         {/* Claims List */}
         <div className="content-spacing mb-8">
-          {paginatedClaims.map((claim) => (
-            <Card key={claim.id} className="glass-card rounded-2xl card-hover">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-teal-500 flex items-center justify-center">
-                      <FileText className="w-6 h-6 text-white" />
+          {isLoading ? (
+            <div className="text-center py-12">
+              <FileText className="w-16 h-16 text-slate-400 mx-auto mb-4 animate-spin" />
+              <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">
+                Loading claims...
+              </h3>
+            </div>
+          ) : (
+            paginatedClaims.map((claim) => (
+              <Card key={claim.id} className="glass-card rounded-2xl card-hover">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-teal-500 flex items-center justify-center">
+                        <FileText className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                          {claim.id}
+                        </h3>
+                        <p className="text-slate-600 dark:text-slate-400">
+                          {claim.type}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-                        {claim.id}
-                      </h3>
-                      <p className="text-slate-600 dark:text-slate-400">
-                        {claim.type}
-                      </p>
+                    <div className="flex items-center space-x-3">
+                      <Badge
+                        className={`status-badge ${getPriorityColor(
+                          claim.priority
+                        )}`}
+                      >
+                        {claim.priority.toUpperCase()}
+                      </Badge>
+                      <Badge
+                        className={`status-badge ${getStatusColor(claim.status)}`}
+                      >
+                        {getStatusIcon(claim.status)}
+                        <span className="ml-1 capitalize">
+                          {claim.status.replace("-", " ")}
+                        </span>
+                      </Badge>
                     </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Badge
-                      className={`status-badge ${getPriorityColor(
-                        claim.priority
-                      )}`}
-                    >
-                      {claim.priority.toUpperCase()}
-                    </Badge>
-                    <Badge
-                      className={`status-badge ${getStatusColor(claim.status)}`}
-                    >
-                      {getStatusIcon(claim.status)}
-                      <span className="ml-1 capitalize">
-                        {claim.status.replace("-", " ")}
-                      </span>
-                    </Badge>
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-4 gap-4 mb-4">
-                  <div className="flex items-center space-x-2">
-                    <DollarSign className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                    <div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Amount
-                      </p>
-                      <p className="font-medium text-slate-800 dark:text-slate-100">
-                        {claim.amount}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                    <div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Submitted
-                      </p>
-                      <p className="font-medium text-slate-800 dark:text-slate-100">
-                        {new Date(claim.submitted_date).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                    <div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Type
-                      </p>
-                      <p className="font-medium text-slate-800 dark:text-slate-100">
-                        {claim.type}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <p className="text-slate-700 dark:text-slate-300 mb-4">
-                  {claim.description}
-                </p>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex space-x-2">
-                    <ClaimReviewDialog
-                      claim={claim}
-                      trigger={
-                        <Button variant="outline" className="floating-button">
-                          <Eye className="w-4 h-4 mr-2" />
-                          Review Details
-                        </Button>
-                      }
-                    />
                   </div>
 
-                  {claim.status === "pending" && null}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  <div className="grid md:grid-cols-4 gap-4 mb-4">
+                    <div className="flex items-center space-x-2">
+                      <DollarSign className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                      <div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          Amount
+                        </p>
+                        <p className="font-medium text-slate-800 dark:text-slate-100">
+                          {claim.amount}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Calendar className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                      <div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          Submitted
+                        </p>
+                        <p className="font-medium text-slate-800 dark:text-slate-100">
+                          {new Date(claim.submitted_date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                      <div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          Type
+                        </p>
+                        <p className="font-medium text-slate-800 dark:text-slate-100">
+                          {claim.type}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="text-slate-700 dark:text-slate-300 mb-4">
+                    {claim.description}
+                  </p>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex space-x-2">
+                      <ClaimReviewDialog
+                        claim={claim}
+                        trigger={
+                          <Button variant="outline" className="floating-button">
+                            <Eye className="w-4 h-4 mr-2" />
+                            Review Details
+                          </Button>
+                        }
+                      />
+                    </div>
+
+                    {claim.status === "pending" && null}
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </div>
 
         {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-          showInfo={true}
-          totalItems={claims.length}
-          itemsPerPage={ITEMS_PER_PAGE}
-          className="mb-8"
-        />
+        {!isLoading && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            showInfo={true}
+            totalItems={claims.length}
+            itemsPerPage={ITEMS_PER_PAGE}
+            className="mb-8"
+          />
+        )}
 
         {claims.length === 0 && !isLoading && (
           <div className="text-center py-12">
