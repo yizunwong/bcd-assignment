@@ -13,6 +13,7 @@ import { PdfClaimExtractorModule } from './api/pdf-claim-extractor/pdf-claim-ext
 import { ReviewsModule } from './api/reviews/reviews.module';
 import { CompanyModule } from './api/company/company.module';
 import { DashboardModule } from './api/dashboard/dashboard.module';
+import { PaymentModule } from './api/payment/payment.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { DashboardModule } from './api/dashboard/dashboard.module';
     ReviewsModule,
     CompanyModule,
     DashboardModule,
+    PaymentModule,
   ],
 
   controllers: [AppController],

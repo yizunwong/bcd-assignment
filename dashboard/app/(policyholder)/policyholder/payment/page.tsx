@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useCreateCoverageMutation } from '@/hooks/useCoverage';
+import { usePolicyQuery } from '@/hooks/usePolicies';
 import { useToast } from '@/components/shared/ToastProvider';
 
 export default function PaymentSummary() {
@@ -41,34 +42,35 @@ export default function PaymentSummary() {
   // Coverage creation mutation
   const { createCoverage } = useCreateCoverageMutation();
 
-  // Mock policy data - in real app, this would come from URL params or API
-  const policyData = {
-    id: 50,
-    name: 'Comprehensive Health Coverage',
-    category: 'health',
-    provider: 'HealthSecure',
-    coverage: '$100,000',
-    premium: '0.8 ETH/month',
-    rating: 4.8,
-    features: [
-      'Emergency Care',
-      'Prescription Drugs',
-      'Mental Health',
-      'Dental',
-    ],
-    description:
-      'Complete healthcare coverage with blockchain-verified claims processing',
-    duration: '12 months',
-    basePrice: 0.8,
-    discount: 0.1,
-    fees: 0.02,
-    total: 0.72,
-  };
+  const searchParams = useSearchParams();
+  const policyId = searchParams.get('policy') ?? '';
+  const { data: policy } = usePolicyQuery(policyId);
 
-  // Set initial token amount to total when component mounts
+  const policyData = useMemo(() => {
+    if (!policy) return null;
+    return {
+      id: policy.id,
+      name: policy.name,
+      category: policy.category,
+      provider: policy.provider,
+      coverage: `$${policy.coverage.toLocaleString()}`,
+      premium: `${policy.premium} ETH/month`,
+      rating: policy.rating,
+      features: policy.claim_types ?? [],
+      description: String(policy.description ?? ''),
+      duration: `${policy.duration_days} days`,
+      basePrice: policy.premium,
+      discount: 0,
+      fees: 0,
+      total: policy.premium,
+    };
+  }, [policy]);
+
   useEffect(() => {
-    setTokenAmount(policyData.total.toString());
-  }, []);
+    if (policyData) {
+      setTokenAmount(policyData.total.toString());
+    }
+  }, [policyData]);
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -96,36 +98,35 @@ export default function PaymentSummary() {
     }
   };
 
-  const handlePayment = async () => {
+  if (!policyData) {
+    return <div className="p-8">Loading...</div>;
+  }
+
+  const handleTokenPayment = async () => {
     setIsProcessing(true);
 
     try {
-      // Calculate dates
       const startDate = new Date();
       const endDate = new Date();
-      endDate.setFullYear(endDate.getFullYear() + 1); // 12 months duration
+      endDate.setFullYear(endDate.getFullYear() + 1);
       const nextPaymentDate = new Date();
-      nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1); // Next month
+      nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
 
-      // Create coverage data
       const coverageData = {
         policy_id: policyData.id,
         status: 'active' as const,
         utilization_rate: 0,
-        start_date: startDate.toISOString().split('T')[0], // YYYY-MM-DD format
+        start_date: startDate.toISOString().split('T')[0],
         end_date: endDate.toISOString().split('T')[0],
         next_payment_date: nextPaymentDate.toISOString().split('T')[0],
       };
 
-      // Save to coverage table
       await createCoverage(coverageData);
 
-      // Simulate payment processing
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       printMessage('Payment successful! Coverage created.', 'success');
 
-      // Redirect to confirmation page
       router.push('/policyholder/payment/confirmation');
     } catch (error) {
       console.error('Payment failed:', error);
@@ -133,6 +134,37 @@ export default function PaymentSummary() {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleStripePayment = async () => {
+    setIsProcessing(true);
+    try {
+      const response = await fetch('http://localhost:3000/payments/intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: policyData.total, currency: 'usd' }),
+      });
+      const data = await response.json();
+      if (data?.data?.clientSecret) {
+        printMessage('Stripe payment initialized', 'success');
+        router.push('/policyholder/payment/confirmation');
+      } else {
+        printMessage('Payment failed. Please try again.', 'error');
+      }
+    } catch (error) {
+      console.error('Stripe payment failed:', error);
+      printMessage('Payment failed. Please try again.', 'error');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handlePayment = async () => {
+    if (paymentMethod === 'STRIPE') {
+      await handleStripePayment();
+      return;
+    }
+    await handleTokenPayment();
   };
 
   const steps = [
@@ -332,8 +364,8 @@ export default function PaymentSummary() {
                   <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">
                     Payment Method
                   </h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    {['ETH', 'USDC', 'DAI'].map((method) => (
+                  <div className="grid grid-cols-4 gap-4">
+                    {['ETH', 'USDC', 'DAI', 'STRIPE'].map((method) => (
                       <button
                         key={method}
                         onClick={() => setPaymentMethod(method)}
@@ -416,54 +448,56 @@ export default function PaymentSummary() {
                 </div>
 
                 {/* Token Amount Input */}
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-                      Payment Amount
-                    </h3>
-                    <button
-                      onClick={() => setShowTokenDetails(!showTokenDetails)}
-                      className="flex items-center space-x-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-                    >
-                      {showTokenDetails ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                      <span>{showTokenDetails ? 'Hide' : 'Show'} Details</span>
-                    </button>
-                  </div>
-
-                  <div className="relative">
-                    <Input
-                      type="number"
-                      value={tokenAmount || policyData.total}
-                      onChange={(e) => setTokenAmount(e.target.value)}
-                      placeholder={`Enter ${paymentMethod} amount`}
-                      className="form-input text-lg font-medium pr-20"
-                      step="0.001"
-                    />
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
-                      <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                        {paymentMethod}
-                      </span>
+                {paymentMethod !== 'STRIPE' && (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                        Payment Amount
+                      </h3>
+                      <button
+                        onClick={() => setShowTokenDetails(!showTokenDetails)}
+                        className="flex items-center space-x-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                      >
+                        {showTokenDetails ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                        <span>{showTokenDetails ? 'Hide' : 'Show'} Details</span>
+                      </button>
                     </div>
-                  </div>
 
-                  {showTokenDetails && (
-                    <div className="mt-4 p-4 bg-blue-50/50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Wallet className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                        <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                          Wallet Balance
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        value={tokenAmount || policyData.total}
+                        onChange={(e) => setTokenAmount(e.target.value)}
+                        placeholder={`Enter ${paymentMethod} amount`}
+                        className="form-input text-lg font-medium pr-20"
+                        step="0.001"
+                      />
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+                        <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                          {paymentMethod}
                         </span>
                       </div>
-                      <p className="text-sm text-blue-700 dark:text-blue-300">
-                        Available: 5.2847 ETH ≈ $18,420 USD
-                      </p>
                     </div>
-                  )}
-                </div>
+
+                    {showTokenDetails && (
+                      <div className="mt-4 p-4 bg-blue-50/50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Wallet className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                          <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                            Wallet Balance
+                          </span>
+                        </div>
+                        <p className="text-sm text-blue-700 dark:text-blue-300">
+                          Available: 5.2847 ETH ≈ $18,420 USD
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Security Features */}
                 <div className="bg-green-50/50 dark:bg-green-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
@@ -513,7 +547,9 @@ export default function PaymentSummary() {
                   </Link>
                   <Button
                     onClick={handlePayment}
-                    disabled={isProcessing || !tokenAmount}
+                    disabled={
+                      isProcessing || (paymentMethod !== 'STRIPE' && !tokenAmount)
+                    }
                     className="flex-1 gradient-accent text-white floating-button relative overflow-hidden"
                   >
                     {isProcessing ? (
