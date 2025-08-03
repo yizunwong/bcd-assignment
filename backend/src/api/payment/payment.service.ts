@@ -1,11 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import { CommonResponseDto } from 'src/common/common.dto';
+import { PaymentIntentResponseDto } from './dto/responses/payment-intent.dto';
 
 @Injectable()
 export class PaymentService {
-  async createPaymentIntent(
-    amount: number,
-    currency: string,
-  ): Promise<string | null> {
+  async createPaymentIntent(amount: number, currency: string) {
     const body = new URLSearchParams();
     body.append('amount', Math.round(amount * 100).toString());
     body.append('currency', currency);
@@ -20,7 +19,11 @@ export class PaymentService {
       body,
     });
 
-    const data = (await response.json()) as { client_secret?: string };
-    return data.client_secret ?? null;
+    const data = (await response.json()) as { client_secret: string };
+    return new CommonResponseDto<PaymentIntentResponseDto>({
+      statusCode: 200,
+      message: 'Payment intent created successfully',
+      data: { clientSecret: data.client_secret },
+    });
   }
 }

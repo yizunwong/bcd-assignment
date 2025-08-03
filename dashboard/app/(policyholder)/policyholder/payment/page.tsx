@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useMemo } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
+import { useState, useEffect, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import {
   Shield,
   ArrowLeft,
@@ -24,45 +24,45 @@ import {
   Heart,
   Plane,
   Sprout,
-} from 'lucide-react';
-import Link from 'next/link';
-import { useCreateCoverageMutation } from '@/hooks/useCoverage';
-import { usePolicyQuery } from '@/hooks/usePolicies';
-import { useToast } from '@/components/shared/ToastProvider';
+} from "lucide-react";
+import Link from "next/link";
+import { useCreateCoverageMutation } from "@/hooks/useCoverage";
+import { usePolicyQuery } from "@/hooks/usePolicies";
+import { useToast } from "@/components/shared/ToastProvider";
 
 export default function PaymentSummary() {
   const router = useRouter();
   const { printMessage } = useToast();
   const [currentStep] = useState(2);
-  const [tokenAmount, setTokenAmount] = useState('');
+  const [tokenAmount, setTokenAmount] = useState("");
   const [showTokenDetails, setShowTokenDetails] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('ETH');
+  const [paymentMethod, setPaymentMethod] = useState("ETH");
 
   // Coverage creation mutation
   const { createCoverage } = useCreateCoverageMutation();
 
   const searchParams = useSearchParams();
-  const policyId = searchParams.get('policy') ?? '';
+  const policyId = searchParams.get("policy") ?? "";
   const { data: policy } = usePolicyQuery(policyId);
 
   const policyData = useMemo(() => {
-    if (!policy) return null;
+    if (!policy?.data) return null;
     return {
-      id: policy.id,
-      name: policy.name,
-      category: policy.category,
-      provider: policy.provider,
-      coverage: `$${policy.coverage.toLocaleString()}`,
-      premium: `${policy.premium} ETH/month`,
-      rating: policy.rating,
-      features: policy.claim_types ?? [],
-      description: String(policy.description ?? ''),
-      duration: `${policy.duration_days} days`,
-      basePrice: policy.premium,
+      id: policy.data.id,
+      name: policy.data.name,
+      category: policy.data.category,
+      provider: policy.data.provider,
+      coverage: `$${policy.data.coverage.toLocaleString()}`,
+      premium: `${policy.data.premium} ETH/month`,
+      rating: policy.data.rating,
+      features: policy.data.claim_types ?? [],
+      description: String(policy.data.description ?? ""),
+      duration: `${policy.data.duration_days} days`,
+      basePrice: policy.data.premium,
       discount: 0,
       fees: 0,
-      total: policy.premium,
+      total: policy.data.premium,
     };
   }, [policy]);
 
@@ -74,11 +74,11 @@ export default function PaymentSummary() {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'health':
+      case "health":
         return Heart;
-      case 'travel':
+      case "travel":
         return Plane;
-      case 'crop':
+      case "crop":
         return Sprout;
       default:
         return Shield;
@@ -87,14 +87,14 @@ export default function PaymentSummary() {
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'health':
-        return 'from-red-500 to-pink-500';
-      case 'travel':
-        return 'from-blue-500 to-cyan-500';
-      case 'crop':
-        return 'from-green-500 to-emerald-500';
+      case "health":
+        return "from-red-500 to-pink-500";
+      case "travel":
+        return "from-blue-500 to-cyan-500";
+      case "crop":
+        return "from-green-500 to-emerald-500";
       default:
-        return 'from-slate-500 to-slate-600';
+        return "from-slate-500 to-slate-600";
     }
   };
 
@@ -114,23 +114,23 @@ export default function PaymentSummary() {
 
       const coverageData = {
         policy_id: policyData.id,
-        status: 'active' as const,
+        status: "active" as const,
         utilization_rate: 0,
-        start_date: startDate.toISOString().split('T')[0],
-        end_date: endDate.toISOString().split('T')[0],
-        next_payment_date: nextPaymentDate.toISOString().split('T')[0],
+        start_date: startDate.toISOString().split("T")[0],
+        end_date: endDate.toISOString().split("T")[0],
+        next_payment_date: nextPaymentDate.toISOString().split("T")[0],
       };
 
       await createCoverage(coverageData);
 
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      printMessage('Payment successful! Coverage created.', 'success');
+      printMessage("Payment successful! Coverage created.", "success");
 
-      router.push('/policyholder/payment/confirmation');
+      router.push("/policyholder/payment/confirmation");
     } catch (error) {
-      console.error('Payment failed:', error);
-      printMessage('Payment failed. Please try again.', 'error');
+      console.error("Payment failed:", error);
+      printMessage("Payment failed. Please try again.", "error");
     } finally {
       setIsProcessing(false);
     }
@@ -139,28 +139,28 @@ export default function PaymentSummary() {
   const handleStripePayment = async () => {
     setIsProcessing(true);
     try {
-      const response = await fetch('http://localhost:3000/payments/intent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: policyData.total, currency: 'usd' }),
+      const response = await fetch("http://localhost:3000/payments/intent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: policyData.total, currency: "usd" }),
       });
       const data = await response.json();
       if (data?.data?.clientSecret) {
-        printMessage('Stripe payment initialized', 'success');
-        router.push('/policyholder/payment/confirmation');
+        printMessage("Stripe payment initialized", "success");
+        router.push("/policyholder/payment/confirmation");
       } else {
-        printMessage('Payment failed. Please try again.', 'error');
+        printMessage("Payment failed. Please try again.", "error");
       }
     } catch (error) {
-      console.error('Stripe payment failed:', error);
-      printMessage('Payment failed. Please try again.', 'error');
+      console.error("Stripe payment failed:", error);
+      printMessage("Payment failed. Please try again.", "error");
     } finally {
       setIsProcessing(false);
     }
   };
 
   const handlePayment = async () => {
-    if (paymentMethod === 'STRIPE') {
+    if (paymentMethod === "STRIPE") {
       await handleStripePayment();
       return;
     }
@@ -168,9 +168,9 @@ export default function PaymentSummary() {
   };
 
   const steps = [
-    { id: 1, name: 'Policy Selection', status: 'completed' },
-    { id: 2, name: 'Payment Details', status: 'current' },
-    { id: 3, name: 'Confirmation', status: 'pending' },
+    { id: 1, name: "Policy Selection", status: "completed" },
+    { id: 2, name: "Payment Details", status: "current" },
+    { id: 3, name: "Confirmation", status: "pending" },
   ];
 
   const CategoryIcon = getCategoryIcon(policyData.category);
@@ -206,14 +206,14 @@ export default function PaymentSummary() {
                 <div key={step.id} className="flex items-center">
                   <div
                     className={`flex items-center justify-center w-10 h-10 rounded-full ${
-                      step.status === 'completed'
-                        ? 'bg-emerald-500 text-white'
-                        : step.status === 'current'
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
+                      step.status === "completed"
+                        ? "bg-emerald-500 text-white"
+                        : step.status === "current"
+                          ? "bg-blue-500 text-white"
+                          : "bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
                     }`}
                   >
-                    {step.status === 'completed' ? (
+                    {step.status === "completed" ? (
                       <CheckCircle className="w-5 h-5" />
                     ) : (
                       <span className="text-sm font-medium">{step.id}</span>
@@ -221,11 +221,11 @@ export default function PaymentSummary() {
                   </div>
                   <span
                     className={`ml-3 text-sm font-medium ${
-                      step.status === 'current'
-                        ? 'text-blue-600 dark:text-blue-400'
-                        : step.status === 'completed'
-                          ? 'text-emerald-600 dark:text-emerald-400'
-                          : 'text-slate-500 dark:text-slate-400'
+                      step.status === "current"
+                        ? "text-blue-600 dark:text-blue-400"
+                        : step.status === "completed"
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : "text-slate-500 dark:text-slate-400"
                     }`}
                   >
                     {step.name}
@@ -233,9 +233,9 @@ export default function PaymentSummary() {
                   {index < steps.length - 1 && (
                     <div
                       className={`w-16 h-1 mx-4 ${
-                        step.status === 'completed'
-                          ? 'bg-emerald-500'
-                          : 'bg-slate-200 dark:bg-slate-700'
+                        step.status === "completed"
+                          ? "bg-emerald-500"
+                          : "bg-slate-200 dark:bg-slate-700"
                       }`}
                     />
                   )}
@@ -365,14 +365,14 @@ export default function PaymentSummary() {
                     Payment Method
                   </h3>
                   <div className="grid grid-cols-4 gap-4">
-                    {['ETH', 'USDC', 'DAI', 'STRIPE'].map((method) => (
+                    {["ETH", "USDC", "DAI", "STRIPE"].map((method) => (
                       <button
                         key={method}
                         onClick={() => setPaymentMethod(method)}
                         className={`p-4 rounded-xl border-2 transition-all duration-200 ${
                           paymentMethod === method
-                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
-                            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                            ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
+                            : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
                         }`}
                       >
                         <div className="flex items-center justify-center space-x-2">
@@ -448,7 +448,7 @@ export default function PaymentSummary() {
                 </div>
 
                 {/* Token Amount Input */}
-                {paymentMethod !== 'STRIPE' && (
+                {paymentMethod !== "STRIPE" && (
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
@@ -463,7 +463,9 @@ export default function PaymentSummary() {
                         ) : (
                           <Eye className="w-4 h-4" />
                         )}
-                        <span>{showTokenDetails ? 'Hide' : 'Show'} Details</span>
+                        <span>
+                          {showTokenDetails ? "Hide" : "Show"} Details
+                        </span>
                       </button>
                     </div>
 
@@ -548,7 +550,8 @@ export default function PaymentSummary() {
                   <Button
                     onClick={handlePayment}
                     disabled={
-                      isProcessing || (paymentMethod !== 'STRIPE' && !tokenAmount)
+                      isProcessing ||
+                      (paymentMethod !== "STRIPE" && !tokenAmount)
                     }
                     className="flex-1 gradient-accent text-white floating-button relative overflow-hidden"
                   >
@@ -569,14 +572,14 @@ export default function PaymentSummary() {
                 {/* Additional Info */}
                 <div className="text-center">
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    By proceeding, you agree to our{' '}
+                    By proceeding, you agree to our{" "}
                     <a
                       href="#"
                       className="text-emerald-600 dark:text-emerald-400 hover:underline"
                     >
                       Terms of Service
-                    </a>{' '}
-                    and{' '}
+                    </a>{" "}
+                    and{" "}
                     <a
                       href="#"
                       className="text-emerald-600 dark:text-emerald-400 hover:underline"

@@ -619,6 +619,15 @@ export interface PolicyholderDashboardDto {
   activeCoverageObject: ActiveCoverageDto[];
 }
 
+export interface PaymentIntentResponseDto {
+  clientSecret: string;
+}
+
+export interface CreatePaymentIntentDto {
+  amount: number;
+  currency: string;
+}
+
 export type AuthControllerLogin200AllOf = {
   data?: LoginResponseDto;
 };
@@ -956,6 +965,13 @@ export type DashboardControllerGetPolicyholderSummary200AllOf = {
 
 export type DashboardControllerGetPolicyholderSummary200 = CommonResponseDto &
   DashboardControllerGetPolicyholderSummary200AllOf;
+
+export type PaymentControllerCreateIntent200AllOf = {
+  data?: PaymentIntentResponseDto;
+};
+
+export type PaymentControllerCreateIntent200 = CommonResponseDto &
+  PaymentControllerCreateIntent200AllOf;
 
 export const authControllerLogin = (
   loginDto: LoginDto,
@@ -5127,3 +5143,84 @@ export function useDashboardControllerGetPolicyholderSummary<
 
   return query;
 }
+
+export const paymentControllerCreateIntent = (
+  createPaymentIntentDto: CreatePaymentIntentDto,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<PaymentControllerCreateIntent200>({
+    url: `/payments/intent`,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    data: createPaymentIntentDto,
+    signal,
+  });
+};
+
+export const getPaymentControllerCreateIntentMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof paymentControllerCreateIntent>>,
+    TError,
+    { data: CreatePaymentIntentDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof paymentControllerCreateIntent>>,
+  TError,
+  { data: CreatePaymentIntentDto },
+  TContext
+> => {
+  const mutationKey = ["paymentControllerCreateIntent"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof paymentControllerCreateIntent>>,
+    { data: CreatePaymentIntentDto }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return paymentControllerCreateIntent(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PaymentControllerCreateIntentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof paymentControllerCreateIntent>>
+>;
+export type PaymentControllerCreateIntentMutationBody = CreatePaymentIntentDto;
+export type PaymentControllerCreateIntentMutationError = unknown;
+
+export const usePaymentControllerCreateIntent = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof paymentControllerCreateIntent>>,
+      TError,
+      { data: CreatePaymentIntentDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof paymentControllerCreateIntent>>,
+  TError,
+  { data: CreatePaymentIntentDto },
+  TContext
+> => {
+  const mutationOptions =
+    getPaymentControllerCreateIntentMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};

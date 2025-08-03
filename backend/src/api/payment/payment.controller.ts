@@ -15,13 +15,9 @@ export class PaymentController {
   async createIntent(
     @Body() body: CreatePaymentIntentDto,
   ): Promise<CommonResponseDto<PaymentIntentResponseDto>> {
-    const clientSecret = await this.paymentService.createPaymentIntent(
+    return await this.paymentService.createPaymentIntent(
       body.amount,
       body.currency,
     );
-    return {
-      message: 'Payment intent created',
-      data: { clientSecret },
-    };
   }
 }
