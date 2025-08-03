@@ -24,10 +24,7 @@ import {
   Download,
   Filter,
 } from 'lucide-react';
-import {
-  useCoverageListQuery,
-  usePolicyholderSummaryQuery,
-} from '@/hooks/useCoverage';
+import { useCoverageListQuery, useCoverageStatsQuery } from '@/hooks/useCoverage';
 import { useToast } from '@/components/shared/ToastProvider';
 import type { CoverageControllerFindAllParams } from '@/api';
 import CoverageDetailsDialog from './components/CoverageDetailsDialog';
@@ -114,7 +111,7 @@ export default function MyCoverage() {
     data: summaryResponse,
     isLoading: isLoadingSummary,
     error: summaryError,
-  } = usePolicyholderSummaryQuery();
+  } = useCoverageStatsQuery();
 
   const summaryData = summaryResponse?.data;
 
@@ -280,11 +277,11 @@ export default function MyCoverage() {
                 <Badge className="status-badge status-active">Active</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {summaryData?.activePolicyCount ?? 0}
+                {summaryData?.activeCoverage ?? 0}
               </h3>
-              <p className="text-slate-600 dark:text-slate-400">
-                Active Policies
-              </p>
+                <p className="text-slate-600 dark:text-slate-400">
+                  Active Coverage
+                </p>
             </CardContent>
           </Card>
 

@@ -24,7 +24,7 @@ export function usePolicyholderDashboardSummaryQuery() {
     queryKey: ['policyholder-dashboard'],
     queryFn: ({ signal }) =>
       customFetcher({
-        url: '/coverage/policyholder/dashboard',
+        url: '/dashboard/policyholder',
         method: 'GET',
         signal,
       }),

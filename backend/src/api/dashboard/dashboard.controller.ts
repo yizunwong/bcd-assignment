@@ -19,4 +19,10 @@ export class DashboardController {
   ): Promise<CommonResponseDto<DashboardSummaryDto>> {
     return this.dashboardService.getAdminSummary(req);
   }
+
+  @Get('policyholder')
+  @UseGuards(AuthGuard)
+  async getPolicyholderSummary(@Req() req: AuthenticatedRequest) {
+    return this.dashboardService.getPolicyholderSummary(req);
+  }
 }

@@ -1543,7 +1543,7 @@
     },
     "/coverage/policyholder/summary": {
       "get": {
-        "operationId": "CoverageController_getPolicyholderSummary",
+        "operationId": "CoverageController_getCoverageStats",
         "parameters": [],
         "responses": {
           "200": {
@@ -1560,9 +1560,9 @@
         ]
       }
     },
-    "/coverage/policyholder/dashboard": {
+    "/dashboard/policyholder": {
       "get": {
-        "operationId": "CoverageController_getPolicyholderDashboard",
+        "operationId": "DashboardController_getPolicyholderSummary",
         "parameters": [],
         "responses": {
           "200": {
@@ -1575,7 +1575,7 @@
           }
         ],
         "tags": [
-          "Coverage"
+          "Dashboard"
         ]
       }
     },

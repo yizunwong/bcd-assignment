@@ -43,7 +43,7 @@ export default function PolicyholderDashboard() {
         {/* Stats Overview */}
         <div className="stats-grid">
           <StatsCard
-            title="Active Policies"
+            title="Active Coverage"
             value={(summary?.data?.activeCoverage ?? 0).toString()}
             icon={Shield}
           />

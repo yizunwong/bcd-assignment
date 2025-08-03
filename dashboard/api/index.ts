@@ -4411,7 +4411,7 @@ export const useCoverageControllerRemove = <
   return useMutation(mutationOptions, queryClient);
 };
 
-export const coverageControllerGetPolicyholderSummary = (
+export const coverageControllerGetCoverageStats = (
   signal?: AbortSignal,
 ) => {
   return customFetcher<void>({
@@ -4421,17 +4421,17 @@ export const coverageControllerGetPolicyholderSummary = (
   });
 };
 
-export const getCoverageControllerGetPolicyholderSummaryQueryKey = () => {
+export const getCoverageControllerGetCoverageStatsQueryKey = () => {
   return [`/coverage/policyholder/summary`] as const;
 };
 
-export const getCoverageControllerGetPolicyholderSummaryQueryOptions = <
-  TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+export const getCoverageControllerGetCoverageStatsQueryOptions = <
+  TData = Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
   TError = unknown,
 >(options?: {
   query?: Partial<
     UseQueryOptions<
-      Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+      Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
       TError,
       TData
     >
@@ -4441,41 +4441,41 @@ export const getCoverageControllerGetPolicyholderSummaryQueryOptions = <
 
   const queryKey =
     queryOptions?.queryKey ??
-    getCoverageControllerGetPolicyholderSummaryQueryKey();
+    getCoverageControllerGetCoverageStatsQueryKey();
 
   const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>
-  > = ({ signal }) => coverageControllerGetPolicyholderSummary(signal);
+    Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>
+  > = ({ signal }) => coverageControllerGetCoverageStats(signal);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+    Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type CoverageControllerGetPolicyholderSummaryQueryResult = NonNullable<
-  Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>
+export type CoverageControllerGetCoverageStatsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>
 >;
-export type CoverageControllerGetPolicyholderSummaryQueryError = unknown;
+export type CoverageControllerGetCoverageStatsQueryError = unknown;
 
-export function useCoverageControllerGetPolicyholderSummary<
-  TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+export function useCoverageControllerGetCoverageStats<
+  TData = Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
   TError = unknown,
 >(
   options: {
     query: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+        Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
         TError,
         TData
       >
     > &
       Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+          Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
           TError,
-          Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>
+          Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>
         >,
         "initialData"
       >;
@@ -4484,23 +4484,23 @@ export function useCoverageControllerGetPolicyholderSummary<
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
-export function useCoverageControllerGetPolicyholderSummary<
-  TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+export function useCoverageControllerGetCoverageStats<
+  TData = Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
   TError = unknown,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+        Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
         TError,
         TData
       >
     > &
       Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+          Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
           TError,
-          Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>
+          Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>
         >,
         "initialData"
       >;
@@ -4509,14 +4509,14 @@ export function useCoverageControllerGetPolicyholderSummary<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
-export function useCoverageControllerGetPolicyholderSummary<
-  TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+export function useCoverageControllerGetCoverageStats<
+  TData = Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
   TError = unknown,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+        Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
         TError,
         TData
       >
@@ -4527,14 +4527,14 @@ export function useCoverageControllerGetPolicyholderSummary<
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
-export function useCoverageControllerGetPolicyholderSummary<
-  TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+export function useCoverageControllerGetCoverageStats<
+  TData = Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
   TError = unknown,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+        Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
         TError,
         TData
       >
@@ -4545,7 +4545,7 @@ export function useCoverageControllerGetPolicyholderSummary<
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions =
-    getCoverageControllerGetPolicyholderSummaryQueryOptions(options);
+    getCoverageControllerGetCoverageStatsQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,
