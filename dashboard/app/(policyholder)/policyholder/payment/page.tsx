@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,12 @@ import { useToast } from "@/components/shared/ToastProvider";
 import { usePaymentMutation } from "@/hooks/usePayment";
 import { CreateCoverageDto } from '@/api';
 
+declare global {
+  interface Window {
+    Stripe?: any;
+  }
+}
+
 export default function PaymentSummary() {
   const router = useRouter();
   const { printMessage } = useToast();
@@ -40,6 +46,10 @@ export default function PaymentSummary() {
   const [showTokenDetails, setShowTokenDetails] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("ETH");
+
+  const stripeRef = useRef<any>(null);
+  const cardElementRef = useRef<any>(null);
+  const cardContainerRef = useRef<HTMLDivElement>(null);
 
   // Coverage creation mutation
   const { makePayment } = usePaymentMutation();
@@ -74,6 +84,38 @@ export default function PaymentSummary() {
       setTokenAmount(policyData.total.toString());
     }
   }, [policyData]);
+
+  useEffect(() => {
+    if (paymentMethod !== "STRIPE") return;
+
+    const setupStripe = () => {
+      if (!stripeRef.current) {
+        stripeRef.current = window.Stripe(
+          process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "",
+        );
+      }
+      const elements = stripeRef.current.elements();
+      cardElementRef.current = elements.create("card");
+      cardElementRef.current.mount(cardContainerRef.current!);
+    };
+
+    if (!window.Stripe) {
+      const script = document.createElement("script");
+      script.src = "https://js.stripe.com/v3";
+      script.async = true;
+      script.onload = setupStripe;
+      document.body.appendChild(script);
+    } else {
+      setupStripe();
+    }
+
+    return () => {
+      if (cardElementRef.current) {
+        cardElementRef.current.unmount();
+        cardElementRef.current = null;
+      }
+    };
+  }, [paymentMethod]);
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -111,11 +153,27 @@ export default function PaymentSummary() {
     try {
       await createCoverage(coverageData);
 
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const txId = `TX-${Date.now()}`;
+      const blockHash = `0x${Array.from({ length: 40 }, () =>
+        Math.floor(Math.random() * 16).toString(16),
+      ).join("")}`;
+      const params = new URLSearchParams({
+        policy: policyData.id,
+        transactionId: txId,
+        blockHash,
+        amount: policyData.total.toString(),
+        usdAmount: (Number(policyData.total) * 3500).toFixed(2),
+        paymentMethod,
+        timestamp: new Date().toISOString(),
+        status: "confirmed",
+        confirmations: "1",
+      });
 
       printMessage("Payment successful! Coverage created.", "success");
 
-      router.push("/policyholder/payment/confirmation");
+      router.push(
+        `/policyholder/payment/confirmation?${params.toString()}`,
+      );
     } catch (error) {
       console.error("Payment failed:", error);
       printMessage("Payment failed. Please try again.", "error");
@@ -131,12 +189,38 @@ export default function PaymentSummary() {
         amount: policyData.total,
         currency: "usd",
       });
+      const clientSecret = response?.data?.clientSecret;
+      if (clientSecret && stripeRef.current && cardElementRef.current) {
+        const result = await stripeRef.current.confirmCardPayment(clientSecret, {
+          payment_method: { card: cardElementRef.current },
+        });
 
-      await createCoverage(coverageData);
+        if (result.error || result.paymentIntent?.status !== "succeeded") {
+          printMessage("Payment failed. Please try again.", "error");
+        } else {
+          await createCoverage(coverageData);
 
-      if (response?.data?.clientSecret) {
-        printMessage("Stripe payment initialized", "success");
-        router.push("/policyholder/payment/confirmation");
+          const txId = `PI-${Date.now()}`;
+          const blockHash = `0x${Array.from({ length: 40 }, () =>
+            Math.floor(Math.random() * 16).toString(16),
+          ).join("")}`;
+          const params = new URLSearchParams({
+            policy: policyData.id,
+            transactionId: txId,
+            blockHash,
+            amount: policyData.total.toString(),
+            usdAmount: (Number(policyData.total) * 3500).toFixed(2),
+            paymentMethod,
+            timestamp: new Date().toISOString(),
+            status: "confirmed",
+            confirmations: "1",
+          });
+
+          printMessage("Stripe payment successful", "success");
+          router.push(
+            `/policyholder/payment/confirmation?${params.toString()}`,
+          );
+        }
       } else {
         printMessage("Payment failed. Please try again.", "error");
       }
@@ -387,6 +471,21 @@ export default function PaymentSummary() {
                     ))}
                   </div>
                 </div>
+
+                {paymentMethod === "STRIPE" && (
+                  <div className="space-y-2">
+                    <div className="text-sm text-slate-600 dark:text-slate-400">
+                      Card Details
+                    </div>
+                    <div
+                      ref={cardContainerRef}
+                      className="p-3 bg-white rounded-md border border-slate-300 dark:border-slate-600"
+                    />
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Use test card 4242 4242 4242 4242
+                    </p>
+                  </div>
+                )}
 
                 {/* Price Breakdown */}
                 <div>
