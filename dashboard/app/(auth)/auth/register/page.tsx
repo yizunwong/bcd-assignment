@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { z } from "zod";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,6 +33,7 @@ export default function RegisterPage() {
   const { register: registerUser, isRegistering } = useAuth();
   const { printMessage } = useToast();
   const setRegistrationData = useUserRegistrationStore((state) => state.setData);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const countryOptions = getCountries().map((countryCode) => ({
     code: countryCode,
@@ -70,42 +72,115 @@ export default function RegisterPage() {
     },
   ];
 
+  const roleSchema = z.object({
+    selectedRole: z.string().min(1, "Please select a role"),
+  });
+
+  const basicInfoSchema = z
+    .object({
+      firstName: z.string().min(1, "First name is required"),
+      lastName: z.string().min(1, "Last name is required"),
+      email: z.string().email("Invalid email address"),
+      password: z.string().min(8, "Password must be at least 8 characters"),
+      confirmPassword: z.string().min(1, "Please confirm your password"),
+      phoneCode: z.string().min(1),
+      phone: z.string().min(1, "Phone number is required"),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      path: ["confirmPassword"],
+      message: "Passwords do not match",
+    });
+
+  const policyholderSchema = z.object({
+    dateOfBirth: z.string().min(1, "Date of birth is required"),
+    occupation: z.string().min(1, "Occupation is required"),
+    address: z.string().min(1, "Address is required"),
+    agreeToTerms: z.boolean().refine((val) => val, "You must agree to the terms"),
+    agreeToPrivacy: z.boolean().refine((val) => val, "You must agree to the privacy policy"),
+  });
+
+  const adminSchema = z.object({
+    agreeToTerms: z.boolean().refine((val) => val, "You must agree to the terms"),
+    agreeToPrivacy: z.boolean().refine((val) => val, "You must agree to the privacy policy"),
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
-    const fullPhoneNumber = `${formData.phoneCode}${formData.phone}`;
     e.preventDefault();
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      if (selectedRole === "admin") {
-        setRegistrationData({
-          email: formData.email,
-          password: formData.password,
-          confirmPassword: formData.confirmPassword,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          phone: fullPhoneNumber,
+    if (currentStep === 1) {
+      const result = roleSchema.safeParse({ selectedRole });
+      if (!result.success) {
+        setErrors({ selectedRole: result.error.flatten().fieldErrors.selectedRole?.[0] as string });
+        return;
+      }
+      setErrors({});
+      setCurrentStep(2);
+      return;
+    }
+
+    if (currentStep === 2) {
+      const result = basicInfoSchema.safeParse(formData);
+      if (!result.success) {
+        const fieldErrors = result.error.flatten().fieldErrors;
+        setErrors({
+          firstName: fieldErrors.firstName?.[0],
+          lastName: fieldErrors.lastName?.[0],
+          email: fieldErrors.email?.[0],
+          password: fieldErrors.password?.[0],
+          confirmPassword: fieldErrors.confirmPassword?.[0],
+          phone: fieldErrors.phone?.[0],
         });
-        router.push("/auth/register/provider");
-      } else {
-        try {
-          await registerUser({
-            email: formData.email,
-            password: formData.password,
-            confirmPassword: formData.confirmPassword,
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            role: "policyholder",
-            phone: fullPhoneNumber,
-            dateOfBirth: formData.dateOfBirth,
-            occupation: formData.occupation,
-            address: formData.address,
-          });
-          printMessage("Account created successfully", "success");
-          router.push("/auth/login");
-          router.refresh();
-        } catch (err) {
-          printMessage(parseError(err) || "Registration failed", "error");
-        }
+        return;
+      }
+      setErrors({});
+      setCurrentStep(3);
+      return;
+    }
+
+    const fullPhoneNumber = `${formData.phoneCode}${formData.phone}`;
+    const finalSchema = selectedRole === "admin" ? adminSchema : policyholderSchema;
+    const result = finalSchema.safeParse(formData);
+    if (!result.success) {
+      const fieldErrors = result.error.flatten().fieldErrors;
+      setErrors({
+        dateOfBirth: fieldErrors.dateOfBirth?.[0],
+        occupation: fieldErrors.occupation?.[0],
+        address: fieldErrors.address?.[0],
+        agreeToTerms: fieldErrors.agreeToTerms?.[0],
+        agreeToPrivacy: fieldErrors.agreeToPrivacy?.[0],
+      });
+      return;
+    }
+    setErrors({});
+
+    if (selectedRole === "admin") {
+      setRegistrationData({
+        email: formData.email,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: fullPhoneNumber,
+      });
+      router.push("/auth/register/provider");
+    } else {
+      try {
+        await registerUser({
+        email: formData.email,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        role: "policyholder",
+        phone: fullPhoneNumber,
+        dateOfBirth: formData.dateOfBirth,
+        occupation: formData.occupation,
+        address: formData.address,
+      });
+        printMessage("Account created successfully", "success");
+        router.push("/auth/login");
+        router.refresh();
+      } catch (err) {
+        printMessage(parseError(err) || "Registration failed", "error");
       }
     }
   };
@@ -189,7 +264,12 @@ export default function RegisterPage() {
             <Card className="glass-card rounded-2xl">
               <CardContent className="p-8">
                 <form onSubmit={handleSubmit}>
-                  {currentStep === 1 && <RoleSelection roles={roles} selectedRole={selectedRole} setSelectedRole={setSelectedRole} />}
+                  {currentStep === 1 && (
+                    <>
+                      <RoleSelection roles={roles} selectedRole={selectedRole} setSelectedRole={setSelectedRole} />
+                      {errors.selectedRole && <p className="text-sm text-red-500 mt-4">{errors.selectedRole}</p>}
+                    </>
+                  )}
                   {currentStep === 2 && (
                     <BasicInfo
                       formData={formData}
@@ -198,10 +278,11 @@ export default function RegisterPage() {
                       setShowPassword={setShowPassword}
                       showConfirmPassword={showConfirmPassword}
                       setShowConfirmPassword={setShowConfirmPassword}
+                      errors={errors}
                     />
                   )}
                   {currentStep === 3 && (
-                    <RoleSpecificInfo selectedRole={selectedRole} formData={formData} setFormData={setFormData} />
+                    <RoleSpecificInfo selectedRole={selectedRole} formData={formData} setFormData={setFormData} errors={errors} />
                   )}
                   <div className="flex justify-between mt-8">
                     {currentStep > 1 && (
