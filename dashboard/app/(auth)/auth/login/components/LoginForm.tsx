@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,9 +22,26 @@ export default function LoginForm() {
     password: "",
     rememberMe: false,
   });
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+
+  const loginSchema = z.object({
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    rememberMe: z.boolean().optional(),
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const result = loginSchema.safeParse(formData);
+    if (!result.success) {
+      const fieldErrors = result.error.flatten().fieldErrors;
+      setErrors({
+        email: fieldErrors.email?.[0],
+        password: fieldErrors.password?.[0],
+      });
+      return;
+    }
+    setErrors({});
     try {
       await login({
         email: formData.email,
@@ -69,6 +87,7 @@ export default function LoginForm() {
                 className="form-input"
                 required
               />
+              {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Password</label>
@@ -89,6 +108,7 @@ export default function LoginForm() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password}</p>}
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">

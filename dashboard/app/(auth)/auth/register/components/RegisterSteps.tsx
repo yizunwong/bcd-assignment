@@ -97,6 +97,7 @@ export function BasicInfo({
   setShowPassword,
   showConfirmPassword,
   setShowConfirmPassword,
+  errors,
 }: {
   formData: any;
   setFormData: Dispatch<SetStateAction<any>>;
@@ -104,6 +105,7 @@ export function BasicInfo({
   setShowPassword: Dispatch<SetStateAction<boolean>>;
   showConfirmPassword: boolean;
   setShowConfirmPassword: Dispatch<SetStateAction<boolean>>;
+  errors: Record<string, string>;
 }) {
   return (
     <div className="space-y-6">
@@ -115,15 +117,18 @@ export function BasicInfo({
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">First Name *</label>
           <Input value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} placeholder="Enter your first name" className="form-input" required />
+          {errors.firstName && <p className="text-sm text-red-500 mt-1">{errors.firstName}</p>}
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Last Name *</label>
           <Input value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} placeholder="Enter your last name" className="form-input" required />
+          {errors.lastName && <p className="text-sm text-red-500 mt-1">{errors.lastName}</p>}
         </div>
       </div>
       <div>
         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Email Address *</label>
         <Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="Enter your email" className="form-input" required />
+        {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email}</p>}
       </div>
       <div>
         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Phone Number *</label>
@@ -131,6 +136,7 @@ export function BasicInfo({
           <PhoneCodeDropdown value={formData.phoneCode} onChange={(val) => setFormData({ ...formData, phoneCode: val })} />
           <Input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="Enter your phone number" className="form-input flex-1" required />
         </div>
+        {errors.phone && <p className="text-sm text-red-500 mt-1">{errors.phone}</p>}
       </div>
       <div className="grid md:grid-cols-2 gap-6">
         <div>
@@ -141,6 +147,7 @@ export function BasicInfo({
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
+          {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password}</p>}
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Confirm Password *</label>
@@ -150,6 +157,7 @@ export function BasicInfo({
               {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
+          {errors.confirmPassword && <p className="text-sm text-red-500 mt-1">{errors.confirmPassword}</p>}
         </div>
       </div>
     </div>
@@ -160,10 +168,12 @@ export function RoleSpecificInfo({
   selectedRole,
   formData,
   setFormData,
+  errors,
 }: {
   selectedRole: string;
   formData: any;
   setFormData: Dispatch<SetStateAction<any>>;
+  errors: Record<string, string>;
 }) {
   if (selectedRole === "policyholder") {
     return (
@@ -176,15 +186,18 @@ export function RoleSpecificInfo({
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Date of Birth *</label>
             <Input type="date" value={formData.dateOfBirth} onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })} className="form-input" required />
+            {errors.dateOfBirth && <p className="text-sm text-red-500 mt-1">{errors.dateOfBirth}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Occupation *</label>
             <Input value={formData.occupation} onChange={(e) => setFormData({ ...formData, occupation: e.target.value })} placeholder="Your occupation" className="form-input" required />
+            {errors.occupation && <p className="text-sm text-red-500 mt-1">{errors.occupation}</p>}
           </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Address *</label>
           <Textarea value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} placeholder="Enter your full address" className="form-input" required />
+          {errors.address && <p className="text-sm text-red-500 mt-1">{errors.address}</p>}
         </div>
         <div className="space-y-4">
           <div className="flex items-start space-x-3">
@@ -193,12 +206,14 @@ export function RoleSpecificInfo({
               I agree to the <Link href="/terms" className="text-emerald-400 hover:text-emerald-300">Terms of Service</Link> and understand that my account will be subject to verification.
             </label>
           </div>
+          {errors.agreeToTerms && <p className="text-sm text-red-500 mt-1">{errors.agreeToTerms}</p>}
           <div className="flex items-start space-x-3">
             <Checkbox id="privacy" checked={formData.agreeToPrivacy} onCheckedChange={(checked) => setFormData({ ...formData, agreeToPrivacy: checked as boolean })} className="mt-1" />
             <label htmlFor="privacy" className="text-sm text-slate-700 dark:text-slate-300">
               I agree to the <Link href="/privacy" className="text-emerald-400 hover:text-emerald-300">Privacy Policy</Link> and consent to the processing of my personal data.
             </label>
           </div>
+          {errors.agreeToPrivacy && <p className="text-sm text-red-500 mt-1">{errors.agreeToPrivacy}</p>}
         </div>
       </div>
     );
@@ -244,12 +259,14 @@ export function RoleSpecificInfo({
               I agree to the <Link href="/terms" className="text-emerald-400 hover:text-emerald-300">Terms of Service</Link> and <Link href="/provider-terms" className="text-emerald-400 hover:text-emerald-300">Provider Agreement</Link>.
             </label>
           </div>
+          {errors.agreeToTerms && <p className="text-sm text-red-500 mt-1">{errors.agreeToTerms}</p>}
           <div className="flex items-start space-x-3">
             <Checkbox id="privacy" checked={formData.agreeToPrivacy} onCheckedChange={(checked) => setFormData({ ...formData, agreeToPrivacy: checked as boolean })} className="mt-1" />
             <label htmlFor="privacy" className="text-sm text-slate-700 dark:text-slate-300">
               I agree to the <Link href="/privacy" className="text-emerald-400 hover:text-emerald-300">Privacy Policy</Link> and consent to business data processing and regulatory compliance checks.
             </label>
           </div>
+          {errors.agreeToPrivacy && <p className="text-sm text-red-500 mt-1">{errors.agreeToPrivacy}</p>}
         </div>
       </div>
     );
