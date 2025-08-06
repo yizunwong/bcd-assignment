@@ -26,7 +26,70 @@ import {
   Download,
   X,
 } from "lucide-react";
-import { claims } from "@/public/data/policyholder/claimsData";
+import { useClaimsQuery } from "@/hooks/useClaims";
+import { useToast } from "@/components/shared/ToastProvider";
+import { getStatusColor } from "@/public/data/admin/policiesData";
+
+// Define the TransformClaims interface
+interface TransformClaims {
+  id: number;
+  policy_id: number;
+  user_id: string;
+  claim_type: string;
+  amount: string;
+  status: "pending" | "approved" | "rejected";
+  submitted_date: string;
+  processed_date: string | null;
+  claimed_date: string | null;
+  description: string | null;
+  statusColor: string; // For badge styling
+  formattedDate: string; // Formatted submitted_date
+  documents: ClaimDocumentResponseDto[]; // Array of document objects
+}
+
+// Assuming ClaimDocumentResponseDto is defined elsewhere
+// Example definition if not provided:
+interface ClaimDocumentResponseDto {
+  id: number;
+  url: string;
+  name: string;
+  // Add other fields as needed (e.g., uploaded_date, size)
+}
+
+// Transformation function
+const transformClaimData = (rawClaims: any[]): TransformClaims[] => {
+  if (!rawClaims || !Array.isArray(rawClaims)) return [];
+
+  return rawClaims.map((claim) => ({
+    id: claim.id || 0,
+    policy_id: claim.policy_id || 0,
+    user_id: claim.user_id || "",
+    claim_type: claim.claim_type || "",
+    amount: claim.amount || "$0.00",
+    status: (claim.status as "pending" | "approved" | "rejected") || "pending",
+    submitted_date: claim.submitted_date || "",
+    processed_date: claim.processed_date || null,
+    claimed_date: claim.claimed_date || null,
+    description: claim.description || null,
+    statusColor: getStatusColor(
+      claim.status as "pending" | "approved" | "rejected"
+    ),
+    formattedDate:
+      new Date(claim.submitted_date || "").toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }) || "N/A",
+    documents: Array.isArray(claim.claim_documents)
+      ? claim.claim_documents.map((doc: any) => ({
+          id: doc.id || 0,
+          url: doc.url || "",
+          name: doc.name || `Document_${doc.id || 0}`,
+          // Add other document fields as needed
+        }))
+      : [],
+  }));
+};
 
 const ITEMS_PER_PAGE = 8;
 
@@ -38,18 +101,61 @@ export default function Claims() {
   const [dragActive, setDragActive] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("newest");
+  const { printMessage } = useToast();
+  const [selectedPolicy, setSelectedPolicy] = useState<string | null>(null);
+
+  // Fetch coverage data
+  const {
+    data: claims,
+    isLoading: isLoadingClaims,
+    error: coverageError,
+  } = useClaimsQuery({
+    limit: 100, // Get all coverage for this user
+  });
+
+  // Fetch summary data
+  // const {
+  //   data: summaryResponse,
+  //   isLoading: isLoadingSummary,
+  //   error: summaryError,
+  // } = usePolicyholderSummaryQuery();
+
+  // Transform the data
+  // open a interface for transform claims at above
+  const allClaims: TransformClaims[] = useMemo(() => {
+    if (!claims?.data) return [];
+    const transformed = transformClaimData(claims.data);
+
+    // Debug: Log the status values to see what we're getting
+    console.log(
+      "Coverage statuses from API:",
+      transformed.map((p) => ({ id: p.id, status: p.status }))
+    );
+
+    return transformed;
+  }, [claims]);
+
+  // Handle errors
+  if (coverageError) {
+    printMessage("Failed to load coverage data", "error");
+  }
+
+  // if (summaryError) {
+  //   printMessage('Failed to load summary data', 'error');
+  // }
+
   const sortedClaims = useMemo(() => {
-    const sorted = [...claims].sort((a, b) => {
+    const sorted = [...allClaims].sort((a, b) => {
       switch (sortBy) {
         case "newest":
           return (
-            new Date(b.submittedDate).getTime() -
-            new Date(a.submittedDate).getTime()
+            new Date(b.submitted_date).getTime() -
+            new Date(a.submitted_date).getTime()
           );
         case "oldest":
           return (
-            new Date(a.submittedDate).getTime() -
-            new Date(b.submittedDate).getTime()
+            new Date(a.submitted_date).getTime() -
+            new Date(b.submitted_date).getTime()
           );
         case "amount-high":
           return (
@@ -68,7 +174,7 @@ export default function Claims() {
       }
     });
     return sorted;
-  }, [sortBy]);
+  }, [sortBy, allClaims]);
 
   const totalPages = Math.ceil(sortedClaims.length / ITEMS_PER_PAGE);
   const paginatedClaims = sortedClaims.slice(
@@ -227,7 +333,7 @@ export default function Claims() {
                           {claim.id}
                         </CardTitle>
                         <p className="text-slate-600 dark:text-slate-400">
-                          {claim.policyName} • {claim.type}
+                          {claim.claim_type}
                         </p>
                       </div>
                       <div className="flex items-center space-x-3">
@@ -262,18 +368,18 @@ export default function Claims() {
                             </span>
                             <span className="text-slate-800 dark:text-slate-100">
                               {new Date(
-                                claim.submittedDate
+                                claim.submitted_date
                               ).toLocaleDateString()}
                             </span>
                           </div>
-                          {claim.processedDate && (
+                          {claim.processed_date && (
                             <div className="flex justify-between">
                               <span className="text-slate-600 dark:text-slate-400">
                                 Processed:
                               </span>
                               <span className="text-slate-800 dark:text-slate-100">
                                 {new Date(
-                                  claim.processedDate
+                                  claim.processed_date
                                 ).toLocaleDateString()}
                               </span>
                             </div>
@@ -290,7 +396,7 @@ export default function Claims() {
                       </div>
 
                       {/* Timeline */}
-                      <div>
+                      {/* <div>
                         <h4 className="font-semibold text-slate-800 dark:text-slate-100 mb-3">
                           Processing Timeline
                         </h4>
@@ -337,8 +443,8 @@ export default function Claims() {
                               </div>
                             </div>
                           ))}
-                        </div>
-                      </div>
+                        </div> 
+                      </div> */}
                     </div>
 
                     {/* Documents */}
@@ -354,7 +460,7 @@ export default function Claims() {
                           >
                             <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                             <span className="text-sm text-slate-700 dark:text-slate-300">
-                              {doc}
+                              {doc.name}
                             </span>
                             <Button
                               size="sm"
