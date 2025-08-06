@@ -11,16 +11,6 @@ const formatAddress = (address?: string) =>
 export function Connect() {
   const { address, isConnected } = useAccount();
 
-  if (isConnected && address) {
-    return (
-      <Button asChild variant="outline" size="sm" className="floating-button">
-        <Link href="/policyholder/wallet">
-          <span>{formatAddress(address)}</span>
-        </Link>
-      </Button>
-    );
-  }
-
   return (
     <appkit-button
       label="Connect"
