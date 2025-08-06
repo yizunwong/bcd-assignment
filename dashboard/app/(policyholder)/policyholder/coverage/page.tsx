@@ -23,13 +23,11 @@ import {
   Clock,
   Download,
   Filter,
-  Loader2,
 } from 'lucide-react';
-import {
-  useCoverageListQuery,
-  usePolicyholderSummaryQuery,
-} from '@/hooks/useCoverage';
+import { useCoverageListQuery, useCoverageStatsQuery } from '@/hooks/useCoverage';
 import { useToast } from '@/components/shared/ToastProvider';
+import type { CoverageControllerFindAllParams } from '@/api';
+import CoverageDetailsDialog from './components/CoverageDetailsDialog';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -84,10 +82,19 @@ const transformCoverageData = (coverageData: any[]): TransformedPolicy[] => {
 
 export default function MyCoverage() {
   const { printMessage } = useToast();
-  const [selectedPolicy, setSelectedPolicy] = useState<string | null>(null);
+  const [selectedPolicy, setSelectedPolicy] = useState<TransformedPolicy | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
+
+  const hasFilters = filterStatus !== 'all';
+
+  const filters = hasFilters
+    ? {
+        ...(filterStatus !== 'all' && { status: filterStatus }),
+      }
+    : {};
 
   // Fetch coverage data
   const {
@@ -95,6 +102,7 @@ export default function MyCoverage() {
     isLoading: isLoadingCoverage,
     error: coverageError,
   } = useCoverageListQuery({
+    ...(filters as CoverageControllerFindAllParams),
     limit: 100, // Get all coverage for this user
   });
 
@@ -103,7 +111,9 @@ export default function MyCoverage() {
     data: summaryResponse,
     isLoading: isLoadingSummary,
     error: summaryError,
-  } = usePolicyholderSummaryQuery();
+  } = useCoverageStatsQuery();
+
+  const summaryData = summaryResponse?.data;
 
   // Transform the data
   const allPolicies: TransformedPolicy[] = useMemo(() => {
@@ -112,15 +122,6 @@ export default function MyCoverage() {
 
     return transformed;
   }, [coverageResponse]);
-
-  // Handle errors
-  if (coverageError) {
-    printMessage('Failed to load coverage data', 'error');
-  }
-
-  if (summaryError) {
-    printMessage('Failed to load summary data', 'error');
-  }
 
   const filteredPolicies = useMemo(() => {
     let filtered = allPolicies;
@@ -222,6 +223,13 @@ export default function MyCoverage() {
     setCurrentPage(1);
   };
 
+  const openDetails = (policy: TransformedPolicy) => {
+    setSelectedPolicy(policy);
+    setShowDetails(true);
+  };
+
+  const closeDetails = () => setShowDetails(false);
+
   // Loading state
   if (isLoadingCoverage || isLoadingSummary) {
     return (
@@ -229,10 +237,10 @@ export default function MyCoverage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
-              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-emerald-500" />
-              <p className="text-slate-600 dark:text-slate-400">
-                Loading your coverage data...
-              </p>
+              <Shield className="w-16 h-16 text-slate-400 mx-auto mb-4 animate-spin" />
+              <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">
+                Loading coverage...
+              </h3>
             </div>
           </div>
         </div>
@@ -269,11 +277,11 @@ export default function MyCoverage() {
                 <Badge className="status-badge status-active">Active</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {allPolicies.filter((p) => p.status === 'active').length}
+                {summaryData?.activeCoverage ?? 0}
               </h3>
-              <p className="text-slate-600 dark:text-slate-400">
-                Active Policies
-              </p>
+                <p className="text-slate-600 dark:text-slate-400">
+                  Active Coverage
+                </p>
             </CardContent>
           </Card>
 
@@ -287,13 +295,7 @@ export default function MyCoverage() {
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
                 $
-                {allPolicies
-                  .reduce(
-                    (sum, p) =>
-                      sum + parseFloat(p.coverage.replace(/[$,]/g, '')),
-                    0
-                  )
-                  .toLocaleString()}
+                {(summaryData?.totalCoverageValue ?? 0).toLocaleString()}
               </h3>
               <p className="text-slate-600 dark:text-slate-400">
                 Total Coverage
@@ -310,7 +312,7 @@ export default function MyCoverage() {
                 <Badge className="status-badge status-warning">Claims</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {allPolicies.reduce((sum, p) => sum + p.recentClaims.length, 0)}
+                {summaryData?.totalClaims ?? 0}
               </h3>
               <p className="text-slate-600 dark:text-slate-400">Total Claims</p>
             </CardContent>
@@ -325,19 +327,9 @@ export default function MyCoverage() {
                 <Badge className="status-badge status-active">Rate</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {allPolicies.length > 0
-                  ? Math.round(
-                      allPolicies.reduce(
-                        (sum, p) => sum + p.utilizationRate,
-                        0
-                      ) / allPolicies.length
-                    )
-                  : 0}
-                %
+                {Math.round(summaryData?.approvalRate ?? 0)}%
               </h3>
-              <p className="text-slate-600 dark:text-slate-400">
-                Average Utilization
-              </p>
+              <p className="text-slate-600 dark:text-slate-400">Approval Rate</p>
             </CardContent>
           </Card>
         </div>
@@ -569,7 +561,11 @@ export default function MyCoverage() {
 
                 {/* Actions */}
                 <div className="flex gap-2 pt-4 border-t border-slate-100 dark:border-slate-700">
-                  <Button variant="outline" className="flex-1 floating-button">
+                  <Button
+                    variant="outline"
+                    className="flex-1 floating-button"
+                    onClick={() => openDetails(policy)}
+                  >
                     <FileText className="w-4 h-4 mr-2" />
                     View Details
                   </Button>
@@ -582,6 +578,14 @@ export default function MyCoverage() {
             </Card>
           ))}
         </div>
+
+        {selectedPolicy && (
+          <CoverageDetailsDialog
+            policy={selectedPolicy}
+            open={showDetails}
+            onClose={closeDetails}
+          />
+        )}
 
         {/* Pagination */}
         <Pagination

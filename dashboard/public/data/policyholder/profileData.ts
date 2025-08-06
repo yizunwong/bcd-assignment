@@ -1,12 +1,17 @@
+import { UserResponseDtoRole } from '@/api';
+
 export const profileData = {
+  id: '1',
+  role: UserResponseDtoRole.policyholder,
   firstName: 'Alex',
   lastName: 'Johnson',
   email: 'alex.johnson@email.com',
   phone: '+1 (555) 123-4567',
   address: '123 Main Street, New York, NY 10001',
   dateOfBirth: '1990-05-15',
-  occupation: 'Software Engineer',
-  bio: 'Blockchain enthusiast and early adopter of decentralized insurance solutions.'
+  occupation: '',
+  bio: '',
+  status: 'active'
 };
 
 export const notifications = {
@@ -19,12 +24,6 @@ export const notifications = {
   smsUrgent: true
 };
 
-export const kycStatus = {
-  identity: { status: 'verified', date: '2024-01-15' },
-  address: { status: 'verified', date: '2024-01-15' },
-  income: { status: 'pending', date: null },
-  documents: { status: 'verified', date: '2024-01-16' }
-};
 
 export const activityLog = [
   { date: '2024-12-20', action: 'Submitted claim CL-002', type: 'claim' },

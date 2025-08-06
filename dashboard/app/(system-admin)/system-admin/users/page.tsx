@@ -51,13 +51,24 @@ import {
   Building,
   FileText,
   Key,
-  Lock,
-  Unlock,
   UserCheck,
   UserX,
   Loader2,
+  Briefcase,
 } from "lucide-react";
-import { users, roles } from "@/public/data/system-admin/usersData";
+import { roles } from "@/public/data/system-admin/usersData";
+import {
+  useCreateUserMutation,
+  useUserStatsQuery,
+  useUsersQuery,
+} from "@/hooks/useUsers";
+import {
+  CompanyDetailsDtoYearsInBusiness,
+  CompanyDetailsDtoEmployeesNumber,
+  UserControllerFindAllParams,
+} from "@/api";
+import { useToast } from "@/components/shared/ToastProvider";
+import { useDebounce } from '@/hooks/useDebounce';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -72,8 +83,71 @@ export default function UserRoleManagement() {
   const [isRoleConfigDialogOpen, setIsRoleConfigDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [selectedRole, setSelectedRole] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [pageTransition, setPageTransition] = useState(false);
+  const { data: userStats } = useUserStatsQuery();
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  const hasFilters =
+    filterRole !== "all" || filterStatus !== "all" || !!searchTerm;
+
+  const filters = hasFilters
+    ? {
+        ...(filterRole !== "all" && { role: filterRole }),
+        ...(filterStatus !== "all" && { status: filterStatus }),
+        ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
+      }
+    : {};
+
+  const { data: usersData, isLoading: isLoading } = useUsersQuery(
+    filters as UserControllerFindAllParams
+  );
+
+  const users = useMemo(
+    () =>
+      (usersData?.data || []).map((u: any) => ({
+        id: u.user_id,
+        name: u.name,
+        email: u.email,
+        phone: u.phone ?? "",
+        role: u.role === "insurance_admin" ? "admin" : u.role,
+        status: u.status,
+        lastLogin: typeof u.lastLogin === "string" ? u.lastLogin : null,
+        joinDate:
+          typeof u.joinedAt === "string" ? u.joinedAt.split("T")[0] : "",
+        policies: 0,
+        claims: 0,
+        location: u.location ?? "",
+        loginAttempts: u.loginAttempts ?? 0,
+        notes: u.notes ?? "",
+        activityLog: u.activityLog ?? [],
+      })),
+    [usersData]
+  );
+
+  const [newUserData, setNewUserData] = useState({
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
+    bio: "",
+    phone: "",
+    role: "policyholder",
+    company: {
+      name: "",
+      address: "",
+      contact_no: "",
+      website: "",
+      license_number: "",
+      years_in_business: Object.values(CompanyDetailsDtoYearsInBusiness)[0],
+      employees_number: Object.values(CompanyDetailsDtoEmployeesNumber)[0],
+    },
+    dateOfBirth: "",
+    occupation: "",
+    address: "",
+  });
+
+  const { createUser, error: createError } = useCreateUserMutation();
+  const { printMessage } = useToast();
 
   const [editUserData, setEditUserData] = useState({
     name: "",
@@ -84,6 +158,9 @@ export default function UserRoleManagement() {
     location: "",
     company: "",
     notes: "",
+    dateOfBirth: "",
+    occupation: "",
+    address: "",
   });
 
   // Data moved to public/data/system-admin/usersData.ts
@@ -129,25 +206,17 @@ export default function UserRoleManagement() {
     }
   };
 
-  const filteredUsers = useMemo(() => {
-    let filtered = users.filter((user) => {
-      const matchesSearch =
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesRole = filterRole === "all" || user.role === filterRole;
-      const matchesStatus =
-        filterStatus === "all" || user.status === filterStatus;
-      return matchesSearch && matchesRole && matchesStatus;
-    });
+  const sortedUsers = useMemo(
+    () =>
+      [...users].sort(
+        (a, b) =>
+          new Date(b.joinDate).getTime() - new Date(a.joinDate).getTime()
+      ),
+    [users]
+  );
 
-    // Sort by join date (newest first)
-    return filtered.sort(
-      (a, b) => new Date(b.joinDate).getTime() - new Date(a.joinDate).getTime()
-    );
-  }, [searchTerm, filterRole, filterStatus]);
-
-  const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
-  const paginatedUsers = filteredUsers.slice(
+  const totalPages = Math.ceil(sortedUsers.length / ITEMS_PER_PAGE);
+  const paginatedUsers = sortedUsers.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
@@ -197,16 +266,17 @@ export default function UserRoleManagement() {
       location: user.location,
       company: user.company || "",
       notes: user.notes || "",
+      dateOfBirth: user.dateOfBirth || "",
+      occupation: user.occupation || "",
+      address: user.address || "",
     });
     setIsEditDialogOpen(true);
   };
 
   const handleSaveUser = async () => {
-    setIsLoading(true);
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
     console.log("Saving user:", editUserData);
-    setIsLoading(false);
     setIsEditDialogOpen(false);
   };
 
@@ -221,19 +291,68 @@ export default function UserRoleManagement() {
   };
 
   const toggleUserStatus = async (userId: string) => {
-    setIsLoading(true);
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 500));
     console.log("Toggling status for user:", userId);
-    setIsLoading(false);
   };
 
   const resetUserPassword = async (userId: string) => {
-    setIsLoading(true);
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 800));
     console.log("Resetting password for user:", userId);
-    setIsLoading(false);
+   };
+
+  const handleCreateUser = async () => {
+    try {
+      const payload: any = {
+        email: newUserData.email,
+        password: newUserData.password,
+        firstName: newUserData.firstName,
+        lastName: newUserData.lastName,
+        bio: newUserData.bio,
+        phone: newUserData.phone,
+        role: newUserData.role as any,
+      };
+
+      if (newUserData.role === "admin") {
+        payload.company = { ...newUserData.company };
+      } else if (newUserData.role === "policyholder") {
+        payload.dateOfBirth = newUserData.dateOfBirth;
+        payload.occupation = newUserData.occupation;
+        payload.address = newUserData.address;
+      }
+
+      await createUser(payload);
+      printMessage("User created successfully", "success");
+    } catch (err) {
+      printMessage(
+        typeof err === "string" ? err : createError || "Failed to create user",
+        "error"
+      );
+    }
+
+    setIsCreateDialogOpen(false);
+    setNewUserData({
+      email: "",
+      password: "",
+      firstName: "",
+      lastName: "",
+      bio: "",
+      phone: "",
+      role: "policyholder",
+      company: {
+        name: "",
+        address: "",
+        contact_no: "",
+        website: "",
+        license_number: "",
+        years_in_business: Object.values(CompanyDetailsDtoYearsInBusiness)[0],
+        employees_number: Object.values(CompanyDetailsDtoEmployeesNumber)[0],
+      },
+      dateOfBirth: "",
+      occupation: "",
+      address: "",
+    });
   };
 
   return (
@@ -270,41 +389,348 @@ export default function UserRoleManagement() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      Full Name
+                      First Name
                     </label>
                     <Input
-                      placeholder="Enter full name"
+                      value={newUserData.firstName}
+                      onChange={(e) =>
+                        setNewUserData({
+                          ...newUserData,
+                          firstName: e.target.value,
+                        })
+                      }
+                      placeholder="First name"
                       className="form-input"
                     />
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      Last Name
+                    </label>
+                    <Input
+                      value={newUserData.lastName}
+                      onChange={(e) =>
+                        setNewUserData({
+                          ...newUserData,
+                          lastName: e.target.value,
+                        })
+                      }
+                      placeholder="Last name"
+                      className="form-input"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                       Email Address
                     </label>
                     <Input
                       type="email"
+                      value={newUserData.email}
+                      onChange={(e) =>
+                        setNewUserData({
+                          ...newUserData,
+                          email: e.target.value,
+                        })
+                      }
                       placeholder="Enter email"
+                      className="form-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      Password
+                    </label>
+                    <Input
+                      type="password"
+                      value={newUserData.password}
+                      onChange={(e) =>
+                        setNewUserData({
+                          ...newUserData,
+                          password: e.target.value,
+                        })
+                      }
+                      placeholder="Enter password"
                       className="form-input"
                     />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Role
+                    Bio
                   </label>
-                  <Select>
-                    <SelectTrigger className="form-input">
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="policyholder">Policyholder</SelectItem>
-                      <SelectItem value="admin">Insurance Admin</SelectItem>
-                      <SelectItem value="system-admin">
-                        System Administrator
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Textarea
+                    value={newUserData.bio}
+                    onChange={(e) =>
+                      setNewUserData({ ...newUserData, bio: e.target.value })
+                    }
+                    placeholder="Short bio"
+                    className="form-input"
+                  />
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      Phone Number
+                    </label>
+                    <Input
+                      value={newUserData.phone}
+                      onChange={(e) =>
+                        setNewUserData({
+                          ...newUserData,
+                          phone: e.target.value,
+                        })
+                      }
+                      placeholder="Phone number"
+                      className="form-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      Role
+                    </label>
+                    <Select
+                      value={newUserData.role}
+                      onValueChange={(value) =>
+                        setNewUserData({ ...newUserData, role: value })
+                      }
+                    >
+                      <SelectTrigger className="form-input">
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="policyholder">
+                          Policyholder
+                        </SelectItem>
+                        <SelectItem value="admin">Insurance Admin</SelectItem>
+                        <SelectItem value="system-admin">
+                          System Administrator
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {newUserData.role === "admin" && (
+                  <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Company Name
+                      </label>
+                      <Input
+                        value={newUserData.company.name}
+                        onChange={(e) =>
+                          setNewUserData({
+                            ...newUserData,
+                            company: {
+                              ...newUserData.company,
+                              name: e.target.value,
+                            },
+                          })
+                        }
+                        placeholder="Company name"
+                        className="form-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Address
+                      </label>
+                      <Input
+                        value={newUserData.company.address}
+                        onChange={(e) =>
+                          setNewUserData({
+                            ...newUserData,
+                            company: {
+                              ...newUserData.company,
+                              address: e.target.value,
+                            },
+                          })
+                        }
+                        placeholder="Address"
+                        className="form-input"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                          Contact No
+                        </label>
+                        <Input
+                          value={newUserData.company.contact_no}
+                          onChange={(e) =>
+                            setNewUserData({
+                              ...newUserData,
+                              company: {
+                                ...newUserData.company,
+                                contact_no: e.target.value,
+                              },
+                            })
+                          }
+                          placeholder="Contact number"
+                          className="form-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                          Website
+                        </label>
+                        <Input
+                          value={newUserData.company.website}
+                          onChange={(e) =>
+                            setNewUserData({
+                              ...newUserData,
+                              company: {
+                                ...newUserData.company,
+                                website: e.target.value,
+                              },
+                            })
+                          }
+                          placeholder="Website"
+                          className="form-input"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                          License Number
+                        </label>
+                        <Input
+                          value={newUserData.company.license_number}
+                          onChange={(e) =>
+                            setNewUserData({
+                              ...newUserData,
+                              company: {
+                                ...newUserData.company,
+                                license_number: e.target.value,
+                              },
+                            })
+                          }
+                          placeholder="License number"
+                          className="form-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                          Years In Business
+                        </label>
+                        <Select
+                          value={newUserData.company.years_in_business}
+                          onValueChange={(value) =>
+                            setNewUserData({
+                              ...newUserData,
+                              company: {
+                                ...newUserData.company,
+                                years_in_business: value as CompanyDetailsDtoYearsInBusiness
+                              },
+                            })
+                          }
+                        >
+                          <SelectTrigger className="form-input">
+                            <SelectValue placeholder="Select years" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.values(
+                              CompanyDetailsDtoYearsInBusiness
+                            ).map((v) => (
+                              <SelectItem key={v} value={v}>
+                                {v}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Employees Number
+                      </label>
+                      <Select
+                        value={newUserData.company.employees_number}
+                        onValueChange={(value) =>
+                          setNewUserData({
+                            ...newUserData,
+                            company: {
+                              ...newUserData.company,
+                              employees_number: value as CompanyDetailsDtoEmployeesNumber,
+                            },
+                          })
+                        }
+                      >
+                        <SelectTrigger className="form-input">
+                          <SelectValue placeholder="Select employee count" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.values(CompanyDetailsDtoEmployeesNumber).map(
+                            (v) => (
+                              <SelectItem key={v} value={v}>
+                                {v}
+                              </SelectItem>
+                            )
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
+
+                {newUserData.role === "policyholder" && (
+                  <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                          Date of Birth
+                        </label>
+                        <Input
+                          type="date"
+                          value={newUserData.dateOfBirth}
+                          onChange={(e) =>
+                            setNewUserData({
+                              ...newUserData,
+                              dateOfBirth: e.target.value,
+                            })
+                          }
+                          className="form-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                          Occupation
+                        </label>
+                        <Input
+                          value={newUserData.occupation}
+                          onChange={(e) =>
+                            setNewUserData({
+                              ...newUserData,
+                              occupation: e.target.value,
+                            })
+                          }
+                          placeholder="Occupation"
+                          className="form-input"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Address
+                      </label>
+                      <Input
+                        value={newUserData.address}
+                        onChange={(e) =>
+                          setNewUserData({
+                            ...newUserData,
+                            address: e.target.value,
+                          })
+                        }
+                        placeholder="Address"
+                        className="form-input"
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex gap-4 pt-4">
                   <Button
                     variant="outline"
@@ -313,7 +739,10 @@ export default function UserRoleManagement() {
                   >
                     Cancel
                   </Button>
-                  <Button className="flex-1 gradient-accent text-white floating-button">
+                  <Button
+                    onClick={handleCreateUser}
+                    className="flex-1 gradient-accent text-white floating-button"
+                  >
                     Create User
                   </Button>
                 </div>
@@ -326,35 +755,31 @@ export default function UserRoleManagement() {
         <div className="stats-grid">
           <StatsCard
             title="Total Users"
-            value={users.length.toString()}
+            value={userStats?.data?.totalUsers?.toString() ?? "0"}
             change="+12 this month"
             changeType="positive"
             icon={Users}
           />
           <StatsCard
             title="Active Users"
-            value={users.filter((u) => u.status === "active").length.toString()}
+            value={userStats?.data?.activeUsers?.toString() ?? "0"}
             change="98.2% uptime"
             changeType="positive"
             icon={CheckCircle}
           />
           <StatsCard
-            title="Pending Approval"
-            value={users
-              .filter((u) => u.status === "pending")
-              .length.toString()}
-            change="Requires review"
+            title="Policyholders"
+            value={userStats?.data?.policyholders?.toString() ?? "0"}
+            change=""
             changeType="neutral"
-            icon={Clock}
+            icon={User}
           />
           <StatsCard
-            title="System Admins"
-            value={users
-              .filter((u) => u.role === "system-admin")
-              .length.toString()}
-            change="Security level: High"
+            title="Insurance Admins"
+            value={userStats?.data?.insuranceAdmins?.toString() ?? "0"}
+            change=""
             changeType="neutral"
-            icon={Crown}
+            icon={Shield}
           />
         </div>
 
@@ -397,8 +822,10 @@ export default function UserRoleManagement() {
                     <SelectContent>
                       <SelectItem value="all">All Roles</SelectItem>
                       <SelectItem value="policyholder">Policyholder</SelectItem>
-                      <SelectItem value="admin">Insurance Admin</SelectItem>
-                      <SelectItem value="system-admin">System Admin</SelectItem>
+                      <SelectItem value="insurance_admin">
+                        Insurance Admin
+                      </SelectItem>
+                      <SelectItem value="system_admin">System Admin</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select
@@ -413,8 +840,7 @@ export default function UserRoleManagement() {
                     <SelectContent>
                       <SelectItem value="all">All Status</SelectItem>
                       <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="suspended">Suspended</SelectItem>
+                      <SelectItem value="deactivated">Deactivated</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -422,7 +848,7 @@ export default function UserRoleManagement() {
             </Card>
 
             {/* Loading State */}
-            {pageTransition && (
+            {isLoading && (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
                 <span className="ml-2 text-slate-600 dark:text-slate-400">
@@ -467,12 +893,6 @@ export default function UserRoleManagement() {
                                   {user.status.replace("-", " ")}
                                 </span>
                               </Badge>
-                              {user.twoFactorEnabled && (
-                                <Badge className="status-badge bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                                  <Lock className="w-3 h-3 mr-1" />
-                                  2FA
-                                </Badge>
-                              )}
                             </div>
                             <p className="text-slate-600 dark:text-slate-400">
                               {user.email}
@@ -555,19 +975,19 @@ export default function UserRoleManagement() {
               totalPages={totalPages}
               onPageChange={handlePageChange}
               showInfo={true}
-              totalItems={filteredUsers.length}
+              totalItems={sortedUsers.length}
               itemsPerPage={ITEMS_PER_PAGE}
               className="mb-8"
             />
 
-            {filteredUsers.length === 0 && !pageTransition && (
+            {sortedUsers.length === 0 && !isLoading && (
               <div className="text-center py-12">
-                <Users className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                <Shield className="w-16 h-16 text-slate-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">
                   No users found
                 </h3>
                 <p className="text-slate-500 dark:text-slate-500">
-                  Try adjusting your search criteria
+                  Try adjusting your search criteria or create a new user
                 </p>
               </div>
             )}
@@ -610,9 +1030,8 @@ export default function UserRoleManagement() {
                           Key Permissions:
                         </p>
                         <div className="space-y-1">
-                          {role.permissions
-                            .slice(0, 4)
-                            .map((permission, index) => (
+                          {(role.permissions?.slice(0, 4) || []).map(
+                            (permission, index) => (
                               <div
                                 key={index}
                                 className="flex items-center space-x-2 text-sm"
@@ -622,10 +1041,12 @@ export default function UserRoleManagement() {
                                   {permission.name}
                                 </span>
                               </div>
-                            ))}
-                          {role.permissions.length > 4 && (
+                            )
+                          )}
+                          {(role.permissions?.length || 0) > 4 && (
                             <p className="text-xs text-slate-500 dark:text-slate-500 ml-5">
-                              +{role.permissions.length - 4} more permissions
+                              +{(role.permissions?.length || 0) - 4} more
+                              permissions
                             </p>
                           )}
                         </div>
@@ -729,6 +1150,45 @@ export default function UserRoleManagement() {
                           </div>
                         </div>
                       )}
+                      {selectedUser.dateOfBirth && (
+                        <div className="flex items-center space-x-3">
+                          <Calendar className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                          <div>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">
+                              Date of Birth
+                            </p>
+                            <p className="font-medium text-slate-800 dark:text-slate-100">
+                              {selectedUser.dateOfBirth}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {selectedUser.occupation && (
+                        <div className="flex items-center space-x-3">
+                          <Briefcase className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                          <div>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">
+                              Occupation
+                            </p>
+                            <p className="font-medium text-slate-800 dark:text-slate-100">
+                              {selectedUser.occupation}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {selectedUser.address && (
+                        <div className="flex items-start space-x-3">
+                          <MapPin className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                          <div>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">
+                              Address
+                            </p>
+                            <p className="font-medium text-slate-800 dark:text-slate-100">
+                              {selectedUser.address}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -794,25 +1254,6 @@ export default function UserRoleManagement() {
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-3">
-                        <Lock className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                        <div>
-                          <p className="text-sm text-slate-600 dark:text-slate-400">
-                            Two-Factor Auth
-                          </p>
-                          <Badge
-                            className={`status-badge ${
-                              selectedUser.twoFactorEnabled
-                                ? "status-active"
-                                : "status-pending"
-                            }`}
-                          >
-                            {selectedUser.twoFactorEnabled
-                              ? "Enabled"
-                              : "Disabled"}
-                          </Badge>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -843,22 +1284,6 @@ export default function UserRoleManagement() {
                       Failed Logins
                     </p>
                   </div>
-                  <div className="text-center">
-                    <Badge
-                      className={`status-badge ${
-                        selectedUser.kycStatus === "verified"
-                          ? "status-active"
-                          : selectedUser.kycStatus === "pending"
-                          ? "status-pending"
-                          : "status-error"
-                      }`}
-                    >
-                      {selectedUser.kycStatus}
-                    </Badge>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                      KYC Status
-                    </p>
-                  </div>
                 </div>
 
                 {/* Notes */}
@@ -879,9 +1304,8 @@ export default function UserRoleManagement() {
                     Recent Activity
                   </h4>
                   <div className="space-y-2">
-                    {selectedUser.activityLog
-                      .slice(0, 5)
-                      .map((activity: any, index: number) => (
+                    {(selectedUser.activityLog?.slice(0, 5) || []).map(
+                      (activity: any, index: number) => (
                         <div
                           key={index}
                           className="flex items-center justify-between p-3 bg-slate-50/50 dark:bg-slate-700/30 rounded-lg"
@@ -896,7 +1320,8 @@ export default function UserRoleManagement() {
                             </p>
                           </div>
                         </div>
-                      ))}
+                      )
+                    )}
                   </div>
                 </div>
 
@@ -1085,6 +1510,59 @@ export default function UserRoleManagement() {
                 </div>
               )}
 
+              {editUserData.role === "policyholder" && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Date of Birth
+                      </label>
+                      <Input
+                        type="date"
+                        value={editUserData.dateOfBirth}
+                        onChange={(e) =>
+                          setEditUserData({
+                            ...editUserData,
+                            dateOfBirth: e.target.value,
+                          })
+                        }
+                        className="form-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Occupation
+                      </label>
+                      <Input
+                        value={editUserData.occupation}
+                        onChange={(e) =>
+                          setEditUserData({
+                            ...editUserData,
+                            occupation: e.target.value,
+                          })
+                        }
+                        className="form-input"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      Address
+                    </label>
+                    <Input
+                      value={editUserData.address}
+                      onChange={(e) =>
+                        setEditUserData({
+                          ...editUserData,
+                          address: e.target.value,
+                        })
+                      }
+                      className="form-input"
+                    />
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                   Notes
@@ -1180,6 +1658,8 @@ export default function UserRoleManagement() {
                     )}
                   </div>
                 </div>
+
+                
 
                 {/* Role Settings */}
                 <div>

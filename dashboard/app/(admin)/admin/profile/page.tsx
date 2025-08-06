@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,9 @@ import {
   activityLog,
   permissions,
 } from "@/public/data/admin/profileData";
+import { useMeQuery } from "@/hooks/useAuth";
+import { useUpdateUserMutation } from "@/hooks/useUsers";
+import { useToast } from "@/components/shared/ToastProvider";
 import {
   User,
   Shield,
@@ -38,15 +41,74 @@ import {
   Users,
   BarChart3,
 } from "lucide-react";
+import {
+  CompanyDetailsDtoEmployeesNumber,
+  CompanyDetailsDtoYearsInBusiness,
+  ProfileResponseDto,
+} from "@/api";
+
+const roleLabels: Record<string, string> = {
+  insurance_admin: "Insurance Admin",
+  policyholder: "Policyholder",
+  system_admin: "System Admin",
+};
 
 export default function AdminProfile() {
   const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState(defaultProfileData);
+  const [profileData, setProfileData] =
+    useState<ProfileResponseDto>(defaultProfileData);
   const [notifications, setNotifications] = useState(defaultNotifications);
+  const { data } = useMeQuery();
+  const { updateUser, isPending } = useUpdateUserMutation();
+  const { printMessage } = useToast();
 
-  const handleSave = () => {
-    setIsEditing(false);
-    // Here you would typically save to backend
+  useEffect(() => {
+    if (data?.data) {
+      const user = data.data;
+      setProfileData((prev) => ({
+        ...prev,
+        firstName: user.firstName ?? prev.firstName,
+        lastName: user.lastName ?? prev.lastName,
+        role: user.role ?? prev.role,
+        email: user.email ?? prev.email,
+        phone: user.phone ?? prev.phone,
+        companyName: user.companyName ?? prev.companyName,
+        companyAddress: user.companyAddress ?? prev.companyAddress,
+        companyContactNo: user.companyContactNo ?? prev.companyContactNo,
+        companyLicenseNo: user.companyLicenseNo ?? prev.companyLicenseNo,
+        bio: user.bio ?? prev.bio,
+      }));
+    }
+  }, [data]);
+
+  const handleSave = async () => {
+    if (!data?.data?.id) return;
+    try {
+      await updateUser(data.data.id, {
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        phone: profileData.phone,
+        bio: profileData.bio,
+        role: profileData.role,
+        company: {
+          name: profileData.companyName,
+          address: profileData.companyAddress,
+          contact_no: profileData.companyContactNo,
+          license_number: profileData.companyLicenseNo,
+          employees_number:
+            profileData.companyEmployeesNumber ??
+            CompanyDetailsDtoEmployeesNumber["1-10_employees"],
+          years_in_business:
+            profileData.companyYearsInBusiness ??
+            CompanyDetailsDtoYearsInBusiness["0-1_years"],
+        },
+      });
+      printMessage("Profile updated", "success");
+      setIsEditing(false);
+    } catch (err) {
+      console.error(err);
+      printMessage("Update failed", "error");
+    }
   };
 
   const handleCancel = () => {
@@ -104,7 +166,7 @@ export default function AdminProfile() {
                 <div className="space-y-2">
                   <Badge className="status-badge status-active">
                     <Shield className="w-3 h-3 mr-1" />
-                    Admin Access
+                    {roleLabels[profileData.role]}
                   </Badge>
                   <Badge className="status-badge status-info">
                     <Award className="w-3 h-3 mr-1" />
@@ -161,15 +223,12 @@ export default function AdminProfile() {
           {/* Main Content */}
           <div className="lg:col-span-3">
             <Tabs defaultValue="personal" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+              <TabsList className="grid w-full grid-cols-3 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                 <TabsTrigger value="personal" className="rounded-lg">
                   Personal Info
                 </TabsTrigger>
                 <TabsTrigger value="permissions" className="rounded-lg">
                   Permissions
-                </TabsTrigger>
-                <TabsTrigger value="notifications" className="rounded-lg">
-                  Notifications
                 </TabsTrigger>
                 <TabsTrigger value="activity" className="rounded-lg">
                   Activity
@@ -203,6 +262,7 @@ export default function AdminProfile() {
                         </Button>
                         <Button
                           onClick={handleSave}
+                          disabled={isPending}
                           className="gradient-accent text-white floating-button"
                         >
                           <Save className="w-4 h-4 mr-2" />
@@ -281,24 +341,9 @@ export default function AdminProfile() {
                         />
                       </div>
                     </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                        Address
-                      </label>
-                      <Input
-                        value={profileData.address}
-                        onChange={(e) =>
-                          setProfileData({
-                            ...profileData,
-                            address: e.target.value,
-                          })
-                        }
-                        disabled={!isEditing}
-                        className="form-input"
-                      />
-                    </div>
-
+                    <CardTitle className="text-xl text-slate-800 dark:text-slate-100">
+                      Company Information
+                    </CardTitle>
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -438,126 +483,6 @@ export default function AdminProfile() {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="notifications">
-                <Card className="glass-card rounded-2xl">
-                  <CardHeader>
-                    <CardTitle className="text-xl text-slate-800 dark:text-slate-100">
-                      Notification Preferences
-                    </CardTitle>
-                    <p className="text-slate-600 dark:text-slate-400">
-                      Manage how you receive administrative notifications
-                    </p>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div>
-                      <h4 className="font-semibold text-slate-800 dark:text-slate-100 mb-4">
-                        Email Notifications
-                      </h4>
-                      <div className="space-y-3">
-                        {[
-                          {
-                            key: "emailClaims",
-                            label: "New claims and claim updates",
-                          },
-                          {
-                            key: "emailPolicies",
-                            label: "Policy changes and renewals",
-                          },
-                          {
-                            key: "emailReports",
-                            label: "Weekly and monthly reports",
-                          },
-                        ].map(({ key, label }) => (
-                          <div
-                            key={key}
-                            className="flex items-center justify-between p-3 bg-slate-50/50 dark:bg-slate-700/30 rounded-lg"
-                          >
-                            <span className="text-slate-700 dark:text-slate-300">
-                              {label}
-                            </span>
-                            <Button
-                              variant={
-                                notifications[key as keyof typeof notifications]
-                                  ? "default"
-                                  : "outline"
-                              }
-                              size="sm"
-                              onClick={() =>
-                                setNotifications({
-                                  ...notifications,
-                                  [key]:
-                                    !notifications[
-                                      key as keyof typeof notifications
-                                    ],
-                                })
-                              }
-                              className="floating-button"
-                            >
-                              {notifications[key as keyof typeof notifications]
-                                ? "On"
-                                : "Off"}
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="font-semibold text-slate-800 dark:text-slate-100 mb-4">
-                        Push Notifications
-                      </h4>
-                      <div className="space-y-3">
-                        {[
-                          {
-                            key: "pushClaims",
-                            label: "Urgent claim notifications",
-                          },
-                          {
-                            key: "pushPolicies",
-                            label: "Policy approval requests",
-                          },
-                          {
-                            key: "pushReports",
-                            label: "Report generation alerts",
-                          },
-                        ].map(({ key, label }) => (
-                          <div
-                            key={key}
-                            className="flex items-center justify-between p-3 bg-slate-50/50 dark:bg-slate-700/30 rounded-lg"
-                          >
-                            <span className="text-slate-700 dark:text-slate-300">
-                              {label}
-                            </span>
-                            <Button
-                              variant={
-                                notifications[key as keyof typeof notifications]
-                                  ? "default"
-                                  : "outline"
-                              }
-                              size="sm"
-                              onClick={() =>
-                                setNotifications({
-                                  ...notifications,
-                                  [key]:
-                                    !notifications[
-                                      key as keyof typeof notifications
-                                    ],
-                                })
-                              }
-                              className="floating-button"
-                            >
-                              {notifications[key as keyof typeof notifications]
-                                ? "On"
-                                : "Off"}
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
               <TabsContent value="activity">
                 <Card className="glass-card rounded-2xl">
                   <CardHeader>
@@ -580,10 +505,10 @@ export default function AdminProfile() {
                               activity.type === "claim"
                                 ? "bg-gradient-to-r from-blue-500 to-cyan-500"
                                 : activity.type === "policy"
-                                ? "bg-gradient-to-r from-emerald-500 to-green-600"
-                                : activity.type === "report"
-                                ? "bg-gradient-to-r from-purple-500 to-indigo-500"
-                                : "bg-gradient-to-r from-orange-500 to-red-500"
+                                  ? "bg-gradient-to-r from-emerald-500 to-green-600"
+                                  : activity.type === "report"
+                                    ? "bg-gradient-to-r from-purple-500 to-indigo-500"
+                                    : "bg-gradient-to-r from-orange-500 to-red-500"
                             }`}
                           >
                             {activity.type === "claim" && (

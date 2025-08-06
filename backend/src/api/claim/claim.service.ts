@@ -5,14 +5,16 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ClaimStatus, UpdateClaimDto } from './dto/requests/update-claim.dto';
+import { UpdateClaimDto } from './dto/requests/update-claim.dto';
 import { CreateClaimDto } from './dto/requests/create-claim.dto';
 import { UploadClaimDocDto } from './dto/requests/upload-claim-doc.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { FindClaimsQueryDto } from './dto/responses/claims-query.dto';
 import { FileService } from '../file/file.service';
 import { ClaimResponseDto } from './dto/responses/claim.dto';
+import { ClaimStatsDto } from './dto/responses/claim-stats.dto';
 import { CommonResponseDto } from 'src/common/common.dto';
+import { ClaimStatus } from 'src/enums';
 @Injectable()
 export class ClaimService {
   constructor(private readonly fileService: FileService) {}
@@ -32,9 +34,9 @@ export class ClaimService {
       .from('claims')
       .insert([
         {
-          policy_id: createClaimDto.policy_id,
-          user_id: user_id,
-          claim_type: createClaimDto.claim_type,
+          coverage_id: createClaimDto.coverage_id,
+          submitted_by: user_id,
+          type: createClaimDto.type,
           priority: createClaimDto.priority,
           amount: createClaimDto.amount,
           status: 'pending',
@@ -107,7 +109,7 @@ export class ClaimService {
   ): Promise<CommonResponseDto<ClaimResponseDto[]>> {
     if (
       query.sortBy &&
-      !['id', 'claim_type', 'amount', 'status', 'submitted_date'].includes(
+      !['id', 'type', 'amount', 'status', 'submitted_date'].includes(
         query.sortBy,
       )
     ) {
@@ -118,19 +120,32 @@ export class ClaimService {
 
     let dbQuery = req.supabase
       .from('claims')
-      .select('*, claim_documents(*)', { count: 'exact' })
+      .select(
+        `*, claim_documents(*), user_details(*), policyholder_details(*), coverage:coverage_id(
+          policy:policy_id(
+            id,
+            name,
+            coverage,
+            premium,
+            admin_details:admin_details!policies_created_by_fkey1(
+              company:companies(name)
+            )
+          )
+        )`,
+        { count: 'exact' },
+      )
       .range(offset, offset + (query.limit || 5) - 1)
       .order(query.sortBy || 'id', {
         ascending: (query.sortOrder || 'asc') === 'asc',
       });
 
-    if (query.category) {
-      dbQuery = dbQuery.eq('claim_type', query.category);
+    if (query.status) {
+      dbQuery = dbQuery.eq('status', query.status);
     }
 
     if (query.search) {
       dbQuery = dbQuery.or(
-        `claim_type.ilike.%${query.search}%,description.ilike.%${query.search}%`,
+        `type.ilike.%${query.search}%,description.ilike.%${query.search}%`,
       );
     }
 
@@ -162,17 +177,37 @@ export class ClaimService {
     );
 
     let urlIndex = 0;
-    const enrichedClaims: ClaimResponseDto[] = data.map((claim) => ({
-      ...claim,
-      claim_documents: Array.isArray(claim.claim_documents)
+    const enrichedClaims: ClaimResponseDto[] = data.map((claim) => {
+      const documents = Array.isArray(claim.claim_documents)
         ? claim.claim_documents.map((doc) => ({
             id: doc.id,
             name: doc.name,
             claim_id: doc.claim_id,
             signedUrl: signedUrls[urlIndex++] || '',
           }))
-        : [],
-    }));
+        : [];
+
+      return {
+        id: claim.id,
+        type: claim.type,
+        amount: claim.amount,
+        status: claim.status,
+        description: claim.description || '',
+        submitted_date: claim.submitted_date,
+        priority: claim.priority,
+        submitted_by:
+          `${claim.user_details?.first_name ?? ''} ${claim.user_details?.last_name ?? ''}`.trim(),
+        claim_documents: documents,
+        policyholder_details: claim.policyholder_details || undefined,
+        policy: {
+          id: claim.coverage?.policy?.id,
+          name: claim.coverage?.policy?.name,
+          coverage: claim.coverage?.policy?.coverage,
+          premium: claim.coverage?.policy?.premium,
+          provider: claim.coverage?.policy?.admin_details?.company?.name,
+        },
+      };
+    });
 
     return new CommonResponseDto<ClaimResponseDto[]>({
       statusCode: 200,
@@ -188,7 +223,19 @@ export class ClaimService {
   ): Promise<CommonResponseDto<ClaimResponseDto>> {
     const { data, error } = await req.supabase
       .from('claims')
-      .select('*, claim_documents(*)')
+      .select(
+        `*, claim_documents(*), user_details(*), policyholder_details(*), coverage:coverage_id(
+          policy:policy_id(
+            id,
+            name,
+            coverage,
+            premium,
+            admin_details:admin_details!policies_created_by_fkey1(
+              company:companies(name)
+            )
+          )
+        )`,
+      )
       .eq('id', id)
       .single();
 
@@ -218,12 +265,23 @@ export class ClaimService {
 
     const claim: ClaimResponseDto = {
       id: data.id,
-      claim_type: data.claim_type,
+      type: data.type,
       amount: data.amount,
       status: data.status,
-      description: data.description,
+      description: data.description || '',
       submitted_date: data.submitted_date,
+      priority: data.priority,
+      submitted_by:
+        `${data.user_details?.first_name ?? ''} ${data.user_details?.last_name ?? ''}`.trim(),
       claim_documents: enrichedDocuments,
+      policyholder_details: data.policyholder_details || undefined,
+      policy: {
+        id: data.coverage?.policy?.id || 0,
+        name: data.coverage?.policy?.name || '',
+        provider: data.coverage?.policy?.admin_details?.company?.name || '',
+        coverage: data.coverage?.policy?.coverage || 0,
+        premium: data.coverage?.policy?.premium || 0,
+      },
     };
 
     return new CommonResponseDto({
@@ -248,9 +306,9 @@ export class ClaimService {
     const { data, error } = await req.supabase
       .from('claims')
       .update({
-        policy_id: updateClaimDto.policy_id,
+        coverage_id: updateClaimDto.coverage_id,
         user_id: user_id,
-        claim_type: updateClaimDto.claim_type,
+        type: updateClaimDto.type,
         priority: updateClaimDto.priority,
         amount: updateClaimDto.amount,
         status: updateClaimDto.status as 'pending' | 'approved' | 'rejected',
@@ -302,7 +360,7 @@ export class ClaimService {
       );
     }
 
-    if (status === ClaimStatus.Approved) {
+    if (status === ClaimStatus.APPROVED) {
       // Fetch the claim to get policy_id and user_id
       const { data: claim, error: claimError } = await req.supabase
         .from('claims')
@@ -312,15 +370,15 @@ export class ClaimService {
       if (!claim || claimError) {
         throw new Error('Failed to fetch claim for utilization update');
       }
-      if (claim.policy_id == null || claim.user_id == null) {
+      if (claim.coverage_id == null || claim.submitted_by == null) {
         throw new Error('Claim is missing policy_id or user_id');
       }
       // Fetch the coverage for this user and policy
       const { data: coverage, error: coverageError } = await req.supabase
         .from('coverage')
         .select('*')
-        .eq('policy_id', claim.policy_id)
-        .eq('user_id', claim.user_id)
+        .eq('id', claim.coverage_id)
+        .eq('submitted_by', claim.submitted_by)
         .single();
       if (!coverage || coverageError) {
         throw new Error('Failed to fetch coverage for utilization update');
@@ -329,7 +387,7 @@ export class ClaimService {
       const { data: policy, error: policyError } = await req.supabase
         .from('policies')
         .select('coverage')
-        .eq('id', claim.policy_id)
+        .eq('id', coverage.policy_id)
         .single();
       if (!policy || policyError || typeof policy.coverage !== 'number') {
         throw new Error('Failed to fetch policy for utilization update');
@@ -339,8 +397,8 @@ export class ClaimService {
         await req.supabase
           .from('claims')
           .select('amount')
-          .eq('policy_id', claim.policy_id)
-          .eq('user_id', claim.user_id)
+          .eq('coverage_id', coverage.id)
+          .eq('user_id', claim.submitted_by)
           .eq('status', 'approved');
       if (!approvedClaims || approvedClaimsError) {
         throw new Error(
@@ -354,7 +412,6 @@ export class ClaimService {
       const newUtilizationRate =
         policy.coverage > 0 ? (totalApprovedAmount / policy.coverage) * 100 : 0;
 
-      console.log('newUtilizationRate', newUtilizationRate);
       // Update the coverage utilization_rate
       const { error: updateCoverageError } = await req.supabase
         .from('coverage')
@@ -473,18 +530,45 @@ export class ClaimService {
     });
   }
 
+  async getStats(
+    req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto<ClaimStatsDto>> {
+    const supabase = req.supabase;
+    const counts: Record<string, number> = {};
+    const statuses = Object.values(ClaimStatus);
+    for (const status of statuses) {
+      const { count, error } = await supabase
+        .from('claims')
+        .select('id', { head: true, count: 'exact' })
+        .eq('status', status);
+
+      if (error) {
+        throw new InternalServerErrorException(
+          `Failed to count ${status} claims`,
+        );
+      }
+      counts[status] = count || 0;
+    }
+
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Claim statistics retrieved successfully',
+      data: new ClaimStatsDto({
+        pending: counts['pending'],
+        claimed: counts['claimed'],
+        approved: counts['approved'],
+        rejected: counts['rejected'],
+      }),
+    });
+  }
+
   async attachClaimTypesToPolicy(
     claimTypeNames: string[],
     policyId: number,
     req: AuthenticatedRequest,
   ) {
-    console.log('Attaching claim types to policy:', {
-      claimTypeNames,
-      policyId,
-    });
     for (const rawName of claimTypeNames) {
       const name = rawName.toLowerCase();
-      console.log('Processing claim type:', name);
       // Check if claim type already exists
       const { data: existingType, error: lookupError } = await req.supabase
         .from('claim_types')

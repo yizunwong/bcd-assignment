@@ -18,12 +18,43 @@ export class ClaimDocumentResponseDto {
   signedUrl!: string;
 }
 
+export class PolicyHolderDetailsDto {
+  @ApiProperty()
+  user_id!: string;
+
+  @ApiProperty()
+  date_of_birth!: string;
+
+  @ApiProperty()
+  occupation!: string;
+
+  @ApiProperty()
+  address!: string;
+}
+
+export class PolicySummaryDto {
+  @ApiProperty()
+  id!: number;
+
+  @ApiProperty()
+  name!: string;
+
+  @ApiProperty()
+  provider!: string;
+
+  @ApiProperty()
+  coverage!: number;
+
+  @ApiProperty()
+  premium!: number;
+}
+
 export class ClaimResponseDto {
   @ApiProperty()
   id!: number;
 
   @ApiProperty()
-  claim_type!: string;
+  type!: string;
 
   @ApiProperty()
   amount!: number;
@@ -32,11 +63,23 @@ export class ClaimResponseDto {
   status!: string;
 
   @ApiProperty()
-  description!: string | null;
+  description!: string;
 
   @ApiProperty()
   submitted_date!: string;
 
+  @ApiProperty()
+  priority!: string;
+
+  @ApiProperty()
+  submitted_by!: string;
+
   @ApiProperty({ type: [ClaimDocumentResponseDto] })
   claim_documents!: ClaimDocumentResponseDto[];
+
+  @ApiProperty({ type: PolicyHolderDetailsDto })
+  policyholder_details!: PolicyHolderDetailsDto;
+
+  @ApiProperty({ type: PolicySummaryDto })
+  policy!: PolicySummaryDto;
 }

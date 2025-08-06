@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { usePolicyQuery } from "@/hooks/usePolicies";
+import { useTransactionStore } from "@/store/useTransactionStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,30 +35,35 @@ import Link from "next/link";
 export default function PaymentConfirmation() {
   const [copied, setCopied] = useState(false);
   const [currentStep] = useState(3);
+  const transaction = useTransactionStore((state) => state.data);
+  const { data: policy } = usePolicyQuery(transaction.policyId);
 
-  // Mock transaction data - in real app, this would come from payment processing
   const transactionData = {
-    id: "TX-2024-001234",
-    blockHash: "0x742d35Cc6634C0532925a3b8D4C0532925a3b8D4",
-    amount: "0.72 ETH",
-    usdAmount: "$2,520.00",
-    paymentMethod: "ETH",
-    timestamp: new Date().toISOString(),
+    id: transaction.transactionId,
+    blockHash: transaction.blockHash,
+    amount: `${transaction.amount} ETH`,
+    usdAmount: `$${transaction.usdAmount.toFixed(2)}`,
+    paymentMethod: transaction.paymentMethod,
+    timestamp: transaction.timestamp || new Date().toISOString(),
     networkFee: "0.02 ETH",
-    status: "confirmed",
-    confirmations: 12,
+    status: transaction.status,
+    confirmations: transaction.confirmations,
   };
 
-  const policyData = {
-    id: "POL-2024-5678",
-    name: "Comprehensive Health Coverage",
-    category: "health",
-    provider: "HealthSecure",
-    coverage: "$100,000",
-    duration: "12 months",
-    effectiveDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
-    expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year from now
-  };
+  const policyData = policy?.data
+    ? {
+        id: policy.data.id,
+        name: policy.data.name,
+        category: policy.data.category,
+        provider: policy.data.provider,
+        coverage: `$${policy.data.coverage.toLocaleString()}`,
+        duration: `${policy.data.duration_days} days`,
+        effectiveDate: new Date().toISOString(),
+        expiryDate: new Date(
+          Date.now() + policy.data.duration_days * 24 * 60 * 60 * 1000,
+        ).toISOString(),
+      }
+    : null;
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -131,6 +137,10 @@ export default function PaymentConfirmation() {
       timeframe: "Available now",
     },
   ];
+
+  if (!policyData || !transaction.transactionId) {
+    return <div className="p-8">Loading...</div>;
+  }
 
   const CategoryIcon = getCategoryIcon(policyData.category);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,478 +39,123 @@ import {
   FileText,
   Download,
 } from "lucide-react";
+import PolicyDetailsDialog, {
+  Policy,
+} from "@/app/(admin)/admin/policies/components/PolicyDetailsDialog";
+import EditPolicyDialog from "@/app/(admin)/admin/policies/components/EditPolicyDialog";
+import {
+  usePoliciesQuery,
+  useCreatePolicyMutation,
+  useUploadPolicyDocumentsMutation,
+  usePolicyStatsQuery,
+  useUpdatePolicyMutation,
+} from "@/hooks/usePolicies";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useMeQuery } from "@/hooks/useAuth";
+import { useToast } from "@/components/shared/ToastProvider";
+import {
+  PolicyControllerFindAllCategory,
+  CreatePolicyDtoCategory,
+  PolicyControllerFindAllParams,
+} from "@/api";
 
 export default function ManagePolicies() {
-  const [activeTab, setActiveTab] = useState("active");
+  const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterCategory, setFilterCategory] = useState<
+    PolicyControllerFindAllCategory | "all"
+  >("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedPolicy, setSelectedPolicy] = useState<any>(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(15);
-  const [uploadedTermsFile, setUploadedTermsFile] = useState<File | null>(null);
+  const [uploadedTermsFiles, setUploadedTermsFiles] = useState<File[]>([]);
   const [dragActive, setDragActive] = useState(false);
+  const { printMessage } = useToast();
 
-  const [newPolicy, setNewPolicy] = useState({
+  const { data: meData } = useMeQuery();
+  const { createPolicy, error: createError } = useCreatePolicyMutation();
+  const { uploadPolicyDocuments } = useUploadPolicyDocumentsMutation();
+  const { data: statsData } = usePolicyStatsQuery();
+  const { updatePolicy, error: updateError } = useUpdatePolicyMutation();
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  const [newPolicy, setNewPolicy] = useState<{
+    name: string;
+    category: "" | PolicyControllerFindAllCategory;
+    coverage: number;
+    premium: number;
+    duration: number;
+    description: string;
+    claimTypes: string[];
+  }>({
     name: "",
     category: "",
-    coverage: "",
-    premium: "",
-    duration: "",
+    coverage: 0,
+    premium: 0,
+    duration: 0,
     description: "",
     claimTypes: [""],
   });
 
-  const policies = [
-    {
-      id: "POL-001",
-      name: "Comprehensive Health Coverage",
-      category: "health",
-      provider: "HealthSecure",
-      coverage: "$100,000",
-      premium: "0.8 ETH/month",
-      status: "active",
-      sales: 245,
-      revenue: "196 ETH",
-      created: "2024-01-15",
-      lastUpdated: "2024-11-20",
-      description:
-        "Complete healthcare coverage with blockchain-verified claims processing",
-      features: [
-        "Emergency Care",
-        "Prescription Drugs",
-        "Mental Health",
-        "Dental Care",
-        "Vision Care",
-      ],
-      terms:
-        "Standard health insurance terms with 30-day waiting period for pre-existing conditions.",
-    },
-    {
-      id: "POL-002",
-      name: "Global Travel Protection",
-      category: "travel",
-      provider: "TravelChain",
-      coverage: "$50,000",
-      premium: "0.2 ETH/trip",
-      status: "active",
-      sales: 189,
-      revenue: "37.8 ETH",
-      created: "2024-02-10",
-      lastUpdated: "2024-12-01",
-      description: "Worldwide travel insurance with instant claim verification",
-      features: [
-        "Trip Cancellation",
-        "Medical Emergency",
-        "Lost Luggage",
-        "24/7 Support",
-        "Flight Delay",
-      ],
-      terms:
-        "Coverage begins 24 hours after purchase. Maximum trip duration 90 days.",
-    },
-    {
-      id: "POL-003",
-      name: "Weather-Based Crop Insurance",
-      category: "crop",
-      provider: "AgriBlock",
-      coverage: "$200,000",
-      premium: "2.5 ETH/season",
-      status: "active",
-      sales: 156,
-      revenue: "390 ETH",
-      created: "2024-03-01",
-      lastUpdated: "2024-10-15",
-      description: "Smart contract insurance using IoT and weather data",
-      features: [
-        "Weather Oracle",
-        "Yield Protection",
-        "Automated Payouts",
-        "Satellite Monitoring",
-      ],
-      terms:
-        "Coverage based on weather oracle data. Automatic payouts triggered by predefined conditions.",
-    },
-    {
-      id: "POL-004",
-      name: "Premium Health Plus",
-      category: "health",
-      provider: "MediChain",
-      coverage: "$250,000",
-      premium: "1.5 ETH/month",
-      status: "draft",
-      sales: 0,
-      revenue: "0 ETH",
-      created: "2024-12-01",
-      lastUpdated: "2024-12-15",
-      description:
-        "Premium healthcare with global coverage and wellness benefits",
-      features: [
-        "Specialized Care",
-        "International Coverage",
-        "Wellness Programs",
-        "Telemedicine",
-      ],
-      terms: "Premium tier with enhanced benefits and global coverage network.",
-    },
-    {
-      id: "POL-005",
-      name: "Family Health Shield",
-      category: "health",
-      provider: "FamilyCare",
-      coverage: "$300,000",
-      premium: "1.2 ETH/month",
-      status: "active",
-      sales: 98,
-      revenue: "117.6 ETH",
-      created: "2024-06-01",
-      lastUpdated: "2024-11-30",
-      description: "Comprehensive family health insurance with pediatric focus",
-      features: [
-        "Family Coverage",
-        "Pediatric Care",
-        "Maternity Benefits",
-        "Preventive Care",
-      ],
-      terms:
-        "Family coverage for up to 6 members with comprehensive pediatric benefits.",
-    },
-    {
-      id: "POL-006",
-      name: "Business Travel Elite",
-      category: "travel",
-      provider: "CorpSecure",
-      coverage: "$100,000",
-      premium: "0.5 ETH/trip",
-      status: "active",
-      sales: 67,
-      revenue: "33.5 ETH",
-      created: "2024-04-15",
-      lastUpdated: "2024-11-25",
-      description: "Executive travel insurance for business professionals",
-      features: [
-        "Business Equipment",
-        "Meeting Cancellation",
-        "Executive Protection",
-        "Concierge",
-      ],
-      terms:
-        "Premium business travel coverage with executive-level benefits and support.",
-    },
-    {
-      id: "POL-007",
-      name: "Organic Crop Protection",
-      category: "crop",
-      provider: "GreenChain",
-      coverage: "$150,000",
-      premium: "1.8 ETH/season",
-      status: "active",
-      sales: 89,
-      revenue: "160.2 ETH",
-      created: "2024-05-20",
-      lastUpdated: "2024-10-30",
-      description: "Specialized insurance for organic farming operations",
-      features: [
-        "Organic Certification",
-        "Pest Protection",
-        "Quality Guarantee",
-        "Market Price Shield",
-      ],
-      terms:
-        "Organic farming insurance with certification protection and quality guarantees.",
-    },
-    {
-      id: "POL-008",
-      name: "Senior Health Care",
-      category: "health",
-      provider: "ElderCare",
-      coverage: "$200,000",
-      premium: "1.0 ETH/month",
-      status: "active",
-      sales: 134,
-      revenue: "134 ETH",
-      created: "2024-03-10",
-      lastUpdated: "2024-11-15",
-      description: "Specialized health insurance designed for seniors",
-      features: [
-        "Senior Specialists",
-        "Long-term Care",
-        "Home Health",
-        "Prescription Coverage",
-      ],
-      terms:
-        "Senior-focused health insurance with specialized care and long-term benefits.",
-    },
-    {
-      id: "POL-009",
-      name: "Adventure Travel Coverage",
-      category: "travel",
-      provider: "AdventureSecure",
-      coverage: "$75,000",
-      premium: "0.3 ETH/trip",
-      status: "active",
-      sales: 45,
-      revenue: "13.5 ETH",
-      created: "2024-07-01",
-      lastUpdated: "2024-11-10",
-      description:
-        "Specialized coverage for adventure and extreme sports travel",
-      features: [
-        "Extreme Sports",
-        "Mountain Rescue",
-        "Equipment Coverage",
-        "Emergency Evacuation",
-      ],
-      terms:
-        "Adventure travel insurance covering extreme sports and high-risk activities.",
-    },
-    {
-      id: "POL-010",
-      name: "Livestock Protection Plan",
-      category: "crop",
-      provider: "RanchGuard",
-      coverage: "$500,000",
-      premium: "3.0 ETH/season",
-      status: "active",
-      sales: 23,
-      revenue: "69 ETH",
-      created: "2024-08-15",
-      lastUpdated: "2024-11-05",
-      description: "Comprehensive livestock and ranch protection insurance",
-      features: [
-        "Disease Coverage",
-        "Theft Protection",
-        "Feed Cost Insurance",
-        "Veterinary Care",
-      ],
-      terms:
-        "Livestock insurance covering disease, theft, and operational risks.",
-    },
-    {
-      id: "POL-011",
-      name: "Digital Nomad Travel",
-      category: "travel",
-      provider: "NomadProtect",
-      coverage: "$60,000",
-      premium: "0.25 ETH/month",
-      status: "active",
-      sales: 78,
-      revenue: "19.5 ETH",
-      created: "2024-09-01",
-      lastUpdated: "2024-12-01",
-      description:
-        "Travel insurance tailored for digital nomads and remote workers",
-      features: [
-        "Global Coverage",
-        "Work Equipment",
-        "Visa Assistance",
-        "Remote Work Support",
-      ],
-      terms:
-        "Digital nomad insurance with global coverage and remote work protection.",
-    },
-    {
-      id: "POL-012",
-      name: "Student Health Plan",
-      category: "health",
-      provider: "StudentCare",
-      coverage: "$75,000",
-      premium: "0.4 ETH/month",
-      status: "active",
-      sales: 156,
-      revenue: "62.4 ETH",
-      created: "2024-08-01",
-      lastUpdated: "2024-11-20",
-      description: "Affordable health insurance designed for students",
-      features: [
-        "Campus Health",
-        "Mental Health",
-        "Sports Injuries",
-        "Prescription Drugs",
-      ],
-      terms:
-        "Student health insurance with campus-specific benefits and mental health support.",
-    },
-    {
-      id: "POL-013",
-      name: "Greenhouse Crop Insurance",
-      category: "crop",
-      provider: "GreenHouse Pro",
-      coverage: "$180,000",
-      premium: "2.2 ETH/season",
-      status: "active",
-      sales: 34,
-      revenue: "74.8 ETH",
-      created: "2024-04-01",
-      lastUpdated: "2024-10-20",
-      description:
-        "Specialized insurance for greenhouse and controlled environment agriculture",
-      features: [
-        "Climate Control",
-        "Pest Management",
-        "Equipment Coverage",
-        "Yield Guarantee",
-      ],
-      terms:
-        "Greenhouse agriculture insurance with climate control and equipment protection.",
-    },
-    {
-      id: "POL-014",
-      name: "Luxury Travel Protection",
-      category: "travel",
-      provider: "LuxuryGuard",
-      coverage: "$200,000",
-      premium: "0.8 ETH/trip",
-      status: "active",
-      sales: 29,
-      revenue: "23.2 ETH",
-      created: "2024-06-15",
-      lastUpdated: "2024-11-28",
-      description: "Premium travel insurance for luxury and high-end travel",
-      features: [
-        "Concierge Service",
-        "Private Medical",
-        "Luxury Transport",
-        "VIP Support",
-      ],
-      terms: "Luxury travel insurance with premium services and VIP support.",
-    },
-    {
-      id: "POL-015",
-      name: "Aquaculture Insurance",
-      category: "crop",
-      provider: "AquaSecure",
-      coverage: "$400,000",
-      premium: "2.8 ETH/season",
-      status: "active",
-      sales: 18,
-      revenue: "50.4 ETH",
-      created: "2024-05-01",
-      lastUpdated: "2024-10-25",
-      description:
-        "Comprehensive insurance for aquaculture and fish farming operations",
-      features: [
-        "Fish Mortality",
-        "Equipment Coverage",
-        "Water Quality",
-        "Disease Protection",
-      ],
-      terms:
-        "Aquaculture insurance covering fish mortality and operational risks.",
-    },
-    {
-      id: "POL-016",
-      name: "Telehealth Plus",
-      category: "health",
-      provider: "TeleHealth Pro",
-      coverage: "$120,000",
-      premium: "0.6 ETH/month",
-      status: "draft",
-      sales: 0,
-      revenue: "0 ETH",
-      created: "2024-11-01",
-      lastUpdated: "2024-12-10",
-      description:
-        "Modern health insurance focused on telehealth and digital care",
-      features: [
-        "24/7 Telehealth",
-        "Remote Monitoring",
-        "Digital Prescriptions",
-        "AI Diagnostics",
-      ],
-      terms:
-        "Telehealth-focused insurance with digital care and remote monitoring.",
-    },
-    {
-      id: "POL-017",
-      name: "Cruise Travel Insurance",
-      category: "travel",
-      provider: "CruiseSecure",
-      coverage: "$80,000",
-      premium: "0.35 ETH/trip",
-      status: "active",
-      sales: 52,
-      revenue: "18.2 ETH",
-      created: "2024-07-15",
-      lastUpdated: "2024-11-12",
-      description: "Specialized travel insurance for cruise vacations",
-      features: [
-        "Shore Excursions",
-        "Cabin Coverage",
-        "Medical at Sea",
-        "Trip Interruption",
-      ],
-      terms: "Cruise travel insurance with specialized maritime coverage.",
-    },
-    {
-      id: "POL-018",
-      name: "Vertical Farm Coverage",
-      category: "crop",
-      provider: "VerticalGrow",
-      coverage: "$250,000",
-      premium: "2.4 ETH/season",
-      status: "active",
-      sales: 12,
-      revenue: "28.8 ETH",
-      created: "2024-09-15",
-      lastUpdated: "2024-12-05",
-      description:
-        "Insurance for vertical farming and indoor agriculture systems",
-      features: [
-        "LED Systems",
-        "Hydroponic Equipment",
-        "Climate Control",
-        "Automation Coverage",
-      ],
-      terms:
-        "Vertical farming insurance with technology and automation protection.",
-    },
-    {
-      id: "POL-019",
-      name: "Emergency Health Response",
-      category: "health",
-      provider: "EmergencyMed",
-      coverage: "$150,000",
-      premium: "0.9 ETH/month",
-      status: "draft",
-      sales: 0,
-      revenue: "0 ETH",
-      created: "2024-11-15",
-      lastUpdated: "2024-12-08",
-      description: "Rapid response health insurance for emergency situations",
-      features: [
-        "Emergency Response",
-        "Ambulance Service",
-        "Trauma Care",
-        "Critical Care",
-      ],
-      terms: "Emergency health insurance with rapid response and trauma care.",
-    },
-    {
-      id: "POL-020",
-      name: "International Business Travel",
-      category: "travel",
-      provider: "GlobalBiz",
-      coverage: "$120,000",
-      premium: "0.45 ETH/trip",
-      status: "active",
-      sales: 38,
-      revenue: "17.1 ETH",
-      created: "2024-08-01",
-      lastUpdated: "2024-11-18",
-      description: "Comprehensive international business travel insurance",
-      features: [
-        "Global Coverage",
-        "Business Interruption",
-        "Equipment Protection",
-        "Legal Assistance",
-      ],
-      terms:
-        "International business travel insurance with comprehensive global coverage.",
-    },
-  ];
+  const hasFilters = filterCategory !== "all" || !!debouncedSearchTerm;
 
-  const getCategoryIcon = (category: string) => {
+  const filters = hasFilters
+    ? {
+        ...(filterCategory !== "all" && {
+          category: filterCategory as PolicyControllerFindAllCategory,
+        }),
+        ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
+      }
+    : {};
+
+  const params: PolicyControllerFindAllParams = {
+    ...(filters as PolicyControllerFindAllParams),
+    page: currentPage,
+    limit: itemsPerPage,
+  };
+  if (meData?.data?.id) {
+    params.userId = meData.data.id;
+  }
+
+  const {
+    data: policiesData,
+    isLoading,
+    error,
+  } = usePoliciesQuery(params);
+
+  useEffect(() => {}, [policiesData]);
+
+  useEffect(() => {
+    if (error) {
+      printMessage(
+        "Failed to load policies: " +
+          (typeof error === "string" ? error : "Unknown error")
+      );
+    }
+  }, [error]);
+
+  const policies: Policy[] = (policiesData?.data || []).map((policy) => ({
+    id: policy.id,
+    name: policy.name,
+    category: policy.category as PolicyControllerFindAllCategory,
+    provider: policy.provider,
+    coverage: policy.coverage,
+    premium: policy.premium,
+    status: policy.status,
+    sales: policy.sales,
+    revenue: policy.revenue,
+    created: undefined,
+    lastUpdated: undefined,
+    description:
+      typeof policy.description === "string" ? policy.description : "",
+    features: policy.claim_types || [],
+    terms: "",
+  }));
+
+  const getCategoryIcon = (category: PolicyControllerFindAllCategory) => {
     switch (category) {
       case "health":
         return Heart;
@@ -540,31 +185,26 @@ export default function ManagePolicies() {
     switch (status) {
       case "active":
         return "status-active";
-      case "draft":
+      case "deactivated":
         return "status-pending";
-      case "inactive":
-        return "bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300";
       default:
         return "bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300";
     }
   };
 
   const filteredPolicies = useMemo(() => {
-    let filtered = policies.filter((policy) => {
-      const matchesTab = activeTab === "all" || policy.status === activeTab;
-      const matchesSearch =
-        policy.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        policy.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory =
-        filterCategory === "all" || policy.category === filterCategory;
-      return matchesTab && matchesSearch && matchesCategory;
-    });
+    if (!policies) return [];
 
-    // Sort by creation date (newest first)
-    return filtered.sort(
-      (a, b) => new Date(b.created).getTime() - new Date(a.created).getTime()
+    const filtered = policies.filter(
+      (policy) => activeTab === "all" || policy.status === activeTab
     );
-  }, [activeTab, searchTerm, filterCategory]);
+
+    return filtered.sort((a, b) => {
+      const dateA = a.created ? new Date(a.created) : new Date(0);
+      const dateB = b.created ? new Date(b.created) : new Date(0);
+      return dateB.getTime() - dateA.getTime();
+    });
+  }, [policies, activeTab]);
 
   const totalPages = Math.ceil(filteredPolicies.length / itemsPerPage);
   const paginatedPolicies = filteredPolicies.slice(
@@ -578,20 +218,86 @@ export default function ManagePolicies() {
     setCurrentPage(1);
   };
 
-  const handleCreatePolicy = () => {
-    console.log("Creating policy:", newPolicy);
+  const openDetails = (policy: Policy) => {
+    setSelectedPolicy(policy);
+    setShowDetails(true);
+  };
+
+  const openEdit = (policy: Policy) => {
+    setSelectedPolicy(policy);
+    setShowEdit(true);
+  };
+
+  const closeDialogs = () => {
+    setShowDetails(false);
+    setShowEdit(false);
+  };
+
+  const handleCreatePolicy = async () => {
+    try {
+      const res = await createPolicy({
+        name: newPolicy.name,
+        category: newPolicy.category as CreatePolicyDtoCategory,
+        coverage: newPolicy.coverage,
+        durationDays: newPolicy.duration,
+        premium: newPolicy.premium,
+        rating: 0,
+        description: newPolicy.description,
+        claimTypes: newPolicy.claimTypes.filter((c) => c),
+      });
+      const createdId = (res as any)?.data?.id;
+      if (createdId && uploadedTermsFiles.length) {
+        await uploadPolicyDocuments(String(createdId), {
+          files: uploadedTermsFiles,
+        });
+      }
+      printMessage(
+        (res as any)?.message || "Policy created successfully",
+        "success"
+      );
+    } catch (err) {
+      printMessage(
+        typeof err === "string"
+          ? err
+          : createError || "Failed to create policy",
+        "error"
+      );
+    }
+
     setIsCreateDialogOpen(false);
-    // Reset form
     setNewPolicy({
       name: "",
       category: "",
-      coverage: "",
-      premium: "",
-      duration: "",
+      coverage: 0,
+      premium: 0,
+      duration: 0,
       description: "",
       claimTypes: [""],
     });
-    setUploadedTermsFile(null);
+    setUploadedTermsFiles([]);
+  };
+
+  const handleUpdatePolicy = async (policy: Policy) => {
+    const parseNumber = (value: string | number | undefined) =>
+      typeof value === "string" ? Number(value.replace(/[^\d.]/g, "")) : value || 0;
+    try {
+      await updatePolicy(String(policy.id), {
+        name: policy.name,
+        category: policy.category as PolicyControllerFindAllCategory,
+        coverage: parseNumber(policy.coverage),
+        premium: parseNumber(policy.premium),
+        description: policy.description,
+        claimTypes: policy.features || [],
+      });
+      printMessage("Policy updated successfully", "success");
+    } catch (err) {
+      printMessage(
+        typeof err === "string"
+          ? err
+          : updateError || "Failed to update policy",
+        "error"
+      );
+    }
   };
 
   const addClaimType = () => {
@@ -627,35 +333,56 @@ export default function ManagePolicies() {
     }
   };
 
+  const addFiles = (files: FileList) => {
+    const accepted = Array.from(files).filter(
+      (file) => file.type === "application/pdf" || file.name.endsWith(".pdf")
+    );
+    if (accepted.length + uploadedTermsFiles.length > 3) {
+      alert("You can only upload up to 3 documents.");
+      accepted.splice(3 - uploadedTermsFiles.length);
+    }
+    setUploadedTermsFiles([...uploadedTermsFiles, ...accepted]);
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
 
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
-        setUploadedTermsFile(file);
-      } else {
-        alert("Please upload a PDF file for terms and conditions.");
-      }
+    if (e.dataTransfer.files && e.dataTransfer.files.length) {
+      addFiles(e.dataTransfer.files);
     }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
-        setUploadedTermsFile(file);
-      } else {
-        alert("Please upload a PDF file for terms and conditions.");
-      }
+    if (e.target.files && e.target.files.length) {
+      addFiles(e.target.files);
     }
   };
 
-  const removeUploadedFile = () => {
-    setUploadedTermsFile(null);
+  const removeUploadedFile = (index: number) => {
+    setUploadedTermsFiles((files) => files.filter((_, i) => i !== index));
   };
+
+  // Error state (in case not caught by useEffect)
+  if (error) {
+    return (
+      <div className="section-spacing">
+        <div className="max-w-7xl mx-auto text-center py-12">
+          <Shield className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-2">
+            Failed to load policies
+          </h3>
+          <p className="text-slate-500 dark:text-slate-500">
+            {typeof error === "string"
+              ? error
+              : "An error occurred while fetching policies."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="section-spacing">
       <div className="max-w-7xl mx-auto">
@@ -708,7 +435,10 @@ export default function ManagePolicies() {
                     <Select
                       value={newPolicy.category}
                       onValueChange={(value) =>
-                        setNewPolicy({ ...newPolicy, category: value })
+                        setNewPolicy({
+                          ...newPolicy,
+                          category: value as PolicyControllerFindAllCategory,
+                        })
                       }
                     >
                       <SelectTrigger className="form-input">
@@ -730,10 +460,14 @@ export default function ManagePolicies() {
                     </label>
                     <Input
                       value={newPolicy.coverage}
+                      type="number"
+                      step={0.01}
                       onChange={(e) =>
-                        setNewPolicy({ ...newPolicy, coverage: e.target.value })
+                        setNewPolicy({
+                          ...newPolicy,
+                          coverage: Number(e.target.value),
+                        })
                       }
-                      placeholder="e.g., $100,000"
                       className="form-input"
                     />
                   </div>
@@ -743,23 +477,29 @@ export default function ManagePolicies() {
                     </label>
                     <Input
                       value={newPolicy.premium}
+                      type="number"
+                      step={0.01}
                       onChange={(e) =>
-                        setNewPolicy({ ...newPolicy, premium: e.target.value })
+                        setNewPolicy({
+                          ...newPolicy,
+                          premium: parseFloat(e.target.value),
+                        })
                       }
-                      placeholder="e.g., 0.8 ETH/month"
                       className="form-input"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      Duration
+                      Duration (in Days)
                     </label>
                     <Input
                       value={newPolicy.duration}
                       onChange={(e) =>
-                        setNewPolicy({ ...newPolicy, duration: e.target.value })
+                        setNewPolicy({
+                          ...newPolicy,
+                          duration: Number(e.target.value),
+                        })
                       }
-                      placeholder="e.g., 12 months"
                       className="form-input"
                     />
                   </div>
@@ -828,7 +568,7 @@ export default function ManagePolicies() {
                       Terms & Conditions Document
                     </label>
 
-                    {!uploadedTermsFile ? (
+                    {uploadedTermsFiles.length === 0 ? (
                       <div
                         className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
                           dragActive
@@ -849,49 +589,74 @@ export default function ManagePolicies() {
                               type="file"
                               className="hidden"
                               accept=".pdf"
+                              multiple
                               onChange={handleFileSelect}
                             />
                           </label>
                         </p>
                         <p className="text-sm text-slate-500 dark:text-slate-500">
-                          PDF format only • Max 10MB
+                          PDF format only • Max 10MB • up to 3 files
                         </p>
                       </div>
                     ) : (
-                      <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-600">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                            <FileText className="w-5 h-5 text-red-600 dark:text-red-400" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-slate-800 dark:text-slate-100">
-                              {uploadedTermsFile.name}
-                            </p>
-                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                              {(uploadedTermsFile.size / 1024 / 1024).toFixed(
-                                2
-                              )}{" "}
-                              MB
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 w-8 p-0"
+                      <div className="space-y-2">
+                        {uploadedTermsFiles.map((file, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-600"
                           >
-                            <Download className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={removeUploadedFile}
-                            className="h-8 w-8 p-0 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                                <FileText className="w-5 h-5 text-red-600 dark:text-red-400" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-slate-800 dark:text-slate-100">
+                                  {file.name}
+                                </p>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">
+                                  {(file.size / 1024 / 1024).toFixed(2)} MB
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0"
+                              >
+                                <Download className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => removeUploadedFile(index)}
+                                className="h-8 w-8 p-0 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                        {uploadedTermsFiles.length < 3 && (
+                          <div
+                            className="border-2 border-dashed rounded-xl p-4 text-center cursor-pointer bg-slate-50/50 dark:bg-slate-700/30"
+                            onDragEnter={handleDrag}
+                            onDragLeave={handleDrag}
+                            onDragOver={handleDrag}
+                            onDrop={handleDrop}
                           >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
+                            <label className="text-emerald-600 dark:text-emerald-400 cursor-pointer hover:text-emerald-700 dark:hover:text-emerald-300">
+                              Add more files
+                              <input
+                                type="file"
+                                className="hidden"
+                                accept=".pdf"
+                                multiple
+                                onChange={handleFileSelect}
+                              />
+                            </label>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -929,7 +694,7 @@ export default function ManagePolicies() {
                 <Badge className="status-badge status-active">Active</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {policies.filter((p) => p.status === "active").length}
+                {statsData?.data?.activePolicies ?? 0}
               </h3>
               <p className="text-slate-600 dark:text-slate-400">
                 Active Policies
@@ -943,13 +708,15 @@ export default function ManagePolicies() {
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
                   <Edit className="w-6 h-6 text-white" />
                 </div>
-                <Badge className="status-badge status-pending">Draft</Badge>
+                <Badge className="status-badge status-pending">
+                  Deactivated
+                </Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {policies.filter((p) => p.status === "draft").length}
+                {statsData?.data?.deactivatedPolicies ?? 0}
               </h3>
               <p className="text-slate-600 dark:text-slate-400">
-                Draft Policies
+                Deactivated Policies
               </p>
             </CardContent>
           </Card>
@@ -963,7 +730,7 @@ export default function ManagePolicies() {
                 <Badge className="status-badge status-info">Total</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {policies.reduce((sum, p) => sum + p.sales, 0)}
+                {statsData?.data?.totalSales ?? 0}
               </h3>
               <p className="text-slate-600 dark:text-slate-400">Total Sales</p>
             </CardContent>
@@ -978,7 +745,7 @@ export default function ManagePolicies() {
                 <Badge className="status-badge status-active">Revenue</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                1,341
+                {statsData?.data?.totalRevenue ?? 0}
               </h3>
               <p className="text-slate-600 dark:text-slate-400">
                 Total ETH Revenue
@@ -998,14 +765,14 @@ export default function ManagePolicies() {
               className="space-y-4"
             >
               <TabsList className="grid w-full grid-cols-3 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                <TabsTrigger value="all" className="rounded-lg">
+                  All Policies
+                </TabsTrigger>
                 <TabsTrigger value="active" className="rounded-lg">
                   Active Policies
                 </TabsTrigger>
-                <TabsTrigger value="draft" className="rounded-lg">
-                  Draft Policies
-                </TabsTrigger>
-                <TabsTrigger value="all" className="rounded-lg">
-                  All Policies
+                <TabsTrigger value="deactivated" className="rounded-lg">
+                  Deactivated Policies
                 </TabsTrigger>
               </TabsList>
 
@@ -1035,7 +802,11 @@ export default function ManagePolicies() {
                   <Select
                     value={filterCategory}
                     onValueChange={(value) =>
-                      handleFilterChange(() => setFilterCategory(value))
+                      handleFilterChange(() =>
+                        setFilterCategory(
+                          value as PolicyControllerFindAllCategory | "all"
+                        )
+                      )
                     }
                   >
                     <SelectTrigger className="w-full md:w-48 form-input">
@@ -1073,64 +844,65 @@ export default function ManagePolicies() {
 
         {/* Policies Grid */}
         <div className="grid lg:grid-cols-2 gap-6 mb-8">
-          {paginatedPolicies.map((policy) => {
-            const CategoryIcon = getCategoryIcon(policy.category);
-            return (
-              <Card
-                key={policy.id}
-                className="glass-card rounded-2xl card-hover"
-              >
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div
-                        className={`w-12 h-12 rounded-xl bg-gradient-to-r ${getCategoryColor(policy.category)} flex items-center justify-center`}
-                      >
-                        <CategoryIcon className="w-6 h-6 text-white" />
+          {isLoading ? (
+            <div className="col-span-full text-center py-12">
+              <Shield className="w-16 h-16 text-slate-400 mx-auto mb-4 animate-spin" />
+              <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">
+                Loading policies...
+              </h3>
+            </div>
+          ) : (
+            paginatedPolicies.map((policy) => {
+              const CategoryIcon = getCategoryIcon(policy.category);
+              return (
+                <Card
+                  key={policy.id}
+                  className="glass-card rounded-2xl card-hover"
+                >
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div
+                          className={`w-12 h-12 rounded-xl bg-gradient-to-r ${getCategoryColor(policy.category)} flex items-center justify-center`}
+                        >
+                          <CategoryIcon className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg text-slate-800 dark:text-slate-100">
+                            {policy.name}
+                          </CardTitle>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">
+                            {policy.provider} • {policy.id}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="space-y-4">
+                    <p className="text-slate-700 dark:text-slate-300">
+                      {policy.description}
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          Coverage
+                        </p>
+                        <p className="font-semibold text-slate-800 dark:text-slate-100">
+                          RM {policy.coverage}
+                        </p>
                       </div>
                       <div>
-                        <CardTitle className="text-lg text-slate-800 dark:text-slate-100">
-                          {policy.name}
-                        </CardTitle>
                         <p className="text-sm text-slate-600 dark:text-slate-400">
-                          {policy.provider} • {policy.id}
+                          Premium
+                        </p>
+                        <p className="font-semibold text-emerald-600 dark:text-emerald-400">
+                          {policy.premium} ETH/month
                         </p>
                       </div>
                     </div>
-                    <Badge
-                      className={`status-badge ${getStatusColor(policy.status)}`}
-                    >
-                      {policy.status.charAt(0).toUpperCase() +
-                        policy.status.slice(1)}
-                    </Badge>
-                  </div>
-                </CardHeader>
 
-                <CardContent className="space-y-4">
-                  <p className="text-slate-700 dark:text-slate-300">
-                    {policy.description}
-                  </p>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Coverage
-                      </p>
-                      <p className="font-semibold text-slate-800 dark:text-slate-100">
-                        {policy.coverage}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Premium
-                      </p>
-                      <p className="font-semibold text-emerald-600 dark:text-emerald-400">
-                        {policy.premium}
-                      </p>
-                    </div>
-                  </div>
-
-                  {policy.status === "active" && (
                     <div className="grid grid-cols-2 gap-4 p-3 bg-slate-50/50 dark:bg-slate-700/30 rounded-lg">
                       <div>
                         <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -1149,59 +921,63 @@ export default function ManagePolicies() {
                         </p>
                       </div>
                     </div>
-                  )}
 
-                  <div>
-                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      Key Features:
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {policy.features.slice(0, 3).map((feature, index) => (
-                        <Badge
-                          key={index}
-                          variant="secondary"
-                          className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
-                        >
-                          {feature}
-                        </Badge>
-                      ))}
-                      {policy.features.length > 3 && (
-                        <Badge
-                          variant="secondary"
-                          className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
-                        >
-                          +{policy.features.length - 3} more
-                        </Badge>
-                      )}
+                    {policy.features && policy.features.length > 0 && (
+                      <div>
+                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                          Claim Type:
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {policy.features.slice(0, 3).map((feature, index) => (
+                            <Badge
+                              key={index}
+                              variant="secondary"
+                              className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
+                            >
+                              {feature}
+                            </Badge>
+                          ))}
+                          {policy.features.length > 3 && (
+                            <Badge
+                              variant="secondary"
+                              className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
+                            >
+                              +{policy.features.length - 3} more
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 pt-4 border-t border-slate-100 dark:border-slate-700">
+                      <Button
+                        variant="outline"
+                        className="flex-1 floating-button"
+                        onClick={() => openDetails(policy)}
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        View Details
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="flex-1 floating-button"
+                        onClick={() => openEdit(policy)}
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
-                  </div>
-
-                  <div className="flex gap-2 pt-4 border-t border-slate-100 dark:border-slate-700">
-                    <Button
-                      variant="outline"
-                      className="flex-1 floating-button"
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      View Details
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex-1 floating-button"
-                    >
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
         </div>
 
         {/* Pagination */}
@@ -1215,7 +991,7 @@ export default function ManagePolicies() {
           className="mb-8"
         />
 
-        {filteredPolicies.length === 0 && (
+        {filteredPolicies.length === 0 && !isLoading && (
           <div className="text-center py-12">
             <Shield className="w-16 h-16 text-slate-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">
@@ -1225,6 +1001,22 @@ export default function ManagePolicies() {
               Try adjusting your search criteria or create a new policy
             </p>
           </div>
+        )}
+
+        {selectedPolicy && (
+          <PolicyDetailsDialog
+            policy={selectedPolicy}
+            open={showDetails}
+            onClose={closeDialogs}
+          />
+        )}
+        {selectedPolicy && (
+          <EditPolicyDialog
+            policy={selectedPolicy}
+            open={showEdit}
+            onClose={closeDialogs}
+            onSave={handleUpdatePolicy}
+          />
         )}
       </div>
     </div>

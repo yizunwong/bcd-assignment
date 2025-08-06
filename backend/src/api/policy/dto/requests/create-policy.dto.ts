@@ -9,8 +9,10 @@ import {
   Min,
   IsUUID,
   ValidateNested,
+  IsEnum,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
+import { PolicyCategory } from 'src/enums';
 
 export class CreateDocumentsDto {
   @ApiProperty({ example: 'Policy Terms', description: 'Document name' })
@@ -67,15 +69,10 @@ export class CreatePolicyDto {
   @IsNotEmpty()
   name!: string;
 
-  @ApiProperty({ example: 'health' })
-  @IsString()
+  @ApiProperty({ example: 'health', enum: PolicyCategory })
+  @IsEnum(PolicyCategory)
   @IsNotEmpty()
-  category!: string;
-
-  @ApiProperty({ example: 'HealthSecure' })
-  @IsString()
-  @IsNotEmpty()
-  provider!: string;
+  category!: PolicyCategory;
 
   @ApiProperty({ example: 100000 })
   @Transform(({ value }: { value: unknown }) => parseInt(value as string, 10))
@@ -89,10 +86,11 @@ export class CreatePolicyDto {
   @IsNotEmpty()
   durationDays!: number;
 
-  @ApiProperty({ example: '0.8 ETH/month' })
-  @IsString()
+  @ApiProperty({ example: '0.8' })
+  @Transform(({ value }: { value: unknown }) => parseFloat(value as string))
+  @IsNumber()
   @IsNotEmpty()
-  premium!: string;
+  premium!: number;
 
   @ApiProperty({ example: 0 })
   @Transform(({ value }: { value: unknown }) => parseInt(value as string, 10))

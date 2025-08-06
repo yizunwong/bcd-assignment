@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
+import { Connect } from "./Connect";
 import {
   Shield,
   Menu,
@@ -14,7 +15,6 @@ import {
   Home,
   Search,
   FileText,
-  Wallet,
   BarChart3,
   Plus,
   Gift,
@@ -25,6 +25,7 @@ import {
   AlertTriangle,
   Users,
   ChevronDown,
+  Wallet,
 } from "lucide-react";
 import useAuth from "@/hooks/useAuth";
 import { useToast } from "./ToastProvider";
@@ -47,15 +48,12 @@ export function Navbar({ role }: NavbarProps) {
       { href: "/policyholder/browse", label: "Browse Policies", icon: Search },
       { href: "/policyholder/coverage", label: "My Coverage", icon: Shield },
       { href: "/policyholder/claims", label: "Claims", icon: FileText },
-      { href: "/policyholder/wallet", label: "Wallet", icon: Wallet },
     ],
     admin: [
       { href: "/admin", label: "Dashboard", icon: BarChart3 },
       { href: "/admin/claims", label: "Claims Review", icon: FileText },
       { href: "/admin/policies", label: "Manage Policies", icon: Plus },
-      { href: "/admin/offers", label: "Seasonal Offers", icon: Gift },
       { href: "/admin/reports", label: "Reports", icon: Download },
-      { href: "/admin/settings", label: "Settings", icon: Settings },
     ],
     "system-admin": [
       { href: "/system-admin", label: "Monitoring", icon: Monitor },
@@ -125,7 +123,7 @@ export function Navbar({ role }: NavbarProps) {
   }
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/20 dark:border-slate-700/50">
+    <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/20 dark:border-slate-700/50 overflow-visible">
       <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -160,6 +158,7 @@ export function Navbar({ role }: NavbarProps) {
 
           {/* Right Side Actions */}
           <div className="hidden md:flex items-center space-x-2 lg:space-x-3 xl:space-x-4 flex-shrink-0">
+            {role === "policyholder" && <Connect />}
             <ThemeToggle />
 
             {role && (
@@ -192,14 +191,26 @@ export function Navbar({ role }: NavbarProps) {
                   {/* Dropdown Menu */}
                   {isUserMenuOpen && (
                     <div className="absolute right-0 mt-2 w-48 glass-card rounded-xl shadow-lg border border-white/20 dark:border-slate-700/50 py-2 z-50">
-                      <Link
-                        href={getProfileLink()}
-                        className="flex items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors"
-                        onClick={() => setIsUserMenuOpen(false)}
-                      >
-                        <User className="w-4 h-4 mr-3" />
-                        Profile
-                      </Link>
+                      {role !== "system-admin" && (
+                        <Link
+                          href={getProfileLink()}
+                          className="flex items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          <User className="w-4 h-4 mr-3" />
+                          Profile
+                        </Link>
+                      )}
+                      {pathname.startsWith("/policyholder") && (
+                        <Link
+                          href="/policyholder/wallet"
+                          className="flex items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          <Wallet className="w-4 h-4 mr-3" />
+                          Wallet
+                        </Link>
+                      )}
                       <Link
                         href={isRolePage ? "/" : getDashboardLink()}
                         className="flex items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors"
@@ -270,6 +281,7 @@ export function Navbar({ role }: NavbarProps) {
         {isOpen && (
           <div className="md:hidden border-t border-white/20 dark:border-slate-700/50 py-4">
             <div className="flex flex-col space-y-4">
+              {role === "policyholder" && <Connect />}
               {navigationLinks.map((link, index) => (
                 <Link
                   key={index}
@@ -295,7 +307,7 @@ export function Navbar({ role }: NavbarProps) {
                       <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
                     </span>
                   </Button>
-
+                  {role !== "system-admin"} && (
                   <Link href={getProfileLink()}>
                     <Button
                       variant="ghost"
@@ -306,7 +318,7 @@ export function Navbar({ role }: NavbarProps) {
                       Profile
                     </Button>
                   </Link>
-
+                  )
                   <Link href={isRolePage ? "/" : getDashboardLink()}>
                     <Button
                       variant="ghost"
@@ -317,7 +329,6 @@ export function Navbar({ role }: NavbarProps) {
                       {isRolePage ? "Home" : "Dashboard"}
                     </Button>
                   </Link>
-
                   <Button
                     variant="ghost"
                     size="sm"

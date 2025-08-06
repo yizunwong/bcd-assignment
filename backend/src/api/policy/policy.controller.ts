@@ -11,6 +11,7 @@ import {
   Query,
   UploadedFiles,
   UseInterceptors,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { PolicyService } from './policy.service';
 import { CreatePolicyDto } from './dto/requests/create-policy.dto';
@@ -21,8 +22,10 @@ import { ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiCommonResponse, CommonResponseDto } from 'src/common/common.dto';
 import { PolicyResponseDto } from './dto/responses/policy.dto';
+import { PolicyStatsDto } from './dto/responses/policy-stats.dto';
 import { FindPoliciesQueryDto } from './dto/responses/policy-query.dto';
 import { UploadDocDto } from '../file/requests/document-upload.dto';
+import { PolicyCategoryCountStatsDto } from './dto/responses/policy-category.dto';
 
 @Controller('policy')
 @ApiBearerAuth('supabase-auth')
@@ -61,11 +64,20 @@ export class PolicyController {
     return this.policyService.findAll(req, query);
   }
 
+  @Get('stats')
+  @UseGuards(AuthGuard)
+  @ApiCommonResponse(PolicyStatsDto, false, 'Get policy stats')
+  getStats(
+    @Req() req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto<PolicyStatsDto>> {
+    return this.policyService.getStats(req);
+  }
+
   @Get(':id')
   @UseGuards(AuthGuard)
   @ApiCommonResponse(PolicyResponseDto, false, 'Get policy with signed URLs')
   findOne(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Req() req: AuthenticatedRequest,
   ): Promise<CommonResponseDto<PolicyResponseDto>> {
     return this.policyService.findOne(+id, req);
@@ -84,7 +96,10 @@ export class PolicyController {
   @Get('/browse/categories')
   @UseGuards(AuthGuard)
   @ApiBearerAuth('supabase-auth')
-  async getCategoryCounts(@Req() req: AuthenticatedRequest) {
+  @ApiCommonResponse(PolicyCategoryCountStatsDto, false, 'Get category counts')
+  async getCategoryCounts(
+    @Req() req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto<PolicyCategoryCountStatsDto>> {
     return this.policyService.getPolicyCountByCategory(req);
   }
 

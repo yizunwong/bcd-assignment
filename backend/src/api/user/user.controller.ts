@@ -6,6 +6,7 @@ import {
   Post,
   Patch,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/requests/create.dto';
@@ -14,8 +15,9 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard } from '../auth/role.guard';
 import { ApiCommonResponse, CommonResponseDto } from 'src/common/common.dto';
-import { UserResponseDto } from './dto/respond/user.dto';
-import { UserStatsResponseDto } from './dto/respond/user-stats.dto';
+import { UserResponseDto } from './dto/responses/user.dto';
+import { UserStatsResponseDto } from './dto/responses/user-stats.dto';
+import { FindUsersQueryDto } from './dto/responses/user-query.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -27,8 +29,10 @@ export class UserController {
 
   @Get()
   @ApiCommonResponse(UserResponseDto, true, 'Get all users')
-  async findAll(): Promise<CommonResponseDto<UserResponseDto[]>> {
-    return this.userService.getAllUsers();
+  async findAll(
+    @Query() query: FindUsersQueryDto,
+  ): Promise<CommonResponseDto<UserResponseDto[]>> {
+    return this.userService.getAllUsers(query);
   }
 
   @Get('stats')

@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsOptional, IsEnum } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsNumber,
+} from 'class-validator';
 
 export enum ClaimPriority {
   LOW = 'low',
@@ -13,7 +19,7 @@ export class CreateClaimDto {
     description: 'ID of the policy associated with the claim',
   })
   @IsNotEmpty({ message: 'Policy ID is required' })
-  policy_id!: number;
+  coverage_id!: number;
 
   @ApiProperty({
     example: 'accident',
@@ -21,7 +27,7 @@ export class CreateClaimDto {
   })
   @IsString({ message: 'Claim type must be a string' })
   @IsNotEmpty({ message: 'Claim type is required' })
-  claim_type!: string;
+  type!: string;
 
   @ApiProperty({
     example: ClaimPriority.MEDIUM,
@@ -36,7 +42,7 @@ export class CreateClaimDto {
     example: 1000,
     description: 'Amount claimed',
   })
-  // @IsNumber({}, { message: 'Amount must be a number' })
+  @IsNumber({}, { message: 'Amount must be a number' })
   @IsNotEmpty({ message: 'Amount is required' })
   amount!: number;
 
@@ -48,5 +54,4 @@ export class CreateClaimDto {
   @IsOptional()
   @IsString({ message: 'Description must be a string' })
   description?: string;
-
 }

@@ -2,12 +2,13 @@
 import { IsIn, IsOptional, IsString } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { PaginatedQueryDto } from 'src/common/paginated-query.dto';
+import { ClaimStatus } from 'src/enums';
 
 export class FindClaimsQueryDto extends PaginatedQueryDto {
-  @ApiPropertyOptional({ description: 'Filter by claim type (category)' })
+  @ApiPropertyOptional({ description: 'Filter by claim status' })
   @IsOptional()
   @IsString()
-  category?: string;
+  status?: ClaimStatus;
 
   @ApiPropertyOptional({
     description: 'Search keyword for claim_type or description',
@@ -18,10 +19,10 @@ export class FindClaimsQueryDto extends PaginatedQueryDto {
 
   @ApiPropertyOptional({
     default: 'id',
-    enum: ['id', 'claim_type', 'amount', 'status', 'submitted_date'],
+    enum: ['id', 'type', 'amount', 'status', 'submitted_date'],
   })
   @IsOptional()
-  @IsIn(['id', 'claim_type', 'amount', 'status', 'submitted_date'])
+  @IsIn(['id', 'type', 'amount', 'status', 'submitted_date'])
   sortBy: string = 'id';
 
   @ApiPropertyOptional({ default: 'asc', enum: ['asc', 'desc'] })

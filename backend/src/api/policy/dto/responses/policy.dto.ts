@@ -1,4 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsEnum } from 'class-validator';
+import { ReviewRespondDto } from 'src/api/reviews/dto/repsonses/review.dto';
+import { PolicyCategory } from 'src/enums';
 
 export class PolicyDocumentResponseDto {
   @ApiProperty()
@@ -24,7 +27,8 @@ export class PolicyResponseDto {
   name!: string;
 
   @ApiProperty()
-  category!: string;
+  @IsEnum(PolicyCategory)
+  category!: PolicyCategory;
 
   @ApiProperty()
   provider!: string;
@@ -36,7 +40,7 @@ export class PolicyResponseDto {
   duration_days!: number;
 
   @ApiProperty()
-  premium!: string;
+  premium!: number;
 
   @ApiProperty()
   rating!: number;
@@ -50,6 +54,18 @@ export class PolicyResponseDto {
   @ApiProperty()
   claim_types!: string[];
 
+  @ApiProperty()
+  sales!: number;
+
+  @ApiProperty()
+  revenue!: number;
+
+  @ApiProperty()
+  status!: string;
+
   @ApiProperty({ type: [PolicyDocumentResponseDto] })
-  policy_documents!: PolicyDocumentResponseDto[];
+  policy_documents?: PolicyDocumentResponseDto[];
+
+  @ApiProperty({ type: [ReviewRespondDto] })
+  reviews?: ReviewRespondDto[];
 }

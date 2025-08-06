@@ -3,13 +3,11 @@ import {
   Controller,
   Param,
   Post,
-  Req,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
-import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { CompanyService } from './company.service';
 import { CommonResponseDto } from 'src/common/common.dto';
 import { UploadDocDto } from '../file/requests/document-upload.dto';
@@ -27,7 +25,6 @@ export class CompanyController {
     @Param('id') id: string,
     @Body() dto: UploadDocDto,
     @UploadedFiles() files: Array<Express.Multer.File>,
-    @Req() req: AuthenticatedRequest,
   ): Promise<CommonResponseDto> {
     return this.service.addDocuments(+id, files);
   }

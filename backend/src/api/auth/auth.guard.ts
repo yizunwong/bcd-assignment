@@ -6,8 +6,7 @@ import {
 } from '@nestjs/common';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { SupabaseService } from 'src/supabase/supabase.service';
-import { parseAppMetadata } from 'src/utils/auth-metadata';
-import { UserRole } from 'src/enums';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -15,38 +14,68 @@ export class AuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+    const res = context.switchToHttp().getResponse<Response>();
     const cookies = request.cookies as Record<string, string | undefined>;
     const token = cookies?.access_token;
+    const refreshToken = cookies?.refresh_token;
 
-    if (!token) {
-      throw new UnauthorizedException('Missing access token in cookie');
-    }
+    // Step 1: Try to use access token
+    if (token) {
+      const supabase = this.supabaseService.createClientWithToken(token);
+      const { data, error } = await supabase.auth.getUser();
 
-    request.supabase = this.supabaseService.createClientWithToken(token);
-    const { data, error } = await request.supabase.auth.getUser();
-
-    if (error || !data.user) {
-      throw new UnauthorizedException('Invalid or expired token');
-    }
-
-    request.user = data.user;
-
-    // ✅ Get role from app_metadata
-    const appMeta = parseAppMetadata(data.user.app_metadata);
-
-    // 🔒 Only check verified_at if role is insurance_admin
-    if (appMeta.role === UserRole.INSURANCE_ADMIN) {
-      const { data: adminDetails } = await request.supabase
-        .from('admin_details')
-        .select('verified_at')
-        .eq('user_id', data.user.id)
-        .single();
-
-      if (!adminDetails || !adminDetails.verified_at) {
-        throw new UnauthorizedException('User is not verified');
+      if (data?.user && !error) {
+        request.supabase = supabase;
+        request.user = data.user;
+        return true;
       }
     }
 
-    return true;
+    // Step 2: If token is expired or invalid, try refresh
+    if (token && refreshToken) {
+      const supabase = this.supabaseService.createClientWithToken();
+      const { data: refreshData, error: refreshError } =
+        await supabase.auth.setSession({
+          refresh_token: refreshToken,
+          access_token: token,
+        });
+
+      if (refreshError || !refreshData.session) {
+        throw new UnauthorizedException(
+          'Session expired, please log in again.',
+        );
+      }
+
+      // Set new tokens in cookies
+      const maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
+      res.cookie('access_token', refreshData.session.access_token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        path: '/',
+        maxAge,
+      });
+      res.cookie('refresh_token', refreshData.session.refresh_token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        path: '/',
+        maxAge,
+      });
+
+      const refreshed = this.supabaseService.createClientWithToken(
+        refreshData.session.access_token,
+      );
+      const { data } = await refreshed.auth.getUser();
+      if (!data?.user) {
+        throw new UnauthorizedException('User not found after refresh.');
+      }
+
+      request.supabase = refreshed;
+      request.user = data.user;
+      return true;
+    }
+
+    throw new UnauthorizedException('Authentication required.');
   }
 }

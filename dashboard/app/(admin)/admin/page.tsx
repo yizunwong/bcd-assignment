@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatsCard } from "@/components/shared/StatsCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import ClaimReviewDialog from "@/components/shared/ClaimReviewDialog";
-import { recentClaims, topPolicies } from "@/public/data/admin/dashboardData";
+import ClaimReviewDialog from "@/app/(admin)/admin/claims/components/ClaimReviewDialog";
+import { useClaimControllerFindAll } from "@/api";
+import { useAdminDashboardSummaryQuery } from "@/hooks/useDashboard";
 import {
   Shield,
   Users,
@@ -18,8 +19,17 @@ import {
   Eye,
   X,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function AdminDashboard() {
+  const { data: recentClaimsData } = useClaimControllerFindAll({
+    limit: 4,
+    page: 1,
+  });
+  const recentClaims = recentClaimsData?.data ?? [];
+  const { data: dashboard } = useAdminDashboardSummaryQuery();
+  const summary = dashboard?.data;
+  const router = useRouter();
   return (
     <div className="section-spacing">
       <div className="max-w-7xl mx-auto">
@@ -42,30 +52,22 @@ export default function AdminDashboard() {
         <div className="stats-grid">
           <StatsCard
             title="Active Policies"
-            value="1,247"
-            change="+8.2% from last month"
-            changeType="positive"
+            value={(summary?.activePolicies ?? 0).toString()}
             icon={Shield}
           />
           <StatsCard
             title="Pending Claims"
-            value="23"
-            change="3 urgent reviews"
-            changeType="neutral"
+            value={(summary?.pendingClaims ?? 0).toString()}
             icon={AlertCircle}
           />
           <StatsCard
             title="Total Revenue"
-            value="2,450 ETH"
-            change="+15.3% from last month"
-            changeType="positive"
+            value={(summary?.totalRevenue ?? 0).toString()}
             icon={DollarSign}
           />
           <StatsCard
             title="Active Users"
-            value="3,891"
-            change="+12.1% from last month"
-            changeType="positive"
+            value={(summary?.activeUsers ?? 0).toString()}
             icon={Users}
           />
         </div>
@@ -84,7 +86,7 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="element-spacing">
-                  {recentClaims.map((claim) => (
+                  {recentClaims.map((claim: any) => (
                     <div
                       key={claim.id}
                       className="flex items-center justify-between p-4 rounded-xl bg-slate-50/50 dark:bg-slate-700/30 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors"
@@ -102,11 +104,13 @@ export default function AdminDashboard() {
                               variant="secondary"
                               className="bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
                             >
-                              {claim.type}
+                              {claim.claim_type}
                             </Badge>
                           </div>
                           <p className="text-sm text-slate-600 dark:text-slate-400">
-                            {claim.submittedBy} • {claim.date}
+                            {new Date(
+                              claim.submitted_date
+                            ).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
@@ -120,8 +124,8 @@ export default function AdminDashboard() {
                               claim.status === "approved"
                                 ? "status-active"
                                 : claim.status === "pending"
-                                ? "status-pending"
-                                : "status-info"
+                                  ? "status-pending"
+                                  : "status-info"
                             }`}
                           >
                             {claim.status === "approved" && (
@@ -156,13 +160,21 @@ export default function AdminDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="element-spacing">
-                <Button className="w-full justify-start gradient-accent text-white floating-button">
+                <Button
+                  className="w-full justify-start gradient-accent text-white floating-button"
+                  onClick={() => {
+                    router.push("/admin/claims");
+                  }}
+                >
                   <FileText className="w-4 h-4 mr-2" />
                   Review Claims
                 </Button>
                 <Button
                   variant="outline"
                   className="w-full justify-start floating-button"
+                  onClick={() => {
+                    router.push("/admin/policies");
+                  }}
                 >
                   <Shield className="w-4 h-4 mr-2" />
                   Create New Policy
@@ -170,6 +182,9 @@ export default function AdminDashboard() {
                 <Button
                   variant="outline"
                   className="w-full justify-start floating-button"
+                  onClick={() => {
+                    router.push("/admin/reports");
+                  }}
                 >
                   <TrendingUp className="w-4 h-4 mr-2" />
                   Generate Report
@@ -186,9 +201,9 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="element-spacing">
-                  {topPolicies.map((policy, index) => (
+                  {(summary?.topPolicies ?? []).map((policy) => (
                     <div
-                      key={index}
+                      key={policy.id}
                       className="flex items-start justify-between"
                     >
                       <div className="flex-1 min-w-0">
@@ -196,13 +211,8 @@ export default function AdminDashboard() {
                           {policy.name}
                         </p>
                         <p className="text-xs text-slate-600 dark:text-slate-400">
-                          {policy.sales} sales • {policy.revenue}
+                          {policy.sales} sales
                         </p>
-                      </div>
-                      <div className="text-right ml-2">
-                        <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                          {policy.trend}
-                        </span>
                       </div>
                     </div>
                   ))}

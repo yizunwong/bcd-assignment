@@ -11,6 +11,7 @@ import { UpdateCoverageDto } from './dto/requests/update-coverage.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { CommonResponseDto } from 'src/common/common.dto';
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return */
 @Injectable()
 export class CoverageService {
   async create(dto: CreateCoverageDto, req: AuthenticatedRequest) {
@@ -58,7 +59,9 @@ export class CoverageService {
         category,
         coverage,
         premium,
-        provider
+        admin_details:admin_details!policies_created_by_fkey1(
+          company:companies(name)
+        )
       )
     `,
         { count: 'exact' },
@@ -96,10 +99,20 @@ export class CoverageService {
       throw new InternalServerErrorException('Failed to fetch coverage data');
     }
 
+    const enriched = data.map((c: any) => ({
+      ...c,
+      policies: c.policies
+        ? {
+            ...c.policies,
+            provider: c.policies.admin_details?.company?.name || '',
+          }
+        : c.policies,
+    }));
+
     return new CommonResponseDto<CoverageResponseDto[]>({
       statusCode: 200,
       message: 'Coverage retrieved successfully',
-      data: data,
+      data: enriched,
       count: count || 0,
     });
   }
@@ -202,7 +215,7 @@ export class CoverageService {
     };
   }
 
-  async getPolicyholderSummary(req: AuthenticatedRequest) {
+  async getCoverageStats(req: AuthenticatedRequest) {
     const { data: userData, error: userError } =
       await req.supabase.auth.getUser();
 
@@ -216,6 +229,7 @@ export class CoverageService {
       .from('coverage')
       .select(
         `
+      id,
       policy_id,
       policy:policy_id (
         id,
@@ -231,19 +245,22 @@ export class CoverageService {
       throw new InternalServerErrorException('Failed to fetch coverages');
     }
 
-    const activePolicyIds = coverages.map((c) => c.policy_id);
-    const activePolicyCount = coverages.length;
+    const activeCoverage = coverages.length;
 
     // 2. Sum approved claims for active policies only (SQL-side filter)
     const { data: approvedClaims, error: approvedClaimsError } =
       await req.supabase
         .from('claims')
         .select('amount')
-        .eq('user_id', userId)
+        .eq('submitted_by', userId)
         .eq('status', 'approved')
-        .in('policy_id', activePolicyIds);
+        .in(
+          'coverage_id',
+          coverages.map((c) => c.id),
+        );
 
     if (approvedClaimsError) {
+      console.error(approvedClaimsError);
       throw new InternalServerErrorException('Failed to fetch approved claims');
     }
 
@@ -256,7 +273,7 @@ export class CoverageService {
     const { data: claims, error: claimsError } = await req.supabase
       .from('claims')
       .select('status')
-      .eq('user_id', userId);
+      .eq('submitted_by', userId);
 
     if (claimsError) {
       throw new InternalServerErrorException('Failed to fetch claims');
@@ -271,9 +288,9 @@ export class CoverageService {
 
     return {
       statusCode: 200,
-      message: 'Policyholder summary retrieved successfully',
+      message: 'Coverage stats retrieved successfully',
       data: {
-        activePolicyCount,
+        activeCoverage,
         totalCoverageValue,
         totalClaims,
         approvalRate,

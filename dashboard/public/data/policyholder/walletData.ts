@@ -1,6 +1,4 @@
 export const walletBalance = {
-  eth: '5.2847',
-  usd: '18,420.50',
   tokens: [
     { symbol: 'USDC', name: 'USD Coin', balance: '2,500.00', usdValue: '2,500.00' },
     { symbol: 'DAI', name: 'Dai Stablecoin', balance: '1,200.50', usdValue: '1,200.50' },

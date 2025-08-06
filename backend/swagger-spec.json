@@ -113,7 +113,7 @@
                     {
                       "properties": {
                         "data": {
-                          "$ref": "#/components/schemas/AuthUserResponseDto"
+                          "$ref": "#/components/schemas/ProfileResponseDto"
                         }
                       }
                     }
@@ -136,7 +136,42 @@
     "/users": {
       "get": {
         "operationId": "UserController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "role",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "policyholder",
+                "insurance_admin",
+                "system_admin"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "deactivated"
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search keyword for name or email",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Get all users",
@@ -407,10 +442,10 @@
             }
           },
           {
-            "name": "category",
+            "name": "status",
             "required": false,
             "in": "query",
-            "description": "Filter by claim type (category)",
+            "description": "Filter by claim status",
             "schema": {
               "type": "string"
             }
@@ -433,7 +468,7 @@
               "type": "string",
               "enum": [
                 "id",
-                "claim_type",
+                "type",
                 "amount",
                 "status",
                 "submitted_date"
@@ -516,6 +551,43 @@
         "responses": {
           "201": {
             "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Claim"
+        ]
+      }
+    },
+    "/claim/stats": {
+      "get": {
+        "operationId": "ClaimController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get claim statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/ClaimStatsDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -830,7 +902,12 @@
             "in": "query",
             "description": "Filter by policy category",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "health",
+                "travel",
+                "crop"
+              ]
             }
           },
           {
@@ -854,7 +931,7 @@
                 "name",
                 "rating",
                 "premium",
-                "popularity"
+                "sales"
               ]
             }
           },
@@ -869,6 +946,15 @@
                 "asc",
                 "desc"
               ]
+            }
+          },
+          {
+            "name": "userId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by creator user id",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -946,6 +1032,43 @@
         ]
       }
     },
+    "/policy/stats": {
+      "get": {
+        "operationId": "PolicyController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get policy stats",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/PolicyStatsDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Policy"
+        ]
+      }
+    },
     "/policy/{id}": {
       "get": {
         "operationId": "PolicyController_findOne",
@@ -955,7 +1078,7 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "number"
             }
           }
         ],
@@ -1124,7 +1247,25 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Get category counts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/PolicyCategoryCountStatsDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1197,7 +1338,12 @@
             "in": "query",
             "description": "Filter by policy category",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "health",
+                "travel",
+                "crop"
+              ]
             }
           },
           {
@@ -1397,7 +1543,7 @@
     },
     "/coverage/policyholder/summary": {
       "get": {
-        "operationId": "CoverageController_getPolicyholderSummary",
+        "operationId": "CoverageController_getCoverageStats",
         "parameters": [],
         "responses": {
           "200": {
@@ -1513,6 +1659,122 @@
           "Company"
         ]
       }
+    },
+    "/dashboard": {
+      "get": {
+        "operationId": "DashboardController_getSummary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get admin dashboard summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/AdminDashoboardDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/dashboard/policyholder": {
+      "get": {
+        "operationId": "DashboardController_getPolicyholderSummary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get policyholder dashboard summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/PolicyholderDashboardDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/payments/intent": {
+      "post": {
+        "operationId": "PaymentController_createIntent",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePaymentIntentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Create payment intent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/PaymentIntentResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payments"
+        ]
+      }
     }
   },
   "info": {
@@ -1579,37 +1841,41 @@
             "type": "string"
           },
           "firstName": {
-            "type": "object"
+            "type": "string"
           },
           "lastName": {
-            "type": "object"
+            "type": "string"
           },
           "phone": {
-            "type": "object"
+            "type": "string"
           },
           "bio": {
-            "type": "object"
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "example": "active"
           },
           "address": {
-            "type": "object"
+            "type": "string"
           },
           "dateOfBirth": {
-            "type": "object"
+            "type": "string"
           },
           "occupation": {
-            "type": "object"
+            "type": "string"
           },
           "companyName": {
-            "type": "object"
+            "type": "string"
           },
           "companyAddress": {
-            "type": "object"
+            "type": "string"
           },
           "companyContactNo": {
-            "type": "object"
+            "type": "string"
           },
           "companyLicenseNo": {
-            "type": "object"
+            "type": "string"
           }
         },
         "required": [
@@ -1619,7 +1885,8 @@
           "username",
           "role",
           "lastSignInAt",
-          "provider"
+          "provider",
+          "status"
         ]
       },
       "LoginResponseDto": {
@@ -1638,13 +1905,15 @@
         "properties": {
           "email": {
             "type": "string",
-            "example": "johndoe@example.com",
             "description": "User email address"
           },
           "password": {
             "type": "string",
-            "example": "secret123",
             "description": "Password for the user"
+          },
+          "rememberMe": {
+            "type": "boolean",
+            "description": "Keep the session for 30 days when checked"
           }
         },
         "required": [
@@ -1773,6 +2042,91 @@
           "role"
         ]
       },
+      "ProfileResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "policyholder",
+              "insurance_admin",
+              "system_admin"
+            ]
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "dateOfBirth": {
+            "type": "string"
+          },
+          "occupation": {
+            "type": "string"
+          },
+          "companyName": {
+            "type": "string"
+          },
+          "companyAddress": {
+            "type": "string"
+          },
+          "companyContactNo": {
+            "type": "string"
+          },
+          "companyLicenseNo": {
+            "type": "string"
+          },
+          "companyYearsInBusiness": {
+            "type": "string",
+            "enum": [
+              "0-1 years",
+              "2-5 years",
+              "6-10 years",
+              "11-20 years",
+              "20+ years"
+            ]
+          },
+          "companyEmployeesNumber": {
+            "type": "string",
+            "enum": [
+              "1-10 employees",
+              "11-50 employees",
+              "51-200 employees",
+              "201-500 employees",
+              "500+ employees"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "role",
+          "firstName",
+          "lastName",
+          "email",
+          "phone",
+          "bio",
+          "status"
+        ]
+      },
       "UserResponseDto": {
         "type": "object",
         "properties": {
@@ -1803,7 +2157,11 @@
           },
           "status": {
             "type": "string",
-            "example": "active"
+            "example": "active",
+            "enum": [
+              "active",
+              "deactivated"
+            ]
           },
           "lastLogin": {
             "type": "object"
@@ -1899,6 +2257,8 @@
           }
         },
         "required": [
+          "firstName",
+          "lastName",
           "email",
           "password",
           "role"
@@ -1968,12 +2328,12 @@
       "CreateClaimDto": {
         "type": "object",
         "properties": {
-          "policy_id": {
+          "coverage_id": {
             "type": "number",
             "example": 1,
             "description": "ID of the policy associated with the claim"
           },
-          "claim_type": {
+          "type": {
             "type": "string",
             "example": "accident",
             "description": "Type of the claim"
@@ -2000,8 +2360,8 @@
           }
         },
         "required": [
-          "policy_id",
-          "claim_type",
+          "coverage_id",
+          "type",
           "priority",
           "amount"
         ]
@@ -2044,13 +2404,63 @@
           "signedUrl"
         ]
       },
+      "PolicyHolderDetailsDto": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "date_of_birth": {
+            "type": "string"
+          },
+          "occupation": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "date_of_birth",
+          "occupation",
+          "address"
+        ]
+      },
+      "PolicySummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "coverage": {
+            "type": "number"
+          },
+          "premium": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "provider",
+          "coverage",
+          "premium"
+        ]
+      },
       "ClaimResponseDto": {
         "type": "object",
         "properties": {
           "id": {
             "type": "number"
           },
-          "claim_type": {
+          "type": {
             "type": "string"
           },
           "amount": {
@@ -2060,9 +2470,15 @@
             "type": "string"
           },
           "description": {
-            "type": "object"
+            "type": "string"
           },
           "submitted_date": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "string"
+          },
+          "submitted_by": {
             "type": "string"
           },
           "claim_documents": {
@@ -2070,27 +2486,60 @@
             "items": {
               "$ref": "#/components/schemas/ClaimDocumentResponseDto"
             }
+          },
+          "policyholder_details": {
+            "$ref": "#/components/schemas/PolicyHolderDetailsDto"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/PolicySummaryDto"
           }
         },
         "required": [
           "id",
-          "claim_type",
+          "type",
           "amount",
           "status",
           "description",
           "submitted_date",
-          "claim_documents"
+          "priority",
+          "submitted_by",
+          "claim_documents",
+          "policyholder_details",
+          "policy"
+        ]
+      },
+      "ClaimStatsDto": {
+        "type": "object",
+        "properties": {
+          "pending": {
+            "type": "number"
+          },
+          "claimed": {
+            "type": "number"
+          },
+          "approved": {
+            "type": "number"
+          },
+          "rejected": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "pending",
+          "claimed",
+          "approved",
+          "rejected"
         ]
       },
       "UpdateClaimDto": {
         "type": "object",
         "properties": {
-          "policy_id": {
+          "coverage_id": {
             "type": "number",
             "example": 1,
             "description": "ID of the policy associated with the claim"
           },
-          "claim_type": {
+          "type": {
             "type": "string",
             "example": "accident",
             "description": "Type of the claim"
@@ -2149,11 +2598,12 @@
           },
           "category": {
             "type": "string",
-            "example": "health"
-          },
-          "provider": {
-            "type": "string",
-            "example": "HealthSecure"
+            "example": "health",
+            "enum": [
+              "health",
+              "travel",
+              "crop"
+            ]
           },
           "coverage": {
             "type": "number",
@@ -2164,8 +2614,8 @@
             "example": 365
           },
           "premium": {
-            "type": "string",
-            "example": "0.8 ETH/month"
+            "type": "number",
+            "example": "0.8"
           },
           "rating": {
             "type": "number",
@@ -2190,7 +2640,6 @@
         "required": [
           "name",
           "category",
-          "provider",
           "coverage",
           "durationDays",
           "premium",
@@ -2222,6 +2671,28 @@
           "signedUrl"
         ]
       },
+      "ReviewRespondDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 1
+          },
+          "rating": {
+            "type": "number",
+            "example": 5,
+            "description": "Rating from 1 to 5"
+          },
+          "comment": {
+            "type": "object",
+            "example": "Great policy!"
+          }
+        },
+        "required": [
+          "id",
+          "rating"
+        ]
+      },
       "PolicyResponseDto": {
         "type": "object",
         "properties": {
@@ -2244,7 +2715,7 @@
             "type": "number"
           },
           "premium": {
-            "type": "string"
+            "type": "number"
           },
           "rating": {
             "type": "number"
@@ -2261,10 +2732,25 @@
               "type": "string"
             }
           },
+          "sales": {
+            "type": "number"
+          },
+          "revenue": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
           "policy_documents": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/PolicyDocumentResponseDto"
+            }
+          },
+          "reviews": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewRespondDto"
             }
           }
         },
@@ -2279,7 +2765,53 @@
           "rating",
           "popular",
           "claim_types",
-          "policy_documents"
+          "sales",
+          "revenue",
+          "status",
+          "policy_documents",
+          "reviews"
+        ]
+      },
+      "PolicyStatsDto": {
+        "type": "object",
+        "properties": {
+          "activePolicies": {
+            "type": "number"
+          },
+          "deactivatedPolicies": {
+            "type": "number"
+          },
+          "totalSales": {
+            "type": "number"
+          },
+          "totalRevenue": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "activePolicies",
+          "deactivatedPolicies",
+          "totalSales",
+          "totalRevenue"
+        ]
+      },
+      "PolicyCategoryCountStatsDto": {
+        "type": "object",
+        "properties": {
+          "travel": {
+            "type": "number"
+          },
+          "health": {
+            "type": "number"
+          },
+          "crop": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "travel",
+          "health",
+          "crop"
         ]
       },
       "UpdatePolicyDto": {
@@ -2291,11 +2823,12 @@
           },
           "category": {
             "type": "string",
-            "example": "health"
-          },
-          "provider": {
-            "type": "string",
-            "example": "HealthSecure"
+            "example": "health",
+            "enum": [
+              "health",
+              "travel",
+              "crop"
+            ]
           },
           "coverage": {
             "type": "number",
@@ -2306,8 +2839,8 @@
             "example": 365
           },
           "premium": {
-            "type": "string",
-            "example": "0.8 ETH/month"
+            "type": "number",
+            "example": "0.8"
           },
           "rating": {
             "type": "number",
@@ -2389,7 +2922,7 @@
             "type": "number"
           },
           "premium": {
-            "type": "string"
+            "type": "number"
           },
           "provider": {
             "type": "string"
@@ -2506,6 +3039,166 @@
         },
         "required": [
           "rating"
+        ]
+      },
+      "TopPolicyDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sales": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "sales"
+        ]
+      },
+      "AdminDashoboardDto": {
+        "type": "object",
+        "properties": {
+          "activePolicies": {
+            "type": "number"
+          },
+          "pendingClaims": {
+            "type": "number"
+          },
+          "activeUsers": {
+            "type": "number"
+          },
+          "totalRevenue": {
+            "type": "number"
+          },
+          "topPolicies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TopPolicyDto"
+            }
+          }
+        },
+        "required": [
+          "activePolicies",
+          "pendingClaims",
+          "activeUsers",
+          "totalRevenue",
+          "topPolicies"
+        ]
+      },
+      "PolicyDetailsDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "coverage": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "coverage"
+        ]
+      },
+      "ActiveCoverageDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "policy_id": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "utilization_rate": {
+            "type": "number"
+          },
+          "start_date": {
+            "type": "string"
+          },
+          "end_date": {
+            "type": "string"
+          },
+          "next_payment_date": {
+            "type": "string"
+          },
+          "policy": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PolicyDetailsDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "policy_id",
+          "status",
+          "utilization_rate",
+          "start_date",
+          "end_date",
+          "next_payment_date",
+          "policy"
+        ]
+      },
+      "PolicyholderDashboardDto": {
+        "type": "object",
+        "properties": {
+          "activeCoverage": {
+            "type": "number"
+          },
+          "totalCoverage": {
+            "type": "number"
+          },
+          "pendingClaims": {
+            "type": "number"
+          },
+          "activeCoverageObject": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActiveCoverageDto"
+            }
+          }
+        },
+        "required": [
+          "activeCoverage",
+          "totalCoverage",
+          "pendingClaims",
+          "activeCoverageObject"
+        ]
+      },
+      "PaymentIntentResponseDto": {
+        "type": "object",
+        "properties": {
+          "clientSecret": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "clientSecret"
+        ]
+      },
+      "CreatePaymentIntentDto": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "currency"
         ]
       }
     }

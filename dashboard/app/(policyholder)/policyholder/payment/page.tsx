@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import {
   Shield,
   ArrowLeft,
@@ -24,59 +24,108 @@ import {
   Heart,
   Plane,
   Sprout,
-} from 'lucide-react';
-import Link from 'next/link';
-import { useCreateCoverageMutation } from '@/hooks/useCoverage';
-import { useToast } from '@/components/shared/ToastProvider';
+} from "lucide-react";
+import Link from "next/link";
+import { useCreateCoverageMutation } from "@/hooks/useCoverage";
+import { usePolicyQuery } from "@/hooks/usePolicies";
+import { useToast } from "@/components/shared/ToastProvider";
+import { usePaymentMutation } from "@/hooks/usePayment";
+import { CreateCoverageDto } from "@/api";
+import { useTransactionStore } from "@/store/useTransactionStore";
+
+declare global {
+  interface Window {
+    Stripe?: any;
+  }
+}
 
 export default function PaymentSummary() {
   const router = useRouter();
   const { printMessage } = useToast();
   const [currentStep] = useState(2);
-  const [tokenAmount, setTokenAmount] = useState('');
+  const [tokenAmount, setTokenAmount] = useState("");
   const [showTokenDetails, setShowTokenDetails] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('ETH');
+  const [paymentMethod, setPaymentMethod] = useState("ETH");
+
+  const stripeRef = useRef<any>(null);
+  const cardElementRef = useRef<any>(null);
+  const cardContainerRef = useRef<HTMLDivElement>(null);
 
   // Coverage creation mutation
+  const { makePayment } = usePaymentMutation();
   const { createCoverage } = useCreateCoverageMutation();
+  const setTransaction = useTransactionStore((state) => state.setData);
 
-  // Mock policy data - in real app, this would come from URL params or API
-  const policyData = {
-    id: 50,
-    name: 'Comprehensive Health Coverage',
-    category: 'health',
-    provider: 'HealthSecure',
-    coverage: '$100,000',
-    premium: '0.8 ETH/month',
-    rating: 4.8,
-    features: [
-      'Emergency Care',
-      'Prescription Drugs',
-      'Mental Health',
-      'Dental',
-    ],
-    description:
-      'Complete healthcare coverage with blockchain-verified claims processing',
-    duration: '12 months',
-    basePrice: 0.8,
-    discount: 0.1,
-    fees: 0.02,
-    total: 0.72,
-  };
+  const searchParams = useSearchParams();
+  const policyId = searchParams.get("policy") ?? "";
+  const { data: policy } = usePolicyQuery(Number(policyId));
 
-  // Set initial token amount to total when component mounts
+  const policyData = useMemo(() => {
+    if (!policy?.data) return null;
+    return {
+      id: policy.data.id,
+      name: policy.data.name,
+      category: policy.data.category,
+      provider: policy.data.provider,
+      coverage: `$${policy.data.coverage.toLocaleString()}`,
+      premium: `${policy.data.premium} ETH/month`,
+      rating: policy.data.rating,
+      features: policy.data.claim_types ?? [],
+      description: String(policy.data.description ?? ""),
+      duration: `${policy.data.duration_days} days`,
+      basePrice: policy.data.premium,
+      discount: 0,
+      fees: 0,
+      total: policy.data.premium,
+    };
+  }, [policy]);
+
   useEffect(() => {
-    setTokenAmount(policyData.total.toString());
-  }, []);
+    if (policyData) {
+      setTokenAmount(policyData.total.toString());
+    }
+  }, [policyData]);
+
+  useEffect(() => {
+    if (paymentMethod !== "STRIPE") return;
+
+    const setupStripe = () => {
+      if (!stripeRef.current) {
+        stripeRef.current = window.Stripe(
+          process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
+        );
+      }
+      const elements = stripeRef.current.elements();
+      cardElementRef.current = elements.create("card");
+      cardElementRef.current.mount(cardContainerRef.current!);
+    };
+
+    if (!window.Stripe) {
+      const script = document.createElement("script");
+      script.src = "https://js.stripe.com/v3";
+      script.async = true;
+      script.onload = setupStripe;
+      document.body.appendChild(script);
+    } else {
+      setupStripe();
+    }
+
+    return () => {
+      if (cardElementRef.current) {
+        cardElementRef.current.unmount();
+        cardElementRef.current = null;
+      }
+    };
+  }, [paymentMethod]);
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'health':
+      case "health":
         return Heart;
-      case 'travel':
+      case "travel":
         return Plane;
-      case 'crop':
+      case "crop":
         return Sprout;
       default:
         return Shield;
@@ -85,60 +134,132 @@ export default function PaymentSummary() {
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'health':
-        return 'from-red-500 to-pink-500';
-      case 'travel':
-        return 'from-blue-500 to-cyan-500';
-      case 'crop':
-        return 'from-green-500 to-emerald-500';
+      case "health":
+        return "from-red-500 to-pink-500";
+      case "travel":
+        return "from-blue-500 to-cyan-500";
+      case "crop":
+        return "from-green-500 to-emerald-500";
       default:
-        return 'from-slate-500 to-slate-600';
+        return "from-slate-500 to-slate-600";
     }
   };
 
-  const handlePayment = async () => {
+  if (!policyData) {
+    return <div className="p-8">Loading...</div>;
+  }
+
+  const handleTokenPayment = async (coverageData: CreateCoverageDto) => {
     setIsProcessing(true);
 
     try {
-      // Calculate dates
-      const startDate = new Date();
-      const endDate = new Date();
-      endDate.setFullYear(endDate.getFullYear() + 1); // 12 months duration
-      const nextPaymentDate = new Date();
-      nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1); // Next month
-
-      // Create coverage data
-      const coverageData = {
-        policy_id: policyData.id,
-        status: 'active' as const,
-        utilization_rate: 0,
-        start_date: startDate.toISOString().split('T')[0], // YYYY-MM-DD format
-        end_date: endDate.toISOString().split('T')[0],
-        next_payment_date: nextPaymentDate.toISOString().split('T')[0],
-      };
-
-      // Save to coverage table
       await createCoverage(coverageData);
 
-      // Simulate payment processing
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const txId = `TX-${Date.now()}`;
+      const blockHash = `0x${Array.from({ length: 40 }, () =>
+        Math.floor(Math.random() * 16).toString(16)
+      ).join("")}`;
+      setTransaction({
+        policyId: policyData.id,
+        transactionId: txId,
+        blockHash,
+        amount: policyData.total,
+        usdAmount: Number((Number(policyData.total) * 3500).toFixed(2)),
+        paymentMethod,
+        timestamp: new Date().toISOString(),
+        status: "confirmed",
+        confirmations: 1,
+      });
 
-      printMessage('Payment successful! Coverage created.', 'success');
+      printMessage("Payment successful! Coverage created.", "success");
 
-      // Redirect to confirmation page
-      router.push('/policyholder/payment/confirmation');
+      router.push("/policyholder/payment/confirmation");
     } catch (error) {
-      console.error('Payment failed:', error);
-      printMessage('Payment failed. Please try again.', 'error');
+      console.error("Payment failed:", error);
+      printMessage("Payment failed. Please try again.", "error");
     } finally {
       setIsProcessing(false);
     }
   };
 
+  const handleStripePayment = async (coverageData: CreateCoverageDto) => {
+    setIsProcessing(true);
+    try {
+      const response = await makePayment({
+        amount: policyData.total,
+        currency: "usd",
+      });
+      const clientSecret = response?.data?.clientSecret;
+      if (clientSecret && stripeRef.current && cardElementRef.current) {
+        const result = await stripeRef.current.confirmCardPayment(
+          clientSecret,
+          {
+            payment_method: { card: cardElementRef.current },
+          }
+        );
+
+        if (result.error || result.paymentIntent?.status !== "succeeded") {
+          printMessage("Payment failed. Please try again.", "error");
+        } else {
+          await createCoverage(coverageData);
+
+          const txId = `PI-${Date.now()}`;
+          const blockHash = `0x${Array.from({ length: 40 }, () =>
+            Math.floor(Math.random() * 16).toString(16)
+          ).join("")}`;
+          setTransaction({
+            policyId: policyData.id,
+            transactionId: txId,
+            blockHash,
+            amount: policyData.total,
+            usdAmount: Number((Number(policyData.total) * 3500).toFixed(2)),
+            paymentMethod,
+            timestamp: new Date().toISOString(),
+            status: "confirmed",
+            confirmations: 1,
+          });
+
+          printMessage("Stripe payment successful", "success");
+          router.push("/policyholder/payment/confirmation");
+        }
+      } else {
+        printMessage("Payment failed. Please try again.", "error");
+      }
+    } catch (error) {
+      console.error("Stripe payment failed:", error);
+      printMessage("Payment failed. Please try again.", "error");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handlePayment = async () => {
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setFullYear(endDate.getFullYear() + 1);
+    const nextPaymentDate = new Date();
+    nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
+
+    const coverageData = {
+      policy_id: policyData.id,
+      status: "active" as const,
+      utilization_rate: 0,
+      start_date: startDate.toISOString().split("T")[0],
+      end_date: endDate.toISOString().split("T")[0],
+      next_payment_date: nextPaymentDate.toISOString().split("T")[0],
+    };
+
+    if (paymentMethod === "STRIPE") {
+      await handleStripePayment(coverageData);
+      return;
+    }
+    await handleTokenPayment(coverageData);
+  };
+
   const steps = [
-    { id: 1, name: 'Policy Selection', status: 'completed' },
-    { id: 2, name: 'Payment Details', status: 'current' },
-    { id: 3, name: 'Confirmation', status: 'pending' },
+    { id: 1, name: "Policy Selection", status: "completed" },
+    { id: 2, name: "Payment Details", status: "current" },
+    { id: 3, name: "Confirmation", status: "pending" },
   ];
 
   const CategoryIcon = getCategoryIcon(policyData.category);
@@ -174,14 +295,14 @@ export default function PaymentSummary() {
                 <div key={step.id} className="flex items-center">
                   <div
                     className={`flex items-center justify-center w-10 h-10 rounded-full ${
-                      step.status === 'completed'
-                        ? 'bg-emerald-500 text-white'
-                        : step.status === 'current'
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
+                      step.status === "completed"
+                        ? "bg-emerald-500 text-white"
+                        : step.status === "current"
+                          ? "bg-blue-500 text-white"
+                          : "bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
                     }`}
                   >
-                    {step.status === 'completed' ? (
+                    {step.status === "completed" ? (
                       <CheckCircle className="w-5 h-5" />
                     ) : (
                       <span className="text-sm font-medium">{step.id}</span>
@@ -189,11 +310,11 @@ export default function PaymentSummary() {
                   </div>
                   <span
                     className={`ml-3 text-sm font-medium ${
-                      step.status === 'current'
-                        ? 'text-blue-600 dark:text-blue-400'
-                        : step.status === 'completed'
-                          ? 'text-emerald-600 dark:text-emerald-400'
-                          : 'text-slate-500 dark:text-slate-400'
+                      step.status === "current"
+                        ? "text-blue-600 dark:text-blue-400"
+                        : step.status === "completed"
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : "text-slate-500 dark:text-slate-400"
                     }`}
                   >
                     {step.name}
@@ -201,9 +322,9 @@ export default function PaymentSummary() {
                   {index < steps.length - 1 && (
                     <div
                       className={`w-16 h-1 mx-4 ${
-                        step.status === 'completed'
-                          ? 'bg-emerald-500'
-                          : 'bg-slate-200 dark:bg-slate-700'
+                        step.status === "completed"
+                          ? "bg-emerald-500"
+                          : "bg-slate-200 dark:bg-slate-700"
                       }`}
                     />
                   )}
@@ -332,15 +453,15 @@ export default function PaymentSummary() {
                   <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">
                     Payment Method
                   </h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    {['ETH', 'USDC', 'DAI'].map((method) => (
+                  <div className="grid grid-cols-2 gap-4">
+                    {["ETH", "STRIPE"].map((method) => (
                       <button
                         key={method}
                         onClick={() => setPaymentMethod(method)}
                         className={`p-4 rounded-xl border-2 transition-all duration-200 ${
                           paymentMethod === method
-                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
-                            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                            ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
+                            : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
                         }`}
                       >
                         <div className="flex items-center justify-center space-x-2">
@@ -351,6 +472,21 @@ export default function PaymentSummary() {
                     ))}
                   </div>
                 </div>
+
+                {paymentMethod === "STRIPE" && (
+                  <div className="space-y-2">
+                    <div className="text-sm text-slate-600 dark:text-slate-400">
+                      Card Details
+                    </div>
+                    <div
+                      ref={cardContainerRef}
+                      className="p-3 bg-white rounded-md border border-slate-300 dark:border-slate-600"
+                    />
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Use test card 4242 4242 4242 4242
+                    </p>
+                  </div>
+                )}
 
                 {/* Price Breakdown */}
                 <div>
@@ -416,54 +552,58 @@ export default function PaymentSummary() {
                 </div>
 
                 {/* Token Amount Input */}
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-                      Payment Amount
-                    </h3>
-                    <button
-                      onClick={() => setShowTokenDetails(!showTokenDetails)}
-                      className="flex items-center space-x-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-                    >
-                      {showTokenDetails ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                      <span>{showTokenDetails ? 'Hide' : 'Show'} Details</span>
-                    </button>
-                  </div>
-
-                  <div className="relative">
-                    <Input
-                      type="number"
-                      value={tokenAmount || policyData.total}
-                      onChange={(e) => setTokenAmount(e.target.value)}
-                      placeholder={`Enter ${paymentMethod} amount`}
-                      className="form-input text-lg font-medium pr-20"
-                      step="0.001"
-                    />
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
-                      <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                        {paymentMethod}
-                      </span>
+                {paymentMethod !== "STRIPE" && (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                        Payment Amount
+                      </h3>
+                      <button
+                        onClick={() => setShowTokenDetails(!showTokenDetails)}
+                        className="flex items-center space-x-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                      >
+                        {showTokenDetails ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                        <span>
+                          {showTokenDetails ? "Hide" : "Show"} Details
+                        </span>
+                      </button>
                     </div>
-                  </div>
 
-                  {showTokenDetails && (
-                    <div className="mt-4 p-4 bg-blue-50/50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Wallet className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                        <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                          Wallet Balance
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        value={tokenAmount || policyData.total}
+                        onChange={(e) => setTokenAmount(e.target.value)}
+                        placeholder={`Enter ${paymentMethod} amount`}
+                        className="form-input text-lg font-medium pr-20"
+                        step="0.001"
+                      />
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+                        <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                          {paymentMethod}
                         </span>
                       </div>
-                      <p className="text-sm text-blue-700 dark:text-blue-300">
-                        Available: 5.2847 ETH ≈ $18,420 USD
-                      </p>
                     </div>
-                  )}
-                </div>
+
+                    {showTokenDetails && (
+                      <div className="mt-4 p-4 bg-blue-50/50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Wallet className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                          <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                            Wallet Balance
+                          </span>
+                        </div>
+                        <p className="text-sm text-blue-700 dark:text-blue-300">
+                          Available: 5.2847 ETH ≈ $18,420 USD
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Security Features */}
                 <div className="bg-green-50/50 dark:bg-green-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
@@ -513,7 +653,10 @@ export default function PaymentSummary() {
                   </Link>
                   <Button
                     onClick={handlePayment}
-                    disabled={isProcessing || !tokenAmount}
+                    disabled={
+                      isProcessing ||
+                      (paymentMethod !== "STRIPE" && !tokenAmount)
+                    }
                     className="flex-1 gradient-accent text-white floating-button relative overflow-hidden"
                   >
                     {isProcessing ? (
@@ -533,14 +676,14 @@ export default function PaymentSummary() {
                 {/* Additional Info */}
                 <div className="text-center">
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    By proceeding, you agree to our{' '}
+                    By proceeding, you agree to our{" "}
                     <a
                       href="#"
                       className="text-emerald-600 dark:text-emerald-400 hover:underline"
                     >
                       Terms of Service
-                    </a>{' '}
-                    and{' '}
+                    </a>{" "}
+                    and{" "}
                     <a
                       href="#"
                       className="text-emerald-600 dark:text-emerald-400 hover:underline"

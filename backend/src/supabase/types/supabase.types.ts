@@ -121,57 +121,71 @@ export type Database = {
       claims: {
         Row: {
           amount: number;
-          claim_priority: Database['public']['Enums']['claim_priority'];
-          claim_type: string;
           claimed_date: string | null;
+          coverage_id: number;
           description: string | null;
           id: number;
-          policy_id: number | null;
+          priority: Database['public']['Enums']['claim_priority'];
           processed_date: string | null;
           status: Database['public']['Enums']['claim_status'];
+          submitted_by: string;
           submitted_date: string;
-          user_id: string | null;
+          type: string;
         };
         Insert: {
           amount?: number;
-          claim_priority?: Database['public']['Enums']['claim_priority'];
-          claim_type: string;
           claimed_date?: string | null;
+          coverage_id: number;
           description?: string | null;
           id?: number;
-          policy_id?: number | null;
+          priority?: Database['public']['Enums']['claim_priority'];
           processed_date?: string | null;
           status?: Database['public']['Enums']['claim_status'];
+          submitted_by: string;
           submitted_date: string;
-          user_id?: string | null;
+          type: string;
         };
         Update: {
           amount?: number;
-          claim_priority?: Database['public']['Enums']['claim_priority'];
-          claim_type?: string;
           claimed_date?: string | null;
+          coverage_id?: number;
           description?: string | null;
           id?: number;
-          policy_id?: number | null;
+          priority?: Database['public']['Enums']['claim_priority'];
           processed_date?: string | null;
           status?: Database['public']['Enums']['claim_status'];
+          submitted_by?: string;
           submitted_date?: string;
-          user_id?: string | null;
+          type?: string;
         };
         Relationships: [
           {
-            foreignKeyName: 'claims_claim_type_fkey';
-            columns: ['claim_type'];
+            foreignKeyName: 'claims_coverage_id_fkey';
+            columns: ['coverage_id'];
+            isOneToOne: false;
+            referencedRelation: 'coverage';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'claims_submitted_by_fkey1';
+            columns: ['submitted_by'];
+            isOneToOne: false;
+            referencedRelation: 'user_details';
+            referencedColumns: ['user_id'];
+          },
+          {
+            foreignKeyName: 'claims_submitted_by_fkey2';
+            columns: ['submitted_by'];
+            isOneToOne: false;
+            referencedRelation: 'policyholder_details';
+            referencedColumns: ['user_id'];
+          },
+          {
+            foreignKeyName: 'claims_type_fkey';
+            columns: ['type'];
             isOneToOne: false;
             referencedRelation: 'claim_types';
             referencedColumns: ['name'];
-          },
-          {
-            foreignKeyName: 'claims_policy_id_fkey';
-            columns: ['policy_id'];
-            isOneToOne: false;
-            referencedRelation: 'policies';
-            referencedColumns: ['id'];
           },
         ];
       };
@@ -245,30 +259,30 @@ export type Database = {
           end_date: string;
           id: number;
           next_payment_date: string;
-          policy_id: number | null;
+          policy_id: number;
           start_date: string;
           status: Database['public']['Enums']['coverage_status'];
-          user_id: string | null;
+          user_id: string;
           utilization_rate: number;
         };
         Insert: {
           end_date: string;
           id?: number;
           next_payment_date: string;
-          policy_id?: number | null;
+          policy_id: number;
           start_date: string;
           status?: Database['public']['Enums']['coverage_status'];
-          user_id?: string | null;
+          user_id: string;
           utilization_rate?: number;
         };
         Update: {
           end_date?: string;
           id?: number;
           next_payment_date?: string;
-          policy_id?: number | null;
+          policy_id?: number;
           start_date?: string;
           status?: Database['public']['Enums']['coverage_status'];
-          user_id?: string | null;
+          user_id?: string;
           utilization_rate?: number;
         };
         Relationships: [
@@ -298,7 +312,7 @@ export type Database = {
       };
       policies: {
         Row: {
-          category: string;
+          category: Database['public']['Enums']['policy_category'];
           coverage: number;
           created_by: string;
           description: string | null;
@@ -306,12 +320,12 @@ export type Database = {
           id: number;
           name: string;
           popular: boolean;
-          premium: string;
-          provider: string;
+          premium: number;
           rating: number;
+          status: Database['public']['Enums']['policy_status'];
         };
         Insert: {
-          category: string;
+          category?: Database['public']['Enums']['policy_category'];
           coverage: number;
           created_by: string;
           description?: string | null;
@@ -319,12 +333,12 @@ export type Database = {
           id?: number;
           name: string;
           popular: boolean;
-          premium: string;
-          provider: string;
+          premium: number;
           rating: number;
+          status?: Database['public']['Enums']['policy_status'];
         };
         Update: {
-          category?: string;
+          category?: Database['public']['Enums']['policy_category'];
           coverage?: number;
           created_by?: string;
           description?: string | null;
@@ -332,11 +346,19 @@ export type Database = {
           id?: number;
           name?: string;
           popular?: boolean;
-          premium?: string;
-          provider?: string;
+          premium?: number;
           rating?: number;
+          status?: Database['public']['Enums']['policy_status'];
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: 'policies_created_by_fkey1';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'admin_details';
+            referencedColumns: ['user_id'];
+          },
+        ];
       };
       policy_claim_type: {
         Row: {
@@ -405,21 +427,21 @@ export type Database = {
       };
       policyholder_details: {
         Row: {
-          address: string | null;
+          address: string;
           date_of_birth: string;
-          occupation: string | null;
+          occupation: string;
           user_id: string;
         };
         Insert: {
-          address?: string | null;
+          address: string;
           date_of_birth: string;
-          occupation?: string | null;
+          occupation: string;
           user_id: string;
         };
         Update: {
-          address?: string | null;
+          address?: string;
           date_of_birth?: string;
-          occupation?: string | null;
+          occupation?: string;
           user_id?: string;
         };
         Relationships: [
@@ -527,24 +549,24 @@ export type Database = {
       user_details: {
         Row: {
           bio: string | null;
-          first_name: string | null;
-          last_name: string | null;
+          first_name: string;
+          last_name: string;
           phone: string | null;
           status: Database['public']['Enums']['user_status'];
           user_id: string;
         };
         Insert: {
           bio?: string | null;
-          first_name?: string | null;
-          last_name?: string | null;
+          first_name: string;
+          last_name: string;
           phone?: string | null;
           status?: Database['public']['Enums']['user_status'];
           user_id: string;
         };
         Update: {
           bio?: string | null;
-          first_name?: string | null;
-          last_name?: string | null;
+          first_name?: string;
+          last_name?: string;
           phone?: string | null;
           status?: Database['public']['Enums']['user_status'];
           user_id?: string;
@@ -556,7 +578,27 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      calculate_policy_revenue: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          policy_id: number;
+          total_revenue: number;
+        }[];
+      };
+      count_active_users_by_company: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          company_id: number;
+          active_users: number;
+        }[];
+      };
+      count_policy_sales: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          policy_id: number;
+          sales: number;
+        }[];
+      };
     };
     Enums: {
       claim_priority: 'high' | 'medium' | 'low';
@@ -568,6 +610,8 @@ export type Database = {
         | '51-200 employees'
         | '201-500 employees'
         | '500+ employees';
+      policy_category: 'health' | 'crop' | 'travel';
+      policy_status: 'active' | 'deactivated';
       role: 'admin' | 'user';
       user_status: 'active' | 'deactivated';
       years_in_business:
@@ -716,6 +760,8 @@ export const Constants = {
         '201-500 employees',
         '500+ employees',
       ],
+      policy_category: ['health', 'crop', 'travel'],
+      policy_status: ['active', 'deactivated'],
       role: ['admin', 'user'],
       user_status: ['active', 'deactivated'],
       years_in_business: [

@@ -11,7 +11,7 @@ interface DecodedToken {
 }
 
 // ✅ Toggle this to true/false to enable/disable middleware role protection
-const ENABLE_ROLE_PROTECTION = false;
+const ENABLE_ROLE_PROTECTION = true;
 
 export function middleware(request: NextRequest) {
   if (!ENABLE_ROLE_PROTECTION) {

@@ -7,6 +7,7 @@ import {
   usePolicyControllerGetSummary,
   usePolicyControllerGetCategoryCounts,
   usePolicyControllerUploadDocuments,
+  usePolicyControllerGetStats,
   type UploadDocDto,
   type PolicyControllerFindAllParams,
   type CreatePolicyDto,
@@ -22,7 +23,7 @@ export function usePoliciesQuery(params?: PolicyControllerFindAllParams) {
   };
 }
 
-export function usePolicyQuery(id: string) {
+export function usePolicyQuery(id: number) {
   const query = usePolicyControllerFindOne(id);
   return {
     ...query,
@@ -68,6 +69,14 @@ export function usePolicySummaryQuery(id: string) {
 
 export function useCategoryCountsQuery() {
   const query = usePolicyControllerGetCategoryCounts();
+  return {
+    ...query,
+    error: parseError(query.error),
+  };
+}
+
+export function usePolicyStatsQuery() {
+  const query = usePolicyControllerGetStats();
   return {
     ...query,
     error: parseError(query.error),

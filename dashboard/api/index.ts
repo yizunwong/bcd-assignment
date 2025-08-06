@@ -31,28 +31,6 @@ export interface CommonResponseDto {
   count?: number;
 }
 
-export type AuthUserResponseDtoFirstName = { [key: string]: unknown };
-
-export type AuthUserResponseDtoLastName = { [key: string]: unknown };
-
-export type AuthUserResponseDtoPhone = { [key: string]: unknown };
-
-export type AuthUserResponseDtoBio = { [key: string]: unknown };
-
-export type AuthUserResponseDtoAddress = { [key: string]: unknown };
-
-export type AuthUserResponseDtoDateOfBirth = { [key: string]: unknown };
-
-export type AuthUserResponseDtoOccupation = { [key: string]: unknown };
-
-export type AuthUserResponseDtoCompanyName = { [key: string]: unknown };
-
-export type AuthUserResponseDtoCompanyAddress = { [key: string]: unknown };
-
-export type AuthUserResponseDtoCompanyContactNo = { [key: string]: unknown };
-
-export type AuthUserResponseDtoCompanyLicenseNo = { [key: string]: unknown };
-
 export interface AuthUserResponseDto {
   id: string;
   email: string;
@@ -61,17 +39,18 @@ export interface AuthUserResponseDto {
   role: string;
   lastSignInAt: string;
   provider: string;
-  firstName?: AuthUserResponseDtoFirstName;
-  lastName?: AuthUserResponseDtoLastName;
-  phone?: AuthUserResponseDtoPhone;
-  bio?: AuthUserResponseDtoBio;
-  address?: AuthUserResponseDtoAddress;
-  dateOfBirth?: AuthUserResponseDtoDateOfBirth;
-  occupation?: AuthUserResponseDtoOccupation;
-  companyName?: AuthUserResponseDtoCompanyName;
-  companyAddress?: AuthUserResponseDtoCompanyAddress;
-  companyContactNo?: AuthUserResponseDtoCompanyContactNo;
-  companyLicenseNo?: AuthUserResponseDtoCompanyLicenseNo;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  bio?: string;
+  status: string;
+  address?: string;
+  dateOfBirth?: string;
+  occupation?: string;
+  companyName?: string;
+  companyAddress?: string;
+  companyContactNo?: string;
+  companyLicenseNo?: string;
 }
 
 export interface LoginResponseDto {
@@ -83,6 +62,8 @@ export interface LoginDto {
   email: string;
   /** Password for the user */
   password: string;
+  /** Keep the session for 30 days when checked */
+  rememberMe?: boolean;
 }
 
 export type CompanyDetailsDtoYearsInBusiness =
@@ -148,6 +129,60 @@ export interface RegisterDto {
   address?: string;
 }
 
+export type ProfileResponseDtoRole =
+  (typeof ProfileResponseDtoRole)[keyof typeof ProfileResponseDtoRole];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ProfileResponseDtoRole = {
+  policyholder: "policyholder",
+  insurance_admin: "insurance_admin",
+  system_admin: "system_admin",
+} as const;
+
+export type ProfileResponseDtoCompanyYearsInBusiness =
+  (typeof ProfileResponseDtoCompanyYearsInBusiness)[keyof typeof ProfileResponseDtoCompanyYearsInBusiness];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ProfileResponseDtoCompanyYearsInBusiness = {
+  "0-1_years": "0-1 years",
+  "2-5_years": "2-5 years",
+  "6-10_years": "6-10 years",
+  "11-20_years": "11-20 years",
+  "20+_years": "20+ years",
+} as const;
+
+export type ProfileResponseDtoCompanyEmployeesNumber =
+  (typeof ProfileResponseDtoCompanyEmployeesNumber)[keyof typeof ProfileResponseDtoCompanyEmployeesNumber];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ProfileResponseDtoCompanyEmployeesNumber = {
+  "1-10_employees": "1-10 employees",
+  "11-50_employees": "11-50 employees",
+  "51-200_employees": "51-200 employees",
+  "201-500_employees": "201-500 employees",
+  "500+_employees": "500+ employees",
+} as const;
+
+export interface ProfileResponseDto {
+  id: string;
+  role: ProfileResponseDtoRole;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  bio: string;
+  status: string;
+  address?: string;
+  dateOfBirth?: string;
+  occupation?: string;
+  companyName?: string;
+  companyAddress?: string;
+  companyContactNo?: string;
+  companyLicenseNo?: string;
+  companyYearsInBusiness?: ProfileResponseDtoCompanyYearsInBusiness;
+  companyEmployeesNumber?: ProfileResponseDtoCompanyEmployeesNumber;
+}
+
 export type UserResponseDtoRole =
   (typeof UserResponseDtoRole)[keyof typeof UserResponseDtoRole];
 
@@ -168,6 +203,15 @@ export type UserResponseDtoPhone = { [key: string]: unknown } | null;
  */
 export type UserResponseDtoBio = { [key: string]: unknown } | null;
 
+export type UserResponseDtoStatus =
+  (typeof UserResponseDtoStatus)[keyof typeof UserResponseDtoStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserResponseDtoStatus = {
+  active: "active",
+  deactivated: "deactivated",
+} as const;
+
 export type UserResponseDtoLastLogin = { [key: string]: unknown };
 
 export type UserResponseDtoJoinedAt = { [key: string]: unknown };
@@ -183,7 +227,7 @@ export interface UserResponseDto {
   phone?: UserResponseDtoPhone;
   /** @nullable */
   bio?: UserResponseDtoBio;
-  status: string;
+  status: UserResponseDtoStatus;
   lastLogin?: UserResponseDtoLastLogin;
   joinedAt?: UserResponseDtoJoinedAt;
   details?: UserResponseDtoDetails;
@@ -207,8 +251,8 @@ export const CreateUserDtoRole = {
 } as const;
 
 export interface CreateUserDto {
-  firstName?: string;
-  lastName?: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   role: CreateUserDtoRole;
@@ -269,9 +313,9 @@ export const CreateClaimDtoPriority = {
 
 export interface CreateClaimDto {
   /** ID of the policy associated with the claim */
-  policy_id: number;
+  coverage_id: number;
   /** Type of the claim */
-  claim_type: string;
+  type: string;
   /** Priority of the claim */
   priority: CreateClaimDtoPriority;
   /** Amount claimed */
@@ -293,16 +337,40 @@ export interface ClaimDocumentResponseDto {
   signedUrl: string;
 }
 
-export type ClaimResponseDtoDescription = { [key: string]: unknown };
+export interface PolicyHolderDetailsDto {
+  user_id: string;
+  date_of_birth: string;
+  occupation: string;
+  address: string;
+}
+
+export interface PolicySummaryDto {
+  id: number;
+  name: string;
+  provider: string;
+  coverage: number;
+  premium: number;
+}
 
 export interface ClaimResponseDto {
   id: number;
-  claim_type: string;
+  type: string;
   amount: number;
   status: string;
-  description: ClaimResponseDtoDescription;
+  description: string;
   submitted_date: string;
+  priority: string;
+  submitted_by: string;
   claim_documents: ClaimDocumentResponseDto[];
+  policyholder_details: PolicyHolderDetailsDto;
+  policy: PolicySummaryDto;
+}
+
+export interface ClaimStatsDto {
+  pending: number;
+  claimed: number;
+  approved: number;
+  rejected: number;
 }
 
 /**
@@ -320,9 +388,9 @@ export const UpdateClaimDtoPriority = {
 
 export interface UpdateClaimDto {
   /** ID of the policy associated with the claim */
-  policy_id?: number;
+  coverage_id?: number;
   /** Type of the claim */
-  claim_type?: string;
+  type?: string;
   /** Priority of the claim */
   priority?: UpdateClaimDtoPriority;
   /** Amount claimed */
@@ -345,13 +413,22 @@ export const ClaimStatus = {
   claimed: "claimed",
 } as const;
 
+export type CreatePolicyDtoCategory =
+  (typeof CreatePolicyDtoCategory)[keyof typeof CreatePolicyDtoCategory];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreatePolicyDtoCategory = {
+  health: "health",
+  travel: "travel",
+  crop: "crop",
+} as const;
+
 export interface CreatePolicyDto {
   name: string;
-  category: string;
-  provider: string;
+  category: CreatePolicyDtoCategory;
   coverage: number;
   durationDays: number;
-  premium: string;
+  premium: number;
   rating: number;
   description?: string;
   claimTypes: string[];
@@ -365,6 +442,15 @@ export interface PolicyDocumentResponseDto {
   signedUrl: string;
 }
 
+export type ReviewRespondDtoComment = { [key: string]: unknown };
+
+export interface ReviewRespondDto {
+  id: number;
+  /** Rating from 1 to 5 */
+  rating: number;
+  comment?: ReviewRespondDtoComment;
+}
+
 export type PolicyResponseDtoDescription = { [key: string]: unknown };
 
 export interface PolicyResponseDto {
@@ -374,21 +460,47 @@ export interface PolicyResponseDto {
   provider: string;
   coverage: number;
   duration_days: number;
-  premium: string;
+  premium: number;
   rating: number;
   popular: boolean;
   description?: PolicyResponseDtoDescription;
   claim_types: string[];
+  sales: number;
+  revenue: number;
+  status: string;
   policy_documents: PolicyDocumentResponseDto[];
+  reviews: ReviewRespondDto[];
 }
+
+export interface PolicyStatsDto {
+  activePolicies: number;
+  deactivatedPolicies: number;
+  totalSales: number;
+  totalRevenue: number;
+}
+
+export interface PolicyCategoryCountStatsDto {
+  travel: number;
+  health: number;
+  crop: number;
+}
+
+export type UpdatePolicyDtoCategory =
+  (typeof UpdatePolicyDtoCategory)[keyof typeof UpdatePolicyDtoCategory];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdatePolicyDtoCategory = {
+  health: "health",
+  travel: "travel",
+  crop: "crop",
+} as const;
 
 export interface UpdatePolicyDto {
   name?: string;
-  category?: string;
-  provider?: string;
+  category?: UpdatePolicyDtoCategory;
   coverage?: number;
   durationDays?: number;
-  premium?: string;
+  premium?: number;
   rating?: number;
   description?: string;
   claimTypes?: string[];
@@ -416,7 +528,7 @@ export interface CoveragePolicyDto {
   description?: CoveragePolicyDtoDescription;
   category: string;
   coverage: number;
-  premium: string;
+  premium: number;
   provider: string;
 }
 
@@ -464,6 +576,58 @@ export interface CreateReviewDto {
   comment?: string;
 }
 
+export interface TopPolicyDto {
+  id: number;
+  name: string;
+  sales: number;
+}
+
+export interface AdminDashoboardDto {
+  activePolicies: number;
+  pendingClaims: number;
+  activeUsers: number;
+  totalRevenue: number;
+  topPolicies: TopPolicyDto[];
+}
+
+export interface PolicyDetailsDto {
+  name: string;
+  coverage: number;
+}
+
+/**
+ * @nullable
+ */
+export type ActiveCoverageDtoPolicy = PolicyDetailsDto | null;
+
+export interface ActiveCoverageDto {
+  id: number;
+  policy_id: number;
+  status: string;
+  utilization_rate: number;
+  start_date: string;
+  end_date: string;
+  next_payment_date: string;
+  /** @nullable */
+  policy: ActiveCoverageDtoPolicy;
+}
+
+export interface PolicyholderDashboardDto {
+  activeCoverage: number;
+  totalCoverage: number;
+  pendingClaims: number;
+  activeCoverageObject: ActiveCoverageDto[];
+}
+
+export interface PaymentIntentResponseDto {
+  clientSecret: string;
+}
+
+export interface CreatePaymentIntentDto {
+  amount: number;
+  currency: string;
+}
+
 export type AuthControllerLogin200AllOf = {
   data?: LoginResponseDto;
 };
@@ -472,11 +636,39 @@ export type AuthControllerLogin200 = CommonResponseDto &
   AuthControllerLogin200AllOf;
 
 export type AuthControllerGetMe200AllOf = {
-  data?: AuthUserResponseDto;
+  data?: ProfileResponseDto;
 };
 
 export type AuthControllerGetMe200 = CommonResponseDto &
   AuthControllerGetMe200AllOf;
+
+export type UserControllerFindAllParams = {
+  role?: UserControllerFindAllRole;
+  status?: UserControllerFindAllStatus;
+  /**
+   * Search keyword for name or email
+   */
+  search?: string;
+};
+
+export type UserControllerFindAllRole =
+  (typeof UserControllerFindAllRole)[keyof typeof UserControllerFindAllRole];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserControllerFindAllRole = {
+  policyholder: "policyholder",
+  insurance_admin: "insurance_admin",
+  system_admin: "system_admin",
+} as const;
+
+export type UserControllerFindAllStatus =
+  (typeof UserControllerFindAllStatus)[keyof typeof UserControllerFindAllStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UserControllerFindAllStatus = {
+  active: "active",
+  deactivated: "deactivated",
+} as const;
 
 export type UserControllerFindAll200AllOf = {
   data?: UserResponseDto[];
@@ -517,9 +709,9 @@ export type ClaimControllerFindAllParams = {
   page?: number;
   limit?: number;
   /**
-   * Filter by claim type (category)
+   * Filter by claim status
    */
-  category?: string;
+  status?: string;
   /**
    * Search keyword for claim_type or description
    */
@@ -534,7 +726,7 @@ export type ClaimControllerFindAllSortBy =
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ClaimControllerFindAllSortBy = {
   id: "id",
-  claim_type: "claim_type",
+  type: "type",
   amount: "amount",
   status: "status",
   submitted_date: "submitted_date",
@@ -555,6 +747,13 @@ export type ClaimControllerFindAll200AllOf = {
 
 export type ClaimControllerFindAll200 = CommonResponseDto &
   ClaimControllerFindAll200AllOf;
+
+export type ClaimControllerGetStats200AllOf = {
+  data?: ClaimStatsDto;
+};
+
+export type ClaimControllerGetStats200 = CommonResponseDto &
+  ClaimControllerGetStats200AllOf;
 
 export type ClaimControllerFindOne200AllOf = {
   data?: ClaimResponseDto;
@@ -597,14 +796,28 @@ export type PolicyControllerFindAllParams = {
   /**
    * Filter by policy category
    */
-  category?: string;
+  category?: PolicyControllerFindAllCategory;
   /**
    * Search keyword for name or description
    */
   search?: string;
   sortBy?: PolicyControllerFindAllSortBy;
   sortOrder?: PolicyControllerFindAllSortOrder;
+  /**
+   * Filter by creator user id
+   */
+  userId?: string;
 };
+
+export type PolicyControllerFindAllCategory =
+  (typeof PolicyControllerFindAllCategory)[keyof typeof PolicyControllerFindAllCategory];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PolicyControllerFindAllCategory = {
+  health: "health",
+  travel: "travel",
+  crop: "crop",
+} as const;
 
 export type PolicyControllerFindAllSortBy =
   (typeof PolicyControllerFindAllSortBy)[keyof typeof PolicyControllerFindAllSortBy];
@@ -615,7 +828,7 @@ export const PolicyControllerFindAllSortBy = {
   name: "name",
   rating: "rating",
   premium: "premium",
-  popularity: "popularity",
+  sales: "sales",
 } as const;
 
 export type PolicyControllerFindAllSortOrder =
@@ -633,6 +846,13 @@ export type PolicyControllerFindAll200AllOf = {
 
 export type PolicyControllerFindAll200 = CommonResponseDto &
   PolicyControllerFindAll200AllOf;
+
+export type PolicyControllerGetStats200AllOf = {
+  data?: PolicyStatsDto;
+};
+
+export type PolicyControllerGetStats200 = CommonResponseDto &
+  PolicyControllerGetStats200AllOf;
 
 export type PolicyControllerFindOne200AllOf = {
   data?: PolicyResponseDto;
@@ -655,13 +875,20 @@ export type PolicyControllerRemove200AllOf = {
 export type PolicyControllerRemove200 = CommonResponseDto &
   PolicyControllerRemove200AllOf;
 
+export type PolicyControllerGetCategoryCounts200AllOf = {
+  data?: PolicyCategoryCountStatsDto;
+};
+
+export type PolicyControllerGetCategoryCounts200 = CommonResponseDto &
+  PolicyControllerGetCategoryCounts200AllOf;
+
 export type CoverageControllerFindAllParams = {
   page?: number;
   limit?: number;
   /**
    * Filter by policy category
    */
-  category?: string;
+  category?: CoverageControllerFindAllCategory;
   /**
    * Search keyword for policy name or description
    */
@@ -670,6 +897,16 @@ export type CoverageControllerFindAllParams = {
   sortBy?: CoverageControllerFindAllSortBy;
   sortOrder?: CoverageControllerFindAllSortOrder;
 };
+
+export type CoverageControllerFindAllCategory =
+  (typeof CoverageControllerFindAllCategory)[keyof typeof CoverageControllerFindAllCategory];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CoverageControllerFindAllCategory = {
+  health: "health",
+  travel: "travel",
+  crop: "crop",
+} as const;
 
 export type CoverageControllerFindAllStatus =
   (typeof CoverageControllerFindAllStatus)[keyof typeof CoverageControllerFindAllStatus];
@@ -714,6 +951,27 @@ export type CoverageControllerFindOne200AllOf = {
 
 export type CoverageControllerFindOne200 = CommonResponseDto &
   CoverageControllerFindOne200AllOf;
+
+export type DashboardControllerGetSummary200AllOf = {
+  data?: AdminDashoboardDto;
+};
+
+export type DashboardControllerGetSummary200 = CommonResponseDto &
+  DashboardControllerGetSummary200AllOf;
+
+export type DashboardControllerGetPolicyholderSummary200AllOf = {
+  data?: PolicyholderDashboardDto;
+};
+
+export type DashboardControllerGetPolicyholderSummary200 = CommonResponseDto &
+  DashboardControllerGetPolicyholderSummary200AllOf;
+
+export type PaymentControllerCreateIntent200AllOf = {
+  data?: PaymentIntentResponseDto;
+};
+
+export type PaymentControllerCreateIntent200 = CommonResponseDto &
+  PaymentControllerCreateIntent200AllOf;
 
 export const authControllerLogin = (
   loginDto: LoginDto,
@@ -1076,37 +1334,47 @@ export function useAuthControllerGetMe<
   return query;
 }
 
-export const userControllerFindAll = (signal?: AbortSignal) => {
+export const userControllerFindAll = (
+  params?: UserControllerFindAllParams,
+  signal?: AbortSignal,
+) => {
   return customFetcher<UserControllerFindAll200>({
     url: `/users`,
     method: "GET",
+    params,
     signal,
   });
 };
 
-export const getUserControllerFindAllQueryKey = () => {
-  return [`/users`] as const;
+export const getUserControllerFindAllQueryKey = (
+  params?: UserControllerFindAllParams,
+) => {
+  return [`/users`, ...(params ? [params] : [])] as const;
 };
 
 export const getUserControllerFindAllQueryOptions = <
   TData = Awaited<ReturnType<typeof userControllerFindAll>>,
   TError = unknown,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<
-      Awaited<ReturnType<typeof userControllerFindAll>>,
-      TError,
-      TData
-    >
-  >;
-}) => {
+>(
+  params?: UserControllerFindAllParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userControllerFindAll>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
   const { query: queryOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getUserControllerFindAllQueryKey();
+  const queryKey =
+    queryOptions?.queryKey ?? getUserControllerFindAllQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof userControllerFindAll>>
-  > = ({ signal }) => userControllerFindAll(signal);
+  > = ({ signal }) => userControllerFindAll(params, signal);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof userControllerFindAll>>,
@@ -1124,6 +1392,7 @@ export function useUserControllerFindAll<
   TData = Awaited<ReturnType<typeof userControllerFindAll>>,
   TError = unknown,
 >(
+  params: undefined | UserControllerFindAllParams,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -1149,6 +1418,7 @@ export function useUserControllerFindAll<
   TData = Awaited<ReturnType<typeof userControllerFindAll>>,
   TError = unknown,
 >(
+  params?: UserControllerFindAllParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -1174,6 +1444,7 @@ export function useUserControllerFindAll<
   TData = Awaited<ReturnType<typeof userControllerFindAll>>,
   TError = unknown,
 >(
+  params?: UserControllerFindAllParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -1192,6 +1463,7 @@ export function useUserControllerFindAll<
   TData = Awaited<ReturnType<typeof userControllerFindAll>>,
   TError = unknown,
 >(
+  params?: UserControllerFindAllParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -1205,7 +1477,7 @@ export function useUserControllerFindAll<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getUserControllerFindAllQueryOptions(options);
+  const queryOptions = getUserControllerFindAllQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,
@@ -1985,6 +2257,148 @@ export const useClaimControllerUploadDocuments = <
   return useMutation(mutationOptions, queryClient);
 };
 
+export const claimControllerGetStats = (signal?: AbortSignal) => {
+  return customFetcher<ClaimControllerGetStats200>({
+    url: `/claim/stats`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getClaimControllerGetStatsQueryKey = () => {
+  return [`/claim/stats`] as const;
+};
+
+export const getClaimControllerGetStatsQueryOptions = <
+  TData = Awaited<ReturnType<typeof claimControllerGetStats>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof claimControllerGetStats>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getClaimControllerGetStatsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof claimControllerGetStats>>
+  > = ({ signal }) => claimControllerGetStats(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof claimControllerGetStats>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ClaimControllerGetStatsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof claimControllerGetStats>>
+>;
+export type ClaimControllerGetStatsQueryError = unknown;
+
+export function useClaimControllerGetStats<
+  TData = Awaited<ReturnType<typeof claimControllerGetStats>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof claimControllerGetStats>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof claimControllerGetStats>>,
+          TError,
+          Awaited<ReturnType<typeof claimControllerGetStats>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useClaimControllerGetStats<
+  TData = Awaited<ReturnType<typeof claimControllerGetStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof claimControllerGetStats>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof claimControllerGetStats>>,
+          TError,
+          Awaited<ReturnType<typeof claimControllerGetStats>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useClaimControllerGetStats<
+  TData = Awaited<ReturnType<typeof claimControllerGetStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof claimControllerGetStats>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useClaimControllerGetStats<
+  TData = Awaited<ReturnType<typeof claimControllerGetStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof claimControllerGetStats>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getClaimControllerGetStatsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
 export const claimControllerFindOne = (id: string, signal?: AbortSignal) => {
   return customFetcher<ClaimControllerFindOne200>({
     url: `/claim/${id}`,
@@ -2757,7 +3171,149 @@ export const usePolicyControllerUploadDocuments = <
   return useMutation(mutationOptions, queryClient);
 };
 
-export const policyControllerFindOne = (id: string, signal?: AbortSignal) => {
+export const policyControllerGetStats = (signal?: AbortSignal) => {
+  return customFetcher<PolicyControllerGetStats200>({
+    url: `/policy/stats`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getPolicyControllerGetStatsQueryKey = () => {
+  return [`/policy/stats`] as const;
+};
+
+export const getPolicyControllerGetStatsQueryOptions = <
+  TData = Awaited<ReturnType<typeof policyControllerGetStats>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof policyControllerGetStats>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getPolicyControllerGetStatsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof policyControllerGetStats>>
+  > = ({ signal }) => policyControllerGetStats(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof policyControllerGetStats>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type PolicyControllerGetStatsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof policyControllerGetStats>>
+>;
+export type PolicyControllerGetStatsQueryError = unknown;
+
+export function usePolicyControllerGetStats<
+  TData = Awaited<ReturnType<typeof policyControllerGetStats>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetStats>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof policyControllerGetStats>>,
+          TError,
+          Awaited<ReturnType<typeof policyControllerGetStats>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePolicyControllerGetStats<
+  TData = Awaited<ReturnType<typeof policyControllerGetStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetStats>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof policyControllerGetStats>>,
+          TError,
+          Awaited<ReturnType<typeof policyControllerGetStats>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePolicyControllerGetStats<
+  TData = Awaited<ReturnType<typeof policyControllerGetStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetStats>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function usePolicyControllerGetStats<
+  TData = Awaited<ReturnType<typeof policyControllerGetStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetStats>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getPolicyControllerGetStatsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const policyControllerFindOne = (id: number, signal?: AbortSignal) => {
   return customFetcher<PolicyControllerFindOne200>({
     url: `/policy/${id}`,
     method: "GET",
@@ -2765,7 +3321,7 @@ export const policyControllerFindOne = (id: string, signal?: AbortSignal) => {
   });
 };
 
-export const getPolicyControllerFindOneQueryKey = (id: string) => {
+export const getPolicyControllerFindOneQueryKey = (id: number) => {
   return [`/policy/${id}`] as const;
 };
 
@@ -2773,7 +3329,7 @@ export const getPolicyControllerFindOneQueryOptions = <
   TData = Awaited<ReturnType<typeof policyControllerFindOne>>,
   TError = unknown,
 >(
-  id: string,
+  id: number,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -2814,7 +3370,7 @@ export function usePolicyControllerFindOne<
   TData = Awaited<ReturnType<typeof policyControllerFindOne>>,
   TError = unknown,
 >(
-  id: string,
+  id: number,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -2840,7 +3396,7 @@ export function usePolicyControllerFindOne<
   TData = Awaited<ReturnType<typeof policyControllerFindOne>>,
   TError = unknown,
 >(
-  id: string,
+  id: number,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -2866,7 +3422,7 @@ export function usePolicyControllerFindOne<
   TData = Awaited<ReturnType<typeof policyControllerFindOne>>,
   TError = unknown,
 >(
-  id: string,
+  id: number,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -2885,7 +3441,7 @@ export function usePolicyControllerFindOne<
   TData = Awaited<ReturnType<typeof policyControllerFindOne>>,
   TError = unknown,
 >(
-  id: string,
+  id: number,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3219,7 +3775,7 @@ export function usePolicyControllerGetSummary<
 }
 
 export const policyControllerGetCategoryCounts = (signal?: AbortSignal) => {
-  return customFetcher<void>({
+  return customFetcher<PolicyControllerGetCategoryCounts200>({
     url: `/policy/browse/categories`,
     method: "GET",
     signal,
@@ -3903,9 +4459,7 @@ export const useCoverageControllerRemove = <
   return useMutation(mutationOptions, queryClient);
 };
 
-export const coverageControllerGetPolicyholderSummary = (
-  signal?: AbortSignal,
-) => {
+export const coverageControllerGetCoverageStats = (signal?: AbortSignal) => {
   return customFetcher<void>({
     url: `/coverage/policyholder/summary`,
     method: "GET",
@@ -3913,17 +4467,17 @@ export const coverageControllerGetPolicyholderSummary = (
   });
 };
 
-export const getCoverageControllerGetPolicyholderSummaryQueryKey = () => {
+export const getCoverageControllerGetCoverageStatsQueryKey = () => {
   return [`/coverage/policyholder/summary`] as const;
 };
 
-export const getCoverageControllerGetPolicyholderSummaryQueryOptions = <
-  TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+export const getCoverageControllerGetCoverageStatsQueryOptions = <
+  TData = Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
   TError = unknown,
 >(options?: {
   query?: Partial<
     UseQueryOptions<
-      Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+      Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
       TError,
       TData
     >
@@ -3932,42 +4486,41 @@ export const getCoverageControllerGetPolicyholderSummaryQueryOptions = <
   const { query: queryOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ??
-    getCoverageControllerGetPolicyholderSummaryQueryKey();
+    queryOptions?.queryKey ?? getCoverageControllerGetCoverageStatsQueryKey();
 
   const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>
-  > = ({ signal }) => coverageControllerGetPolicyholderSummary(signal);
+    Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>
+  > = ({ signal }) => coverageControllerGetCoverageStats(signal);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+    Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type CoverageControllerGetPolicyholderSummaryQueryResult = NonNullable<
-  Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>
+export type CoverageControllerGetCoverageStatsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>
 >;
-export type CoverageControllerGetPolicyholderSummaryQueryError = unknown;
+export type CoverageControllerGetCoverageStatsQueryError = unknown;
 
-export function useCoverageControllerGetPolicyholderSummary<
-  TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+export function useCoverageControllerGetCoverageStats<
+  TData = Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
   TError = unknown,
 >(
   options: {
     query: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+        Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
         TError,
         TData
       >
     > &
       Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+          Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
           TError,
-          Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>
+          Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>
         >,
         "initialData"
       >;
@@ -3976,23 +4529,23 @@ export function useCoverageControllerGetPolicyholderSummary<
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
-export function useCoverageControllerGetPolicyholderSummary<
-  TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+export function useCoverageControllerGetCoverageStats<
+  TData = Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
   TError = unknown,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+        Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
         TError,
         TData
       >
     > &
       Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+          Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
           TError,
-          Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>
+          Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>
         >,
         "initialData"
       >;
@@ -4001,14 +4554,14 @@ export function useCoverageControllerGetPolicyholderSummary<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
-export function useCoverageControllerGetPolicyholderSummary<
-  TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+export function useCoverageControllerGetCoverageStats<
+  TData = Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
   TError = unknown,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+        Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
         TError,
         TData
       >
@@ -4019,14 +4572,14 @@ export function useCoverageControllerGetPolicyholderSummary<
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
-export function useCoverageControllerGetPolicyholderSummary<
-  TData = Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+export function useCoverageControllerGetCoverageStats<
+  TData = Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
   TError = unknown,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof coverageControllerGetPolicyholderSummary>>,
+        Awaited<ReturnType<typeof coverageControllerGetCoverageStats>>,
         TError,
         TData
       >
@@ -4037,7 +4590,7 @@ export function useCoverageControllerGetPolicyholderSummary<
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions =
-    getCoverageControllerGetPolicyholderSummaryQueryOptions(options);
+    getCoverageControllerGetCoverageStatsQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,
@@ -4299,6 +4852,375 @@ export const useCompanyControllerUpload = <
   TContext
 > => {
   const mutationOptions = getCompanyControllerUploadMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const dashboardControllerGetSummary = (signal?: AbortSignal) => {
+  return customFetcher<DashboardControllerGetSummary200>({
+    url: `/dashboard`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getDashboardControllerGetSummaryQueryKey = () => {
+  return [`/dashboard`] as const;
+};
+
+export const getDashboardControllerGetSummaryQueryOptions = <
+  TData = Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getDashboardControllerGetSummaryQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof dashboardControllerGetSummary>>
+  > = ({ signal }) => dashboardControllerGetSummary(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type DashboardControllerGetSummaryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof dashboardControllerGetSummary>>
+>;
+export type DashboardControllerGetSummaryQueryError = unknown;
+
+export function useDashboardControllerGetSummary<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardControllerGetSummary>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useDashboardControllerGetSummary<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardControllerGetSummary>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useDashboardControllerGetSummary<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useDashboardControllerGetSummary<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetSummary>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getDashboardControllerGetSummaryQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const dashboardControllerGetPolicyholderSummary = (
+  signal?: AbortSignal,
+) => {
+  return customFetcher<DashboardControllerGetPolicyholderSummary200>({
+    url: `/dashboard/policyholder`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getDashboardControllerGetPolicyholderSummaryQueryKey = () => {
+  return [`/dashboard/policyholder`] as const;
+};
+
+export const getDashboardControllerGetPolicyholderSummaryQueryOptions = <
+  TData = Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getDashboardControllerGetPolicyholderSummaryQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>
+  > = ({ signal }) => dashboardControllerGetPolicyholderSummary(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type DashboardControllerGetPolicyholderSummaryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>
+>;
+export type DashboardControllerGetPolicyholderSummaryQueryError = unknown;
+
+export function useDashboardControllerGetPolicyholderSummary<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useDashboardControllerGetPolicyholderSummary<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+          TError,
+          Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useDashboardControllerGetPolicyholderSummary<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useDashboardControllerGetPolicyholderSummary<
+  TData = Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof dashboardControllerGetPolicyholderSummary>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions =
+    getDashboardControllerGetPolicyholderSummaryQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const paymentControllerCreateIntent = (
+  createPaymentIntentDto: CreatePaymentIntentDto,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<PaymentControllerCreateIntent200>({
+    url: `/payments/intent`,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    data: createPaymentIntentDto,
+    signal,
+  });
+};
+
+export const getPaymentControllerCreateIntentMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof paymentControllerCreateIntent>>,
+    TError,
+    { data: CreatePaymentIntentDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof paymentControllerCreateIntent>>,
+  TError,
+  { data: CreatePaymentIntentDto },
+  TContext
+> => {
+  const mutationKey = ["paymentControllerCreateIntent"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof paymentControllerCreateIntent>>,
+    { data: CreatePaymentIntentDto }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return paymentControllerCreateIntent(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PaymentControllerCreateIntentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof paymentControllerCreateIntent>>
+>;
+export type PaymentControllerCreateIntentMutationBody = CreatePaymentIntentDto;
+export type PaymentControllerCreateIntentMutationError = unknown;
+
+export const usePaymentControllerCreateIntent = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof paymentControllerCreateIntent>>,
+      TError,
+      { data: CreatePaymentIntentDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof paymentControllerCreateIntent>>,
+  TError,
+  { data: CreatePaymentIntentDto },
+  TContext
+> => {
+  const mutationOptions =
+    getPaymentControllerCreateIntentMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

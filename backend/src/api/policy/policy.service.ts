@@ -7,19 +7,24 @@ import {
 } from '@nestjs/common';
 import { CreatePolicyDto } from './dto/requests/create-policy.dto';
 import { UpdatePolicyDto } from './dto/requests/update-policy.dto';
-// import { SupabaseService } from 'src/supabase/supabase.service';
+import { SupabaseService } from 'src/supabase/supabase.service';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { FileService } from '../file/file.service';
 import { CommonResponseDto } from 'src/common/common.dto';
 import { PolicyResponseDto } from './dto/responses/policy.dto';
 import { FindPoliciesQueryDto } from './dto/responses/policy-query.dto';
 import { ClaimService } from '../claim/claim.service';
+import { PolicyCategoryCountStatsDto } from './dto/responses/policy-category.dto';
+import { PolicyStatsDto } from './dto/responses/policy-stats.dto';
+import { PolicyCategory, PolicyStatus } from 'src/enums';
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return */
 @Injectable()
 export class PolicyService {
   constructor(
     private readonly claimsService: ClaimService,
     private readonly fileService: FileService,
+    private readonly supabaseService: SupabaseService,
   ) {}
   async addPolicyDocuments(
     id: number,
@@ -75,7 +80,6 @@ export class PolicyService {
         .insert({
           name: dto.name,
           category: dto.category,
-          provider: dto.provider,
           coverage: dto.coverage,
           duration_days: dto.durationDays,
           premium: dto.premium,
@@ -120,7 +124,7 @@ export class PolicyService {
     req: AuthenticatedRequest,
     query: FindPoliciesQueryDto,
   ): Promise<CommonResponseDto<PolicyResponseDto[]>> {
-    const sortableFields = ['id', 'name', 'rating', 'premium', 'popularity'];
+    const sortableFields = ['id', 'name', 'rating', 'premium', 'popular'];
     if (query.sortBy && !sortableFields.includes(query.sortBy)) {
       throw new BadRequestException(`Invalid sortBy field: ${query.sortBy}`);
     }
@@ -130,10 +134,13 @@ export class PolicyService {
     let dbQuery = req.supabase
       .from('policies')
       .select(
-        `*, 
-     policy_documents(*), 
+        `*,
+     policy_documents(*),
      policy_claim_type:policy_claim_type(
        claim_type:claim_types(name)
+     ),
+     admin_details:admin_details!policies_created_by_fkey1(
+       company:companies(name)
      )`,
         { count: 'exact' },
       )
@@ -141,6 +148,10 @@ export class PolicyService {
       .order(query.sortBy || 'id', {
         ascending: (query.sortOrder || 'asc') === 'asc',
       });
+
+    if (query.userId) {
+      dbQuery = dbQuery.eq('created_by', query.userId);
+    }
 
     if (query.category) {
       dbQuery = dbQuery.eq('category', query.category);
@@ -173,6 +184,25 @@ export class PolicyService {
       }
     }
 
+    const { data: coverageCounts } =
+      await req.supabase.rpc('count_policy_sales');
+    const { data: revenueCounts } = await req.supabase.rpc(
+      'calculate_policy_revenue',
+    );
+
+    const coverageMap = new Map<number, number>();
+    const revenueMap = new Map<number, number>();
+
+    coverageCounts?.forEach((row: { policy_id: number; sales: number }) => {
+      coverageMap.set(row.policy_id, row.sales);
+    });
+
+    revenueCounts?.forEach(
+      (row: { policy_id: number; total_revenue: number }) => {
+        revenueMap.set(row.policy_id, row.total_revenue);
+      },
+    );
+
     const signedUrls = await this.fileService.getSignedUrls(
       req.supabase,
       allPaths,
@@ -180,10 +210,12 @@ export class PolicyService {
 
     let urlIndex = 0;
     const enrichedPolicies: PolicyResponseDto[] = data.map((policy) => {
-      const { policy_claim_type, ...rest } = policy;
+      const { policy_claim_type, admin_details, ...rest } = policy as any;
 
       return {
         ...rest,
+        provider: admin_details?.company?.name || '',
+        category: policy.category as PolicyCategory,
         policy_documents: Array.isArray(policy.policy_documents)
           ? policy.policy_documents.map((doc) => ({
               id: doc.id,
@@ -194,8 +226,11 @@ export class PolicyService {
           : [],
         claim_types:
           policy_claim_type?.map((link) => link.claim_type.name) || [],
+        sales: coverageMap.get(policy.id) || 0,
+        revenue: revenueMap.get(policy.id) || 0,
       };
     });
+
     return new CommonResponseDto<PolicyResponseDto[]>({
       statusCode: 200,
       message: 'Policies retrieved successfully',
@@ -204,12 +239,18 @@ export class PolicyService {
     });
   }
 
-  async findOne(id: number, req: AuthenticatedRequest) {
+  async findOne(
+    id: number,
+    req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto<PolicyResponseDto>> {
     // Step 1: Get the policy + claim types
     const { data: policy, error: policyError } = await req.supabase
       .from('policies')
       .select(
-        '*, policy_claim_type:policy_claim_type(claim_type:claim_types(name))',
+        `*, policy_claim_type:policy_claim_type(claim_type:claim_types(name)),
+        admin_details:admin_details!policies_created_by_fkey1(
+          company:companies(name)
+        )`,
       )
       .eq('id', id)
       .single();
@@ -253,17 +294,21 @@ export class PolicyService {
       throw new InternalServerErrorException('Failed to fetch reviews');
     }
 
-    const { policy_claim_type, ...rest } = policy;
+    const { policy_claim_type, category, admin_details, ...rest } =
+      policy as any;
 
-    return new CommonResponseDto({
+    return new CommonResponseDto<PolicyResponseDto>({
       statusCode: 200,
       message: 'Policy retrieved successfully',
       data: {
         ...rest,
+        provider: admin_details?.company?.name || '',
+        category: category as PolicyCategory,
         policy_documents: enrichedDocuments,
         reviews: reviews || [],
         claim_types:
           policy_claim_type?.map((link) => link.claim_type.name) || [],
+        sales: 0,
       },
     });
   }
@@ -322,18 +367,80 @@ export class PolicyService {
       throw new InternalServerErrorException('Failed to fetch categories');
     }
 
-    const categoryCounts: Record<string, number> = {};
+    const categoryCounts: PolicyCategoryCountStatsDto = {
+      travel: 0,
+      health: 0,
+      crop: 0,
+    };
 
     for (const policy of data) {
       const category = policy.category || 'Unknown';
       categoryCounts[category] = (categoryCounts[category] || 0) + 1;
     }
 
-    return {
+    return new CommonResponseDto({
       statusCode: 200,
-      message: 'Policy categories counted successfully',
+      message: 'Category counts fetched successfully',
       data: categoryCounts,
-    };
+    });
+  }
+
+  async getStats(
+    req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto<PolicyStatsDto>> {
+    const supabase = req.supabase;
+
+    const { count: activePolicies, error: activeError } = await supabase
+      .from('policies')
+      .select('id', { head: true, count: 'exact' })
+      .eq('status', PolicyStatus.ACTIVE);
+    if (activeError) {
+      throw new InternalServerErrorException('Failed to count active policies');
+    }
+
+    const { count: deactivatedPolicies, error: deactivatedError } =
+      await supabase
+        .from('policies')
+        .select('id', { head: true, count: 'exact' })
+        .eq('status', PolicyStatus.DEACTIVATED);
+    if (deactivatedError) {
+      throw new InternalServerErrorException(
+        'Failed to count deactivated policies',
+      );
+    }
+
+    const { data: salesData, error: salesError } =
+      await supabase.rpc('count_policy_sales');
+    if (salesError) {
+      throw new InternalServerErrorException('Failed to fetch policy sales');
+    }
+    const totalSales = (salesData || []).reduce(
+      (sum: number, row: { sales: number }) => sum + (row.sales || 0),
+      0,
+    );
+
+    const { data: revenueData, error: revenueError } = await supabase.rpc(
+      'calculate_policy_revenue',
+    );
+    if (revenueError) {
+      throw new InternalServerErrorException('Failed to calculate revenue');
+    }
+    const totalRevenue = (revenueData || []).reduce(
+      (sum: number, row: { total_revenue: number }) =>
+        sum + (row.total_revenue || 0),
+      0,
+    );
+
+    return new CommonResponseDto<PolicyStatsDto>({
+      statusCode: 200,
+      message: 'Policy stats fetched successfully',
+      data: new PolicyStatsDto({
+        activePolicies: activePolicies || 0,
+        deactivatedPolicies: deactivatedPolicies || 0,
+        totalSales,
+        totalRevenue,
+      }),
+    });
   }
   async update(id: number, dto: UpdatePolicyDto, req: AuthenticatedRequest) {
     const supabase = req.supabase;
@@ -354,7 +461,6 @@ export class PolicyService {
 
     if (dto.name !== undefined) updateFields.name = dto.name;
     if (dto.category !== undefined) updateFields.category = dto.category;
-    if (dto.provider !== undefined) updateFields.provider = dto.provider;
     if (dto.coverage !== undefined) updateFields.coverage = dto.coverage;
     if (dto.premium !== undefined) updateFields.premium = dto.premium;
     if (dto.rating !== undefined) updateFields.rating = dto.rating;

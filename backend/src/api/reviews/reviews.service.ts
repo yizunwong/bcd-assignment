@@ -3,8 +3,9 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { CreateReviewDto } from './dto/create-review.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
+import { CommonResponseDto } from 'src/common/common.dto';
+import { CreateReviewDto } from './dto/requests/create-review.dto';
 
 @Injectable()
 export class ReviewsService {
@@ -12,7 +13,7 @@ export class ReviewsService {
     policyId: number,
     reviewDto: CreateReviewDto,
     req: AuthenticatedRequest,
-  ): Promise<any> {
+  ): Promise<CommonResponseDto> {
     // ✅ Step 1: Get authenticated user
     const { data: userData, error: userError } =
       await req.supabase.auth.getUser();
@@ -57,10 +58,10 @@ export class ReviewsService {
       );
     }
 
-    return {
+    return new CommonResponseDto({
       statusCode: 201,
       message: 'Review submitted successfully',
       data,
-    };
+    });
   }
 }

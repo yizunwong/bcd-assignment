@@ -14,7 +14,7 @@ export class CoveragePolicyDto {
   coverage!: number;
 
   @ApiProperty()
-  premium!: string;
+  premium!: number;
 
   @ApiProperty()
   provider!: string;

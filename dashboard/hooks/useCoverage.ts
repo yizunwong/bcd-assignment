@@ -4,7 +4,7 @@ import {
   useCoverageControllerCreate,
   useCoverageControllerUpdate,
   useCoverageControllerRemove,
-  useCoverageControllerGetPolicyholderSummary,
+  useCoverageControllerGetCoverageStats,
   type CoverageControllerFindAllParams,
   type CreateCoverageDto,
   type UpdateCoverageDto,
@@ -55,8 +55,8 @@ export function useRemoveCoverageMutation() {
   };
 }
 
-export function usePolicyholderSummaryQuery() {
-  const query = useCoverageControllerGetPolicyholderSummary();
+export function useCoverageStatsQuery() {
+  const query = useCoverageControllerGetCoverageStats();
   return {
     ...query,
     error: parseError(query.error),

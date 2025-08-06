@@ -5,6 +5,18 @@ export enum UserStatus {
   DEACTIVATED = 'deactivated',
 }
 
+export enum ClaimStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  CLAIMED = 'claimed',
+}
+
+export enum PolicyStatus {
+  ACTIVE = 'active',
+  DEACTIVATED = 'deactivated',
+}
+
 export enum UserRole {
   POLICYHOLDER = 'policyholder',
   INSURANCE_ADMIN = 'insurance_admin',
@@ -26,6 +38,14 @@ export enum NumberOfEmployees {
   TWO_HUNDRED_TO_FIVE_HUNDRED = '201-500 employees',
   OVER_500 = '500+ employees',
 }
+
+export enum PolicyCategory {
+  HEALTH = 'health',
+  TRAVEL = 'travel',
+  CROP = 'crop',
+}
+
+export type PolicyCategoryQuery = 'all' | keyof typeof PolicyCategory;
 
 export type AdminDetails = Partial<
   Database['public']['Tables']['admin_details']['Row']
