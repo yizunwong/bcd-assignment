@@ -14,7 +14,9 @@ export function Connect() {
   if (isConnected && address) {
     return (
       <Button asChild variant="outline" size="sm" className="floating-button">
-        <Link href="/policyholder/wallet">{formatAddress(address)}</Link>
+        <Link href="/policyholder/wallet">
+          <span>{formatAddress(address)}</span>
+        </Link>
       </Button>
     );
   }
