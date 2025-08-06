@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { z } from "zod";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
+import { z } from 'zod';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
   ArrowLeft,
   Shield,
@@ -13,26 +13,36 @@ import {
   DollarSign,
   Eye,
   CheckCircle,
-} from "lucide-react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import useAuth from "@/hooks/useAuth";
-import { useToast } from "@/components/shared/ToastProvider";
-import { parseError } from "@/utils/parseError";
-import { useUserRegistrationStore } from "@/store/useAdminRegistrationStore";
-import { getCountries, getCountryCallingCode } from "libphonenumber-js";
-import { StepIndicator, RoleSelection, BasicInfo, RoleSpecificInfo, Role } from "./components/RegisterSteps";
+} from 'lucide-react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import useAuth from '@/hooks/useAuth';
+import { useToast } from '@/components/shared/ToastProvider';
+import { parseError } from '@/utils/parseError';
+import { useUserRegistrationStore } from '@/store/useAdminRegistrationStore';
+import { getCountries, getCountryCallingCode } from 'libphonenumber-js';
+import {
+  StepIndicator,
+  RoleSelection,
+  BasicInfo,
+  RoleSpecificInfo,
+  Role,
+} from './components/RegisterSteps';
 
 export default function RegisterPage() {
   const searchParams = useSearchParams();
-  const [selectedRole, setSelectedRole] = useState<string>(searchParams.get("role") || "");
+  const [selectedRole, setSelectedRole] = useState<string>(
+    searchParams.get('role') || ''
+  );
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const router = useRouter();
   const { register: registerUser, isRegistering } = useAuth();
   const { printMessage } = useToast();
-  const setRegistrationData = useUserRegistrationStore((state) => state.setData);
+  const setRegistrationData = useUserRegistrationStore(
+    (state) => state.setData
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const countryOptions = getCountries().map((countryCode) => ({
@@ -41,67 +51,75 @@ export default function RegisterPage() {
   }));
 
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    phoneCode: "+60",
-    phone: "",
-    dateOfBirth: "",
-    address: "",
-    occupation: "",
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    phoneCode: '+60',
+    phone: '',
+    dateOfBirth: '',
+    address: '',
+    occupation: '',
     agreeToTerms: false,
     agreeToPrivacy: false,
   });
 
   const roles: Role[] = [
     {
-      id: "policyholder",
-      title: "Individual/Policyholder",
-      description: "Personal insurance coverage for individuals and families",
+      id: 'policyholder',
+      title: 'Individual/Policyholder',
+      description: 'Personal insurance coverage for individuals and families',
       icon: User,
-      gradient: "from-blue-500 to-teal-500",
+      gradient: 'from-blue-500 to-teal-500',
     },
     {
-      id: "admin",
-      title: "Insurance Provider",
-      description: "Insurance companies, brokers, and service providers",
+      id: 'admin',
+      title: 'Insurance Provider',
+      description: 'Insurance companies, brokers, and service providers',
       icon: Building,
-      gradient: "from-emerald-500 to-green-500",
+      gradient: 'from-emerald-500 to-green-500',
     },
   ];
 
   const roleSchema = z.object({
-    selectedRole: z.string().min(1, "Please select a role"),
+    selectedRole: z.string().min(1, 'Please select a role'),
   });
 
   const basicInfoSchema = z
     .object({
-      firstName: z.string().min(1, "First name is required"),
-      lastName: z.string().min(1, "Last name is required"),
-      email: z.string().email("Invalid email address"),
-      password: z.string().min(8, "Password must be at least 8 characters"),
-      confirmPassword: z.string().min(1, "Please confirm your password"),
+      firstName: z.string().min(1, 'First name is required'),
+      lastName: z.string().min(1, 'Last name is required'),
+      email: z.string().email('Invalid email address'),
+      password: z.string().min(8, 'Password must be at least 8 characters'),
+      confirmPassword: z.string().min(1, 'Please confirm your password'),
       phoneCode: z.string().min(1),
-      phone: z.string().min(1, "Phone number is required"),
+      phone: z.string().min(1, 'Phone number is required'),
     })
     .refine((data) => data.password === data.confirmPassword, {
-      path: ["confirmPassword"],
-      message: "Passwords do not match",
+      path: ['confirmPassword'],
+      message: 'Passwords do not match',
     });
 
   const policyholderSchema = z.object({
-    dateOfBirth: z.string().min(1, "Date of birth is required"),
-    occupation: z.string().min(1, "Occupation is required"),
-    address: z.string().min(1, "Address is required"),
-    agreeToTerms: z.boolean().refine((val) => val, "You must agree to the terms"),
-    agreeToPrivacy: z.boolean().refine((val) => val, "You must agree to the privacy policy"),
+    dateOfBirth: z.string().min(1, 'Date of birth is required'),
+    occupation: z.string().min(1, 'Occupation is required'),
+    address: z.string().min(1, 'Address is required'),
+    agreeToTerms: z
+      .boolean()
+      .refine((val) => val, 'You must agree to the terms'),
+    agreeToPrivacy: z
+      .boolean()
+      .refine((val) => val, 'You must agree to the privacy policy'),
   });
 
   const adminSchema = z.object({
-    agreeToTerms: z.boolean().refine((val) => val, "You must agree to the terms"),
-    agreeToPrivacy: z.boolean().refine((val) => val, "You must agree to the privacy policy"),
+    agreeToTerms: z
+      .boolean()
+      .refine((val) => val, 'You must agree to the terms'),
+    agreeToPrivacy: z
+      .boolean()
+      .refine((val) => val, 'You must agree to the privacy policy'),
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -109,7 +127,10 @@ export default function RegisterPage() {
     if (currentStep === 1) {
       const result = roleSchema.safeParse({ selectedRole });
       if (!result.success) {
-        setErrors({ selectedRole: result.error.flatten().fieldErrors.selectedRole?.[0] as string });
+        setErrors({
+          selectedRole: result.error.flatten().fieldErrors
+            .selectedRole?.[0] as string,
+        });
         return;
       }
       setErrors({});
@@ -122,12 +143,12 @@ export default function RegisterPage() {
       if (!result.success) {
         const fieldErrors = result.error.flatten().fieldErrors;
         setErrors({
-          firstName: fieldErrors.firstName?.[0],
-          lastName: fieldErrors.lastName?.[0],
-          email: fieldErrors.email?.[0],
-          password: fieldErrors.password?.[0],
-          confirmPassword: fieldErrors.confirmPassword?.[0],
-          phone: fieldErrors.phone?.[0],
+          firstName: fieldErrors.firstName?.[0] || '',
+          lastName: fieldErrors.lastName?.[0] || '',
+          email: fieldErrors.email?.[0] || '',
+          password: fieldErrors.password?.[0] || '',
+          confirmPassword: fieldErrors.confirmPassword?.[0] || '',
+          phone: fieldErrors.phone?.[0] || '',
         });
         return;
       }
@@ -137,22 +158,30 @@ export default function RegisterPage() {
     }
 
     const fullPhoneNumber = `${formData.phoneCode}${formData.phone}`;
-    const finalSchema = selectedRole === "admin" ? adminSchema : policyholderSchema;
+    const finalSchema =
+      selectedRole === 'admin' ? adminSchema : policyholderSchema;
     const result = finalSchema.safeParse(formData);
     if (!result.success) {
-      const fieldErrors = result.error.flatten().fieldErrors;
-      setErrors({
-        dateOfBirth: fieldErrors.dateOfBirth?.[0],
-        occupation: fieldErrors.occupation?.[0],
-        address: fieldErrors.address?.[0],
-        agreeToTerms: fieldErrors.agreeToTerms?.[0],
-        agreeToPrivacy: fieldErrors.agreeToPrivacy?.[0],
-      });
+      const fieldErrors = result.error.flatten().fieldErrors as any;
+      if (selectedRole === 'admin') {
+        setErrors({
+          agreeToTerms: fieldErrors.agreeToTerms?.[0] || '',
+          agreeToPrivacy: fieldErrors.agreeToPrivacy?.[0] || '',
+        });
+      } else {
+        setErrors({
+          dateOfBirth: fieldErrors.dateOfBirth?.[0] || '',
+          occupation: fieldErrors.occupation?.[0] || '',
+          address: fieldErrors.address?.[0] || '',
+          agreeToTerms: fieldErrors.agreeToTerms?.[0] || '',
+          agreeToPrivacy: fieldErrors.agreeToPrivacy?.[0] || '',
+        });
+      }
       return;
     }
     setErrors({});
 
-    if (selectedRole === "admin") {
+    if (selectedRole === 'admin') {
       setRegistrationData({
         email: formData.email,
         password: formData.password,
@@ -161,26 +190,26 @@ export default function RegisterPage() {
         lastName: formData.lastName,
         phone: fullPhoneNumber,
       });
-      router.push("/auth/register/provider");
+      router.push('/auth/register/provider');
     } else {
       try {
         await registerUser({
-        email: formData.email,
-        password: formData.password,
-        confirmPassword: formData.confirmPassword,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        role: "policyholder",
-        phone: fullPhoneNumber,
-        dateOfBirth: formData.dateOfBirth,
-        occupation: formData.occupation,
-        address: formData.address,
-      });
-        printMessage("Account created successfully", "success");
-        router.push("/auth/login");
+          email: formData.email,
+          password: formData.password,
+          confirmPassword: formData.confirmPassword,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          role: 'policyholder',
+          phone: fullPhoneNumber,
+          dateOfBirth: formData.dateOfBirth,
+          occupation: formData.occupation,
+          address: formData.address,
+        });
+        printMessage('Account created successfully', 'success');
+        router.push('/auth/login');
         router.refresh();
       } catch (err) {
-        printMessage(parseError(err) || "Registration failed", "error");
+        printMessage(parseError(err) || 'Registration failed', 'error');
       }
     }
   };
@@ -195,8 +224,13 @@ export default function RegisterPage() {
               <div className="w-16 h-16 mb-6 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
                 <Shield className="w-8 h-8 text-white" />
               </div>
-              <h1 className="text-4xl font-bold mb-4">Join the Insurance Revolution</h1>
-              <p className="text-xl text-emerald-100 mb-8">Experience the future of insurance with blockchain technology, instant payouts, and complete transparency.</p>
+              <h1 className="text-4xl font-bold mb-4">
+                Join the Insurance Revolution
+              </h1>
+              <p className="text-xl text-emerald-100 mb-8">
+                Experience the future of insurance with blockchain technology,
+                instant payouts, and complete transparency.
+              </p>
             </div>
             <div className="space-y-6">
               <div className="flex items-center space-x-4">
@@ -205,7 +239,9 @@ export default function RegisterPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold">Instant Coverage</h3>
-                  <p className="text-emerald-100 text-sm">Get protected in minutes, not days</p>
+                  <p className="text-emerald-100 text-sm">
+                    Get protected in minutes, not days
+                  </p>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
@@ -214,7 +250,9 @@ export default function RegisterPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold">Lower Costs</h3>
-                  <p className="text-emerald-100 text-sm">Save up to 40% vs traditional insurance</p>
+                  <p className="text-emerald-100 text-sm">
+                    Save up to 40% vs traditional insurance
+                  </p>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
@@ -223,7 +261,9 @@ export default function RegisterPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold">Full Transparency</h3>
-                  <p className="text-emerald-100 text-sm">Every transaction visible on blockchain</p>
+                  <p className="text-emerald-100 text-sm">
+                    Every transaction visible on blockchain
+                  </p>
                 </div>
               </div>
             </div>
@@ -248,7 +288,10 @@ export default function RegisterPage() {
         <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
           <div className="max-w-lg w-full">
             <div className="mb-8">
-              <Link href="/" className="inline-flex items-center space-x-2 group mb-8 text-slate-400 hover:text-emerald-400 transition-colors">
+              <Link
+                href="/"
+                className="inline-flex items-center space-x-2 group mb-8 text-slate-400 hover:text-emerald-400 transition-colors"
+              >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back to Home</span>
               </Link>
@@ -257,8 +300,12 @@ export default function RegisterPage() {
                   <Shield className="w-8 h-8 text-white" />
                 </div>
               </div>
-              <h1 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">Create Your Account</h1>
-              <p className="text-slate-600 dark:text-slate-400">Join the future of decentralized insurance</p>
+              <h1 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">
+                Create Your Account
+              </h1>
+              <p className="text-slate-600 dark:text-slate-400">
+                Join the future of decentralized insurance
+              </p>
             </div>
             <StepIndicator currentStep={currentStep} />
             <Card className="glass-card rounded-2xl">
@@ -266,8 +313,16 @@ export default function RegisterPage() {
                 <form onSubmit={handleSubmit}>
                   {currentStep === 1 && (
                     <>
-                      <RoleSelection roles={roles} selectedRole={selectedRole} setSelectedRole={setSelectedRole} />
-                      {errors.selectedRole && <p className="text-sm text-red-500 mt-4">{errors.selectedRole}</p>}
+                      <RoleSelection
+                        roles={roles}
+                        selectedRole={selectedRole}
+                        setSelectedRole={setSelectedRole}
+                      />
+                      {errors.selectedRole && (
+                        <p className="text-sm text-red-500 mt-4">
+                          {errors.selectedRole}
+                        </p>
+                      )}
                     </>
                   )}
                   {currentStep === 2 && (
@@ -282,29 +337,45 @@ export default function RegisterPage() {
                     />
                   )}
                   {currentStep === 3 && (
-                    <RoleSpecificInfo selectedRole={selectedRole} formData={formData} setFormData={setFormData} errors={errors} />
+                    <RoleSpecificInfo
+                      selectedRole={selectedRole}
+                      formData={formData}
+                      setFormData={setFormData}
+                      errors={errors}
+                    />
                   )}
                   <div className="flex justify-between mt-8">
                     {currentStep > 1 && (
-                      <Button type="button" variant="outline" onClick={() => setCurrentStep(currentStep - 1)} className="floating-button">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setCurrentStep(currentStep - 1)}
+                        className="floating-button"
+                      >
                         Previous
                       </Button>
                     )}
                     <Button
                       type="submit"
                       loading={isRegistering}
-                      disabled={(currentStep === 1 && !selectedRole) || (currentStep === 3 && (!formData.agreeToTerms || !formData.agreeToPrivacy))}
+                      disabled={
+                        (currentStep === 1 && !selectedRole) ||
+                        (currentStep === 3 &&
+                          (!formData.agreeToTerms || !formData.agreeToPrivacy))
+                      }
                       className="gradient-accent text-white floating-button ml-auto"
                     >
-                      {currentStep === 3 ? selectedRole === "admin" ? (
-                        <>
-                          Continue to Provider Setup
-                          <ArrowRight className="w-4 h-4 ml-2" />
-                        </>
+                      {currentStep === 3 ? (
+                        selectedRole === 'admin' ? (
+                          <>
+                            Continue to Provider Setup
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                          </>
+                        ) : (
+                          'Create Account'
+                        )
                       ) : (
-                        "Create Account"
-                      ) : (
-                        "Continue"
+                        'Continue'
                       )}
                     </Button>
                   </div>
@@ -314,7 +385,10 @@ export default function RegisterPage() {
             <div className="text-center mt-6">
               <p className="text-slate-600 dark:text-slate-400">
                 Already have an account?{' '}
-                <Link href="/auth/login" className="text-emerald-400 hover:text-emerald-300 font-medium">
+                <Link
+                  href="/auth/login"
+                  className="text-emerald-400 hover:text-emerald-300 font-medium"
+                >
                   Sign in here
                 </Link>
               </p>

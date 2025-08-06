@@ -1,17 +1,17 @@
-"use client";
+'use client';
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createAppKit } from "@reown/appkit/react";
-import { mainnet, arbitrum, hardhat } from "@reown/appkit/networks";
-import React, { useEffect, useState, type ReactNode } from "react";
-import { cookieToInitialState, State, WagmiProvider, type Config } from "wagmi";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { createAppKit } from '@reown/appkit/react';
+import { mainnet, arbitrum, hardhat } from '@reown/appkit/networks';
+import React, { useEffect, useState, type ReactNode } from 'react';
+import { cookieToInitialState, State, WagmiProvider, type Config } from 'wagmi';
 import { projectId, wagmiAdapter } from './WagmiAdapter';
 
 // Set up queryClient
 const queryClient = new QueryClient();
 
 if (!projectId) {
-  throw new Error("Project ID is not defined");
+  throw new Error('Project ID is not defined');
 }
 
 // Create modal
@@ -39,7 +39,7 @@ function Web3ContextProvider({ children }: { children: ReactNode }) {
     setInitialState(state);
   }, []);
 
-  if (typeof window === "undefined" || !initialState) return null;
+  if (typeof window === 'undefined' || !initialState) return null;
 
   return (
     <WagmiProvider

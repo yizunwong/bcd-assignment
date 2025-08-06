@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useMemo, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 import {
   Shield,
   ArrowLeft,
@@ -24,14 +24,16 @@ import {
   Heart,
   Plane,
   Sprout,
-} from "lucide-react";
-import Link from "next/link";
-import { useCreateCoverageMutation } from "@/hooks/useCoverage";
-import { usePolicyQuery } from "@/hooks/usePolicies";
-import { useToast } from "@/components/shared/ToastProvider";
-import { usePaymentMutation } from "@/hooks/usePayment";
-import { CreateCoverageDto } from "@/api";
-import { useTransactionStore } from "@/store/useTransactionStore";
+} from 'lucide-react';
+import Link from 'next/link';
+import { useCreateCoverageMutation } from '@/hooks/useCoverage';
+import { usePolicyQuery } from '@/hooks/usePolicies';
+import { useToast } from '@/components/shared/ToastProvider';
+import { usePaymentMutation } from '@/hooks/usePayment';
+import { useInsuranceContract } from '@/hooks/useBlockchain';
+import { CreateCoverageDto } from '@/api';
+import { useTransactionStore } from '@/store/useTransactionStore';
+import { useAccount } from 'wagmi';
 
 declare global {
   interface Window {
@@ -42,11 +44,12 @@ declare global {
 export default function PaymentSummary() {
   const router = useRouter();
   const { printMessage } = useToast();
+  const { address, isConnected } = useAccount();
   const [currentStep] = useState(2);
-  const [tokenAmount, setTokenAmount] = useState("");
+  const [tokenAmount, setTokenAmount] = useState('');
   const [showTokenDetails, setShowTokenDetails] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("ETH");
+  const [paymentMethod, setPaymentMethod] = useState('ETH');
 
   const stripeRef = useRef<any>(null);
   const cardElementRef = useRef<any>(null);
@@ -57,8 +60,18 @@ export default function PaymentSummary() {
   const { createCoverage } = useCreateCoverageMutation();
   const setTransaction = useTransactionStore((state) => state.setData);
 
+  // Blockchain contract interactions
+  const {
+    createPolicyWithPayment,
+    isCreatingPolicy,
+    isWaitingForTransaction,
+    isTransactionSuccess,
+    createPolicyError,
+    createPolicyData,
+  } = useInsuranceContract();
+
   const searchParams = useSearchParams();
-  const policyId = searchParams.get("policy") ?? "";
+  const policyId = searchParams.get('policy') ?? '';
   const { data: policy } = usePolicyQuery(Number(policyId));
 
   const policyData = useMemo(() => {
@@ -72,12 +85,13 @@ export default function PaymentSummary() {
       premium: `${policy.data.premium} ETH/month`,
       rating: policy.data.rating,
       features: policy.data.claim_types ?? [],
-      description: String(policy.data.description ?? ""),
+      description: String(policy.data.description ?? ''),
       duration: `${policy.data.duration_days} days`,
       basePrice: policy.data.premium,
       discount: 0,
       fees: 0,
       total: policy.data.premium,
+      coverageAmount: policy.data.coverage / 3500, // Convert USD to ETH (approximate)
     };
   }, [policy]);
 
@@ -87,23 +101,39 @@ export default function PaymentSummary() {
     }
   }, [policyData]);
 
+  // Handle blockchain transaction success
   useEffect(() => {
-    if (paymentMethod !== "STRIPE") return;
+    if (isTransactionSuccess && createPolicyData) {
+      handleBlockchainSuccess();
+    }
+  }, [isTransactionSuccess, createPolicyData]);
+
+  // Handle blockchain transaction error
+  useEffect(() => {
+    if (createPolicyError) {
+      console.error('Blockchain transaction failed:', createPolicyError);
+      printMessage('Blockchain transaction failed. Please try again.', 'error');
+      setIsProcessing(false);
+    }
+  }, [createPolicyError, printMessage]);
+
+  useEffect(() => {
+    if (paymentMethod !== 'STRIPE') return;
 
     const setupStripe = () => {
       if (!stripeRef.current) {
         stripeRef.current = window.Stripe(
-          process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
+          process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ''
         );
       }
       const elements = stripeRef.current.elements();
-      cardElementRef.current = elements.create("card");
+      cardElementRef.current = elements.create('card');
       cardElementRef.current.mount(cardContainerRef.current!);
     };
 
     if (!window.Stripe) {
-      const script = document.createElement("script");
-      script.src = "https://js.stripe.com/v3";
+      const script = document.createElement('script');
+      script.src = 'https://js.stripe.com/v3';
       script.async = true;
       script.onload = setupStripe;
       document.body.appendChild(script);
@@ -121,11 +151,11 @@ export default function PaymentSummary() {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case "health":
+      case 'health':
         return Heart;
-      case "travel":
+      case 'travel':
         return Plane;
-      case "crop":
+      case 'crop':
         return Sprout;
       default:
         return Shield;
@@ -134,50 +164,92 @@ export default function PaymentSummary() {
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case "health":
-        return "from-red-500 to-pink-500";
-      case "travel":
-        return "from-blue-500 to-cyan-500";
-      case "crop":
-        return "from-green-500 to-emerald-500";
+      case 'health':
+        return 'from-red-500 to-pink-500';
+      case 'travel':
+        return 'from-blue-500 to-cyan-500';
+      case 'crop':
+        return 'from-green-500 to-emerald-500';
       default:
-        return "from-slate-500 to-slate-600";
+        return 'from-slate-500 to-slate-600';
     }
   };
 
-  if (!policyData) {
-    return <div className="p-8">Loading...</div>;
-  }
-
-  const handleTokenPayment = async (coverageData: CreateCoverageDto) => {
-    setIsProcessing(true);
-
+  const handleBlockchainSuccess = async () => {
     try {
+      // Create coverage in the backend
+      const coverageData = {
+        policy_id: policyData!.id,
+        status: 'active' as const,
+        utilization_rate: 0,
+        start_date: new Date().toISOString().split('T')[0],
+        end_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0],
+        next_payment_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0],
+      };
+
       await createCoverage(coverageData);
 
-      const txId = `TX-${Date.now()}`;
-      const blockHash = `0x${Array.from({ length: 40 }, () =>
-        Math.floor(Math.random() * 16).toString(16)
-      ).join("")}`;
+      // Set transaction details
       setTransaction({
-        policyId: policyData.id,
-        transactionId: txId,
-        blockHash,
-        amount: policyData.total,
-        usdAmount: Number((Number(policyData.total) * 3500).toFixed(2)),
+        policyId: policyData!.id,
+        transactionId: createPolicyData!,
+        blockHash: createPolicyData!,
+        amount: policyData!.total,
+        usdAmount: Number((Number(policyData!.total) * 3500).toFixed(2)),
         paymentMethod,
         timestamp: new Date().toISOString(),
-        status: "confirmed",
+        status: 'confirmed',
         confirmations: 1,
       });
 
-      printMessage("Payment successful! Coverage created.", "success");
-
-      router.push("/policyholder/payment/confirmation");
+      printMessage(
+        'Blockchain payment successful! Coverage created.',
+        'success'
+      );
+      router.push('/policyholder/payment/confirmation');
     } catch (error) {
-      console.error("Payment failed:", error);
-      printMessage("Payment failed. Please try again.", "error");
+      console.error(
+        'Failed to create coverage after blockchain payment:',
+        error
+      );
+      printMessage(
+        'Payment successful but failed to create coverage. Please contact support.',
+        'error'
+      );
     } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleTokenPayment = async () => {
+    if (!isConnected) {
+      printMessage('Please connect your wallet first', 'error');
+      return;
+    }
+
+    if (!policyData) {
+      printMessage('Policy data not available', 'error');
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      // Call the blockchain contract to create policy with payment
+      await createPolicyWithPayment(
+        policyData.coverageAmount, // coverage amount in ETH
+        Number(tokenAmount), // premium amount in ETH
+        parseInt(policyData.duration.split(' ')[0]) // duration in days
+      );
+
+      // The success will be handled by the useEffect that watches isTransactionSuccess
+    } catch (error) {
+      console.error('Blockchain payment failed:', error);
+      printMessage('Blockchain payment failed. Please try again.', 'error');
       setIsProcessing(false);
     }
   };
@@ -186,8 +258,8 @@ export default function PaymentSummary() {
     setIsProcessing(true);
     try {
       const response = await makePayment({
-        amount: policyData.total,
-        currency: "usd",
+        amount: policyData!.total,
+        currency: 'usd',
       });
       const clientSecret = response?.data?.clientSecret;
       if (clientSecret && stripeRef.current && cardElementRef.current) {
@@ -198,71 +270,77 @@ export default function PaymentSummary() {
           }
         );
 
-        if (result.error || result.paymentIntent?.status !== "succeeded") {
-          printMessage("Payment failed. Please try again.", "error");
+        if (result.error || result.paymentIntent?.status !== 'succeeded') {
+          printMessage('Payment failed. Please try again.', 'error');
         } else {
           await createCoverage(coverageData);
 
           const txId = `PI-${Date.now()}`;
           const blockHash = `0x${Array.from({ length: 40 }, () =>
             Math.floor(Math.random() * 16).toString(16)
-          ).join("")}`;
+          ).join('')}`;
           setTransaction({
-            policyId: policyData.id,
+            policyId: policyData!.id,
             transactionId: txId,
             blockHash,
-            amount: policyData.total,
-            usdAmount: Number((Number(policyData.total) * 3500).toFixed(2)),
+            amount: policyData!.total,
+            usdAmount: Number((Number(policyData!.total) * 3500).toFixed(2)),
             paymentMethod,
             timestamp: new Date().toISOString(),
-            status: "confirmed",
+            status: 'confirmed',
             confirmations: 1,
           });
 
-          printMessage("Stripe payment successful", "success");
-          router.push("/policyholder/payment/confirmation");
+          printMessage('Stripe payment successful', 'success');
+          router.push('/policyholder/payment/confirmation');
         }
       } else {
-        printMessage("Payment failed. Please try again.", "error");
+        printMessage('Payment failed. Please try again.', 'error');
       }
     } catch (error) {
-      console.error("Stripe payment failed:", error);
-      printMessage("Payment failed. Please try again.", "error");
+      console.error('Stripe payment failed:', error);
+      printMessage('Payment failed. Please try again.', 'error');
     } finally {
       setIsProcessing(false);
     }
   };
 
   const handlePayment = async () => {
-    const startDate = new Date();
-    const endDate = new Date();
-    endDate.setFullYear(endDate.getFullYear() + 1);
-    const nextPaymentDate = new Date();
-    nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
+    if (paymentMethod === 'STRIPE') {
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setFullYear(endDate.getFullYear() + 1);
+      const nextPaymentDate = new Date();
+      nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
 
-    const coverageData = {
-      policy_id: policyData.id,
-      status: "active" as const,
-      utilization_rate: 0,
-      start_date: startDate.toISOString().split("T")[0],
-      end_date: endDate.toISOString().split("T")[0],
-      next_payment_date: nextPaymentDate.toISOString().split("T")[0],
-    };
+      const coverageData = {
+        policy_id: policyData!.id,
+        status: 'active' as const,
+        utilization_rate: 0,
+        start_date: startDate.toISOString().split('T')[0],
+        end_date: endDate.toISOString().split('T')[0],
+        next_payment_date: nextPaymentDate.toISOString().split('T')[0],
+      };
 
-    if (paymentMethod === "STRIPE") {
       await handleStripePayment(coverageData);
       return;
     }
-    await handleTokenPayment(coverageData);
+
+    // ETH payment
+    await handleTokenPayment();
   };
 
   const steps = [
-    { id: 1, name: "Policy Selection", status: "completed" },
-    { id: 2, name: "Payment Details", status: "current" },
-    { id: 3, name: "Confirmation", status: "pending" },
+    { id: 1, name: 'Policy Selection', status: 'completed' },
+    { id: 2, name: 'Payment Details', status: 'current' },
+    { id: 3, name: 'Confirmation', status: 'pending' },
   ];
 
-  const CategoryIcon = getCategoryIcon(policyData.category);
+  const CategoryIcon = getCategoryIcon(policyData?.category || '');
+
+  if (!policyData) {
+    return <div className="p-8">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 py-8 px-4">
@@ -295,14 +373,14 @@ export default function PaymentSummary() {
                 <div key={step.id} className="flex items-center">
                   <div
                     className={`flex items-center justify-center w-10 h-10 rounded-full ${
-                      step.status === "completed"
-                        ? "bg-emerald-500 text-white"
-                        : step.status === "current"
-                          ? "bg-blue-500 text-white"
-                          : "bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+                      step.status === 'completed'
+                        ? 'bg-emerald-500 text-white'
+                        : step.status === 'current'
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
                     }`}
                   >
-                    {step.status === "completed" ? (
+                    {step.status === 'completed' ? (
                       <CheckCircle className="w-5 h-5" />
                     ) : (
                       <span className="text-sm font-medium">{step.id}</span>
@@ -310,11 +388,11 @@ export default function PaymentSummary() {
                   </div>
                   <span
                     className={`ml-3 text-sm font-medium ${
-                      step.status === "current"
-                        ? "text-blue-600 dark:text-blue-400"
-                        : step.status === "completed"
-                          ? "text-emerald-600 dark:text-emerald-400"
-                          : "text-slate-500 dark:text-slate-400"
+                      step.status === 'current'
+                        ? 'text-blue-600 dark:text-blue-400'
+                        : step.status === 'completed'
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'text-slate-500 dark:text-slate-400'
                     }`}
                   >
                     {step.name}
@@ -322,9 +400,9 @@ export default function PaymentSummary() {
                   {index < steps.length - 1 && (
                     <div
                       className={`w-16 h-1 mx-4 ${
-                        step.status === "completed"
-                          ? "bg-emerald-500"
-                          : "bg-slate-200 dark:bg-slate-700"
+                        step.status === 'completed'
+                          ? 'bg-emerald-500'
+                          : 'bg-slate-200 dark:bg-slate-700'
                       }`}
                     />
                   )}
@@ -448,20 +526,54 @@ export default function PaymentSummary() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-8">
+                {/* Wallet Connection Status */}
+                {paymentMethod === 'ETH' && (
+                  <div
+                    className={`p-4 rounded-xl border-2 ${
+                      isConnected
+                        ? 'border-green-200 bg-green-50/50 dark:bg-green-900/20'
+                        : 'border-red-200 bg-red-50/50 dark:bg-red-900/20'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <Wallet
+                        className={`w-5 h-5 ${isConnected ? 'text-green-600' : 'text-red-600'}`}
+                      />
+                      <span
+                        className={`font-medium ${isConnected ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}`}
+                      >
+                        {isConnected
+                          ? 'Wallet Connected'
+                          : 'Wallet Not Connected'}
+                      </span>
+                    </div>
+                    {isConnected && (
+                      <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                        Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
+                      </p>
+                    )}
+                    {!isConnected && (
+                      <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                        Please connect your wallet to proceed with ETH payment
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* Payment Method Selection */}
                 <div>
                   <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">
                     Payment Method
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
-                    {["ETH", "STRIPE"].map((method) => (
+                    {['ETH', 'STRIPE'].map((method) => (
                       <button
                         key={method}
                         onClick={() => setPaymentMethod(method)}
                         className={`p-4 rounded-xl border-2 transition-all duration-200 ${
                           paymentMethod === method
-                            ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
-                            : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
+                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                         }`}
                       >
                         <div className="flex items-center justify-center space-x-2">
@@ -473,7 +585,7 @@ export default function PaymentSummary() {
                   </div>
                 </div>
 
-                {paymentMethod === "STRIPE" && (
+                {paymentMethod === 'STRIPE' && (
                   <div className="space-y-2">
                     <div className="text-sm text-slate-600 dark:text-slate-400">
                       Card Details
@@ -552,7 +664,7 @@ export default function PaymentSummary() {
                 </div>
 
                 {/* Token Amount Input */}
-                {paymentMethod !== "STRIPE" && (
+                {paymentMethod !== 'STRIPE' && (
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
@@ -568,7 +680,7 @@ export default function PaymentSummary() {
                           <Eye className="w-4 h-4" />
                         )}
                         <span>
-                          {showTokenDetails ? "Hide" : "Show"} Details
+                          {showTokenDetails ? 'Hide' : 'Show'} Details
                         </span>
                       </button>
                     </div>
@@ -655,14 +767,23 @@ export default function PaymentSummary() {
                     onClick={handlePayment}
                     disabled={
                       isProcessing ||
-                      (paymentMethod !== "STRIPE" && !tokenAmount)
+                      isCreatingPolicy ||
+                      isWaitingForTransaction ||
+                      (paymentMethod === 'ETH' && !isConnected) ||
+                      (paymentMethod !== 'STRIPE' && !tokenAmount)
                     }
                     className="flex-1 gradient-accent text-white floating-button relative overflow-hidden"
                   >
-                    {isProcessing ? (
+                    {isProcessing ||
+                    isCreatingPolicy ||
+                    isWaitingForTransaction ? (
                       <div className="flex items-center space-x-2">
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Processing...</span>
+                        <span>
+                          {isWaitingForTransaction
+                            ? 'Confirming Transaction...'
+                            : 'Processing...'}
+                        </span>
                       </div>
                     ) : (
                       <div className="flex items-center space-x-2">
@@ -676,14 +797,14 @@ export default function PaymentSummary() {
                 {/* Additional Info */}
                 <div className="text-center">
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    By proceeding, you agree to our{" "}
+                    By proceeding, you agree to our{' '}
                     <a
                       href="#"
                       className="text-emerald-600 dark:text-emerald-400 hover:underline"
                     >
                       Terms of Service
-                    </a>{" "}
-                    and{" "}
+                    </a>{' '}
+                    and{' '}
                     <a
                       href="#"
                       className="text-emerald-600 dark:text-emerald-400 hover:underline"
