@@ -26,9 +26,11 @@ export default function RootLayout({
         <Web3Providers>
           <ThemeProvider defaultTheme="light" storageKey="blocksecure-ui-theme">
             <ToastProvider>
-              <GlobalNavbar />
-              <main>{children}</main>
-              <Footer />
+              <>
+                <GlobalNavbar />
+                <main>{children}</main>
+                <Footer />
+              </>
             </ToastProvider>
           </ThemeProvider>
         </Web3Providers>
