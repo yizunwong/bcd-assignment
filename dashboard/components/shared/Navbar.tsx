@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
 import { Connect } from "./Connect";
@@ -145,7 +146,10 @@ export function Navbar({ role }: NavbarProps) {
               <Link
                 key={index}
                 href={link.href}
-                className="nav-item whitespace-nowrap px-2 xl:px-3 2xl:px-4"
+                className={cn(
+                  "nav-item whitespace-nowrap px-2 xl:px-3 2xl:px-4",
+                  pathname === link.href && "nav-item-active"
+                )}
               >
                 {link.icon && <link.icon className="w-4 h-4 flex-shrink-0" />}
                 <span className="hidden xl:block">{link.label}</span>
@@ -286,7 +290,10 @@ export function Navbar({ role }: NavbarProps) {
                 <Link
                   key={index}
                   href={link.href}
-                  className="nav-item"
+                  className={cn(
+                    "nav-item",
+                    pathname === link.href && "nav-item-active"
+                  )}
                   onClick={() => setIsOpen(false)}
                 >
                   {link.icon && <link.icon className="w-4 h-4" />}

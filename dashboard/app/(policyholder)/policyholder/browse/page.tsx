@@ -21,6 +21,7 @@ import PolicyDetailsDialog, {
 import Link from "next/link";
 import { logEvent } from "@/lib/analytics";
 import { usePoliciesQuery, useCategoryCountsQuery } from "@/hooks/usePolicies";
+import { useCoverageListQuery } from "@/hooks/useCoverage";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useToast } from "@/components/shared/ToastProvider";
 import {
@@ -76,6 +77,11 @@ export default function BrowsePolicies() {
   }, [sortBy]);
 
   const { data: categoryCountsData } = useCategoryCountsQuery();
+  const { data: coverageData } = useCoverageListQuery({ limit: 100 });
+
+  const purchasedPolicyIds = useMemo(() => {
+    return (coverageData?.data || []).map((c: any) => Number(c.policies?.id));
+  }, [coverageData]);
 
   const hasFilters = selectedCategory !== "all" || !!debouncedSearchTerm;
 
@@ -392,14 +398,20 @@ export default function BrowsePolicies() {
                       >
                         Details
                       </Button>
-                      <Link
-                        href={`/policyholder/payment?policy=${policy.id}`}
-                        className="flex-1"
-                      >
-                        <Button className="w-full gradient-accent text-white floating-button">
-                          Buy with Token
+                      {purchasedPolicyIds.includes(Number(policy.id)) ? (
+                        <Button className="flex-1" disabled>
+                          Purchased
                         </Button>
-                      </Link>
+                      ) : (
+                        <Link
+                          href={`/policyholder/payment?policy=${policy.id}`}
+                          className="flex-1"
+                        >
+                          <Button className="w-full gradient-accent text-white floating-button">
+                            Buy with Token
+                          </Button>
+                        </Link>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

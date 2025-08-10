@@ -691,7 +691,7 @@ export default function PaymentSummary() {
                         value={tokenAmount || policyData.total}
                         onChange={(e) => setTokenAmount(e.target.value)}
                         placeholder={`Enter ${paymentMethod} amount`}
-                        className="form-input text-lg font-medium pr-20"
+                        className="form-input text-lg font-medium pr-20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         step="0.001"
                       />
                       <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">

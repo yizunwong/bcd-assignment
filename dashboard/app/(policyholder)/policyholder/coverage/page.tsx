@@ -291,14 +291,14 @@ export default function MyCoverage() {
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
                   <DollarSign className="w-6 h-6 text-white" />
                 </div>
-                <Badge className="status-badge status-info">Coverage</Badge>
+                <Badge className="status-badge status-info">Claimed</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
                 $
                 {(summaryData?.totalCoverageValue ?? 0).toLocaleString()}
               </h3>
               <p className="text-slate-600 dark:text-slate-400">
-                Total Coverage
+                Claimed
               </p>
             </CardContent>
           </Card>
