@@ -27,6 +27,7 @@ import {
   X,
 } from "lucide-react";
 import { claims } from "@/public/data/policyholder/claimsData";
+import { useInsuranceContract } from "@/hooks/useBlockchain";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -38,6 +39,11 @@ export default function Claims() {
   const [dragActive, setDragActive] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("newest");
+  const [selectedPolicy, setSelectedPolicy] = useState("");
+  const [claimAmount, setClaimAmount] = useState("");
+  const [description, setDescription] = useState("");
+
+  const { fileClaimForPolicy, isFilingClaim } = useInsuranceContract();
   const sortedClaims = useMemo(() => {
     const sorted = [...claims].sort((a, b) => {
       switch (sortBy) {
@@ -401,20 +407,14 @@ export default function Claims() {
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                     Select Policy
                   </label>
-                  <Select>
+                  <Select value={selectedPolicy} onValueChange={setSelectedPolicy}>
                     <SelectTrigger className="form-input">
                       <SelectValue placeholder="Choose a policy" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="POL-001">
-                        Comprehensive Health Coverage
-                      </SelectItem>
-                      <SelectItem value="POL-002">
-                        Global Travel Protection
-                      </SelectItem>
-                      <SelectItem value="POL-003">
-                        Weather-Based Crop Insurance
-                      </SelectItem>
+                      <SelectItem value="1">Comprehensive Health Coverage</SelectItem>
+                      <SelectItem value="2">Global Travel Protection</SelectItem>
+                      <SelectItem value="3">Weather-Based Crop Insurance</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -444,8 +444,10 @@ export default function Claims() {
                 </label>
                 <Input
                   type="number"
-                  placeholder="Enter claim amount in USD"
+                  placeholder="Enter claim amount in ETH"
                   className="form-input"
+                  value={claimAmount}
+                  onChange={(e) => setClaimAmount(e.target.value)}
                 />
               </div>
 
@@ -456,6 +458,8 @@ export default function Claims() {
                 <Textarea
                   placeholder="Provide detailed description of the incident..."
                   className="form-input min-h-[100px]"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                 />
               </div>
 
@@ -532,7 +536,18 @@ export default function Claims() {
                 <Button variant="outline" className="flex-1">
                   Save as Draft
                 </Button>
-                <Button className="flex-1 gradient-accent text-white floating-button">
+                <Button
+                  className="flex-1 gradient-accent text-white floating-button"
+                  onClick={() => {
+                    if (!selectedPolicy || !claimAmount || !description) return;
+                    fileClaimForPolicy(
+                      Number(selectedPolicy),
+                      parseFloat(claimAmount),
+                      description
+                    );
+                  }}
+                  disabled={isFilingClaim}
+                >
                   <Plus className="w-4 h-4 mr-2" />
                   Submit Claim
                 </Button>

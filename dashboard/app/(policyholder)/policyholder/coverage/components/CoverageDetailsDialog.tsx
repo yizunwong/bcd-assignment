@@ -10,6 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock } from "lucide-react";
+import { useInsuranceContract } from "@/hooks/useBlockchain";
 
 interface CoveragePolicy {
   id: string;
@@ -35,6 +36,13 @@ export default function CoverageDetailsDialog({
   open,
   onClose,
 }: CoverageDetailsDialogProps) {
+  const { payPremiumForPolicy, isPayingPremium } = useInsuranceContract();
+
+  const handlePayPremium = () => {
+    const premiumAmount = parseFloat(policy.premium.toString());
+    if (isNaN(premiumAmount)) return;
+    payPremiumForPolicy(Number(policy.id), premiumAmount);
+  };
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-md">
@@ -102,8 +110,17 @@ export default function CoverageDetailsDialog({
             </div>
           )}
         </div>
-        <DialogFooter className="mt-4">
-          <Button onClick={onClose}>Close</Button>
+        <DialogFooter className="mt-4 gap-2">
+          <Button
+            onClick={handlePayPremium}
+            disabled={isPayingPremium}
+            className="flex-1"
+          >
+            Pay Premium
+          </Button>
+          <Button onClick={onClose} variant="outline" className="flex-1">
+            Close
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
