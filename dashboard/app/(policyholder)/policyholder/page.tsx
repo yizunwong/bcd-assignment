@@ -46,7 +46,7 @@ export default function PolicyholderDashboard() {
             icon={Shield}
           />
           <StatsCard
-            title="Total Coverage"
+            title="Claimed"
             value={formatValue(summary?.data?.totalCoverage, {
               currency: typeof summary?.data?.totalCoverage === "number",
             })}
