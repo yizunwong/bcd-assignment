@@ -10,11 +10,14 @@ import {
   FileText,
   HelpCircle,
   Home,
+  LogIn,
+  LogOut,
   Monitor,
   Plus,
   Search,
   Shield,
   Star,
+  User,
   Users,
 } from "lucide-react";
 import React from "react";
@@ -29,6 +32,13 @@ interface DecodedToken {
 }
 
 type Role = "policyholder" | "admin" | "system-admin";
+
+interface DockItem {
+  title: string;
+  href?: string;
+  icon: React.ReactNode;
+  action?: "logout";
+}
 
 export default async function GlobalDock() {
   const cookieStore = await cookies();
@@ -59,16 +69,17 @@ export default async function GlobalDock() {
     }
   }
 
-  const defaultItems = [
+  const defaultItems: DockItem[] = [
     { title: "Home", href: "/", icon: <Home className="h-full w-full" /> },
     { title: "Solutions", href: "/solutions", icon: <Shield className="h-full w-full" /> },
     { title: "How It Works", href: "/how-it-works", icon: <BookOpen className="h-full w-full" /> },
     { title: "Benefits", href: "/benefits", icon: <Star className="h-full w-full" /> },
     { title: "Plans", href: "/plans", icon: <DollarSign className="h-full w-full" /> },
     { title: "Help", href: "/help", icon: <HelpCircle className="h-full w-full" /> },
+    { title: "Login", href: "/auth/login", icon: <LogIn className="h-full w-full" /> },
   ];
 
-  const roleItems: Record<Role, { title: string; href: string; icon: React.ReactNode }[]> = {
+  const roleItems: Record<Role, DockItem[]> = {
     policyholder: [
       { title: "Dashboard", href: "/policyholder", icon: <Home className="h-full w-full" /> },
       { title: "Browse", href: "/policyholder/browse", icon: <Search className="h-full w-full" /> },
@@ -88,13 +99,32 @@ export default async function GlobalDock() {
     ],
   };
 
-  const items = role ? roleItems[role] : defaultItems;
+  const getProfileLink = (r: Role) => {
+    switch (r) {
+      case "policyholder":
+        return "/policyholder/profile";
+      case "admin":
+        return "/admin/profile";
+      case "system-admin":
+        return "/system-admin/profile";
+      default:
+        return "/profile";
+    }
+  };
+
+  const items: DockItem[] = role
+    ? [
+        ...roleItems[role],
+        { title: "Profile", href: getProfileLink(role), icon: <User className="h-full w-full" /> },
+        { title: "Logout", icon: <LogOut className="h-full w-full" />, action: "logout" },
+      ]
+    : defaultItems;
 
   return (
     <AnimatedDock
       items={items}
-      largeClassName="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
-      smallClassName="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
+      largeClassName="fixed top-6 left-1/2 -translate-x-1/2 z-50"
+      smallClassName="fixed top-6 left-1/2 -translate-x-1/2 z-50"
     />
   );
 }

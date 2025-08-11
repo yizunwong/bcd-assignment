@@ -12,9 +12,18 @@ import {
 import Link from "next/link";
 import React, { useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useLogout } from "@/hooks/useAuth";
+
+interface DockItem {
+  title: string;
+  icon: React.ReactNode;
+  href?: string;
+  action?: "logout";
+}
 
 interface AnimatedDockProps {
-  items: { title: string; icon: React.ReactNode; href: string }[];
+  items: DockItem[];
   largeClassName?: string;
   smallClassName?: string;
 }
@@ -32,7 +41,7 @@ const LargeDock = ({
   items,
   className,
 }: {
-  items: { title: string; icon: React.ReactNode; href: string }[];
+  items: DockItem[];
   className?: string;
 }) => {
   const mouseXPosition = useMotionValue(Infinity);
@@ -57,13 +66,17 @@ function DockIcon({
   title,
   icon,
   href,
+  action,
 }: {
   mouseX: MotionValue;
   title: string;
   icon: React.ReactNode;
-  href: string;
+  href?: string;
+  action?: "logout";
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const { logout } = useLogout();
   const distanceFromMouse = useTransform(mouseX, (val) => {
     const bounds = ref.current?.getBoundingClientRect() ?? { x: 0, width: 0 };
     return val - bounds.x - bounds.width / 2;
@@ -81,35 +94,51 @@ function DockIcon({
 
   const [isHovered, setIsHovered] = useState(false);
 
-  return (
-    <Link href={href}>
+  const handleClick = async () => {
+    if (action === "logout") {
+      await logout();
+      router.push("/");
+      router.refresh();
+    }
+  };
+
+  const content = (
+    <motion.div
+      ref={ref}
+      style={{ width, height }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="relative flex aspect-square items-center justify-center rounded-full bg-white/20 text-slate-800 shadow-lg backdrop-blur-md dark:bg-slate-800/40 dark:text-slate-200"
+    >
+      <AnimatePresence>
+        {isHovered && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, x: "-50%" }}
+            exit={{ opacity: 0, y: 2, x: "-50%" }}
+            className="absolute -top-8 left-1/2 w-fit -translate-x-1/2 whitespace-pre rounded-md border border-white/20 bg-white/80 px-2 py-0.5 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+          >
+            {title}
+          </motion.div>
+        )}
+      </AnimatePresence>
       <motion.div
-        ref={ref}
-        style={{ width, height }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        className="relative flex aspect-square items-center justify-center rounded-full bg-white/20 text-slate-800 shadow-lg backdrop-blur-md dark:bg-slate-800/40 dark:text-slate-200"
+        style={{ width: iconWidth, height: iconHeight }}
+        className="flex items-center justify-center"
       >
-        <AnimatePresence>
-          {isHovered && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, x: "-50%" }}
-              animate={{ opacity: 1, y: 0, x: "-50%" }}
-              exit={{ opacity: 0, y: 2, x: "-50%" }}
-              className="absolute -top-8 left-1/2 w-fit -translate-x-1/2 whitespace-pre rounded-md border border-white/20 bg-white/80 px-2 py-0.5 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-            >
-              {title}
-            </motion.div>
-          )}
-        </AnimatePresence>
-        <motion.div
-          style={{ width: iconWidth, height: iconHeight }}
-          className="flex items-center justify-center"
-        >
-          {icon}
-        </motion.div>
+        {icon}
       </motion.div>
-    </Link>
+    </motion.div>
+  );
+
+  if (href) {
+    return <Link href={href}>{content}</Link>;
+    }
+
+  return (
+    <button onClick={handleClick} className="block">
+      {content}
+    </button>
   );
 }
 
@@ -117,10 +146,12 @@ const SmallDock = ({
   items,
   className,
 }: {
-  items: { title: string; icon: React.ReactNode; href: string }[];
+  items: DockItem[];
   className?: string;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { logout } = useLogout();
+  const router = useRouter();
 
   return (
     <nav className={cn("relative block md:hidden", className)}>
@@ -138,12 +169,26 @@ const SmallDock = ({
                 exit={{ opacity: 0, y: 10, transition: { delay: index * 0.05 } }}
                 transition={{ delay: (items.length - 1 - index) * 0.05 }}
               >
-                <Link
-                  href={item.href}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-slate-800 shadow-md backdrop-blur-md dark:bg-slate-800/40 dark:text-slate-200"
-                >
-                  <div className="h-4 w-4">{item.icon}</div>
-                </Link>
+                {item.href ? (
+                  <Link
+                    href={item.href}
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-slate-800 shadow-md backdrop-blur-md dark:bg-slate-800/40 dark:text-slate-200"
+                  >
+                    <div className="h-4 w-4">{item.icon}</div>
+                  </Link>
+                ) : (
+                  <button
+                    onClick={async () => {
+                      await logout();
+                      router.push("/");
+                      router.refresh();
+                      setIsOpen(false);
+                    }}
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-slate-800 shadow-md backdrop-blur-md dark:bg-slate-800/40 dark:text-slate-200"
+                  >
+                    <div className="h-4 w-4">{item.icon}</div>
+                  </button>
+                )}
               </motion.div>
             ))}
           </motion.div>
