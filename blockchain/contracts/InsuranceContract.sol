@@ -70,6 +70,7 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
         uint256[] claimIds;
         uint256 totalPaid;
         uint256 utilizationRate;
+        string agreementCid;
     }
 
     struct Payment {
@@ -127,12 +128,14 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
     function createPolicyWithPayment(
         uint256 coverage,
         uint256 premium,
-        uint256 durationDays
+        uint256 durationDays,
+        string memory agreementCid
     ) external payable nonReentrant returns (uint256) {
         require(msg.value == premium, "Incorrect premium amount");
         require(coverage > 0, "Coverage must be greater than 0");
         require(premium > 0, "Premium must be greater than 0");
         require(durationDays > 0, "Duration must be greater than 0");
+        require(bytes(agreementCid).length > 0, "Agreement CID required");
 
         uint256 policyId = nextPolicyId;
         uint256 startDate = block.timestamp;
@@ -150,7 +153,8 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
             status: PolicyStatus.Active,
             claimIds: new uint256[](0),
             totalPaid: premium,
-            utilizationRate: 0
+            utilizationRate: 0,
+            agreementCid: agreementCid
         });
 
         // Create payment record
@@ -185,6 +189,7 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
      */
     function payPremium(uint256 policyId) external payable nonReentrant policyExists(policyId) policyActive(policyId) {
         Policy storage policy = policies[policyId];
+        require(bytes(policy.agreementCid).length > 0, "Agreement CID not set");
         require(policy.policyholder == msg.sender, "Not policyholder");
         require(msg.value == policy.premium, "Incorrect premium amount");
         require(block.timestamp >= policy.nextPaymentDate, "Payment not due yet");
