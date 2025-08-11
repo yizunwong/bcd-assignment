@@ -4,9 +4,10 @@ import { PolicyController } from './policy.controller';
 import { SupabaseModule } from 'src/supabase/supabase.module';
 import { ClaimModule } from '../claim/claim.module';
 import { FileModule } from '../file/file.module';
+import { PinataModule } from 'src/pinata/pinata.module';
 
 @Module({
-  imports: [SupabaseModule, ClaimModule, FileModule],
+  imports: [SupabaseModule, ClaimModule, FileModule, PinataModule],
   controllers: [PolicyController],
   providers: [PolicyService],
   exports: [PolicyService],
