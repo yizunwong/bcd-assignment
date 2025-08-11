@@ -70,6 +70,7 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
         uint256[] claimIds;
         uint256 totalPaid;
         uint256 utilizationRate;
+        string agreementCid;
     }
 
     struct Payment {
@@ -79,7 +80,6 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
         uint256 amount;
         PaymentStatus status;
         uint256 timestamp;
-        string transactionHash;
     }
 
     uint256 private nextPolicyId;
@@ -93,26 +93,57 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
     mapping(uint256 => uint256[]) private policyPayments;
 
     // Events
-    event PolicyCreated(uint256 indexed policyId, address indexed policyholder, uint256 coverage, uint256 premium);
-    event PremiumPaid(uint256 indexed policyId, address indexed payer, uint256 amount, uint256 paymentId);
-    event ClaimFiled(uint256 indexed claimId, uint256 indexed policyId, uint256 amount);
-    event ClaimApproved(uint256 indexed claimId, uint256 indexed policyId, uint256 amount);
+    event PolicyCreated(
+        uint256 indexed policyId,
+        address indexed policyholder,
+        uint256 coverage,
+        uint256 premium
+    );
+    event PremiumPaid(
+        uint256 indexed policyId,
+        address indexed payer,
+        uint256 amount,
+        uint256 paymentId
+    );
+    event ClaimFiled(
+        uint256 indexed claimId,
+        uint256 indexed policyId,
+        uint256 amount
+    );
+    event ClaimApproved(
+        uint256 indexed claimId,
+        uint256 indexed policyId,
+        uint256 amount
+    );
     event PolicyStatusChanged(uint256 indexed policyId, PolicyStatus newStatus);
-    event PaymentRefunded(uint256 indexed paymentId, address indexed recipient, uint256 amount);
+    event PaymentRefunded(
+        uint256 indexed paymentId,
+        address indexed recipient,
+        uint256 amount
+    );
 
     // Modifiers
     modifier onlyPolicyholder(uint256 policyId) {
-        require(policies[policyId].policyholder == msg.sender, "Not policyholder");
+        require(
+            policies[policyId].policyholder == msg.sender,
+            "Not policyholder"
+        );
         _;
     }
 
     modifier policyExists(uint256 policyId) {
-        require(policies[policyId].policyholder != address(0), "Policy does not exist");
+        require(
+            policies[policyId].policyholder != address(0),
+            "Policy does not exist"
+        );
         _;
     }
 
     modifier policyActive(uint256 policyId) {
-        require(policies[policyId].status == PolicyStatus.Active, "Policy not active");
+        require(
+            policies[policyId].status == PolicyStatus.Active,
+            "Policy not active"
+        );
         _;
     }
 
@@ -127,12 +158,14 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
     function createPolicyWithPayment(
         uint256 coverage,
         uint256 premium,
-        uint256 durationDays
+        uint256 durationDays,
+        string memory agreementCid
     ) external payable nonReentrant returns (uint256) {
         require(msg.value == premium, "Incorrect premium amount");
         require(coverage > 0, "Coverage must be greater than 0");
         require(premium > 0, "Premium must be greater than 0");
         require(durationDays > 0, "Duration must be greater than 0");
+        require(bytes(agreementCid).length > 0, "Agreement CID not set");
 
         uint256 policyId = nextPolicyId;
         uint256 startDate = block.timestamp;
@@ -150,7 +183,8 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
             status: PolicyStatus.Active,
             claimIds: new uint256[](0),
             totalPaid: premium,
-            utilizationRate: 0
+            utilizationRate: 0,
+            agreementCid: agreementCid
         });
 
         // Create payment record
@@ -161,8 +195,7 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
             payer: msg.sender,
             amount: premium,
             status: PaymentStatus.Completed,
-            timestamp: block.timestamp,
-            transactionHash: ""
+            timestamp: block.timestamp
         });
 
         // Update mappings
@@ -183,11 +216,22 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
      * @dev Pay premium for an existing policy
      * @param policyId The ID of the policy
      */
-    function payPremium(uint256 policyId) external payable nonReentrant policyExists(policyId) policyActive(policyId) {
+    function payPremium(
+        uint256 policyId
+    )
+        external
+        payable
+        nonReentrant
+        policyExists(policyId)
+        policyActive(policyId)
+    {
         Policy storage policy = policies[policyId];
         require(policy.policyholder == msg.sender, "Not policyholder");
         require(msg.value == policy.premium, "Incorrect premium amount");
-        require(block.timestamp >= policy.nextPaymentDate, "Payment not due yet");
+        require(
+            block.timestamp >= policy.nextPaymentDate,
+            "Payment not due yet"
+        );
 
         // Update policy
         policy.totalPaid = policy.totalPaid.add(msg.value);
@@ -201,8 +245,7 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
             payer: msg.sender,
             amount: msg.value,
             status: PaymentStatus.Completed,
-            timestamp: block.timestamp,
-            transactionHash: ""
+            timestamp: block.timestamp
         });
 
         policyPayments[policyId].push(paymentId);
@@ -221,7 +264,12 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
         uint256 policyId,
         uint256 amount,
         string memory description
-    ) external onlyPolicyholder(policyId) policyActive(policyId) returns (uint256) {
+    )
+        external
+        onlyPolicyholder(policyId)
+        policyActive(policyId)
+        returns (uint256)
+    {
         Policy storage policy = policies[policyId];
         require(amount <= policy.coverage, "Claim amount exceeds coverage");
         require(amount > 0, "Claim amount must be greater than 0");
@@ -272,7 +320,10 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
      * @param policyId The ID of the policy
      * @param newStatus The new status
      */
-    function updatePolicyStatus(uint256 policyId, PolicyStatus newStatus) external onlyOwner policyExists(policyId) {
+    function updatePolicyStatus(
+        uint256 policyId,
+        PolicyStatus newStatus
+    ) external onlyOwner policyExists(policyId) {
         policies[policyId].status = newStatus;
         emit PolicyStatusChanged(policyId, newStatus);
     }
@@ -297,7 +348,9 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
      * @dev Get payment details
      * @param paymentId The ID of the payment
      */
-    function getPayment(uint256 paymentId) external view returns (Payment memory) {
+    function getPayment(
+        uint256 paymentId
+    ) external view returns (Payment memory) {
         return payments[paymentId];
     }
 
@@ -305,7 +358,9 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
      * @dev Get all policies for a user
      * @param user The user address
      */
-    function getUserPolicies(address user) external view returns (uint256[] memory) {
+    function getUserPolicies(
+        address user
+    ) external view returns (uint256[] memory) {
         return userPolicies[user];
     }
 
@@ -313,7 +368,9 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
      * @dev Get all payments for a policy
      * @param policyId The ID of the policy
      */
-    function getPolicyPayments(uint256 policyId) external view returns (uint256[] memory) {
+    function getPolicyPayments(
+        uint256 policyId
+    ) external view returns (uint256[] memory) {
         return policyPayments[policyId];
     }
 
@@ -323,7 +380,7 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
     function withdrawBalance() external onlyOwner {
         uint256 balance = address(this).balance;
         require(balance > 0, "No balance to withdraw");
-        
+
         (bool success, ) = owner().call{value: balance}("");
         require(success, "Withdrawal failed");
     }
@@ -339,15 +396,20 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
      * @dev Emergency refund function (owner only)
      * @param paymentId The ID of the payment to refund
      */
-    function emergencyRefund(uint256 paymentId) external onlyOwner nonReentrant {
+    function emergencyRefund(
+        uint256 paymentId
+    ) external onlyOwner nonReentrant {
         Payment storage payment = payments[paymentId];
-        require(payment.status == PaymentStatus.Completed, "Payment not completed");
-        
+        require(
+            payment.status == PaymentStatus.Completed,
+            "Payment not completed"
+        );
+
         payment.status = PaymentStatus.Refunded;
-        
+
         (bool success, ) = payment.payer.call{value: payment.amount}("");
         require(success, "Refund failed");
-        
+
         emit PaymentRefunded(paymentId, payment.payer, payment.amount);
     }
 
@@ -356,4 +418,3 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
         revert("Direct ETH transfers not allowed");
     }
 }
-
