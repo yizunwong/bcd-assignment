@@ -39,7 +39,7 @@ export default function PolicyholderDashboard() {
         </div>
 
         {/* Stats Overview */}
-        <div className="stats-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <StatsCard
             title="Active Coverage"
             value={(summary?.data?.activeCoverage ?? 0).toString()}
@@ -56,13 +56,6 @@ export default function PolicyholderDashboard() {
             title="Pending Claims"
             value={(summary?.data?.pendingClaims ?? 0).toString()}
             icon={Clock}
-          />
-          <StatsCard
-            title="Wallet Balance"
-            value="5.2 ETH"
-            change="$18,420 USD"
-            changeType="neutral"
-            icon={Coins}
           />
         </div>
 
@@ -111,8 +104,8 @@ export default function PolicyholderDashboard() {
                               coverage.status === "Active"
                                 ? "status-active"
                                 : coverage.status === "Claimed"
-                                  ? "status-info"
-                                  : "status-pending"
+                                ? "status-info"
+                                : "status-pending"
                             }`}
                           >
                             {coverage.status}
@@ -185,8 +178,8 @@ export default function PolicyholderDashboard() {
                           activity.status === "completed"
                             ? "bg-emerald-100 dark:bg-emerald-900/30"
                             : activity.status === "pending"
-                              ? "bg-yellow-100 dark:bg-yellow-900/30"
-                              : "bg-blue-100 dark:bg-blue-900/30"
+                            ? "bg-yellow-100 dark:bg-yellow-900/30"
+                            : "bg-blue-100 dark:bg-blue-900/30"
                         }`}
                       >
                         {activity.status === "completed" ? (
