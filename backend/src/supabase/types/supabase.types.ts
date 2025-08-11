@@ -298,21 +298,6 @@ export type Database = {
           },
         ];
       };
-      permissions: {
-        Row: {
-          id: string;
-          name: string;
-        };
-        Insert: {
-          id: string;
-          name: string;
-        };
-        Update: {
-          id?: string;
-          name?: string;
-        };
-        Relationships: [];
-      };
       policies: {
         Row: {
           category: Database['public']['Enums']['policy_category'];
@@ -495,62 +480,47 @@ export type Database = {
           },
         ];
       };
-      role_permissions: {
+      transactions: {
         Row: {
-          enabled: boolean | null;
-          permission_id: string;
-          role_id: string;
+          coverage_id: number;
+          created_at: string;
+          id: number;
+          premium: number;
+          tx_hash: string;
+          user_id: string;
         };
         Insert: {
-          enabled?: boolean | null;
-          permission_id: string;
-          role_id: string;
+          coverage_id: number;
+          created_at?: string;
+          id?: number;
+          premium: number;
+          tx_hash: string;
+          user_id: string;
         };
         Update: {
-          enabled?: boolean | null;
-          permission_id?: string;
-          role_id?: string;
+          coverage_id?: number;
+          created_at?: string;
+          id?: number;
+          premium?: number;
+          tx_hash?: string;
+          user_id?: string;
         };
         Relationships: [
           {
-            foreignKeyName: 'role_permissions_permission_id_fkey';
-            columns: ['permission_id'];
+            foreignKeyName: 'transactions_coverage_id_fkey';
+            columns: ['coverage_id'];
             isOneToOne: false;
-            referencedRelation: 'permissions';
+            referencedRelation: 'coverage';
             referencedColumns: ['id'];
           },
           {
-            foreignKeyName: 'role_permissions_role_id_fkey';
-            columns: ['role_id'];
+            foreignKeyName: 'transactions_user_id_fkey';
+            columns: ['user_id'];
             isOneToOne: false;
-            referencedRelation: 'roles';
-            referencedColumns: ['id'];
+            referencedRelation: 'user_details';
+            referencedColumns: ['user_id'];
           },
         ];
-      };
-      roles: {
-        Row: {
-          color: string | null;
-          description: string | null;
-          id: string;
-          name: string;
-          settings: Json | null;
-        };
-        Insert: {
-          color?: string | null;
-          description?: string | null;
-          id: string;
-          name: string;
-          settings?: Json | null;
-        };
-        Update: {
-          color?: string | null;
-          description?: string | null;
-          id?: string;
-          name?: string;
-          settings?: Json | null;
-        };
-        Relationships: [];
       };
       user_details: {
         Row: {
