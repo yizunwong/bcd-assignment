@@ -80,7 +80,7 @@ npm run dev
 The smart contract provides the following functionality:
 
 1. **Policy Creation with Payment**
-   - `createPolicyWithPayment(coverage, premium, durationDays)`
+   - `createPolicyWithPayment(coverage, premium, durationDays, agreementCid)`
    - Creates a new insurance policy and collects ETH payment
    - Returns the policy ID
 
@@ -107,7 +107,7 @@ The smart contract provides the following functionality:
 
 The `useBlockchain.ts` hook provides:
 
-- `createPolicyWithPayment(coverage, premium, durationDays)`
+- `createPolicyWithPayment(coverage, premium, durationDays, agreementCid)`
 - `payPremiumForPolicy(policyId, premium)`
 - `fileClaimForPolicy(policyId, amount, description)`
 - `getPolicyDetails(policyId)`

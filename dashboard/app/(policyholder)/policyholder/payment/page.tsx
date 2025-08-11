@@ -287,6 +287,11 @@ export default function PaymentSummary() {
   };
 
   const handleTokenPayment = async () => {
+    if(!agreementCid) {
+      printMessage("Please upload the signed agreement.", "error");
+      return;
+    }
+    
     if (!isConnected) {
       printMessage("Please connect your wallet first", "error");
       return;
@@ -304,7 +309,8 @@ export default function PaymentSummary() {
       await createPolicyWithPayment(
         policyData.coverageAmount, // coverage amount in ETH
         Number(tokenAmount), // premium amount in ETH
-        parseInt(policyData.duration.split(" ")[0]) // duration in days
+        parseInt(policyData.duration.split(" ")[0]),// duration in days
+        agreementCid
       );
 
       // The success will be handled by the useEffect that watches isTransactionSuccess
