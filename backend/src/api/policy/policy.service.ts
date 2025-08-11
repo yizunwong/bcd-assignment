@@ -46,6 +46,7 @@ export class PolicyService {
       policy_id: id,
       name: file.originalname,
       path: `ipfs://${hashes[idx]}`,
+      cid: hashes[idx],
     }));
 
     const { error } = await req.supabase
@@ -458,16 +459,6 @@ export class PolicyService {
     // Step 2: Prepare update fields
     const updateFields: Partial<typeof existing> = {};
 
-    if (dto.name !== undefined) updateFields.name = dto.name;
-    if (dto.category !== undefined) updateFields.category = dto.category;
-    if (dto.coverage !== undefined) updateFields.coverage = dto.coverage;
-    if (dto.premium !== undefined) updateFields.premium = dto.premium;
-    if (dto.rating !== undefined) updateFields.rating = dto.rating;
-    if (dto.description !== undefined)
-      updateFields.description = dto.description;
-    if (dto.durationDays !== undefined)
-      updateFields.duration_days = dto.durationDays;
-
     // Step 3: Update policy
     const { data: updated, error: updateError } = await supabase
       .from('policies')
@@ -526,10 +517,7 @@ export class PolicyService {
     for (const doc of documents as { path: string }[]) {
       try {
         if (!doc.path.startsWith('ipfs://')) {
-          await this.fileService.removeFileFromStorage(
-            req.supabase,
-            doc.path,
-          );
+          await this.fileService.removeFileFromStorage(req.supabase, doc.path);
         }
       } catch {
         console.warn(`Failed to delete file "${doc.path}":`);
@@ -570,10 +558,7 @@ export class PolicyService {
       data: deleted,
     });
   }
-  async removeFile(
-    filePath: string,
-    req: AuthenticatedRequest,
-  ): Promise<void> {
+  async removeFile(filePath: string, req: AuthenticatedRequest): Promise<void> {
     if (!filePath.startsWith('ipfs://')) {
       await this.fileService.removeFileFromStorage(req.supabase, filePath);
     }

@@ -133,7 +133,6 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
         require(coverage > 0, "Coverage must be greater than 0");
         require(premium > 0, "Premium must be greater than 0");
         require(durationDays > 0, "Duration must be greater than 0");
-        require(userPolicies[msg.sender].length == 0, "Policy already purchased");
 
         uint256 policyId = nextPolicyId;
         uint256 startDate = block.timestamp;

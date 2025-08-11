@@ -6,4 +6,3 @@ import { PinataService } from './pinata.service';
   exports: [PinataService],
 })
 export class PinataModule {}
-

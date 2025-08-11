@@ -80,7 +80,7 @@ export default function BrowsePolicies() {
   const { data: coverageData } = useCoverageListQuery({ limit: 100 });
 
   const purchasedPolicyIds = useMemo(() => {
-    return (coverageData?.data || []).map((c: any) => Number(c.policies?.id));
+    return (coverageData?.data || []).map((c: any) => Number(c.policy_id));
   }, [coverageData]);
 
   const hasFilters = selectedCategory !== "all" || !!debouncedSearchTerm;
@@ -408,7 +408,7 @@ export default function BrowsePolicies() {
                           className="flex-1"
                         >
                           <Button className="w-full gradient-accent text-white floating-button">
-                            Buy with Token
+                            Buy
                           </Button>
                         </Link>
                       )}
