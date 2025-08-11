@@ -34,6 +34,9 @@ export class CoverageResponseDto {
   status!: string | null;
 
   @ApiProperty()
+  agreement_cid!: string;
+
+  @ApiProperty()
   utilization_rate!: number;
 
   @ApiProperty()

@@ -5,6 +5,7 @@ import {
   IsDateString,
   IsNotEmpty,
   IsEnum,
+  IsString,
 } from 'class-validator';
 
 export enum CoverageStatus {
@@ -65,4 +66,12 @@ export class CreateCoverageDto {
   )
   @IsNotEmpty({ message: 'next_payment_date is required' })
   next_payment_date!: string;
+
+  @ApiProperty({
+    example: 'QmHash',
+    description: 'CID of the signed agreement stored on IPFS',
+  })
+  @IsString({ message: 'agreement_cid must be a string' })
+  @IsNotEmpty({ message: 'agreement_cid is required' })
+  agreement_cid!: string;
 }

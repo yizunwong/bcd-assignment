@@ -221,6 +221,8 @@ export class PolicyService {
               id: doc.id,
               name: doc.name,
               policy_id: doc.policy_id,
+              path: doc.path,
+              cid: doc.cid,
               signedUrl: signedUrls[urlIndex++] || '',
             }))
           : [],

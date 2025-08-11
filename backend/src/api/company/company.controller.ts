@@ -20,7 +20,6 @@ export class CompanyController {
   @Post(':id/documents')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FilesInterceptor('files'))
-  // @UseGuards(AuthGuard)
   upload(
     @Param('id') id: string,
     @Body() dto: UploadDocDto,

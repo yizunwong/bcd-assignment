@@ -1433,6 +1433,35 @@
         ]
       }
     },
+    "/coverage/agreement": {
+      "post": {
+        "operationId": "CoverageController_uploadAgreement",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadDocDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Coverage"
+        ]
+      }
+    },
     "/coverage/{id}": {
       "get": {
         "operationId": "CoverageController_findOne",
@@ -2659,6 +2688,12 @@
           "policy_id": {
             "type": "number"
           },
+          "path": {
+            "type": "string"
+          },
+          "cid": {
+            "type": "string"
+          },
           "signedUrl": {
             "type": "string",
             "description": "Signed Supabase URL for accessing this document"
@@ -2668,6 +2703,8 @@
           "id",
           "name",
           "policy_id",
+          "path",
+          "cid",
           "signedUrl"
         ]
       },
@@ -2895,6 +2932,11 @@
             "type": "string",
             "example": "2025-08-01",
             "description": "Next payment date for the coverage (YYYY-MM-DD)"
+          },
+          "agreement_cid": {
+            "type": "string",
+            "example": "QmHash",
+            "description": "CID of the signed agreement stored on IPFS"
           }
         },
         "required": [
@@ -2903,7 +2945,8 @@
           "utilization_rate",
           "start_date",
           "end_date",
-          "next_payment_date"
+          "next_payment_date",
+          "agreement_cid"
         ]
       },
       "CoveragePolicyDto": {
@@ -2951,6 +2994,9 @@
           "status": {
             "type": "object"
           },
+          "agreement_cid": {
+            "type": "string"
+          },
           "utilization_rate": {
             "type": "number"
           },
@@ -2969,6 +3015,7 @@
         },
         "required": [
           "id",
+          "agreement_cid",
           "utilization_rate",
           "start_date",
           "end_date",
@@ -3008,6 +3055,11 @@
             "type": "string",
             "example": "2025-08-01",
             "description": "Next payment date for the coverage (YYYY-MM-DD)"
+          },
+          "agreement_cid": {
+            "type": "string",
+            "example": "QmHash",
+            "description": "CID of the signed agreement stored on IPFS"
           }
         }
       },

@@ -26,11 +26,9 @@ import {
   Filter,
   Calendar,
 } from "lucide-react";
-import {
-  walletBalance,
-  allTransactions,
-} from "@/public/data/policyholder/walletData";
+import { walletBalance } from "@/public/data/policyholder/walletData";
 import WalletSection from "@/components/shared/WalletSectiom";
+import { useWalletTransactions } from "@/hooks/useWalletTransactions";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -39,8 +37,10 @@ export default function WalletPage() {
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [dateRange, setDateRange] = useState("all");
+  const { transactions: chainTxs } = useWalletTransactions();
+  const transactions = useMemo(() => chainTxs, [chainTxs]);
   const filteredTransactions = useMemo(() => {
-    let filtered = allTransactions;
+    let filtered = transactions;
 
     // Filter by type
     if (filterType !== "all") {
@@ -81,7 +81,7 @@ export default function WalletPage() {
     return filtered.sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
-  }, [filterType, filterStatus, dateRange]);
+  }, [filterType, filterStatus, dateRange, transactions]);
 
   const totalPages = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE);
   const paginatedTransactions = filteredTransactions.slice(

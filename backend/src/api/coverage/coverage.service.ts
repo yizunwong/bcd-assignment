@@ -4,6 +4,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { PinataService } from 'src/pinata/pinata.service';
 import { CreateCoverageDto } from './dto/requests/create-coverage.dto';
 import { FindCoverageQueryDto } from './dto/responses/coverage-query.dto';
 import { CoverageResponseDto } from './dto/responses/coverage.dto';
@@ -14,6 +15,19 @@ import { CommonResponseDto } from 'src/common/common.dto';
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return */
 @Injectable()
 export class CoverageService {
+  constructor(private readonly pinataService: PinataService) {}
+
+  async uploadAgreement(file: Express.Multer.File, req: AuthenticatedRequest) {
+    const cid = await this.pinataService.uploadPolicyDocument(file, {
+      userId: req.user.id,
+    });
+    return new CommonResponseDto({
+      statusCode: 201,
+      message: 'Agreement uploaded successfully',
+      data: cid,
+    });
+  }
+
   async create(dto: CreateCoverageDto, req: AuthenticatedRequest) {
     //Insert into coverage table
     const { data: coverage, error: coverageError } = await req.supabase
@@ -26,6 +40,7 @@ export class CoverageService {
         start_date: dto.start_date,
         end_date: dto.end_date,
         next_payment_date: dto.next_payment_date,
+        agreement_cid: dto.agreement_cid,
       })
       .select()
       .single();
@@ -155,22 +170,9 @@ export class CoverageService {
       throw new NotFoundException(`Coverage with ID ${id} not found`);
     }
 
-    const updateFields: Partial<typeof existingCoverage> = {};
-
-    if (updateCoverageDto.status !== undefined)
-      updateFields.status = updateCoverageDto.status;
-    if (updateCoverageDto.utilization_rate !== undefined)
-      updateFields.utilization_rate = updateCoverageDto.utilization_rate;
-    if (updateCoverageDto.start_date !== undefined)
-      updateFields.start_date = updateCoverageDto.start_date;
-    if (updateCoverageDto.end_date !== undefined)
-      updateFields.end_date = updateCoverageDto.end_date;
-    if (updateCoverageDto.next_payment_date !== undefined)
-      updateFields.next_payment_date = updateCoverageDto.next_payment_date;
-
     const { data: updatedCoverage, error: updateError } = await req.supabase
       .from('coverage')
-      .update(updateFields)
+      .update(updateCoverageDto)
       .eq('id', id)
       .select()
       .single();
