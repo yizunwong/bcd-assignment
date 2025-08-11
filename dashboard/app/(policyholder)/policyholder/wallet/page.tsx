@@ -30,6 +30,7 @@ import FluidTabs from "@/components/animata/fluid-tabs";
 import { walletBalance } from "@/public/data/policyholder/walletData";
 import WalletSection from "@/components/shared/WalletSectiom";
 import { useWalletTransactions } from "@/hooks/useWalletTransactions";
+import { useFetchTransactions } from "@/hooks/useFetchTransactions";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -39,7 +40,11 @@ export default function WalletPage() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [dateRange, setDateRange] = useState("all");
   const { transactions: chainTxs } = useWalletTransactions();
-  const transactions = useMemo(() => chainTxs, [chainTxs]);
+  const { transactions: savedTxs } = useFetchTransactions();
+  const transactions = useMemo(
+    () => [...savedTxs, ...chainTxs],
+    [savedTxs, chainTxs],
+  );
   const filteredTransactions = useMemo(() => {
     let filtered = transactions;
 
@@ -80,14 +85,14 @@ export default function WalletPage() {
 
     // Sort by date (newest first)
     return filtered.sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
     );
   }, [filterType, filterStatus, dateRange, transactions]);
 
   const totalPages = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE);
   const paginatedTransactions = filteredTransactions.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    currentPage * ITEMS_PER_PAGE,
   );
 
   const pendingPayouts = [
@@ -100,7 +105,6 @@ export default function WalletPage() {
       status: "processing",
     },
   ];
-
 
   const formatAddress = (address?: string) => {
     if (!address) return "";
@@ -360,7 +364,7 @@ export default function WalletPage() {
                                 <p className="text-sm text-slate-600 dark:text-slate-400">
                                   Claim ID: {payout.claimId} • Est.{" "}
                                   {new Date(
-                                    payout.estimatedDate
+                                    payout.estimatedDate,
                                   ).toLocaleDateString()}
                                 </p>
                               </div>
