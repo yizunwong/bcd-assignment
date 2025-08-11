@@ -56,6 +56,12 @@ export class FileService {
   ): Promise<string[]> {
     const results = await Promise.all(
       filePaths.map(async (path) => {
+        // If the stored path is an IPFS URI, return the Pinata gateway URL
+        if (path.startsWith('ipfs://')) {
+          const cid = path.replace('ipfs://', '');
+          return `https://gateway.pinata.cloud/ipfs/${cid}`;
+        }
+
         const { data, error } = await supabase.storage
           .from(this.BUCKET)
           .createSignedUrl(path, this.SIGNED_URL_EXPIRY);

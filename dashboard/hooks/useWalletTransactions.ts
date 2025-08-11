@@ -13,13 +13,13 @@ export interface WalletTransaction {
 }
 
 export function useWalletTransactions(limit = 10) {
-  const { address } = useAccount();
-  const client = usePublicClient();
+  const { address, chainId } = useAccount();
+  const client = usePublicClient({ chainId });
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
 
   useEffect(() => {
     const fetchTransactions = async () => {
-      if (!address) return;
+      if (!address || !client) return;
       const latestBlock = await client.getBlockNumber();
       const txs: WalletTransaction[] = [];
       let blockNumber = latestBlock;
