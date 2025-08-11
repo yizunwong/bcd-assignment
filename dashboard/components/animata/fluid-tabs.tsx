@@ -47,11 +47,11 @@ export default function FluidTabs({ tabs, defaultTab }: FluidTabsProps) {
 
   return (
     <div className="space-y-6">
-      <div className="relative flex w-full space-x-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800 p-1 shadow-lg">
+      <div className="relative flex w-full space-x-2 overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-800 p-1 shadow-lg">
         <AnimatePresence initial={false}>
           <motion.div
             key={activeTab}
-            className="absolute inset-y-0 my-1 rounded-full bg-white dark:bg-slate-700"
+            className="absolute inset-y-0 my-1 rounded-2xl bg-white dark:bg-slate-700"
             initial={{ x: `${getTabIndex(prevActiveTab) * 100}%` }}
             animate={{ x: `${getTabIndex(activeTab) * 100}%` }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -65,7 +65,7 @@ export default function FluidTabs({ tabs, defaultTab }: FluidTabsProps) {
               activeTab === tab.id
                 ? "text-slate-900 dark:text-slate-100"
                 : "text-slate-500"
-            } ${touchedTab === tab.id ? "blur-sm" : ""}`}
+            }`}
             onClick={() => handleTabClick(tab.id)}
           >
             {tab.icon}

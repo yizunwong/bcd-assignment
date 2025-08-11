@@ -26,7 +26,7 @@ import {
   Calendar,
   ArrowLeftRight,
 } from "lucide-react";
-import FluidTabs from "@/components/ui/fluid-tabs";
+import FluidTabs from "@/components/animata/fluid-tabs";
 import { walletBalance } from "@/public/data/policyholder/walletData";
 import WalletSection from "@/components/shared/WalletSectiom";
 import { useWalletTransactions } from "@/hooks/useWalletTransactions";
@@ -172,47 +172,6 @@ export default function WalletPage() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Token Holdings */}
-        <Card className="glass-card rounded-2xl mb-8">
-          <CardHeader>
-            <CardTitle className="text-xl text-slate-800 dark:text-slate-100">
-              Token Holdings
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {walletBalance.tokens.map((token, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-700/30 rounded-xl hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors"
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center">
-                      <Coins className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-800 dark:text-slate-100">
-                        {token.symbol}
-                      </h3>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        {token.name}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-slate-800 dark:text-slate-100">
-                      {token.balance}
-                    </p>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      ${token.usdValue}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Transactions and Pending Payouts */}
         <FluidTabs
