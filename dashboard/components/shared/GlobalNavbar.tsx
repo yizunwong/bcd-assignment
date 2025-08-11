@@ -42,5 +42,5 @@ export default async function GlobalNavbar() {
     }
   }
 
-  return <Navbar role={role} />;
+  return <Navbar initialRole={role} />;
 }

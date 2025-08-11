@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -18,30 +18,35 @@ import {
   FileText,
   BarChart3,
   Plus,
-  Gift,
   Download,
-  Settings,
   Monitor,
   Code,
-  AlertTriangle,
   Users,
   ChevronDown,
   Wallet,
 } from "lucide-react";
 import useAuth from "@/hooks/useAuth";
 import { useToast } from "./ToastProvider";
+import { useAuthStore, type Role } from "@/store/useAuthStore";
 
 interface NavbarProps {
-  role?: "policyholder" | "admin" | "system-admin";
+  initialRole?: Role;
 }
 
-export function Navbar({ role }: NavbarProps) {
+export function Navbar({ initialRole }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const pathname = usePathname();
   const { logout } = useAuth();
   const router = useRouter();
   const { printMessage } = useToast();
+  const { role, setRole } = useAuthStore();
+
+  useEffect(() => {
+    if (initialRole) {
+      setRole(initialRole);
+    }
+  }, [initialRole, setRole]);
 
   const allLinks = {
     policyholder: [
@@ -71,25 +76,10 @@ export function Navbar({ role }: NavbarProps) {
     { href: "/trust", label: "Trust & Security", icon: undefined },
     { href: "/help", label: "Help Center", icon: undefined },
   ];
-  const publicPaths = [
-    "/",
-    "/solutions",
-    "/how-it-works",
-    "/benefits",
-    "/plans",
-    "/trust",
-    "/help",
-  ];
 
-  const isPublicPage = publicPaths.some(
-    (path) => pathname === path || pathname.startsWith(path + "/")
-  );
-  const navigationLinks = role && !isPublicPage ? allLinks[role] : defaultLinks;
+  const navigationLinks = role ? allLinks[role] : defaultLinks;
 
-  const isRolePage =
-    pathname.startsWith("/policyholder") ||
-    pathname.startsWith("/admin") ||
-    pathname.startsWith("/system-admin");
+  const isRolePage = role ? pathname.startsWith(`/${role}`) : false;
 
   // Get the correct profile link based on role
   const getProfileLink = () => {
@@ -205,7 +195,7 @@ export function Navbar({ role }: NavbarProps) {
                           Profile
                         </Link>
                       )}
-                      {userRole === "policyholder" && (
+                      {role === "policyholder" && (
                         <Link
                           href="/policyholder/wallet"
                           className="flex items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors"
@@ -314,18 +304,18 @@ export function Navbar({ role }: NavbarProps) {
                       <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
                     </span>
                   </Button>
-                  {role !== "system-admin"} && (
-                  <Link href={getProfileLink()}>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="floating-button w-full justify-start"
-                    >
-                      <User className="w-5 h-5 mr-2" />
-                      Profile
-                    </Button>
-                  </Link>
-                  )
+                  {role !== "system-admin" && (
+                    <Link href={getProfileLink()}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="floating-button w-full justify-start"
+                      >
+                        <User className="w-5 h-5 mr-2" />
+                        Profile
+                      </Button>
+                    </Link>
+                  )}
                   <Link href={isRolePage ? "/" : getDashboardLink()}>
                     <Button
                       variant="ghost"

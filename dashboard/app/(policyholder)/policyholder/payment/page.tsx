@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef, use } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,9 @@ import {
   Eye,
   EyeOff,
   Wallet,
+  Upload,
+  File,
+  X,
   Zap,
   Globe,
   Award,
@@ -53,6 +56,7 @@ export default function PaymentSummary() {
   const [paymentMethod, setPaymentMethod] = useState("ETH");
   const [agreementFile, setAgreementFile] = useState<File | null>(null);
   const [agreementCid, setAgreementCid] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
 
   const stripeRef = useRef<any>(null);
   const cardElementRef = useRef<any>(null);
@@ -113,6 +117,58 @@ export default function PaymentSummary() {
       setTokenAmount(policyData.total.toString());
     }
   }, [policyData]);
+
+  const handleAgreementFile = useCallback(
+    (file: File) => {
+      if (file.type !== "application/pdf") {
+        printMessage("Only PDF files are allowed", "error");
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        printMessage("File is too large. Maximum size is 10MB.", "error");
+        return;
+      }
+      setAgreementFile(file);
+      setAgreementCid(null);
+    },
+    [printMessage]
+  );
+
+  const handleAgreementSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files?.[0]) {
+        handleAgreementFile(e.target.files[0]);
+      }
+    },
+    [handleAgreementFile]
+  );
+
+  const handleAgreementDrag = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  }, []);
+
+  const handleAgreementDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragActive(false);
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleAgreementFile(e.dataTransfer.files[0]);
+      }
+    },
+    [handleAgreementFile]
+  );
+
+  const handleRemoveAgreement = () => {
+    setAgreementFile(null);
+    setAgreementCid(null);
+  };
 
   // Handle blockchain transaction success
   useEffect(() => {
@@ -780,24 +836,74 @@ export default function PaymentSummary() {
                 </div>
 
                 {/* Agreement Upload */}
-                <div className="mt-6 space-y-2">
-                  {agreementTemplateUrls.map((doc, idx) => (
-                    <a
-                      key={idx}
-                      href={doc.url}
-                      download
-                      className="text-emerald-600 dark:text-emerald-400 text-sm underline block"
-                    >
-                      {doc.name || `Agreement Template ${idx + 1}`}
-                    </a>
-                  ))}
-                  <Input
-                    type="file"
-                    accept="application/pdf"
-                    onChange={(e) =>
-                      setAgreementFile(e.target.files?.[0] || null)
-                    }
-                  />
+                <div className="mt-6 space-y-4">
+                  <div className="space-y-2">
+                    {agreementTemplateUrls.map((doc, idx) => (
+                      <a
+                        key={idx}
+                        href={doc.url}
+                        download
+                        className="text-emerald-600 dark:text-emerald-400 text-sm underline block"
+                      >
+                        {doc.name || `Agreement Template ${idx + 1}`}
+                      </a>
+                    ))}
+                  </div>
+
+                  <div
+                    className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+                      dragActive
+                        ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
+                        : "border-slate-300 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-700/30"
+                    }`}
+                    onDragEnter={handleAgreementDrag}
+                    onDragLeave={handleAgreementDrag}
+                    onDragOver={handleAgreementDrag}
+                    onDrop={handleAgreementDrop}
+                  >
+                    <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                    <p className="text-slate-700 dark:text-slate-300 mb-2">
+                      Drag and drop signed agreement here, or{" "}
+                      <label className="text-emerald-600 dark:text-emerald-400 cursor-pointer hover:text-emerald-700 dark:hover:text-emerald-300">
+                        browse
+                        <input
+                          type="file"
+                          accept="application/pdf"
+                          className="hidden"
+                          onChange={handleAgreementSelect}
+                        />
+                      </label>
+                    </p>
+                    <p className="text-sm text-slate-500 dark:text-slate-500">
+                      PDF only, max 10MB
+                    </p>
+                  </div>
+
+                  {agreementFile && (
+                    <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-600">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-lg bg-slate-200 dark:bg-slate-600 flex items-center justify-center">
+                          <File className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-800 dark:text-white">
+                            {agreementFile.name}
+                          </p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            {(agreementFile.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleRemoveAgreement}
+                        className="h-8 w-8 p-0 text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Action Buttons */}
