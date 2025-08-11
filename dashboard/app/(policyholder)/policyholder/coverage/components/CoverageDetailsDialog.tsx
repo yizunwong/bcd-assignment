@@ -10,7 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useWaitForTransactionReceipt } from "wagmi";
 import { useInsuranceContract } from "@/hooks/useBlockchain";
 import { usePaymentMutation } from "@/hooks/usePayment";
@@ -42,32 +42,62 @@ export default function CoverageDetailsDialog({
   const { payPremiumForPolicy, isPayingPremium, payPremiumData } =
     useInsuranceContract();
   const { createTransaction } = usePaymentMutation();
+
+  // remember the amount used when we initiated the tx
+  const payingAmountRef = useRef<number | null>(null);
+  // make sure we only record a given hash once
+  const lastRecordedHashRef = useRef<string | null>(null);
+
+  // Wait for the tx ONLY when we actually have a hash
   const { isSuccess: isTxSuccess } = useWaitForTransactionReceipt({
     hash: payPremiumData,
+    confirmations: 2,
+    // wagmi v2: this prevents polling when no hash; if you're on v1, remove `query`
+    query: { enabled: !!payPremiumData },
   });
 
-  useEffect(() => {
-    const record = async () => {
-      if (isTxSuccess && payPremiumData) {
-        const premiumAmount = parseFloat(policy.premium.toString());
-        await createTransaction({
-          coverageId: Number(policy.id),
-          txHash: payPremiumData,
-          amount: premiumAmount,
-          currency: "ETH",
-          status: "confirmed",
-          type: "sent",
-        });
-      }
-    };
-    record();
-  }, [isTxSuccess, payPremiumData, createTransaction, policy]);
-
+  // Button click -> fire ONE on-chain tx
   const handlePayPremium = () => {
-    const premiumAmount = parseFloat(policy.premium.toString());
-    if (isNaN(premiumAmount)) return;
-    payPremiumForPolicy(Number(policy.id), premiumAmount);
+    const premiumAmount = parseFloat(String(policy.premium)); // handles "0.1" or "0.1 ETH"
+    if (!Number.isFinite(premiumAmount)) return;
+
+    payingAmountRef.current = premiumAmount;
+    payPremiumForPolicy(0, premiumAmount);
   };
+
+  // After tx confirms -> record it ONCE, do not send a new tx
+  useEffect(() => {
+    const recordOnce = async () => {
+      if (!isTxSuccess || !payPremiumData) return;
+
+      // avoid duplicate records if the dialog re-renders
+      if (lastRecordedHashRef.current === payPremiumData) return;
+      lastRecordedHashRef.current = payPremiumData;
+
+      const amount =
+        payingAmountRef.current ?? parseFloat(String(policy.premium));
+      if (!Number.isFinite(amount)) return;
+
+      await createTransaction({
+        coverageId: Number(policy.id),
+        txHash: payPremiumData,
+        amount,
+        currency: "ETH",
+        status: "confirmed",
+        type: "sent",
+      });
+    };
+
+    recordOnce();
+    // depend only on what truly changes the effect
+    // (avoid putting `policy` object itself here to prevent spurious reruns)
+  }, [
+    isTxSuccess,
+    payPremiumData,
+    createTransaction,
+    policy.id,
+    policy.premium,
+  ]);
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-md">
@@ -76,19 +106,25 @@ export default function CoverageDetailsDialog({
         </DialogHeader>
         <div className="space-y-4 mt-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-slate-600 dark:text-slate-400">Provider</p>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Provider
+            </p>
             <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
               {policy.provider}
             </p>
           </div>
           <div className="flex items-center justify-between">
-            <p className="text-sm text-slate-600 dark:text-slate-400">Coverage</p>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Coverage
+            </p>
             <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
               {policy.coverage}
             </p>
           </div>
           <div className="flex items-center justify-between">
-            <p className="text-sm text-slate-600 dark:text-slate-400">Premium</p>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Premium
+            </p>
             <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
               {policy.premium}
             </p>
@@ -100,17 +136,21 @@ export default function CoverageDetailsDialog({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Calendar className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-              <p className="text-sm text-slate-600 dark:text-slate-400">Policy Period</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Policy Period
+              </p>
             </div>
             <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
-              {new Date(policy.startDate).toLocaleDateString()} - {" "}
+              {new Date(policy.startDate).toLocaleDateString()} -{" "}
               {new Date(policy.endDate).toLocaleDateString()}
             </p>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Clock className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-              <p className="text-sm text-slate-600 dark:text-slate-400">Next Payment</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Next Payment
+              </p>
             </div>
             <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
               {new Date(policy.nextPayment).toLocaleDateString()}
@@ -138,11 +178,11 @@ export default function CoverageDetailsDialog({
         <DialogFooter className="mt-4 gap-2">
           <Button
             onClick={handlePayPremium}
-            disabled={isPayingPremium}
-            className="flex-1"
+            disabled={isPayingPremium || (!!payPremiumData && !isTxSuccess)}
           >
             Pay Premium
           </Button>
+
           <Button onClick={onClose} variant="outline" className="flex-1">
             Close
           </Button>

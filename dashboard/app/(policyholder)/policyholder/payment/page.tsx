@@ -389,13 +389,13 @@ export default function PaymentSummary() {
 
     let cid = agreementCid;
     if (!cid) {
-      cid = await uploadAgreement(agreementFile! as UploadDocDto);
+      cid = await uploadAgreement(agreementFile!);
       if (!cid) {
         printMessage("Failed to upload agreement.", "error");
         return;
       }
-      setAgreementCid(cid);
     }
+    setAgreementCid(cid);
 
     const startDate = new Date();
     const endDate = new Date();

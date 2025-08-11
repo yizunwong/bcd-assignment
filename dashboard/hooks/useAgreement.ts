@@ -6,8 +6,13 @@ export function useAgreementUploadMutation() {
 
   return {
     ...mutation,
-    uploadAgreement: (data: UploadDocDto) => mutation.mutateAsync({ data }),
+    uploadAgreement: async (agreementFile: File): Promise<string | null> => {
+      const res = await mutation.mutateAsync({
+        data: { files: [agreementFile] },
+      });
+
+      return res.data;
+    },
     error: parseError(mutation.error),
   };
 }
-
