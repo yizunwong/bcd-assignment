@@ -36,7 +36,6 @@ export default function EditPolicyDialog({
   onSave,
 }: EditPolicyDialogProps) {
   const [formData, setFormData] = useState<Policy>({ ...policy });
-  console.log("formData", formData);
 
   useEffect(() => {
     if (open) {

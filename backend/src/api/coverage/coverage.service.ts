@@ -53,6 +53,7 @@ export class CoverageService {
     return new CommonResponseDto({
       statusCode: 201,
       message: 'Coverage created successfully',
+      data: coverage,
     });
   }
 

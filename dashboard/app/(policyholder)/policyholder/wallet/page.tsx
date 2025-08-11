@@ -39,7 +39,6 @@ export default function WalletPage() {
   const [dateRange, setDateRange] = useState("all");
   const { transactions: chainTxs } = useWalletTransactions();
   const transactions = useMemo(() => chainTxs, [chainTxs]);
-  console.log(transactions);
   const filteredTransactions = useMemo(() => {
     let filtered = transactions;
 

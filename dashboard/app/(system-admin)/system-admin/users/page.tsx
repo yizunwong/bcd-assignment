@@ -276,7 +276,6 @@ export default function UserRoleManagement() {
   const handleSaveUser = async () => {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    console.log("Saving user:", editUserData);
     setIsEditDialogOpen(false);
   };
 
@@ -293,13 +292,11 @@ export default function UserRoleManagement() {
   const toggleUserStatus = async (userId: string) => {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 500));
-    console.log("Toggling status for user:", userId);
   };
 
   const resetUserPassword = async (userId: string) => {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 800));
-    console.log("Resetting password for user:", userId);
    };
 
   const handleCreateUser = async () => {

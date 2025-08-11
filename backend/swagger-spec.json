@@ -1296,8 +1296,26 @@
           }
         },
         "responses": {
-          "201": {
-            "description": ""
+          "200": {
+            "description": "Create coverage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/CoverageResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1440,7 +1458,7 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
                 "$ref": "#/components/schemas/UploadDocDto"
               }
@@ -2924,55 +2942,6 @@
           }
         }
       },
-      "CreateCoverageDto": {
-        "type": "object",
-        "properties": {
-          "policy_id": {
-            "type": "number",
-            "example": 1,
-            "description": "ID of the policy this coverage is linked to"
-          },
-          "status": {
-            "type": "string",
-            "example": "active",
-            "description": "Status of the coverage"
-          },
-          "utilization_rate": {
-            "type": "number",
-            "example": 0,
-            "description": "Utilization rate of the coverage"
-          },
-          "start_date": {
-            "type": "string",
-            "example": "2025-07-01",
-            "description": "Start date of the coverage (YYYY-MM-DD)"
-          },
-          "end_date": {
-            "type": "string",
-            "example": "2026-07-01",
-            "description": "End date of the coverage (YYYY-MM-DD)"
-          },
-          "next_payment_date": {
-            "type": "string",
-            "example": "2025-08-01",
-            "description": "Next payment date for the coverage (YYYY-MM-DD)"
-          },
-          "agreement_cid": {
-            "type": "string",
-            "example": "QmHash",
-            "description": "CID of the signed agreement stored on IPFS"
-          }
-        },
-        "required": [
-          "policy_id",
-          "status",
-          "utilization_rate",
-          "start_date",
-          "end_date",
-          "next_payment_date",
-          "agreement_cid"
-        ]
-      },
       "CoveragePolicyDto": {
         "type": "object",
         "properties": {
@@ -3045,6 +3014,55 @@
           "end_date",
           "next_payment_date",
           "policies"
+        ]
+      },
+      "CreateCoverageDto": {
+        "type": "object",
+        "properties": {
+          "policy_id": {
+            "type": "number",
+            "example": 1,
+            "description": "ID of the policy this coverage is linked to"
+          },
+          "status": {
+            "type": "string",
+            "example": "active",
+            "description": "Status of the coverage"
+          },
+          "utilization_rate": {
+            "type": "number",
+            "example": 0,
+            "description": "Utilization rate of the coverage"
+          },
+          "start_date": {
+            "type": "string",
+            "example": "2025-07-01",
+            "description": "Start date of the coverage (YYYY-MM-DD)"
+          },
+          "end_date": {
+            "type": "string",
+            "example": "2026-07-01",
+            "description": "End date of the coverage (YYYY-MM-DD)"
+          },
+          "next_payment_date": {
+            "type": "string",
+            "example": "2025-08-01",
+            "description": "Next payment date for the coverage (YYYY-MM-DD)"
+          },
+          "agreement_cid": {
+            "type": "string",
+            "example": "QmHash",
+            "description": "CID of the signed agreement stored on IPFS"
+          }
+        },
+        "required": [
+          "policy_id",
+          "status",
+          "utilization_rate",
+          "start_date",
+          "end_date",
+          "next_payment_date",
+          "agreement_cid"
         ]
       },
       "UpdateCoverageDto": {

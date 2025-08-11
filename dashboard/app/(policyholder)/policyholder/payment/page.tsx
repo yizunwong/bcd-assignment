@@ -82,8 +82,6 @@ export default function PaymentSummary() {
   const policyId = searchParams.get("policy") ?? "";
   const { data: policy } = usePolicyQuery(Number(policyId));
 
-  console.log(policy);
-
   const policyData = useMemo(() => {
     if (!policy?.data) return null;
     return {
@@ -176,6 +174,7 @@ export default function PaymentSummary() {
   // Handle blockchain transaction success
   useEffect(() => {
     if (isTransactionSuccess && createPolicyData) {
+      console.log("Blockchain transaction successful:", createPolicyData);
       handleBlockchainSuccess();
     }
   }, [isTransactionSuccess, createPolicyData]);

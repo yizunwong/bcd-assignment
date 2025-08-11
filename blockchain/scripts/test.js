@@ -25,7 +25,6 @@ async function main() {
 
   // // Now call the view function correctly: pass the USER address as the param
   const ids = await insurance.getPolicy(0);
-  console.log("User policies:", ids);
 }
 
 main().catch((e) => {
