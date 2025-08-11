@@ -143,15 +143,18 @@ export default function PaymentSummary() {
     [handleAgreementFile]
   );
 
-  const handleAgreementDrag = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  }, []);
+  const handleAgreementDrag = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.type === "dragenter" || e.type === "dragover") {
+        setDragActive(true);
+      } else if (e.type === "dragleave") {
+        setDragActive(false);
+      }
+    },
+    []
+  );
 
   const handleAgreementDrop = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
@@ -837,15 +840,26 @@ export default function PaymentSummary() {
 
                 {/* Agreement Upload */}
                 <div className="mt-6 space-y-4">
-                  <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-3">
+                    Agreement Templates
+                  </h4>
+                  <div className="divide-y divide-slate-200 dark:divide-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
                     {agreementTemplateUrls.map((doc, idx) => (
                       <a
                         key={idx}
                         href={doc.url}
                         download
-                        className="text-emerald-600 dark:text-emerald-400 text-sm underline block"
+                        className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors group"
                       >
-                        {doc.name || `Agreement Template ${idx + 1}`}
+                        <div className="flex items-center gap-3">
+                          <File className="w-5 h-5 text-emerald-500 group-hover:text-emerald-600 transition-colors" />
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors">
+                            {doc.name || `Agreement Template ${idx + 1}`}
+                          </span>
+                        </div>
+                        <span className="text-xs text-slate-400 group-hover:text-emerald-500 transition-colors">
+                          Download
+                        </span>
                       </a>
                     ))}
                   </div>
@@ -908,14 +922,6 @@ export default function PaymentSummary() {
 
                 {/* Action Buttons */}
                 <div className="flex gap-4 pt-6 border-t border-slate-200 dark:border-slate-700">
-                  <Link href="/policyholder/browse" className="flex-1">
-                    <Button
-                      variant="outline"
-                      className="w-full floating-button"
-                    >
-                      Modify Selection
-                    </Button>
-                  </Link>
                   <Button
                     onClick={handlePayment}
                     disabled={
