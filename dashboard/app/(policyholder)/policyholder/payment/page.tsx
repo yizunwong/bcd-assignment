@@ -31,7 +31,7 @@ import { usePolicyQuery } from '@/hooks/usePolicies';
 import { useToast } from '@/components/shared/ToastProvider';
 import { usePaymentMutation } from '@/hooks/usePayment';
 import { useInsuranceContract } from '@/hooks/useBlockchain';
-import { CreateCoverageDto, UploadDocDto } from '@/api';
+import { CreateCoverageDto } from '@/api';
 import { useTransactionStore } from '@/store/useTransactionStore';
 import { useAccount } from 'wagmi';
 import { useAgreementUploadMutation } from '@/hooks/useAgreement';
@@ -311,7 +311,7 @@ export default function PaymentSummary() {
 
     let cid = agreementCid;
     if (!cid) {
-      cid = await uploadAgreement(agreementFile as UploadDocDto);
+      cid = await uploadAgreement(agreementFile!);
       if (!cid) {
         printMessage('Failed to upload agreement.', 'error');
         return;

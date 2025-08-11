@@ -4184,11 +4184,13 @@ export const coverageControllerUploadAgreement = (
   uploadDocDto: UploadDocDto,
   signal?: AbortSignal,
 ) => {
-  return customFetcher<null>({
+  const formData = new FormData();
+  uploadDocDto.files?.forEach((file) => formData.append("file", file));
+
+  return customFetcher<CommonResponseDto>({
     url: `/coverage/agreement`,
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    data: uploadDocDto,
+    data: formData,
     signal,
   });
 };
