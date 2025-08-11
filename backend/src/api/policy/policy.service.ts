@@ -10,6 +10,7 @@ import { UpdatePolicyDto } from './dto/requests/update-policy.dto';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { FileService } from '../file/file.service';
+import { PinataService } from 'src/pinata/pinata.service';
 import { CommonResponseDto } from 'src/common/common.dto';
 import { PolicyResponseDto } from './dto/responses/policy.dto';
 import { FindPoliciesQueryDto } from './dto/responses/policy-query.dto';
@@ -25,6 +26,7 @@ export class PolicyService {
     private readonly claimsService: ClaimService,
     private readonly fileService: FileService,
     private readonly supabaseService: SupabaseService,
+    private readonly pinataService: PinataService,
   ) {}
   async addPolicyDocuments(
     id: number,
@@ -36,17 +38,14 @@ export class PolicyService {
     if (userError || !userData?.user) {
       throw new UnauthorizedException('Invalid or expired token');
     }
-    const paths = await this.fileService.uploadFiles(
-      req.supabase,
-      files,
-      'policy_documents',
-      userData.user.id,
+    const hashes = await Promise.all(
+      files.map((file) => this.pinataService.uploadPolicyDocument(file)),
     );
 
     const inserts = files.map((file, idx) => ({
       policy_id: id,
       name: file.originalname,
-      path: paths[idx],
+      path: `ipfs://${hashes[idx]}`,
     }));
 
     const { error } = await req.supabase
@@ -526,7 +525,12 @@ export class PolicyService {
 
     for (const doc of documents as { path: string }[]) {
       try {
-        await this.fileService.removeFileFromStorage(req.supabase, doc.path);
+        if (!doc.path.startsWith('ipfs://')) {
+          await this.fileService.removeFileFromStorage(
+            req.supabase,
+            doc.path,
+          );
+        }
       } catch {
         console.warn(`Failed to delete file "${doc.path}":`);
       }
@@ -566,7 +570,12 @@ export class PolicyService {
       data: deleted,
     });
   }
-  async removeFile(filePath: string, req: AuthenticatedRequest): Promise<void> {
-    await this.fileService.removeFileFromStorage(req.supabase, filePath);
+  async removeFile(
+    filePath: string,
+    req: AuthenticatedRequest,
+  ): Promise<void> {
+    if (!filePath.startsWith('ipfs://')) {
+      await this.fileService.removeFileFromStorage(req.supabase, filePath);
+    }
   }
 }
