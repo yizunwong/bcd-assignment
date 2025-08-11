@@ -6,7 +6,7 @@ import { CreatePaymentIntentDto } from './dto/requests/create-intent.dto';
 import { PaymentIntentResponseDto } from './dto/responses/payment-intent.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { AuthGuard } from '../auth/auth.guard';
-import { CreateTransactionDto } from './dto/requests/create-transcation.dto';
+import { CreateTransactionDto } from './dto/requests/create-transaction.dto';
 
 @ApiTags('Payments')
 @Controller('payments')

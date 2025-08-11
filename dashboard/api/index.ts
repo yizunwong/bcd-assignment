@@ -635,13 +635,44 @@ export interface CreatePaymentIntentDto {
   currency: string;
 }
 
+/**
+ * Status of the transaction
+ */
+export type CreateTransactionDtoStatus =
+  (typeof CreateTransactionDtoStatus)[keyof typeof CreateTransactionDtoStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateTransactionDtoStatus = {
+  pending: "pending",
+  confirmed: "confirmed",
+  failed: "failed",
+} as const;
+
+/**
+ * Type of transaction
+ */
+export type CreateTransactionDtoType =
+  (typeof CreateTransactionDtoType)[keyof typeof CreateTransactionDtoType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CreateTransactionDtoType = {
+  sent: "sent",
+  received: "received",
+} as const;
+
 export interface CreateTransactionDto {
   /** ID of the policy associated with this transaction */
   coverageId: number;
   /** Blockchain transaction hash */
   txHash: string;
   /** Premium amount paid for the policy */
-  premium: number;
+  amount: number;
+  /** Currency of the premium payment */
+  currency: string;
+  /** Status of the transaction */
+  status: CreateTransactionDtoStatus;
+  /** Type of transaction */
+  type: CreateTransactionDtoType;
 }
 
 export type AuthControllerLogin200AllOf = {

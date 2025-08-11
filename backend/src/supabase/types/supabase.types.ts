@@ -482,27 +482,36 @@ export type Database = {
       };
       transactions: {
         Row: {
+          amount: number;
           coverage_id: number;
           created_at: string;
+          currency: string;
           id: number;
-          premium: number;
+          status: Database['public']['Enums']['transaction_status'];
           tx_hash: string;
+          type: Database['public']['Enums']['transaction_type'] | null;
           user_id: string;
         };
         Insert: {
+          amount: number;
           coverage_id: number;
           created_at?: string;
+          currency: string;
           id?: number;
-          premium: number;
+          status?: Database['public']['Enums']['transaction_status'];
           tx_hash: string;
+          type?: Database['public']['Enums']['transaction_type'] | null;
           user_id: string;
         };
         Update: {
+          amount?: number;
           coverage_id?: number;
           created_at?: string;
+          currency?: string;
           id?: number;
-          premium?: number;
+          status?: Database['public']['Enums']['transaction_status'];
           tx_hash?: string;
+          type?: Database['public']['Enums']['transaction_type'] | null;
           user_id?: string;
         };
         Relationships: [
@@ -589,6 +598,8 @@ export type Database = {
       policy_category: 'health' | 'crop' | 'travel';
       policy_status: 'active' | 'deactivated';
       role: 'admin' | 'user';
+      transaction_status: 'pending' | 'confirmed' | 'failed';
+      transaction_type: 'sent' | 'received';
       user_status: 'active' | 'deactivated';
       years_in_business:
         | '0-1 years'
@@ -739,6 +750,8 @@ export const Constants = {
       policy_category: ['health', 'crop', 'travel'],
       policy_status: ['active', 'deactivated'],
       role: ['admin', 'user'],
+      transaction_status: ['pending', 'confirmed', 'failed'],
+      transaction_type: ['sent', 'received'],
       user_status: ['active', 'deactivated'],
       years_in_business: [
         '0-1 years',

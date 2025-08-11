@@ -6,7 +6,7 @@ import {
 import { CommonResponseDto } from 'src/common/common.dto';
 import { PaymentIntentResponseDto } from './dto/responses/payment-intent.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
-import { CreateTransactionDto } from './dto/requests/create-transcation.dto';
+import { CreateTransactionDto } from './dto/requests/create-transaction.dto';
 
 @Injectable()
 export class PaymentService {
@@ -49,7 +49,11 @@ export class PaymentService {
         user_id: userData.user.id,
         coverage_id: dto.coverageId,
         tx_hash: dto.txHash,
-        premium: dto.premium,
+        amount: dto.amount,
+        currency: dto.currency,
+        created_at: new Date().toISOString(),
+        status: dto.status,
+        type: dto.type,
       })
       .select()
       .single();

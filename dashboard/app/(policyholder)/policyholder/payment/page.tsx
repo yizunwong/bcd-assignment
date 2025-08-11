@@ -34,7 +34,7 @@ import { usePolicyQuery } from "@/hooks/usePolicies";
 import { useToast } from "@/components/shared/ToastProvider";
 import { usePaymentMutation } from "@/hooks/usePayment";
 import { useInsuranceContract } from "@/hooks/useBlockchain";
-import { CreateCoverageDto } from "@/api";
+import { CreateCoverageDto, UploadDocDto } from "@/api";
 import { useTransactionStore } from "@/store/useTransactionStore";
 import { useAccount } from "wagmi";
 import { useAgreementUploadMutation } from "@/hooks/useAgreement";
@@ -256,7 +256,10 @@ export default function PaymentSummary() {
         await createTransaction({
           coverageId: coverage.data.id,
           txHash: createPolicyData,
-          premium: Number(tokenAmount),
+          amount: Number(tokenAmount),
+          currency: 'ETH',
+          status: "confirmed",
+          type: "sent",
         });
       }
 
@@ -386,7 +389,7 @@ export default function PaymentSummary() {
 
     let cid = agreementCid;
     if (!cid) {
-      cid = await uploadAgreement(agreementFile!);
+      cid = await uploadAgreement(agreementFile! as UploadDocDto);
       if (!cid) {
         printMessage("Failed to upload agreement.", "error");
         return;

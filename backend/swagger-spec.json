@@ -3308,16 +3308,43 @@
             "example": "0xabc123",
             "description": "Blockchain transaction hash"
           },
-          "premium": {
+          "amount": {
             "type": "number",
             "example": 100,
             "description": "Premium amount paid for the policy"
+          },
+          "currency": {
+            "type": "string",
+            "example": "ETH",
+            "description": "Currency of the premium payment"
+          },
+          "status": {
+            "type": "string",
+            "example": "confirmed",
+            "description": "Status of the transaction",
+            "enum": [
+              "pending",
+              "confirmed",
+              "failed"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "example": "sent",
+            "description": "Type of transaction",
+            "enum": [
+              "sent",
+              "received"
+            ]
           }
         },
         "required": [
           "coverageId",
           "txHash",
-          "premium"
+          "amount",
+          "currency",
+          "status",
+          "type"
         ]
       }
     }

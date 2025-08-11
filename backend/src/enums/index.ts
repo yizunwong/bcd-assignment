@@ -65,3 +65,14 @@ export type PolicyholderDetails = Partial<
 > | null;
 
 export type UserDetails = Database['public']['Tables']['user_details']['Row'];
+
+export enum TransactionStatus {
+  PENDING = 'pending',
+  CONFIRMED = 'confirmed',
+  FAILED = 'failed',
+}
+
+export enum TransactionType {
+  SENT = 'sent',
+  RECEIVED = 'received',
+}
