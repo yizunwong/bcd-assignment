@@ -2659,6 +2659,12 @@
           "policy_id": {
             "type": "number"
           },
+          "path": {
+            "type": "string"
+          },
+          "cid": {
+            "type": "string"
+          },
           "signedUrl": {
             "type": "string",
             "description": "Signed Supabase URL for accessing this document"
@@ -2668,6 +2674,8 @@
           "id",
           "name",
           "policy_id",
+          "path",
+          "cid",
           "signedUrl"
         ]
       },

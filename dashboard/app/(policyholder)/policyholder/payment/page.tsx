@@ -34,6 +34,7 @@ import { useInsuranceContract } from '@/hooks/useBlockchain';
 import { CreateCoverageDto } from '@/api';
 import { useTransactionStore } from '@/store/useTransactionStore';
 import { useAccount } from 'wagmi';
+import { useAgreementUpload } from '@/hooks/useAgreement';
 
 declare global {
   interface Window {
@@ -50,10 +51,13 @@ export default function PaymentSummary() {
   const [showTokenDetails, setShowTokenDetails] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('ETH');
+  const [agreementFile, setAgreementFile] = useState<File | null>(null);
+  const [agreementCid, setAgreementCid] = useState<string | null>(null);
 
   const stripeRef = useRef<any>(null);
   const cardElementRef = useRef<any>(null);
   const cardContainerRef = useRef<HTMLDivElement>(null);
+  const coverageRef = useRef<CreateCoverageDto | null>(null);
 
   // Coverage creation mutation
   const { makePayment } = usePaymentMutation();
@@ -93,6 +97,11 @@ export default function PaymentSummary() {
       total: policy.data.premium,
       coverageAmount: policy.data.coverage / 3500, // Convert USD to ETH (approximate)
     };
+  }, [policy]);
+
+  const agreementTemplateUrl = useMemo(() => {
+    const doc = policy?.data?.policy_documents?.[0];
+    return doc ? `https://gateway.pinata.cloud/ipfs/${doc.cid}` : '';
   }, [policy]);
 
   useEffect(() => {
@@ -175,22 +184,11 @@ export default function PaymentSummary() {
     }
   };
 
+  const { uploadAgreement } = useAgreementUpload();
+
   const handleBlockchainSuccess = async () => {
     try {
-      // Create coverage in the backend
-      const coverageData = {
-        policy_id: policyData!.id,
-        status: 'active' as const,
-        utilization_rate: 0,
-        start_date: new Date().toISOString().split('T')[0],
-        end_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split('T')[0],
-        next_payment_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split('T')[0],
-      };
-
+      const coverageData = coverageRef.current!;
       await createCoverage(coverageData);
 
       // Set transaction details
@@ -306,22 +304,40 @@ export default function PaymentSummary() {
   };
 
   const handlePayment = async () => {
+    if (!agreementFile && !agreementCid) {
+      printMessage('Please upload the signed agreement.', 'error');
+      return;
+    }
+
+    let cid = agreementCid;
+    if (!cid) {
+      cid = await uploadAgreement(agreementFile);
+      if (!cid) {
+        printMessage('Failed to upload agreement.', 'error');
+        return;
+      }
+      setAgreementCid(cid);
+    }
+
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setFullYear(endDate.getFullYear() + 1);
+    const nextPaymentDate = new Date();
+    nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
+
+    const coverageData: CreateCoverageDto = {
+      policy_id: policyData!.id,
+      status: 'active',
+      utilization_rate: 0,
+      start_date: startDate.toISOString().split('T')[0],
+      end_date: endDate.toISOString().split('T')[0],
+      next_payment_date: nextPaymentDate.toISOString().split('T')[0],
+      agreement_cid: cid,
+    };
+
+    coverageRef.current = coverageData;
+
     if (paymentMethod === 'STRIPE') {
-      const startDate = new Date();
-      const endDate = new Date();
-      endDate.setFullYear(endDate.getFullYear() + 1);
-      const nextPaymentDate = new Date();
-      nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
-
-      const coverageData = {
-        policy_id: policyData!.id,
-        status: 'active' as const,
-        utilization_rate: 0,
-        start_date: startDate.toISOString().split('T')[0],
-        end_date: endDate.toISOString().split('T')[0],
-        next_payment_date: nextPaymentDate.toISOString().split('T')[0],
-      };
-
       await handleStripePayment(coverageData);
       return;
     }
@@ -751,6 +767,26 @@ export default function PaymentSummary() {
                       </span>
                     </div>
                   </div>
+                </div>
+
+                {/* Agreement Upload */}
+                <div className="mt-6 space-y-2">
+                  {agreementTemplateUrl && (
+                    <a
+                      href={agreementTemplateUrl}
+                      download
+                      className="text-emerald-600 dark:text-emerald-400 text-sm underline"
+                    >
+                      Download Agreement Template
+                    </a>
+                  )}
+                  <Input
+                    type="file"
+                    accept="application/pdf"
+                    onChange={(e) =>
+                      setAgreementFile(e.target.files?.[0] || null)
+                    }
+                  />
                 </div>
 
                 {/* Action Buttons */}

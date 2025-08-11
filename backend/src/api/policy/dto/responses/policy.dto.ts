@@ -13,6 +13,12 @@ export class PolicyDocumentResponseDto {
   @ApiProperty()
   policy_id!: number;
 
+  @ApiProperty()
+  path!: string;
+
+  @ApiProperty()
+  cid!: string;
+
   @ApiProperty({
     description: 'Signed Supabase URL for accessing this document',
   })

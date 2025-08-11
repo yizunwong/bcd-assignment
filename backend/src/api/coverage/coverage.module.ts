@@ -3,9 +3,10 @@ import { CoverageService } from './coverage.service';
 import { CoverageController } from './coverage.controller';
 import { SupabaseModule } from 'src/supabase/supabase.module';
 import { ClaimModule } from '../claim/claim.module';
+import { PinataModule } from 'src/pinata/pinata.module';
 
 @Module({
-  imports: [SupabaseModule, ClaimModule],
+  imports: [SupabaseModule, ClaimModule, PinataModule],
   controllers: [CoverageController],
   providers: [CoverageService],
 })

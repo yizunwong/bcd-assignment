@@ -438,6 +438,8 @@ export interface PolicyDocumentResponseDto {
   id: number;
   name: string;
   policy_id: number;
+  path: string;
+  cid: string;
   /** Signed Supabase URL for accessing this document */
   signedUrl: string;
 }
@@ -519,6 +521,8 @@ export interface CreateCoverageDto {
   end_date: string;
   /** Next payment date for the coverage (YYYY-MM-DD) */
   next_payment_date: string;
+  /** CID of the signed agreement stored on IPFS */
+  agreement_cid: string;
 }
 
 export type CoveragePolicyDtoDescription = { [key: string]: unknown };
@@ -543,6 +547,7 @@ export interface CoverageResponseDto {
   policy_id?: CoverageResponseDtoPolicyId;
   user_id?: CoverageResponseDtoUserId;
   status?: CoverageResponseDtoStatus;
+  agreement_cid: string;
   utilization_rate: number;
   start_date: string;
   end_date: string;
@@ -563,6 +568,8 @@ export interface UpdateCoverageDto {
   end_date?: string;
   /** Next payment date for the coverage (YYYY-MM-DD) */
   next_payment_date?: string;
+  /** CID of the signed agreement stored on IPFS */
+  agreement_cid?: string;
 }
 
 export interface ExtractClaimDto {
