@@ -299,6 +299,8 @@ export class PolicyService {
     const { policy_claim_type, category, admin_details, ...rest } =
       policy as any;
 
+    console.log(enrichedDocuments);
+
     return new CommonResponseDto<PolicyResponseDto>({
       statusCode: 200,
       message: 'Policy retrieved successfully',

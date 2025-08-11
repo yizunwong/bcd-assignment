@@ -205,7 +205,7 @@ export function Navbar({ role }: NavbarProps) {
                           Profile
                         </Link>
                       )}
-                      {pathname.startsWith("/policyholder") && (
+                      {userRole === "policyholder" && (
                         <Link
                           href="/policyholder/wallet"
                           className="flex items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors"

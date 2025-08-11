@@ -39,6 +39,7 @@ export default function WalletPage() {
   const [dateRange, setDateRange] = useState("all");
   const { transactions: chainTxs } = useWalletTransactions();
   const transactions = useMemo(() => chainTxs, [chainTxs]);
+  console.log(transactions);
   const filteredTransactions = useMemo(() => {
     let filtered = transactions;
 
@@ -346,7 +347,7 @@ export default function WalletPage() {
                           {tx.amount}
                         </p>
                         <div className="flex items-center space-x-1">
-                          {tx.status === "completed" ? (
+                          {tx.status === "confirmed" ? (
                             <CheckCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                           ) : (
                             <Clock className="w-3 h-3 text-yellow-600 dark:text-yellow-400" />
