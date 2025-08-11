@@ -53,7 +53,10 @@ export default function CoverageDetailsDialog({
         await createTransaction({
           coverageId: Number(policy.id),
           txHash: payPremiumData,
-          premium: premiumAmount,
+          amount: premiumAmount,
+          currency: "ETH",
+          status: "confirmed",
+          type: "sent",
         });
       }
     };
