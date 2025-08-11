@@ -22,6 +22,7 @@ import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { ApiCommonResponse, CommonResponseDto } from 'src/common/common.dto';
 import { CoverageResponseDto } from './dto/responses/coverage.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { UploadDocDto } from '../file/requests/document-upload.dto';
 
 @Controller('coverage')
 @ApiBearerAuth('supabase-auth')
@@ -42,8 +43,9 @@ export class CoverageController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadAgreement(
     @UploadedFile() file: Express.Multer.File,
+    @Body() dto: UploadDocDto,
     @Req() req: AuthenticatedRequest,
-  ) {
+  ): Promise<CommonResponseDto<string>> {
     return this.coverageService.uploadAgreement(file, req);
   }
 

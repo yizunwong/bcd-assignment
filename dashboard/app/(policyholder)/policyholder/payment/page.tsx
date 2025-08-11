@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,10 +31,10 @@ import { usePolicyQuery } from '@/hooks/usePolicies';
 import { useToast } from '@/components/shared/ToastProvider';
 import { usePaymentMutation } from '@/hooks/usePayment';
 import { useInsuranceContract } from '@/hooks/useBlockchain';
-import { CreateCoverageDto } from '@/api';
+import { CreateCoverageDto, UploadDocDto } from '@/api';
 import { useTransactionStore } from '@/store/useTransactionStore';
 import { useAccount } from 'wagmi';
-import { useAgreementUpload } from '@/hooks/useAgreement';
+import { useAgreementUploadMutation } from '@/hooks/useAgreement';
 
 declare global {
   interface Window {
@@ -184,7 +184,7 @@ export default function PaymentSummary() {
     }
   };
 
-  const { uploadAgreement } = useAgreementUpload();
+  const { uploadAgreement } = useAgreementUploadMutation();
 
   const handleBlockchainSuccess = async () => {
     try {
@@ -311,7 +311,7 @@ export default function PaymentSummary() {
 
     let cid = agreementCid;
     if (!cid) {
-      cid = await uploadAgreement(agreementFile);
+      cid = await uploadAgreement(agreementFile as UploadDocDto);
       if (!cid) {
         printMessage('Failed to upload agreement.', 'error');
         return;
