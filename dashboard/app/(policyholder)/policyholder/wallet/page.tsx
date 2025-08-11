@@ -29,7 +29,8 @@ import {
 import FluidTabs from "@/components/animata/fluid-tabs";
 import { walletBalance } from "@/public/data/policyholder/walletData";
 import WalletSection from "@/components/shared/WalletSectiom";
-import { useWalletTransactions } from "@/hooks/useWalletTransactions";
+import { useFetchTransactions } from "@/hooks/usePayment";
+import { TransactionResponseDto } from '@/api';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -38,8 +39,10 @@ export default function WalletPage() {
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [dateRange, setDateRange] = useState("all");
-  const { transactions: chainTxs } = useWalletTransactions();
-  const transactions = useMemo(() => chainTxs, [chainTxs]);
+  const { data: savedTxs, error: chainTxsError } = useFetchTransactions();
+  const txArray = (savedTxs?.data ?? []) as TransactionResponseDto[];
+
+  const transactions = useMemo(() => [...txArray], [txArray]);
   const filteredTransactions = useMemo(() => {
     let filtered = transactions;
 
@@ -74,13 +77,13 @@ export default function WalletPage() {
       }
 
       if (dateRange !== "all") {
-        filtered = filtered.filter((tx) => new Date(tx.date) >= filterDate);
+        filtered = filtered.filter((tx) => new Date(tx.createdAt) >= filterDate);
       }
     }
 
     // Sort by date (newest first)
     return filtered.sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }, [filterType, filterStatus, dateRange, transactions]);
 
@@ -100,7 +103,6 @@ export default function WalletPage() {
       status: "processing",
     },
   ];
-
 
   const formatAddress = (address?: string) => {
     if (!address) return "";
@@ -273,14 +275,14 @@ export default function WalletPage() {
                             </div>
                             <div>
                               <h3 className="font-semibold text-slate-800 dark:text-slate-100">
-                                {tx.description}
+                                {tx.type}
                               </h3>
                               <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-400">
                                 <span>
-                                  {new Date(tx.date).toLocaleDateString()}
+                                  {new Date(tx.createdAt).toLocaleDateString()}
                                 </span>
                                 <span>•</span>
-                                <span>{formatAddress(tx.hash)}</span>
+                                <span>{formatAddress(tx.txHash)}</span>
                                 <Button
                                   size="sm"
                                   variant="ghost"

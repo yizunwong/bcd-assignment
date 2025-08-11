@@ -1846,6 +1846,41 @@
           "Payments"
         ]
       }
+    },
+    "/payments/transactions": {
+      "get": {
+        "operationId": "PaymentController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Fetch user transactions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/TransactionResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payments"
+        ]
+      }
     }
   },
   "info": {
@@ -3345,6 +3380,54 @@
           "currency",
           "status",
           "type"
+        ]
+      },
+      "TransactionResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "coverageId": {
+            "type": "number"
+          },
+          "txHash": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "failed"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "sent",
+              "received"
+            ]
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "coverageId",
+          "txHash",
+          "amount",
+          "currency",
+          "status",
+          "type",
+          "createdAt"
         ]
       }
     }

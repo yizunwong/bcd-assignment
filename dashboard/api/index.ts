@@ -675,6 +675,36 @@ export interface CreateTransactionDto {
   type: CreateTransactionDtoType;
 }
 
+export type TransactionResponseDtoStatus =
+  (typeof TransactionResponseDtoStatus)[keyof typeof TransactionResponseDtoStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TransactionResponseDtoStatus = {
+  pending: "pending",
+  confirmed: "confirmed",
+  failed: "failed",
+} as const;
+
+export type TransactionResponseDtoType =
+  (typeof TransactionResponseDtoType)[keyof typeof TransactionResponseDtoType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TransactionResponseDtoType = {
+  sent: "sent",
+  received: "received",
+} as const;
+
+export interface TransactionResponseDto {
+  id: number;
+  coverageId: number;
+  txHash: string;
+  amount: number;
+  currency: string;
+  status: TransactionResponseDtoStatus;
+  type: TransactionResponseDtoType;
+  createdAt: string;
+}
+
 export type AuthControllerLogin200AllOf = {
   data?: LoginResponseDto;
 };
@@ -1044,6 +1074,13 @@ export type PaymentControllerCreateIntent200AllOf = {
 
 export type PaymentControllerCreateIntent200 = CommonResponseDto &
   PaymentControllerCreateIntent200AllOf;
+
+export type PaymentControllerFindAll200AllOf = {
+  data?: TransactionResponseDto[];
+};
+
+export type PaymentControllerFindAll200 = CommonResponseDto &
+  PaymentControllerFindAll200AllOf;
 
 export const authControllerLogin = (
   loginDto: LoginDto,
@@ -5462,3 +5499,145 @@ export const usePaymentControllerCreate = <
 
   return useMutation(mutationOptions, queryClient);
 };
+
+export const paymentControllerFindAll = (signal?: AbortSignal) => {
+  return customFetcher<PaymentControllerFindAll200>({
+    url: `/payments/transactions`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getPaymentControllerFindAllQueryKey = () => {
+  return [`/payments/transactions`] as const;
+};
+
+export const getPaymentControllerFindAllQueryOptions = <
+  TData = Awaited<ReturnType<typeof paymentControllerFindAll>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof paymentControllerFindAll>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getPaymentControllerFindAllQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof paymentControllerFindAll>>
+  > = ({ signal }) => paymentControllerFindAll(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof paymentControllerFindAll>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type PaymentControllerFindAllQueryResult = NonNullable<
+  Awaited<ReturnType<typeof paymentControllerFindAll>>
+>;
+export type PaymentControllerFindAllQueryError = unknown;
+
+export function usePaymentControllerFindAll<
+  TData = Awaited<ReturnType<typeof paymentControllerFindAll>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof paymentControllerFindAll>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof paymentControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof paymentControllerFindAll>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePaymentControllerFindAll<
+  TData = Awaited<ReturnType<typeof paymentControllerFindAll>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof paymentControllerFindAll>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof paymentControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof paymentControllerFindAll>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePaymentControllerFindAll<
+  TData = Awaited<ReturnType<typeof paymentControllerFindAll>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof paymentControllerFindAll>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function usePaymentControllerFindAll<
+  TData = Awaited<ReturnType<typeof paymentControllerFindAll>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof paymentControllerFindAll>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getPaymentControllerFindAllQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
