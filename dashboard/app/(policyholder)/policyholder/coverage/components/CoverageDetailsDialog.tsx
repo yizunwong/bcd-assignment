@@ -10,7 +10,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock } from "lucide-react";
+import { useEffect } from "react";
+import { useWaitForTransactionReceipt } from "wagmi";
 import { useInsuranceContract } from "@/hooks/useBlockchain";
+import { usePaymentMutation } from "@/hooks/usePayment";
 
 interface CoveragePolicy {
   id: string;
@@ -36,7 +39,26 @@ export default function CoverageDetailsDialog({
   open,
   onClose,
 }: CoverageDetailsDialogProps) {
-  const { payPremiumForPolicy, isPayingPremium } = useInsuranceContract();
+  const { payPremiumForPolicy, isPayingPremium, payPremiumData } =
+    useInsuranceContract();
+  const { createTransaction } = usePaymentMutation();
+  const { isSuccess: isTxSuccess } = useWaitForTransactionReceipt({
+    hash: payPremiumData,
+  });
+
+  useEffect(() => {
+    const record = async () => {
+      if (isTxSuccess && payPremiumData) {
+        const premiumAmount = parseFloat(policy.premium.toString());
+        await createTransaction({
+          coverageId: Number(policy.id),
+          txHash: payPremiumData,
+          premium: premiumAmount,
+        });
+      }
+    };
+    record();
+  }, [isTxSuccess, payPremiumData, createTransaction, policy]);
 
   const handlePayPremium = () => {
     const premiumAmount = parseFloat(policy.premium.toString());

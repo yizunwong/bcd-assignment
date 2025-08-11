@@ -508,23 +508,6 @@ export interface UpdatePolicyDto {
   claimTypes?: string[];
 }
 
-export interface CreateCoverageDto {
-  /** ID of the policy this coverage is linked to */
-  policy_id: number;
-  /** Status of the coverage */
-  status: string;
-  /** Utilization rate of the coverage */
-  utilization_rate: number;
-  /** Start date of the coverage (YYYY-MM-DD) */
-  start_date: string;
-  /** End date of the coverage (YYYY-MM-DD) */
-  end_date: string;
-  /** Next payment date for the coverage (YYYY-MM-DD) */
-  next_payment_date: string;
-  /** CID of the signed agreement stored on IPFS */
-  agreement_cid: string;
-}
-
 export type CoveragePolicyDtoDescription = { [key: string]: unknown };
 
 export interface CoveragePolicyDto {
@@ -553,6 +536,23 @@ export interface CoverageResponseDto {
   end_date: string;
   next_payment_date: string;
   policies: CoveragePolicyDto;
+}
+
+export interface CreateCoverageDto {
+  /** ID of the policy this coverage is linked to */
+  policy_id: number;
+  /** Status of the coverage */
+  status: string;
+  /** Utilization rate of the coverage */
+  utilization_rate: number;
+  /** Start date of the coverage (YYYY-MM-DD) */
+  start_date: string;
+  /** End date of the coverage (YYYY-MM-DD) */
+  end_date: string;
+  /** Next payment date for the coverage (YYYY-MM-DD) */
+  next_payment_date: string;
+  /** CID of the signed agreement stored on IPFS */
+  agreement_cid: string;
 }
 
 export interface UpdateCoverageDto {
@@ -909,6 +909,13 @@ export type PolicyControllerGetCategoryCounts200AllOf = {
 
 export type PolicyControllerGetCategoryCounts200 = CommonResponseDto &
   PolicyControllerGetCategoryCounts200AllOf;
+
+export type CoverageControllerCreate200AllOf = {
+  data?: CoverageResponseDto;
+};
+
+export type CoverageControllerCreate200 = CommonResponseDto &
+  CoverageControllerCreate200AllOf;
 
 export type CoverageControllerFindAllParams = {
   /**
@@ -3955,7 +3962,7 @@ export const coverageControllerCreate = (
   createCoverageDto: CreateCoverageDto,
   signal?: AbortSignal,
 ) => {
-  return customFetcher<null>({
+  return customFetcher<CoverageControllerCreate200>({
     url: `/coverage`,
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -4193,11 +4200,16 @@ export const coverageControllerUploadAgreement = (
   uploadDocDto: UploadDocDto,
   signal?: AbortSignal,
 ) => {
+  const formData = new FormData();
+  if (uploadDocDto.files !== undefined) {
+    uploadDocDto.files.forEach((value) => formData.append(`files`, value));
+  }
+
   return customFetcher<null>({
     url: `/coverage/agreement`,
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    data: uploadDocDto,
+    headers: { "Content-Type": "multipart/form-data" },
+    data: formData,
     signal,
   });
 };

@@ -241,7 +241,6 @@ export default function SmartContractManagement() {
     setIsLoading(true);
     // Simulate deployment
     await new Promise((resolve) => setTimeout(resolve, 2000));
-    console.log("Deploying new contract");
     setIsLoading(false);
     setIsDeployDialogOpen(false);
   };

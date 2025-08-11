@@ -64,7 +64,7 @@ export default function PaymentSummary() {
   const coverageRef = useRef<CreateCoverageDto | null>(null);
 
   // Coverage creation mutation
-  const { makePayment } = usePaymentMutation();
+  const { makePayment, createTransaction } = usePaymentMutation();
   const { createCoverage } = useCreateCoverageMutation();
   const setTransaction = useTransactionStore((state) => state.setData);
 
@@ -81,8 +81,6 @@ export default function PaymentSummary() {
   const searchParams = useSearchParams();
   const policyId = searchParams.get("policy") ?? "";
   const { data: policy } = usePolicyQuery(Number(policyId));
-
-  console.log(policy);
 
   const policyData = useMemo(() => {
     if (!policy?.data) return null;
@@ -176,6 +174,7 @@ export default function PaymentSummary() {
   // Handle blockchain transaction success
   useEffect(() => {
     if (isTransactionSuccess && createPolicyData) {
+      console.log("Blockchain transaction successful:", createPolicyData);
       handleBlockchainSuccess();
     }
   }, [isTransactionSuccess, createPolicyData]);
@@ -252,7 +251,14 @@ export default function PaymentSummary() {
   const handleBlockchainSuccess = async () => {
     try {
       const coverageData = coverageRef.current!;
-      await createCoverage(coverageData);
+      const coverage = await createCoverage(coverageData);
+      if (coverage?.data?.id && createPolicyData) {
+        await createTransaction({
+          coverageId: coverage.data.id,
+          txHash: createPolicyData,
+          premium: Number(tokenAmount),
+        });
+      }
 
       // Set transaction details
       setTransaction({

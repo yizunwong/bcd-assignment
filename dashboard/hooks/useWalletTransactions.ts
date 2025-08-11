@@ -23,7 +23,6 @@ export function useWalletTransactions(limit = 10) {
       const latestBlock = await client.getBlockNumber();
       const txs: WalletTransaction[] = [];
       let blockNumber = latestBlock;
-      console.log(blockNumber);
       while (txs.length < limit && blockNumber > BigInt(0)) {
         const block = await client.getBlock({
           blockNumber,

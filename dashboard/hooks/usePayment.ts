@@ -1,11 +1,19 @@
-import { CreatePaymentIntentDto, usePaymentControllerCreateIntent } from "@/api";
+import {
+  CreatePaymentIntentDto,
+  CreateTransactionDto,
+  usePaymentControllerCreateIntent,
+  usePaymentControllerCreate,
+} from "@/api";
 
 export function usePaymentMutation() {
-  const mutation = usePaymentControllerCreateIntent();
+  const intentMutation = usePaymentControllerCreateIntent();
+  const transactionMutation = usePaymentControllerCreate();
 
   return {
-    ...mutation,
+    ...intentMutation,
     makePayment: (data: CreatePaymentIntentDto) =>
-      mutation.mutateAsync({ data }),
+      intentMutation.mutateAsync({ data }),
+    createTransaction: (data: CreateTransactionDto) =>
+      transactionMutation.mutateAsync({ data }),
   };
 }

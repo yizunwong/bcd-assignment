@@ -55,6 +55,7 @@ export class PaymentService {
       .single();
 
     if (error || !data) {
+      console.error(error);
       throw new InternalServerErrorException('Failed to record transaction');
     }
 

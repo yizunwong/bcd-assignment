@@ -17,7 +17,7 @@ import { CreateCoverageDto } from './dto/requests/create-coverage.dto';
 import { FindCoverageQueryDto } from './dto/responses/coverage-query.dto';
 import { UpdateCoverageDto } from './dto/requests/update-coverage.dto';
 import { AuthGuard } from '../auth/auth.guard';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { ApiCommonResponse, CommonResponseDto } from 'src/common/common.dto';
 import { CoverageResponseDto } from './dto/responses/coverage.dto';
@@ -31,16 +31,18 @@ export class CoverageController {
 
   @Post()
   @UseGuards(AuthGuard)
+  @ApiCommonResponse(CoverageResponseDto, false, 'Create coverage')
   async create(
     @Body() createCoverageDto: CreateCoverageDto,
     @Req() req: AuthenticatedRequest,
-  ) {
+  ): Promise<CommonResponseDto<CoverageResponseDto>> {
     return await this.coverageService.create(createCoverageDto, req);
   }
 
   @Post('agreement')
   @UseGuards(AuthGuard)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('files'))
+  @ApiConsumes('multipart/form-data')
   async uploadAgreement(
     @UploadedFile() file: Express.Multer.File,
     @Body() dto: UploadDocDto,

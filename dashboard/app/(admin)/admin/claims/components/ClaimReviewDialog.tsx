@@ -83,7 +83,6 @@ export function ClaimReviewDialog({ claim, trigger }: ClaimReviewDialogProps) {
 
   const handleSaveChanges = () => {
     if (!validateForm()) return;
-    console.log("Saving claim:", claim.id, reviewForm);
     setOpen(false);
   };
 
