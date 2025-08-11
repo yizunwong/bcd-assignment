@@ -16,7 +16,6 @@ import {
   TrendingUp,
   CheckCircle,
   ArrowRight,
-  Star,
   Award,
   Smartphone,
   FileText,
@@ -30,6 +29,7 @@ import {
   Plane,
 } from "lucide-react";
 import Link from "next/link";
+import ScrollingTestimonials from "@/components/shared/scrolling-testimonials";
 
 export default function BenefitsPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -188,6 +188,12 @@ export default function BenefitsPage() {
       savings: "Unbreakable protection",
     },
   ];
+
+  const marqueeTestimonials = testimonials.map((t) => ({
+    name: t.name,
+    image: `https://i.pravatar.cc/150?u=${encodeURIComponent(t.name)}`,
+    description: t.content,
+  }));
 
   const statisticsData = [
     {
@@ -499,52 +505,7 @@ export default function BenefitsPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="glass-card rounded-2xl card-hover">
-                <CardContent className="p-8">
-                  <div className="flex items-center mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className="w-5 h-5 text-yellow-500 fill-current"
-                      />
-                    ))}
-                  </div>
-
-                  <p className="text-slate-700 dark:text-slate-300 mb-6 italic">
-                    "{testimonial.content}"
-                  </p>
-
-                  <div className="flex items-center mb-4">
-                    <div className="text-3xl mr-4">{testimonial.avatar}</div>
-                    <div>
-                      <div className="font-semibold text-slate-800 dark:text-slate-100">
-                        {testimonial.name}
-                      </div>
-                      <div className="text-slate-600 dark:text-slate-400 text-sm">
-                        {testimonial.role}
-                      </div>
-                      <div className="text-slate-500 dark:text-slate-500 text-xs">
-                        {testimonial.company}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
-                    <div className="flex justify-between items-center">
-                      <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                        {testimonial.benefit}
-                      </Badge>
-                      <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
-                        {testimonial.savings}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <ScrollingTestimonials data={marqueeTestimonials} />
         </div>
       </section>
 

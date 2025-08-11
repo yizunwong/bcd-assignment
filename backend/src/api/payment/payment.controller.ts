@@ -1,9 +1,12 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ApiCommonResponse, CommonResponseDto } from 'src/common/common.dto';
 import { PaymentService } from './payment.service';
 import { CreatePaymentIntentDto } from './dto/requests/create-intent.dto';
 import { PaymentIntentResponseDto } from './dto/responses/payment-intent.dto';
+import { AuthenticatedRequest } from 'src/supabase/types/express';
+import { AuthGuard } from '../auth/auth.guard';
+import { CreateTransactionDto } from './dto/requests/create-transcation.dto';
 
 @ApiTags('Payments')
 @Controller('payments')
@@ -19,5 +22,14 @@ export class PaymentController {
       body.amount,
       body.currency,
     );
+  }
+
+  @Post('transaction')
+  @UseGuards(AuthGuard)
+  async create(
+    @Body() dto: CreateTransactionDto,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto> {
+    return await this.paymentService.recordTransaction(dto, req);
   }
 }

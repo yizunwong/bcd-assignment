@@ -130,6 +130,14 @@ const config: Config = {
           "0%, 100%": { boxShadow: "0 0 20px rgba(52, 211, 153, 0.4)" },
           "50%": { boxShadow: "0 0 30px rgba(52, 211, 153, 0.7)" },
         },
+        "marquee-x": {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(calc(-100% - var(--gap)))" },
+        },
+        "marquee-y": {
+          from: { transform: "translateY(0)" },
+          to: { transform: "translateY(calc(-100% - var(--gap)))" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -138,6 +146,8 @@ const config: Config = {
         "slide-in": "slide-in 0.3s ease-out",
         glow: "glow 2s ease-in-out infinite",
         "glow-dark": "glow-dark 2s ease-in-out infinite",
+        "marquee-horizontal": "marquee-x var(--duration) infinite linear",
+        "marquee-vertical": "marquee-y var(--duration) linear infinite",
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],

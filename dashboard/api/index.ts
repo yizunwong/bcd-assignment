@@ -635,6 +635,15 @@ export interface CreatePaymentIntentDto {
   currency: string;
 }
 
+export interface CreateTransactionDto {
+  /** ID of the policy associated with this transaction */
+  coverageId: number;
+  /** Blockchain transaction hash */
+  txHash: string;
+  /** Premium amount paid for the policy */
+  premium: number;
+}
+
 export type AuthControllerLogin200AllOf = {
   data?: LoginResponseDto;
 };
@@ -4184,13 +4193,11 @@ export const coverageControllerUploadAgreement = (
   uploadDocDto: UploadDocDto,
   signal?: AbortSignal,
 ) => {
-  const formData = new FormData();
-  uploadDocDto.files?.forEach((file) => formData.append("file", file));
-
-  return customFetcher<CommonResponseDto>({
+  return customFetcher<null>({
     url: `/coverage/agreement`,
     method: "POST",
-    data: formData,
+    headers: { "Content-Type": "application/json" },
+    data: uploadDocDto,
     signal,
   });
 };
@@ -5329,6 +5336,86 @@ export const usePaymentControllerCreateIntent = <
 > => {
   const mutationOptions =
     getPaymentControllerCreateIntentMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const paymentControllerCreate = (
+  createTransactionDto: CreateTransactionDto,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<null>({
+    url: `/payments/transaction`,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    data: createTransactionDto,
+    signal,
+  });
+};
+
+export const getPaymentControllerCreateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof paymentControllerCreate>>,
+    TError,
+    { data: CreateTransactionDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof paymentControllerCreate>>,
+  TError,
+  { data: CreateTransactionDto },
+  TContext
+> => {
+  const mutationKey = ["paymentControllerCreate"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof paymentControllerCreate>>,
+    { data: CreateTransactionDto }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return paymentControllerCreate(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PaymentControllerCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof paymentControllerCreate>>
+>;
+export type PaymentControllerCreateMutationBody = CreateTransactionDto;
+export type PaymentControllerCreateMutationError = unknown;
+
+export const usePaymentControllerCreate = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof paymentControllerCreate>>,
+      TError,
+      { data: CreateTransactionDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof paymentControllerCreate>>,
+  TError,
+  { data: CreateTransactionDto },
+  TContext
+> => {
+  const mutationOptions = getPaymentControllerCreateMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

@@ -13,68 +13,12 @@ const supabase = createClient<Database>(
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
-type RoleSeed = Database['public']['Tables']['roles']['Insert'] & {
-  permissions: string[];
-};
-
-const roles: RoleSeed[] = [
-  {
-    id: 'policyholder',
-    name: 'Policyholder',
-    description: 'Users who purchase and manage insurance policies',
-    color: 'from-blue-500 to-cyan-500',
-    settings: {
-      maxPolicies: 10,
-      maxClaimsPerMonth: 5,
-      requireTwoFactor: false,
-      autoApprovalLimit: 1000,
-    },
-    permissions: [
-      'view_policies',
-      'purchase_policies',
-      'submit_claims',
-      'manage_profile',
-      'view_wallet',
-      'download_documents',
-    ],
-  },
-  {
-    id: 'insurance_admin',
-    name: 'Insurance Admin',
-    description: 'Admins who manage policies and claims',
-    color: 'from-emerald-500 to-teal-500',
-    settings: {
-      maxClaimApproval: 50000,
-      requireTwoFactor: true,
-      sessionTimeout: 60,
-      ipRestriction: false,
-    },
-    permissions: [
-      'manage_policies',
-      'review_claims',
-      'view_reports',
-      'manage_offers',
-      'approve_claims',
-      'access_analytics',
-      'manage_customers',
-      'export_data',
-    ],
-  },
-];
-
-const permissions: Database['public']['Tables']['permissions']['Insert'][] =
-  Array.from(new Set(roles.flatMap((r) => r.permissions))).map((id) => ({
-    id,
-    name: id.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-  }));
-
 type SeedUser = {
   email: string;
   password: string;
   firstName: string;
   lastName: string;
   phone?: string;
-  role: RoleSeed['id'];
   policyholder?: Omit<
     Database['public']['Tables']['policyholder_details']['Insert'],
     'user_id'
@@ -83,6 +27,7 @@ type SeedUser = {
     Database['public']['Tables']['admin_details']['Insert'],
     'user_id'
   >;
+  role: 'policyholder' | 'insurance_admin';
 };
 
 const users: SeedUser[] = [
@@ -113,33 +58,6 @@ const users: SeedUser[] = [
 
 async function seed() {
   console.log('🌱 Seeding roles and permissions...');
-
-  await supabase.from('role_permissions').delete().neq('role_id', '');
-  await supabase.from('permissions').delete().neq('id', '');
-  await supabase.from('roles').delete().neq('id', '');
-
-  await supabase.from('permissions').insert(permissions);
-
-  await supabase.from('roles').insert(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    roles.map(({ permissions, ...role }) => ({
-      ...role,
-      settings: role.settings,
-    })),
-  );
-
-  const rolePerms = roles.flatMap((role) =>
-    role.permissions.map((pid) => ({
-      role_id: role.id,
-      permission_id: pid,
-      enabled: true,
-    })),
-  );
-
-  await supabase.from('role_permissions').insert(rolePerms);
-
-  console.log('✅ Roles & permissions seeded.\n');
-
   for (const user of users) {
     const { data, error } = await supabase.auth.admin.createUser({
       email: user.email,

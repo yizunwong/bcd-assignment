@@ -1,6 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CommonResponseDto } from 'src/common/common.dto';
 import { PaymentIntentResponseDto } from './dto/responses/payment-intent.dto';
+import { AuthenticatedRequest } from 'src/supabase/types/express';
+import { CreateTransactionDto } from './dto/requests/create-transcation.dto';
 
 @Injectable()
 export class PaymentService {
@@ -24,6 +30,38 @@ export class PaymentService {
       statusCode: 200,
       message: 'Payment intent created successfully',
       data: { clientSecret: data.client_secret },
+    });
+  }
+
+  async recordTransaction(
+    dto: CreateTransactionDto,
+    req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto> {
+    const { data: userData, error: userError } =
+      await req.supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    const { data, error } = await req.supabase
+      .from('transactions')
+      .insert({
+        user_id: userData.user.id,
+        coverage_id: dto.coverageId,
+        tx_hash: dto.txHash,
+        premium: dto.premium,
+      })
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new InternalServerErrorException('Failed to record transaction');
+    }
+
+    return new CommonResponseDto({
+      statusCode: 201,
+      message: 'Transaction recorded successfully',
+      data,
     });
   }
 }

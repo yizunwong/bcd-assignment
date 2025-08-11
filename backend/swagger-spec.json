@@ -1804,6 +1804,30 @@
           "Payments"
         ]
       }
+    },
+    "/payments/transaction": {
+      "post": {
+        "operationId": "PaymentController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTransactionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Payments"
+        ]
+      }
     }
   },
   "info": {
@@ -3251,6 +3275,31 @@
         "required": [
           "amount",
           "currency"
+        ]
+      },
+      "CreateTransactionDto": {
+        "type": "object",
+        "properties": {
+          "coverageId": {
+            "type": "number",
+            "example": 1,
+            "description": "ID of the policy associated with this transaction"
+          },
+          "txHash": {
+            "type": "string",
+            "example": "0xabc123",
+            "description": "Blockchain transaction hash"
+          },
+          "premium": {
+            "type": "number",
+            "example": 100,
+            "description": "Premium amount paid for the policy"
+          }
+        },
+        "required": [
+          "coverageId",
+          "txHash",
+          "premium"
         ]
       }
     }
