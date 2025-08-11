@@ -256,6 +256,7 @@ export type Database = {
       };
       coverage: {
         Row: {
+          agreement_cid: string;
           end_date: string;
           id: number;
           next_payment_date: string;
@@ -266,6 +267,7 @@ export type Database = {
           utilization_rate: number;
         };
         Insert: {
+          agreement_cid: string;
           end_date: string;
           id?: number;
           next_payment_date: string;
@@ -276,6 +278,7 @@ export type Database = {
           utilization_rate?: number;
         };
         Update: {
+          agreement_cid?: string;
           end_date?: string;
           id?: number;
           next_payment_date?: string;
@@ -398,18 +401,21 @@ export type Database = {
       };
       policy_documents: {
         Row: {
+          cid: string;
           id: number;
           name: string;
           path: string;
           policy_id: number;
         };
         Insert: {
+          cid: string;
           id?: number;
           name: string;
           path: string;
           policy_id: number;
         };
         Update: {
+          cid?: string;
           id?: number;
           name?: string;
           path?: string;
