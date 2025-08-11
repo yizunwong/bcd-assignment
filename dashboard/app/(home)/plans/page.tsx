@@ -771,51 +771,6 @@ export default function PlansPage() {
         </div>
       </section>
 
-      {/* Special Offers */}
-      <section className="py-20 px-4 bg-white/50 dark:bg-slate-800/30">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-800 dark:text-slate-100">
-              Special Offers
-            </h2>
-            <p className="text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto">
-              Take advantage of these limited-time discounts and promotions
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {specialOffers.map((offer, index) => (
-              <Card key={index} className="glass-card rounded-2xl card-hover">
-                <CardContent className="p-8">
-                  <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center">
-                    <Zap className="w-8 h-8 text-white" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-3 text-center">
-                    {offer.title}
-                  </h3>
-                  <p className="text-slate-600 dark:text-slate-400 mb-6 text-center">
-                    {offer.description}
-                  </p>
-
-                  <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg text-center mb-4">
-                    <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-                      Promo Code
-                    </div>
-                    <div className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                      {offer.code}
-                    </div>
-                  </div>
-
-                  <div className="text-center text-sm text-slate-500 dark:text-slate-400">
-                    {offer.expires}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Billing Terms */}
       <section className="py-20 px-4">
         <div className="max-w-7xl mx-auto">

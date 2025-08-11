@@ -474,7 +474,7 @@ export default function HowItWorksPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {claimsProcess.map((step, index) => (
               <div key={index} className="text-center">
                 <div className="relative mb-6">
