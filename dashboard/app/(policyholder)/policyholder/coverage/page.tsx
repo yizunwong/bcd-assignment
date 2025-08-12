@@ -43,6 +43,7 @@ interface TransformedPolicy {
   startDate: string;
   endDate: string;
   nextPayment: string;
+  agreementCid: string;
   utilizationRate: number;
   claimsUsed: string;
   benefits: string[];
@@ -72,6 +73,7 @@ const transformCoverageData = (coverageData: any[]): TransformedPolicy[] => {
       startDate: coverage.start_date,
       endDate: coverage.end_date,
       nextPayment: coverage.next_payment_date,
+      agreementCid: coverage.agreement_cid,
       utilizationRate: coverage.utilization_rate,
       claimsUsed: `$${utilizationAmount.toLocaleString()}`,
       benefits: policy?.claim_types || [],
@@ -199,6 +201,27 @@ export default function MyCoverage() {
         return 'from-green-500 to-emerald-500';
       default:
         return 'from-slate-500 to-slate-600';
+    }
+  };
+
+  const handleDownloadAgreement = async (policy: TransformedPolicy) => {
+    if (!policy.agreementCid) {
+      printMessage('No agreement available to download', 'error');
+      return;
+    }
+    try {
+      const res = await fetch(`https://ipfs.io/ipfs/${policy.agreementCid}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${policy.name}-agreement.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch {
+      printMessage('Failed to download agreement', 'error');
     }
   };
 
@@ -569,9 +592,13 @@ export default function MyCoverage() {
                     <FileText className="w-4 h-4 mr-2" />
                     View Details
                   </Button>
-                  <Button variant="outline" className="flex-1 floating-button">
+                  <Button
+                    variant="outline"
+                    className="flex-1 floating-button"
+                    onClick={() => handleDownloadAgreement(policy)}
+                  >
                     <Download className="w-4 h-4 mr-2" />
-                    Download Policy
+                    Download Agreement
                   </Button>
                 </div>
               </CardContent>
