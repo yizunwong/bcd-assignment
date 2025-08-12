@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "deploy": "npx hardhat ignition deploy ./ignition/modules/Deployment.ts --reset --network localhost",
+    "deploy": "npx hardhat ignition deploy ./ignition/modules/Deployment.ts --reset --network localhost && npm run export",
+    "export": "npx hardhat run scripts/export-frontend.ts --network localhost",
     "test": "npx hardhat test",
     "compile": "npx hardhat compile",
     "dev": "npx hardhat node"

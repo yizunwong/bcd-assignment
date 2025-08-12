@@ -320,7 +320,10 @@ export default function PaymentSummary() {
         policyData.coverageAmount, // coverage amount in ETH
         Number(tokenAmount), // premium amount in ETH
         parseInt(policyData.duration.split(" ")[0]),// duration in days
-        agreementCid
+        agreementCid,
+        policyData.name,
+        policyData.category,
+        policyData.provider
       );
 
       // The success will be handled by the useEffect that watches isTransactionSuccess

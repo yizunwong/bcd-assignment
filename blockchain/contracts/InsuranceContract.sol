@@ -61,6 +61,9 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
     struct Policy {
         uint256 id;
         address policyholder;
+        string name;
+        string category;
+        string provider;
         uint256 coverage;
         uint256 premium;
         uint256 startDate;
@@ -159,7 +162,10 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
         uint256 coverage,
         uint256 premium,
         uint256 durationDays,
-        string memory agreementCid
+        string memory agreementCid,
+        string memory name,
+        string memory category,
+        string memory provider
     ) external payable nonReentrant returns (uint256) {
         require(msg.value == premium, "Incorrect premium amount");
         require(coverage > 0, "Coverage must be greater than 0");
@@ -175,6 +181,9 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
         policies[policyId] = Policy({
             id: policyId,
             policyholder: msg.sender,
+            name: name,
+            category: category,
+            provider: provider,
             coverage: coverage,
             premium: premium,
             startDate: startDate,

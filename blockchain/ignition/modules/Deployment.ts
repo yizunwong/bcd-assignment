@@ -1,16 +1,10 @@
+// ignition/modules/InsuranceContract.ts
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
-const DeploymentModule = buildModule("DeploymentModule", (m) => {
-  const CoverlyToken = m.contract("CoverlyToken");
-  const ICO = m.contract("ICO", [CoverlyToken]);
+export default buildModule("Deployment", (m) => {
+  // Deploy InsuranceContract (no constructor args)
+  const insurance = m.contract("InsuranceContract");
 
-  const owner = m.getAccount(0);
-  const totalSupply = m.staticCall(CoverlyToken, "totalSupply");
-  m.call(CoverlyToken, "approve", [ICO, totalSupply], {
-    from: owner,
-  });
-
-  return { CoverlyToken, ICO };
+  // You can export anything you want to reference later
+  return { insurance };
 });
-
-export default DeploymentModule;
