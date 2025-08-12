@@ -752,13 +752,13 @@ export function useInsuranceContract() {
   };
 
   // Get policy details
-  const getPolicyDetails = async (policyId: number) => {
+  const getPolicyDetails = async (policyId: bigint) => {
     try {
       const data = await readContract({
         address: INSURANCE_CONTRACT_ADDRESS,
         abi: INSURANCE_CONTRACT_ABI,
         functionName: "getPolicy",
-        args: [BigInt(policyId)],
+        args: [policyId],
       });
       return data;
     } catch (error) {

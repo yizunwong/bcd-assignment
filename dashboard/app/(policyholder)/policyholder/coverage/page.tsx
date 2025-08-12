@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import { useState, useMemo, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { useState, useMemo, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Pagination } from '@/components/shared/Pagination';
+} from "@/components/ui/select";
+import { Pagination } from "@/components/shared/Pagination";
 import {
   Shield,
   Calendar,
@@ -23,12 +23,12 @@ import {
   Clock,
   Download,
   Filter,
-} from 'lucide-react';
-import { useCoverageStatsQuery } from '@/hooks/useCoverage';
-import { useInsuranceContract } from '@/hooks/useBlockchain';
-import { useToast } from '@/components/shared/ToastProvider';
-import { formatEther } from 'viem';
-import CoverageDetailsDialog from './components/CoverageDetailsDialog';
+} from "lucide-react";
+import { useCoverageStatsQuery } from "@/hooks/useCoverage";
+import { useInsuranceContract } from "@/hooks/useBlockchain";
+import { useToast } from "@/components/shared/ToastProvider";
+import { formatEther } from "viem";
+import CoverageDetailsDialog from "./components/CoverageDetailsDialog";
 
 const ITEMS_PER_PAGE = 5;
 
@@ -64,29 +64,29 @@ const transformCoverageData = (policies: any[]): TransformedPolicy[] => {
       (Number(policy.utilizationRate) / 100) * coverageAmount;
 
     const statusMap: Record<number, string> = {
-      0: 'active',
-      1: 'claimed',
-      2: 'inactive',
-      3: 'expired',
+      0: "active",
+      1: "claimed",
+      2: "inactive",
+      3: "expired",
     };
 
     return {
       id: policy.id.toString(),
       name: `Policy #${policy.id}`,
-      type: 'On-chain',
-      provider: 'Smart Contract',
+      type: "On-chain",
+      provider: "Smart Contract",
       coverage: `${coverageAmount} ETH`,
       premium: `${premiumAmount} ETH`,
-      status: statusMap[Number(policy.status)] || 'unknown',
+      status: statusMap[Number(policy.status)] || "unknown",
       startDate: new Date(Number(policy.startDate) * 1000)
         .toISOString()
-        .split('T')[0],
+        .split("T")[0],
       endDate: new Date(Number(policy.endDate) * 1000)
         .toISOString()
-        .split('T')[0],
+        .split("T")[0],
       nextPayment: new Date(Number(policy.nextPaymentDate) * 1000)
         .toISOString()
-        .split('T')[0],
+        .split("T")[0],
       agreementCid: policy.agreementCid,
       utilizationRate: Number(policy.utilizationRate),
       claimsUsed: `${utilizationAmount} ETH`,
@@ -98,39 +98,34 @@ const transformCoverageData = (policies: any[]): TransformedPolicy[] => {
 
 export default function MyCoverage() {
   const { printMessage } = useToast();
-  const [selectedPolicy, setSelectedPolicy] = useState<TransformedPolicy | null>(null);
+  const [selectedPolicy, setSelectedPolicy] =
+    useState<TransformedPolicy | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [sortBy, setSortBy] = useState('newest');
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
 
-  const {
-    userPolicies,
-    isLoadingUserPolicies,
-    getPolicyDetails,
-  } = useInsuranceContract();
+  const { userPolicies, isLoadingUserPolicies, getPolicyDetails } =
+    useInsuranceContract();
   const [policyData, setPolicyData] = useState<any[]>([]);
   const [isFetchingPolicies, setIsFetchingPolicies] = useState(false);
 
-  useEffect(() => {
-    const fetchPolicies = async () => {
-      if (!userPolicies) return;
-      setIsFetchingPolicies(true);
-      try {
-        const details = await Promise.all(
-          userPolicies.map((id: bigint) => getPolicyDetails(Number(id)))
-        );
-        setPolicyData(details.filter(Boolean));
-        } catch (err) {
-          console.error(err);
-        } finally {
-          setIsFetchingPolicies(false);
-        }
-    };
-    fetchPolicies();
-  }, [userPolicies, getPolicyDetails]);
+  console.log(userPolicies);
 
-  const isLoadingCoverage = isLoadingUserPolicies || isFetchingPolicies;
+  useEffect(() => {
+    if (!userPolicies || userPolicies.length === 0) return;
+
+    (async () => {
+      try {
+        const detailsArray = await Promise.all(
+          userPolicies.map((policyId: bigint) => getPolicyDetails(policyId))
+        );
+        setPolicyData(detailsArray);
+      } catch (error) {
+        console.error("Error fetching policy details:", error);
+      }
+    })();
+  }, [userPolicies, getPolicyDetails]);
 
   // Fetch summary data
   const {
@@ -151,7 +146,7 @@ export default function MyCoverage() {
     let filtered = allPolicies;
 
     // Filter by status
-    if (filterStatus !== 'all') {
+    if (filterStatus !== "all") {
       filtered = filtered.filter((policy) => {
         const matches =
           policy.status.toLowerCase() === filterStatus.toLowerCase();
@@ -162,27 +157,27 @@ export default function MyCoverage() {
     // Sort policies
     filtered.sort((a, b) => {
       switch (sortBy) {
-        case 'newest':
+        case "newest":
           return (
             new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
           );
-        case 'oldest':
+        case "oldest":
           return (
             new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
           );
-        case 'coverage-high':
+        case "coverage-high":
           return (
-            parseFloat(b.coverage.replace(/[$,]/g, '')) -
-            parseFloat(a.coverage.replace(/[$,]/g, ''))
+            parseFloat(b.coverage.replace(/[$,]/g, "")) -
+            parseFloat(a.coverage.replace(/[$,]/g, ""))
           );
-        case 'coverage-low':
+        case "coverage-low":
           return (
-            parseFloat(a.coverage.replace(/[$,]/g, '')) -
-            parseFloat(b.coverage.replace(/[$,]/g, ''))
+            parseFloat(a.coverage.replace(/[$,]/g, "")) -
+            parseFloat(b.coverage.replace(/[$,]/g, ""))
           );
-        case 'utilization':
+        case "utilization":
           return b.utilizationRate - a.utilizationRate;
-        case 'name':
+        case "name":
           return a.name.localeCompare(b.name);
         default:
           return 0;
@@ -200,46 +195,46 @@ export default function MyCoverage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'status-active';
-      case 'limitExceeded':
-        return 'status-info';
-      case 'claimed':
-        return 'status-info';
-      case 'inactive':
-        return 'status-warning';
-      case 'expired':
-        return 'bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300';
-      case 'suspended':
-        return 'status-error';
+      case "active":
+        return "status-active";
+      case "limitExceeded":
+        return "status-info";
+      case "claimed":
+        return "status-info";
+      case "inactive":
+        return "status-warning";
+      case "expired":
+        return "bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300";
+      case "suspended":
+        return "status-error";
       default:
-        return 'bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300';
+        return "bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300";
     }
   };
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'Health':
-        return 'from-red-500 to-pink-500';
-      case 'Travel':
-        return 'from-blue-500 to-cyan-500';
-      case 'Crop':
-        return 'from-green-500 to-emerald-500';
+      case "Health":
+        return "from-red-500 to-pink-500";
+      case "Travel":
+        return "from-blue-500 to-cyan-500";
+      case "Crop":
+        return "from-green-500 to-emerald-500";
       default:
-        return 'from-slate-500 to-slate-600';
+        return "from-slate-500 to-slate-600";
     }
   };
 
   const handleDownloadAgreement = async (policy: TransformedPolicy) => {
     if (!policy.agreementCid) {
-      printMessage('No agreement available to download', 'error');
+      printMessage("No agreement available to download", "error");
       return;
     }
     try {
       const res = await fetch(`https://ipfs.io/ipfs/${policy.agreementCid}`);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = `${policy.name}-agreement.pdf`;
       document.body.appendChild(link);
@@ -247,24 +242,24 @@ export default function MyCoverage() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch {
-      printMessage('Failed to download agreement', 'error');
+      printMessage("Failed to download agreement", "error");
     }
   };
 
   const getStatusDisplayText = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'Active';
-      case 'limitExceeded':
-        return 'Limit Exceeded';
-      case 'claimed':
-        return 'Claimed';
-      case 'inactive':
-        return 'Inactive';
-      case 'expired':
-        return 'Expired';
-      case 'suspended':
-        return 'Suspended';
+      case "active":
+        return "Active";
+      case "limitExceeded":
+        return "Limit Exceeded";
+      case "claimed":
+        return "Claimed";
+      case "inactive":
+        return "Inactive";
+      case "expired":
+        return "Expired";
+      case "suspended":
+        return "Suspended";
       default:
         return status;
     }
@@ -284,7 +279,7 @@ export default function MyCoverage() {
   const closeDetails = () => setShowDetails(false);
 
   // Loading state
-  if (isLoadingCoverage || isLoadingSummary) {
+  if (isLoadingUserPolicies || isLoadingSummary) {
     return (
       <div className="section-spacing">
         <div className="max-w-7xl mx-auto">
@@ -332,9 +327,9 @@ export default function MyCoverage() {
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
                 {summaryData?.activeCoverage ?? 0}
               </h3>
-                <p className="text-slate-600 dark:text-slate-400">
-                  Active Coverage
-                </p>
+              <p className="text-slate-600 dark:text-slate-400">
+                Active Coverage
+              </p>
             </CardContent>
           </Card>
 
@@ -347,12 +342,9 @@ export default function MyCoverage() {
                 <Badge className="status-badge status-info">Claimed</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                $
-                {(summaryData?.totalCoverageValue ?? 0).toLocaleString()}
+                ${(summaryData?.totalCoverageValue ?? 0).toLocaleString()}
               </h3>
-              <p className="text-slate-600 dark:text-slate-400">
-                Claimed
-              </p>
+              <p className="text-slate-600 dark:text-slate-400">Claimed</p>
             </CardContent>
           </Card>
 
@@ -382,7 +374,9 @@ export default function MyCoverage() {
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
                 {Math.round(summaryData?.approvalRate ?? 0)}%
               </h3>
-              <p className="text-slate-600 dark:text-slate-400">Approval Rate</p>
+              <p className="text-slate-600 dark:text-slate-400">
+                Approval Rate
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -396,7 +390,7 @@ export default function MyCoverage() {
                   Your Policies
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400">
-                  Showing {paginatedPolicies.length} of{' '}
+                  Showing {paginatedPolicies.length} of{" "}
                   {filteredPolicies.length} policies
                 </p>
               </div>
@@ -532,7 +526,7 @@ export default function MyCoverage() {
                         Policy Period
                       </p>
                       <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                        {new Date(policy.startDate).toLocaleDateString()} -{' '}
+                        {new Date(policy.startDate).toLocaleDateString()} -{" "}
                         {new Date(policy.endDate).toLocaleDateString()}
                       </p>
                     </div>
@@ -664,7 +658,7 @@ export default function MyCoverage() {
             <p className="text-slate-500 dark:text-slate-500">
               {allPolicies.length === 0
                 ? "You don't have any coverage policies yet."
-                : 'Try adjusting your filter criteria'}
+                : "Try adjusting your filter criteria"}
             </p>
           </div>
         )}
