@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import jsPDF from "jspdf";
 import { usePolicyQuery } from "@/hooks/usePolicies";
 import { useTransactionStore } from "@/store/useTransactionStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -99,6 +100,22 @@ export default function PaymentConfirmation() {
 
   const formatAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const generateReceiptPdf = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text("Payment Receipt", 105, 20, { align: "center" });
+    doc.setFontSize(12);
+    doc.text(`Policy: ${policyData?.name ?? ""}`, 20, 40);
+    doc.text(`Amount: ${transactionData.amount}`, 20, 50);
+    doc.text(
+      `Date: ${new Date(transactionData.timestamp).toLocaleString()}`,
+      20,
+      60
+    );
+    doc.text(`Transaction ID: ${transactionData.id}`, 20, 70);
+    doc.save("receipt.pdf");
   };
 
   const steps = [
@@ -453,7 +470,11 @@ export default function PaymentConfirmation() {
             </Button>
           </Link>
 
-          <Button variant="outline" className="flex-1 floating-button">
+          <Button
+            variant="outline"
+            className="flex-1 floating-button"
+            onClick={generateReceiptPdf}
+          >
             <Download className="w-4 h-4 mr-2" />
             Download Receipt
           </Button>
