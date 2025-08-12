@@ -2855,6 +2855,9 @@
           "status": {
             "type": "string"
           },
+          "created_at": {
+            "type": "string"
+          },
           "policy_documents": {
             "type": "array",
             "items": {
@@ -2882,6 +2885,7 @@
           "sales",
           "revenue",
           "status",
+          "created_at",
           "policy_documents",
           "reviews"
         ]

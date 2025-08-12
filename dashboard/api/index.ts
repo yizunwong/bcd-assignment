@@ -470,6 +470,7 @@ export interface PolicyResponseDto {
   sales: number;
   revenue: number;
   status: string;
+  created_at: string;
   policy_documents: PolicyDocumentResponseDto[];
   reviews: ReviewRespondDto[];
 }

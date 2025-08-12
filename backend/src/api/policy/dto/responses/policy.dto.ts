@@ -69,6 +69,9 @@ export class PolicyResponseDto {
   @ApiProperty()
   status!: string;
 
+  @ApiProperty()
+  created_at!: string;
+
   @ApiProperty({ type: [PolicyDocumentResponseDto] })
   policy_documents?: PolicyDocumentResponseDto[];
 

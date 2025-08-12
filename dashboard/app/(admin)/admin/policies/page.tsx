@@ -147,7 +147,7 @@ export default function ManagePolicies() {
     status: policy.status,
     sales: policy.sales,
     revenue: policy.revenue,
-    created: undefined,
+    created: policy.created_at,
     lastUpdated: undefined,
     description:
       typeof policy.description === "string" ? policy.description : "",
