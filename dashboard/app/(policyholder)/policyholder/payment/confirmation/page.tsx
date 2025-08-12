@@ -32,6 +32,188 @@ import {
   Award,
 } from "lucide-react";
 import Link from "next/link";
+import autoTable from "jspdf-autotable";
+
+// ------- Helpers -------
+function formatAmount(a: any) {
+  // Customize if you use crypto (e.g., "10 ETH")
+  if (typeof a === "string") return a;
+  if (typeof a === "number") return `$${a.toFixed(2)}`;
+  return String(a ?? "-");
+}
+
+function drawBox(
+  doc: jsPDF,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  rows: [string, string][]
+) {
+  doc.setDrawColor(0);
+  doc.rect(x, y, w, h);
+  const rowH = h / rows.length;
+  rows.forEach((row, i) => {
+    const yy = y + rowH * i + 5;
+    doc.setFont("helvetica", "bold");
+    doc.text(`${row[0]}:`, x + 2, yy);
+    doc.setFont("helvetica", "normal");
+    doc.text(String(row[1] ?? "-"), x + w / 2, yy);
+    if (i < rows.length - 1)
+      doc.line(x, y + rowH * (i + 1), x + w, y + rowH * (i + 1));
+  });
+}
+
+function drawDashedLine(
+  doc: jsPDF,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  dash = 2,
+  gap = 2
+) {
+  // Manual dashed line (avoids setLineDash type issues)
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len = Math.sqrt(dx * dx + dy * dy);
+  const steps = Math.floor(len / (dash + gap));
+  const vx = dx / steps;
+  const vy = dy / steps;
+  let cx = x1,
+    cy = y1;
+  for (let i = 0; i < steps; i++) {
+    // draw dash
+    doc.line(
+      cx,
+      cy,
+      cx + vx * (dash / (dash + gap)),
+      cy + vy * (dash / (dash + gap))
+    );
+    // move to next dash start
+    cx += vx;
+    cy += vy;
+  }
+}
+
+function drawDashedRect(
+  doc: jsPDF,
+  x: number,
+  y: number,
+  w: number,
+  h: number
+) {
+  drawDashedLine(doc, x, y, x + w, y, 2, 2); // top
+  drawDashedLine(doc, x + w, y, x + w, y + h, 2, 2); // right
+  drawDashedLine(doc, x, y + h, x + w, y + h, 2, 2); // bottom
+  drawDashedLine(doc, x, y, x, y + h, 2, 2); // left
+}
+
+function drawRowsInRect(
+  doc: jsPDF,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  rows: [string, string][]
+) {
+  const rowH = h / rows.length;
+  rows.forEach((row, i) => {
+    const yy = y + rowH * i + 6;
+    // inner dashed separator (skip first row)
+    if (i > 0) drawDashedLine(doc, x, y + rowH * i, x + w, y + rowH * i, 2, 2);
+
+    doc.setFont("helvetica", "bold");
+    doc.text(`${row[0]}:`, x + 4, yy);
+    doc.setFont("helvetica", "normal");
+    doc.text(String(row[1] ?? "-"), x + w / 2, yy);
+  });
+}
+
+function addTermsAndConditions(doc: jsPDF, startY: number) {
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const marginX = 15;
+  const maxWidth = pageW - marginX * 2;
+  let y = startY;
+
+  // Page-break if starting too low
+  if (y > pageH - 40) {
+    doc.addPage();
+    y = 20;
+  }
+
+  // Section header
+  doc.setFillColor(240, 240, 240);
+  doc.rect(marginX, y, maxWidth, 8, "F");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.text("Terms & Conditions", marginX + 3, y + 6);
+  y += 12;
+
+  // Body text style
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+
+  // Terms (edit as you need)
+  const terms: string[] = [
+    "This receipt is issued upon successful payment and does not on its own constitute proof of coverage. Coverage becomes effective only in accordance with the policy terms and eligibility requirements.",
+    "All amounts are quoted in the payment currency shown on this invoice. Crypto payments, if any, are valued at the on-chain settlement time. Network or gas fees are non-refundable.",
+    "Minimum Amount Due must be received by the Due Date to avoid lapse, late fees, or suspension as described in your policy schedule.",
+    "Refunds, cancellations, and cooling-off periods (if applicable) follow the policy wording and any governing regulations. Administrative fees may apply.",
+    "Policyholder is responsible for accuracy of personal details and contact information. Please notify us promptly of any changes.",
+    "Claims must be submitted within the timeframes specified in the policy. Supporting documents and verifications may be required.",
+    "Where permitted, documents may be delivered electronically. Keep this receipt for your records.",
+    "This document should be read together with the Policy Schedule, Product Disclosure Sheet (if any), and full Policy Wording. In the event of inconsistency, the Policy Wording prevails.",
+    "For assistance with billing or coverage, contact our support center during business hours listed on this statement.",
+  ];
+
+  // Render bullets with auto-wrap + page breaks
+  const lineGap = 4; // gap between wrapped lines
+  const bulletGap = 3; // space between bullet and text line
+  const paraGap = 3; // extra gap between bullet items
+
+  terms.forEach((t) => {
+    // Split into wrapped lines
+    const lines = doc.splitTextToSize(t, maxWidth - 5 - bulletGap); // subtract bullet space
+
+    // Page break if needed (space for at least two lines)
+    if (y + lines.length * (lineGap + 2) > pageH - 20) {
+      doc.addPage();
+      y = 20;
+    }
+
+    // Draw bullet for first wrapped line of this item
+    doc.circle(marginX + 2, y - 2, 0.7, "F"); // small filled bullet
+    // Draw first line
+    doc.text(String(lines[0]), marginX + 5 + bulletGap, y);
+
+    // Additional wrapped lines (indented)
+    for (let i = 1; i < lines.length; i++) {
+      y += lineGap + 2;
+      if (y > pageH - 20) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(String(lines[i]), marginX + 5 + bulletGap, y);
+    }
+
+    y += paraGap + 4; // space before next bullet
+  });
+
+  // Optional: tiny footer note
+  if (y > pageH - 15) {
+    doc.addPage();
+    y = 20;
+  }
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(8);
+  doc.text(
+    "Note: This receipt is generated electronically. No signature is required.",
+    marginX,
+    y + 2
+  );
+}
 
 export default function PaymentConfirmation() {
   const [copied, setCopied] = useState(false);
@@ -61,7 +243,7 @@ export default function PaymentConfirmation() {
         duration: `${policy.data.duration_days} days`,
         effectiveDate: new Date().toISOString(),
         expiryDate: new Date(
-          Date.now() + policy.data.duration_days * 24 * 60 * 60 * 1000,
+          Date.now() + policy.data.duration_days * 24 * 60 * 60 * 1000
         ).toISOString(),
       }
     : null;
@@ -104,17 +286,109 @@ export default function PaymentConfirmation() {
 
   const generateReceiptPdf = () => {
     const doc = new jsPDF();
+
+    // ---- HEADER ----
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
-    doc.text("Payment Receipt", 105, 20, { align: "center" });
-    doc.setFontSize(12);
-    doc.text(`Policy: ${policyData?.name ?? ""}`, 20, 40);
-    doc.text(`Amount: ${transactionData.amount}`, 20, 50);
-    doc.text(
-      `Date: ${new Date(transactionData.timestamp).toLocaleString()}`,
-      20,
-      60
-    );
-    doc.text(`Transaction ID: ${transactionData.id}`, 20, 70);
+    doc.text("PREMIUM INVOICE", 105, 18, { align: "center" });
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text("Your Insurance Company Name", 105, 24, { align: "center" });
+
+    // Right policy box
+    const RIGHT = { x: 140, y: 10, w: 60, h: 25 };
+    const policyDetails: [string, string][] = [
+      ["Policy #", String(policyData?.id ?? "-")],
+      ["Statement Date", new Date().toLocaleDateString()],
+      ["Due Date", new Date(transactionData.timestamp).toLocaleDateString()],
+    ];
+    drawBox(doc, RIGHT.x, RIGHT.y, RIGHT.w, RIGHT.h, policyDetails);
+
+    // Compute where header ends and table should start
+    const headerBottomY = Math.max(24, RIGHT.y + RIGHT.h); // title vs box
+    const tableStartY = headerBottomY + 10; // spacing
+
+    // ---- TABLE ----
+    const tableBody = [
+      [
+        new Date(transactionData.timestamp).toLocaleDateString(),
+        String(policyData?.id ?? "-"),
+        String(policyData?.name ?? "-"),
+        formatAmount(transactionData.amount),
+        formatAmount(transactionData.amount),
+      ],
+    ];
+
+    autoTable(doc, {
+      startY: tableStartY,
+      margin: { left: 15, right: 15 },
+      theme: "grid",
+      head: [
+        [
+          "Trans Date",
+          "Policy Number",
+          "Description",
+          "Transaction Amount",
+          "Minimum Due",
+        ],
+      ],
+      body: tableBody,
+      styles: {
+        fontSize: 10,
+        cellPadding: 3,
+        lineWidth: 0.2,
+        lineColor: [120, 120, 120],
+      },
+      headStyles: {
+        fillColor: [52, 104, 160],
+        textColor: 255,
+        halign: "center",
+      },
+      columnStyles: { 3: { halign: "right" }, 4: { halign: "right" } },
+    });
+
+    const finalY = (doc as any).lastAutoTable?.finalY ?? tableStartY + 10;
+
+    // Totals (right aligned)
+    doc.setFont("helvetica", "bold");
+    const minText = `Minimum Amount Due: ${formatAmount(
+      transactionData.amount
+    )}`;
+    doc.text(minText, 195, finalY + 8, { align: "right" });
+
+    // ---- DETACH LINE ----
+    drawDashedLine(doc, 15, finalY + 16, 195, finalY + 16, 2, 2);
+    doc.setFont("helvetica", "italic");
+    doc.text("Detach Here", 105, finalY + 12, { align: "center" });
+
+    // ---- MAIL TO (below table) ----
+    doc.setFont("helvetica", "bold");
+    doc.text("Mail To:", 15, finalY + 26);
+    doc.setFont("helvetica", "normal");
+    // if (policyData?.customerName)
+    //   doc.text(String(policyData.customerName), 15, finalY + 32);
+    // if (policyData?.customerAddress)
+    //   doc.text(String(policyData.customerAddress), 15, finalY + 38);
+
+    // ---- PAYMENT SLIP (right dashed box) ----
+    const slipTop = finalY + 24;
+    const slipH = 48;
+    const slipW = 70;
+    const slipX = 195 - slipW;
+    drawDashedRect(doc, slipX, slipTop, slipW, slipH);
+
+    const slipRows: [string, string][] = [
+      ["Policy #", String(policyData?.id ?? "-")],
+      ["Statement Date", new Date().toLocaleDateString()],
+      ["Due Date", new Date(transactionData.timestamp).toLocaleDateString()],
+      ["Payment in Full", formatAmount(transactionData.amount)],
+      ["Minimum Due", formatAmount(transactionData.amount)],
+    ];
+    drawRowsInRect(doc, slipX, slipTop, slipW, slipH, slipRows);
+    const termsStartY = slipTop + slipH + 12;
+    addTermsAndConditions(doc, termsStartY);
+
     doc.save("receipt.pdf");
   };
 
@@ -202,8 +476,8 @@ export default function PaymentConfirmation() {
                       step.status === "current"
                         ? "text-emerald-600 dark:text-emerald-400"
                         : step.status === "completed"
-                          ? "text-emerald-600 dark:text-emerald-400"
-                          : "text-slate-500 dark:text-slate-400"
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-slate-500 dark:text-slate-400"
                     }`}
                   >
                     {step.name}
