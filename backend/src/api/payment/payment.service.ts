@@ -50,6 +50,7 @@ export class PaymentService {
       .insert({
         user_id: userData.user.id,
         coverage_id: dto.coverageId,
+        description: dto.description,
         tx_hash: dto.txHash,
         amount: dto.amount,
         currency: dto.currency,
@@ -98,6 +99,7 @@ export class PaymentService {
           id: tx.id,
           coverageId: tx.coverage_id,
           txHash: tx.tx_hash,
+          description: tx.description,
           amount: tx.amount,
           currency: tx.currency,
           status: tx.status as TransactionStatus,

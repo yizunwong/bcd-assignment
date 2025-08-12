@@ -275,7 +275,7 @@ export default function WalletPage() {
                             </div>
                             <div>
                               <h3 className="font-semibold text-slate-800 dark:text-slate-100">
-                                {tx.type}
+                                {tx.description} {tx.type}
                               </h3>
                               <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-400">
                                 <span>

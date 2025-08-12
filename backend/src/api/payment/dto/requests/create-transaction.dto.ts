@@ -20,6 +20,14 @@ export class CreateTransactionDto {
   txHash!: string;
 
   @ApiProperty({
+    example: 'Transaction description',
+    description: 'Description of the transaction',
+  })
+  @IsString()
+  @IsNotEmpty()
+  description!: string;
+
+  @ApiProperty({
     example: 100,
     description: 'Premium amount paid for the policy',
   })

@@ -12,6 +12,9 @@ export class TransactionResponseDto {
   txHash!: string;
 
   @ApiProperty()
+  description!: string;
+
+  @ApiProperty()
   amount!: number;
 
   @ApiProperty()

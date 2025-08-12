@@ -665,6 +665,8 @@ export interface CreateTransactionDto {
   coverageId: number;
   /** Blockchain transaction hash */
   txHash: string;
+  /** Description of the transaction */
+  description: string;
   /** Premium amount paid for the policy */
   amount: number;
   /** Currency of the premium payment */
@@ -698,6 +700,7 @@ export interface TransactionResponseDto {
   id: number;
   coverageId: number;
   txHash: string;
+  description: string;
   amount: number;
   currency: string;
   status: TransactionResponseDtoStatus;

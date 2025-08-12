@@ -3343,6 +3343,11 @@
             "example": "0xabc123",
             "description": "Blockchain transaction hash"
           },
+          "description": {
+            "type": "string",
+            "example": "Transaction description",
+            "description": "Description of the transaction"
+          },
           "amount": {
             "type": "number",
             "example": 100,
@@ -3376,6 +3381,7 @@
         "required": [
           "coverageId",
           "txHash",
+          "description",
           "amount",
           "currency",
           "status",
@@ -3392,6 +3398,9 @@
             "type": "number"
           },
           "txHash": {
+            "type": "string"
+          },
+          "description": {
             "type": "string"
           },
           "amount": {
@@ -3423,6 +3432,7 @@
           "id",
           "coverageId",
           "txHash",
+          "description",
           "amount",
           "currency",
           "status",

@@ -256,8 +256,9 @@ export default function PaymentSummary() {
         await createTransaction({
           coverageId: coverage.data.id,
           txHash: createPolicyData,
+          description: `${policyData?.name} Purchased`,
           amount: Number(tokenAmount),
-          currency: 'ETH',
+          currency: "ETH",
           status: "confirmed",
           type: "sent",
         });

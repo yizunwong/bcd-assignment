@@ -486,6 +486,7 @@ export type Database = {
           coverage_id: number;
           created_at: string;
           currency: string;
+          description: string;
           id: number;
           status: Database['public']['Enums']['transaction_status'];
           tx_hash: string;
@@ -497,6 +498,7 @@ export type Database = {
           coverage_id: number;
           created_at?: string;
           currency: string;
+          description?: string;
           id?: number;
           status?: Database['public']['Enums']['transaction_status'];
           tx_hash: string;
@@ -508,6 +510,7 @@ export type Database = {
           coverage_id?: number;
           created_at?: string;
           currency?: string;
+          description?: string;
           id?: number;
           status?: Database['public']['Enums']['transaction_status'];
           tx_hash?: string;
