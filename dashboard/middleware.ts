@@ -15,14 +15,36 @@ const ENABLE_ROLE_PROTECTION = true;
 
 export function middleware(request: NextRequest) {
   if (!ENABLE_ROLE_PROTECTION) {
-    return NextResponse.next(); // 👈 Skip all checks if disabled
+    return NextResponse.next();
   }
 
   const token = request.cookies.get("access_token")?.value;
   const pathname = request.nextUrl.pathname;
 
   const protectedPaths = ["/policyholder", "/admin", "/system-admin"];
+  const authPaths = ["/auth/login", "/auth/register"];
 
+  // 🔒 Block authenticated users from accessing /auth/login or /auth/register
+  if (token && authPaths.some((path) => pathname.startsWith(path))) {
+    try {
+      const decoded = jwtDecode<DecodedToken>(token);
+      const role = decoded?.app_metadata?.role;
+
+      const roleToPath = {
+        system_admin: "/system-admin",
+        admin: "/admin",
+        policyholder: "/policyholder",
+      } as const;
+
+      const userPath = roleToPath[role as keyof typeof roleToPath] || "/";
+      return NextResponse.redirect(new URL(userPath, request.url));
+    } catch (err) {
+      console.error("JWT decoding error:", err);
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+  }
+
+  // 🔒 Block unauthenticated access to protected routes
   if (protectedPaths.some((path) => pathname.startsWith(path))) {
     if (!token) {
       return NextResponse.redirect(new URL("/auth/login", request.url));
@@ -53,5 +75,11 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/policyholder/:path*", "/admin/:path*", "/system-admin/:path*"],
+  matcher: [
+    "/policyholder/:path*",
+    "/admin/:path*",
+    "/system-admin/:path*",
+    "/auth/login",
+    "/auth/register",
+  ],
 };

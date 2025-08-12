@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { z } from "zod";
 
-const RoleSchema = z.enum(["policyholder", "admin", "system-admin"]);
+const RoleSchema = z.enum(["policyholder", "admin", "system-admin"]).nullable();
 
 export type Role = z.infer<typeof RoleSchema>;
 
