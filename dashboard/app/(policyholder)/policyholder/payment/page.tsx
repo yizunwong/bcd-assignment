@@ -264,17 +264,17 @@ export default function PaymentSummary() {
         });
       }
 
-      // Set transaction details
+      // Set transaction details in store
       setTransaction({
-        policyId: policyData!.id,
-        transactionId: createPolicyData!,
-        blockHash: createPolicyData!,
-        amount: policyData!.total,
-        usdAmount: Number((Number(policyData!.total) * 3500).toFixed(2)),
-        paymentMethod,
-        timestamp: new Date().toISOString(),
+        id: 0,
+        coverageId: coverage.data.id,
+        txHash: createPolicyData!,
+        description: `${policyData?.name} Purchased`,
+        amount: Number(tokenAmount),
+        currency: "ETH",
         status: "confirmed",
-        confirmations: 1,
+        type: "sent",
+        createdAt: new Date().toISOString(),
       });
 
       printMessage(
@@ -353,23 +353,23 @@ export default function PaymentSummary() {
         if (result.error || result.paymentIntent?.status !== "succeeded") {
           printMessage("Payment failed. Please try again.", "error");
         } else {
-          await createCoverage(coverageData);
+          const coverage = await createCoverage(coverageData);
 
           const txId = `PI-${Date.now()}`;
           const blockHash = `0x${Array.from({ length: 40 }, () =>
             Math.floor(Math.random() * 16).toString(16)
           ).join("")}`;
-          setTransaction({
-            policyId: policyData!.id,
-            transactionId: txId,
-            blockHash,
-            amount: policyData!.total,
-            usdAmount: Number((Number(policyData!.total) * 3500).toFixed(2)),
-            paymentMethod,
-            timestamp: new Date().toISOString(),
-            status: "confirmed",
-            confirmations: 1,
-          });
+            setTransaction({
+              id: 0,
+              coverageId: coverage?.data?.id ?? 0,
+              txHash: blockHash,
+              description: `${policyData?.name} Purchased`,
+              amount: policyData!.total,
+              currency: "USD",
+              status: "confirmed",
+              type: "sent",
+              createdAt: new Date().toISOString(),
+            });
 
           printMessage("Stripe payment successful", "success");
           router.push("/policyholder/payment/confirmation");

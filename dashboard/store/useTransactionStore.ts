@@ -1,15 +1,16 @@
 import { create } from "zustand";
 
+// Matches the Supabase transaction table structure
 export interface TransactionInfo {
-  policyId: number;
-  transactionId: string;
-  blockHash: string;
+  id: number; // Supabase transaction ID
+  coverageId: number; // Associated coverage
+  txHash: string; // Blockchain transaction hash
+  description: string;
   amount: number;
-  usdAmount: number;
-  paymentMethod: string;
-  timestamp: string;
+  currency: string;
   status: string;
-  confirmations: number;
+  type: string;
+  createdAt: string;
 }
 
 interface TransactionState {
@@ -19,15 +20,15 @@ interface TransactionState {
 }
 
 const initialData: TransactionInfo = {
-  policyId: 1,
-  transactionId: "",
-  blockHash: "",
+  id: 0,
+  coverageId: 0,
+  txHash: "",
+  description: "",
   amount: 0,
-  usdAmount: 0,
-  paymentMethod: "",
-  timestamp: "",
+  currency: "",
   status: "",
-  confirmations: 0,
+  type: "",
+  createdAt: "",
 };
 
 export const useTransactionStore = create<TransactionState>((set) => ({

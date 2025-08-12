@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import jsPDF from "jspdf";
-import { usePolicyQuery } from "@/hooks/usePolicies";
+import { useCoverageQuery } from "@/hooks/useCoverage";
 import { useTransactionStore } from "@/store/useTransactionStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -219,32 +219,34 @@ export default function PaymentConfirmation() {
   const [copied, setCopied] = useState(false);
   const [currentStep] = useState(3);
   const transaction = useTransactionStore((state) => state.data);
-  const { data: policy } = usePolicyQuery(transaction.policyId);
+  const { data: coverage } = useCoverageQuery(
+    transaction.coverageId.toString()
+  );
 
   const transactionData = {
-    id: transaction.transactionId,
-    blockHash: transaction.blockHash,
-    amount: `${transaction.amount} ETH`,
-    usdAmount: `$${transaction.usdAmount.toFixed(2)}`,
-    paymentMethod: transaction.paymentMethod,
-    timestamp: transaction.timestamp || new Date().toISOString(),
+    id: transaction.id,
+    blockHash: transaction.txHash,
+    amount: `${transaction.amount} ${transaction.currency}`,
+    usdAmount: `$${(transaction.amount * 3500).toFixed(2)}`,
+    paymentMethod: transaction.currency,
+    timestamp: transaction.createdAt || new Date().toISOString(),
     networkFee: "0.02 ETH",
     status: transaction.status,
-    confirmations: transaction.confirmations,
+    confirmations: 1,
   };
 
-  const policyData = policy?.data
+  const policyData = coverage?.data
     ? {
-        id: policy.data.id,
-        name: policy.data.name,
-        category: policy.data.category,
-        provider: policy.data.provider,
-        coverage: `$${policy.data.coverage.toLocaleString()}`,
-        duration: `${policy.data.duration_days} days`,
-        effectiveDate: new Date().toISOString(),
-        expiryDate: new Date(
-          Date.now() + policy.data.duration_days * 24 * 60 * 60 * 1000
-        ).toISOString(),
+        id: coverage.data.id,
+        name: coverage.data.policies?.name || "Unknown Policy",
+        category: coverage.data.policies?.category || "general",
+        provider: coverage.data.policies?.provider || "Unknown Provider",
+        coverage: `$${(
+          coverage.data.policies?.coverage || 0
+        ).toLocaleString()}`,
+        duration: `${coverage.data.policies?.duration_days || 0} days`,
+        effectiveDate: coverage.data.start_date,
+        expiryDate: coverage.data.end_date,
       }
     : null;
 
@@ -300,8 +302,18 @@ export default function PaymentConfirmation() {
     const RIGHT = { x: 140, y: 10, w: 60, h: 25 };
     const policyDetails: [string, string][] = [
       ["Policy #", String(policyData?.id ?? "-")],
-      ["Statement Date", new Date().toLocaleDateString()],
-      ["Due Date", new Date(transactionData.timestamp).toLocaleDateString()],
+      [
+        "Statement Date",
+        policyData
+          ? new Date(policyData.effectiveDate).toLocaleDateString()
+          : "-",
+      ],
+      [
+        "Due Date",
+        policyData
+          ? new Date(policyData.expiryDate).toLocaleDateString()
+          : "-",
+      ],
     ];
     drawBox(doc, RIGHT.x, RIGHT.y, RIGHT.w, RIGHT.h, policyDetails);
 
@@ -380,8 +392,18 @@ export default function PaymentConfirmation() {
 
     const slipRows: [string, string][] = [
       ["Policy #", String(policyData?.id ?? "-")],
-      ["Statement Date", new Date().toLocaleDateString()],
-      ["Due Date", new Date(transactionData.timestamp).toLocaleDateString()],
+      [
+        "Statement Date",
+        policyData
+          ? new Date(policyData.effectiveDate).toLocaleDateString()
+          : "-",
+      ],
+      [
+        "Due Date",
+        policyData
+          ? new Date(policyData.expiryDate).toLocaleDateString()
+          : "-",
+      ],
       ["Payment in Full", formatAmount(transactionData.amount)],
       ["Minimum Due", formatAmount(transactionData.amount)],
     ];
@@ -429,7 +451,7 @@ export default function PaymentConfirmation() {
     },
   ];
 
-  if (!policyData || !transaction.transactionId) {
+  if (!policyData || !transaction.txHash) {
     return <div className="p-8">Loading...</div>;
   }
 
