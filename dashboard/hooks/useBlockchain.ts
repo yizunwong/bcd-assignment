@@ -4,6 +4,7 @@ import {
   useWaitForTransactionReceipt,
   useAccount,
 } from "wagmi";
+import { readContract } from "wagmi/actions";
 import { parseEther, formatEther } from "viem";
 import { useToast } from "@/components/shared/ToastProvider";
 
@@ -753,7 +754,7 @@ export function useInsuranceContract() {
   // Get policy details
   const getPolicyDetails = async (policyId: number) => {
     try {
-      const { data } = await useReadContract({
+      const data = await readContract({
         address: INSURANCE_CONTRACT_ADDRESS,
         abi: INSURANCE_CONTRACT_ABI,
         functionName: "getPolicy",

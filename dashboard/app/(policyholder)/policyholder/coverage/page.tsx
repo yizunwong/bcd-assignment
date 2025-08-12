@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,14 +24,15 @@ import {
   Download,
   Filter,
 } from 'lucide-react';
-import { useCoverageListQuery, useCoverageStatsQuery } from '@/hooks/useCoverage';
+import { useCoverageStatsQuery } from '@/hooks/useCoverage';
+import { useInsuranceContract } from '@/hooks/useBlockchain';
 import { useToast } from '@/components/shared/ToastProvider';
-import type { CoverageControllerFindAllParams } from '@/api';
+import { formatEther } from 'viem';
 import CoverageDetailsDialog from './components/CoverageDetailsDialog';
 
 const ITEMS_PER_PAGE = 5;
 
-// Transform API data to match the expected format
+// Transform on-chain data to match the expected format
 interface TransformedPolicy {
   id: string;
   name: string;
@@ -55,29 +56,42 @@ interface TransformedPolicy {
   }>;
 }
 
-const transformCoverageData = (coverageData: any[]): TransformedPolicy[] => {
-  return coverageData.map((coverage) => {
-    const policy = coverage.policies;
-    const coverageAmount = policy?.coverage || 0;
+const transformCoverageData = (policies: any[]): TransformedPolicy[] => {
+  return policies.map((policy) => {
+    const coverageAmount = Number(formatEther(policy.coverage));
+    const premiumAmount = Number(formatEther(policy.premium));
     const utilizationAmount =
-      (coverage.utilization_rate / 100) * coverageAmount;
+      (Number(policy.utilizationRate) / 100) * coverageAmount;
+
+    const statusMap: Record<number, string> = {
+      0: 'active',
+      1: 'claimed',
+      2: 'inactive',
+      3: 'expired',
+    };
 
     return {
-      id: coverage.id.toString(),
-      name: policy?.name || 'Unknown Policy',
-      type: policy?.category || 'General',
-      provider: policy?.provider || 'Unknown Provider',
-      coverage: `$${coverageAmount.toLocaleString()}`,
-      premium: policy?.premium || '0 ETH/month',
-      status: coverage.status || 'active',
-      startDate: coverage.start_date,
-      endDate: coverage.end_date,
-      nextPayment: coverage.next_payment_date,
-      agreementCid: coverage.agreement_cid,
-      utilizationRate: coverage.utilization_rate,
-      claimsUsed: `$${utilizationAmount.toLocaleString()}`,
-      benefits: policy?.claim_types || [],
-      recentClaims: [], // This would need to be fetched separately if needed
+      id: policy.id.toString(),
+      name: `Policy #${policy.id}`,
+      type: 'On-chain',
+      provider: 'Smart Contract',
+      coverage: `${coverageAmount} ETH`,
+      premium: `${premiumAmount} ETH`,
+      status: statusMap[Number(policy.status)] || 'unknown',
+      startDate: new Date(Number(policy.startDate) * 1000)
+        .toISOString()
+        .split('T')[0],
+      endDate: new Date(Number(policy.endDate) * 1000)
+        .toISOString()
+        .split('T')[0],
+      nextPayment: new Date(Number(policy.nextPaymentDate) * 1000)
+        .toISOString()
+        .split('T')[0],
+      agreementCid: policy.agreementCid,
+      utilizationRate: Number(policy.utilizationRate),
+      claimsUsed: `${utilizationAmount} ETH`,
+      benefits: [],
+      recentClaims: [],
     };
   });
 };
@@ -90,23 +104,33 @@ export default function MyCoverage() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
 
-  const hasFilters = filterStatus !== 'all';
-
-  const filters = hasFilters
-    ? {
-        ...(filterStatus !== 'all' && { status: filterStatus }),
-      }
-    : {};
-
-  // Fetch coverage data
   const {
-    data: coverageResponse,
-    isLoading: isLoadingCoverage,
-    error: coverageError,
-  } = useCoverageListQuery({
-    ...(filters as CoverageControllerFindAllParams),
-    limit: 100, // Get all coverage for this user
-  });
+    userPolicies,
+    isLoadingUserPolicies,
+    getPolicyDetails,
+  } = useInsuranceContract();
+  const [policyData, setPolicyData] = useState<any[]>([]);
+  const [isFetchingPolicies, setIsFetchingPolicies] = useState(false);
+
+  useEffect(() => {
+    const fetchPolicies = async () => {
+      if (!userPolicies) return;
+      setIsFetchingPolicies(true);
+      try {
+        const details = await Promise.all(
+          userPolicies.map((id: bigint) => getPolicyDetails(Number(id)))
+        );
+        setPolicyData(details.filter(Boolean));
+        } catch (err) {
+          console.error(err);
+        } finally {
+          setIsFetchingPolicies(false);
+        }
+    };
+    fetchPolicies();
+  }, [userPolicies, getPolicyDetails]);
+
+  const isLoadingCoverage = isLoadingUserPolicies || isFetchingPolicies;
 
   // Fetch summary data
   const {
@@ -119,11 +143,9 @@ export default function MyCoverage() {
 
   // Transform the data
   const allPolicies: TransformedPolicy[] = useMemo(() => {
-    if (!coverageResponse?.data) return [];
-    const transformed = transformCoverageData(coverageResponse.data);
-
-    return transformed;
-  }, [coverageResponse]);
+    if (!policyData) return [];
+    return transformCoverageData(policyData);
+  }, [policyData]);
 
   const filteredPolicies = useMemo(() => {
     let filtered = allPolicies;
@@ -182,6 +204,10 @@ export default function MyCoverage() {
         return 'status-active';
       case 'limitExceeded':
         return 'status-info';
+      case 'claimed':
+        return 'status-info';
+      case 'inactive':
+        return 'status-warning';
       case 'expired':
         return 'bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300';
       case 'suspended':
@@ -231,6 +257,10 @@ export default function MyCoverage() {
         return 'Active';
       case 'limitExceeded':
         return 'Limit Exceeded';
+      case 'claimed':
+        return 'Claimed';
+      case 'inactive':
+        return 'Inactive';
       case 'expired':
         return 'Expired';
       case 'suspended':
