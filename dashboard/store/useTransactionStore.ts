@@ -2,9 +2,8 @@ import { create } from "zustand";
 
 // Matches the Supabase transaction table structure
 export interface TransactionInfo {
-  id: number; // Supabase transaction ID
-  coverageId: number; // Associated coverage
-  txHash: string; // Blockchain transaction hash
+  coverageId: number; 
+  txHash: string;
   description: string;
   amount: number;
   currency: string;
@@ -20,7 +19,6 @@ interface TransactionState {
 }
 
 const initialData: TransactionInfo = {
-  id: 0,
   coverageId: 0,
   txHash: "",
   description: "",

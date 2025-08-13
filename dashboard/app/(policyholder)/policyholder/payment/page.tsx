@@ -262,20 +262,19 @@ export default function PaymentSummary() {
           status: "confirmed",
           type: "sent",
         });
-      }
 
-      // Set transaction details in store
-      setTransaction({
-        id: 0,
-        coverageId: coverage.data.id,
-        txHash: createPolicyData!,
-        description: `${policyData?.name} Purchased`,
-        amount: Number(tokenAmount),
-        currency: "ETH",
-        status: "confirmed",
-        type: "sent",
-        createdAt: new Date().toISOString(),
-      });
+        // Set transaction details in store
+        setTransaction({
+          coverageId: coverage.data.id,
+          txHash: createPolicyData!,
+          description: `${policyData?.name} Purchased`,
+          amount: Number(tokenAmount),
+          currency: "ETH",
+          status: "confirmed",
+          type: "sent",
+          createdAt: new Date().toISOString(),
+        });
+      }
 
       printMessage(
         "Blockchain payment successful! Coverage created.",
@@ -297,11 +296,11 @@ export default function PaymentSummary() {
   };
 
   const handleTokenPayment = async () => {
-    if(!agreementCid) {
+    if (!agreementCid) {
       printMessage("Please upload the signed agreement.", "error");
       return;
     }
-    
+
     if (!isConnected) {
       printMessage("Please connect your wallet first", "error");
       return;
@@ -319,7 +318,7 @@ export default function PaymentSummary() {
       await createPolicyWithPayment(
         policyData.coverageAmount, // coverage amount in ETH
         Number(tokenAmount), // premium amount in ETH
-        parseInt(policyData.duration.split(" ")[0]),// duration in days
+        parseInt(policyData.duration.split(" ")[0]), // duration in days
         agreementCid,
         policyData.name,
         policyData.category,
@@ -359,17 +358,16 @@ export default function PaymentSummary() {
           const blockHash = `0x${Array.from({ length: 40 }, () =>
             Math.floor(Math.random() * 16).toString(16)
           ).join("")}`;
-            setTransaction({
-              id: 0,
-              coverageId: coverage?.data?.id ?? 0,
-              txHash: blockHash,
-              description: `${policyData?.name} Purchased`,
-              amount: policyData!.total,
-              currency: "USD",
-              status: "confirmed",
-              type: "sent",
-              createdAt: new Date().toISOString(),
-            });
+          setTransaction({
+            coverageId: coverage?.data?.id ?? 0,
+            txHash: blockHash,
+            description: `${policyData?.name} Purchased`,
+            amount: policyData!.total,
+            currency: "USD",
+            status: "confirmed",
+            type: "sent",
+            createdAt: new Date().toISOString(),
+          });
 
           printMessage("Stripe payment successful", "success");
           router.push("/policyholder/payment/confirmation");

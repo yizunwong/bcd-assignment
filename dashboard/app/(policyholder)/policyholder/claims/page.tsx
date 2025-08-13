@@ -26,7 +26,7 @@ import {
   Download,
   X,
 } from "lucide-react";
-import { claims } from "@/public/data/policyholder/claimsData";
+import { useClaimsQuery } from "@/hooks/useClaims";
 import { useInsuranceContract } from "@/hooks/useBlockchain";
 import {
   useCreateClaimMutation,
@@ -54,6 +54,28 @@ export default function Claims() {
   const { createClaim, isPending: isCreating } = useCreateClaimMutation();
   const { uploadClaimDocuments, isPending: isUploading } =
     useUploadClaimDocumentsMutation();
+  const { data: claimsData, isLoading, error } = useClaimsQuery();
+
+  const claims = useMemo(
+    () =>
+      (claimsData?.data ?? []).map((claim) => ({
+        id: claim.id.toString(),
+        policyName: claim.policy?.name ?? "",
+        type: claim.type,
+        amount: new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+        }).format(claim.amount ?? 0),
+        status: claim.status,
+        submittedDate: claim.submitted_date,
+        processedDate: undefined,
+        description: claim.description,
+        documents: claim.claim_documents?.map((doc) => doc.name) ?? [],
+        timeline: [],
+      })),
+    [claimsData]
+  );
+
   const sortedClaims = useMemo(() => {
     const sorted = [...claims].sort((a, b) => {
       switch (sortBy) {
@@ -84,13 +106,29 @@ export default function Claims() {
       }
     });
     return sorted;
-  }, [sortBy]);
+  }, [claims, sortBy]);
 
   const totalPages = Math.ceil(sortedClaims.length / ITEMS_PER_PAGE);
   const paginatedClaims = sortedClaims.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
+
+  if (isLoading) {
+    return (
+      <div className="section-spacing">
+        <div className="max-w-7xl mx-auto">Loading...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="section-spacing">
+        <div className="max-w-7xl mx-auto">Error loading claims</div>
+      </div>
+    );
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
