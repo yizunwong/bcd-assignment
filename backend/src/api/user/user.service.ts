@@ -8,6 +8,7 @@ import { parseAppMetadata } from 'src/utils/auth-metadata';
 import { CommonResponseDto } from 'src/common/common.dto';
 import { UserResponseDto } from './dto/responses/user.dto';
 import { UserStatsResponseDto } from './dto/responses/user-stats.dto';
+import { ActivityLoggerService } from 'src/logger/activity-logger.service';
 import {
   UserRole,
   UserStatus,
@@ -19,7 +20,10 @@ import { CompanyDetailsDto } from '../auth/dto/requests/register.dto';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly supabaseService: SupabaseService) {}
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly activityLogger: ActivityLoggerService,
+  ) {}
 
   async getAllUsers(
     query: FindUsersQueryDto,
@@ -189,9 +193,13 @@ export class UserService {
     ) {
       details = {
         date_of_birth: profile.policyholder_details.date_of_birth,
-        occupation: profile.policyholder_details.occupation!,
+        occupation: profile.policyholder_details.occupation,
         address: profile.policyholder_details.address,
       };
+    }
+
+    if (role === UserRole.POLICYHOLDER) {
+      await this.activityLogger.log('POLICYHOLDER_READ', user_id);
     }
 
     return new CommonResponseDto<UserResponseDto>({
@@ -218,6 +226,10 @@ export class UserService {
       user_id,
       dto,
     );
+
+    if (dto.role === UserRole.POLICYHOLDER) {
+      await this.activityLogger.log('POLICYHOLDER_CREATED', user_id);
+    }
 
     return new CommonResponseDto<UserResponseDto>({
       statusCode: 201,
@@ -454,6 +466,8 @@ export class UserService {
           holderError,
         );
       }
+
+      await this.activityLogger.log('POLICYHOLDER_UPDATED', user_id);
     }
 
     const updated = await this.getUserById(user_id);
