@@ -23,6 +23,7 @@ import { ApiCommonResponse, CommonResponseDto } from 'src/common/common.dto';
 import { CoverageResponseDto } from './dto/responses/coverage.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadDocDto } from '../file/requests/document-upload.dto';
+import { CoverageStatsDto } from './dto/responses/coverage-stats.dto';
 
 @Controller('coverage')
 @ApiBearerAuth('supabase-auth')
@@ -89,7 +90,10 @@ export class CoverageController {
 
   @Get('policyholder/summary')
   @UseGuards(AuthGuard)
-  async getCoverageStats(@Req() req: AuthenticatedRequest) {
+  @ApiCommonResponse(CoverageStatsDto, false, 'Get coverage stats')
+  async getCoverageStats(
+    @Req() req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto<CoverageStatsDto>> {
     return this.coverageService.getCoverageStats(req);
   }
 }

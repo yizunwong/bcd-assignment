@@ -1594,7 +1594,25 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Get coverage stats",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/CoverageStatsDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2984,6 +3002,9 @@
       "CoveragePolicyDto": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "number"
+          },
           "name": {
             "type": "string"
           },
@@ -2999,15 +3020,20 @@
           "premium": {
             "type": "number"
           },
+          "duration_days": {
+            "type": "number"
+          },
           "provider": {
             "type": "string"
           }
         },
         "required": [
+          "id",
           "name",
           "category",
           "coverage",
           "premium",
+          "duration_days",
           "provider"
         ]
       },
@@ -3018,13 +3044,13 @@
             "type": "number"
           },
           "policy_id": {
-            "type": "object"
+            "type": "number"
           },
           "user_id": {
-            "type": "object"
+            "type": "string"
           },
           "status": {
-            "type": "object"
+            "type": "string"
           },
           "agreement_cid": {
             "type": "string"
@@ -3047,6 +3073,9 @@
         },
         "required": [
           "id",
+          "policy_id",
+          "user_id",
+          "status",
           "agreement_cid",
           "utilization_rate",
           "start_date",
@@ -3143,6 +3172,37 @@
             "description": "CID of the signed agreement stored on IPFS"
           }
         }
+      },
+      "CoverageStatsDto": {
+        "type": "object",
+        "properties": {
+          "activeCoverage": {
+            "type": "number",
+            "example": 3,
+            "description": "Number of active coverage policies."
+          },
+          "totalCoverageValue": {
+            "type": "number",
+            "example": 12345.67,
+            "description": "Total value of coverage across active policies (choose your unit: USD/ETH/etc)."
+          },
+          "totalClaims": {
+            "type": "number",
+            "example": 42,
+            "description": "Total number of claims filed."
+          },
+          "approvalRate": {
+            "type": "number",
+            "example": 87.5,
+            "description": "Approval rate as a percentage (0–100)."
+          }
+        },
+        "required": [
+          "activeCoverage",
+          "totalCoverageValue",
+          "totalClaims",
+          "approvalRate"
+        ]
       },
       "ExtractClaimDto": {
         "type": "object",

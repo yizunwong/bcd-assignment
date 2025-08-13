@@ -224,7 +224,6 @@ export default function PaymentConfirmation() {
   );
 
   const transactionData = {
-    id: transaction.id,
     blockHash: transaction.txHash,
     amount: `${transaction.amount} ${transaction.currency}`,
     usdAmount: `$${(transaction.amount * 3500).toFixed(2)}`,
@@ -235,20 +234,22 @@ export default function PaymentConfirmation() {
     confirmations: 1,
   };
 
+  console.log("transactionData", coverage);
+
   const policyData = coverage?.data
     ? {
-        id: coverage.data.id,
+        id: coverage.data.policies?.id,
         name: coverage.data.policies?.name || "Unknown Policy",
         category: coverage.data.policies?.category || "general",
         provider: coverage.data.policies?.provider || "Unknown Provider",
-        coverage: `$${(
-          coverage.data.policies?.coverage || 0
-        ).toLocaleString()}`,
-        duration: `${coverage.data.policies?.duration_days || 0} days`,
+        duration: `${coverage.data.policies?.duration_days} days`,
+        coverage: `$${coverage.data.policies?.coverage.toLocaleString()}`,
         effectiveDate: coverage.data.start_date,
         expiryDate: coverage.data.end_date,
       }
     : null;
+
+  console.log("policyData", policyData);
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -421,20 +422,6 @@ export default function PaymentConfirmation() {
   ];
 
   const nextSteps = [
-    {
-      title: "Policy Activation",
-      description:
-        "Your policy will be automatically activated within 24 hours",
-      icon: Zap,
-      timeframe: "Within 24 hours",
-    },
-    {
-      title: "Welcome Package",
-      description:
-        "You'll receive a welcome email with your policy documents and member ID",
-      icon: Mail,
-      timeframe: "Within 1 hour",
-    },
     {
       title: "Digital Wallet",
       description:
@@ -616,17 +603,6 @@ export default function PaymentConfirmation() {
                 )}
               </div>
 
-              {/* Transaction ID */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Transaction ID
-                </label>
-                <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border">
-                  <code className="text-sm font-mono text-slate-700 dark:text-slate-300">
-                    {transactionData.id}
-                  </code>
-                </div>
-              </div>
             </CardContent>
           </Card>
 
@@ -707,13 +683,6 @@ export default function PaymentConfirmation() {
                 </div>
               </div>
 
-              {/* Status Badge */}
-              <div className="flex items-center justify-center">
-                <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 px-4 py-2">
-                  <Clock className="w-4 h-4 mr-2" />
-                  Activation Pending
-                </Badge>
-              </div>
             </CardContent>
           </Card>
         </div>

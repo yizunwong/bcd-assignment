@@ -11,6 +11,7 @@ import { CoverageResponseDto } from './dto/responses/coverage.dto';
 import { UpdateCoverageDto } from './dto/requests/update-coverage.dto';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { CommonResponseDto } from 'src/common/common.dto';
+import { CoverageStatsDto } from './dto/responses/coverage-stats.dto';
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return */
 @Injectable()
@@ -139,7 +140,23 @@ export class CoverageService {
   ): Promise<CommonResponseDto<CoverageResponseDto>> {
     const { data: coverage, error: findOneError } = await req.supabase
       .from('coverage')
-      .select('*')
+      .select(
+        `
+      *,
+      policies!inner(
+        id,
+        name,
+        description,
+        category,
+        coverage,
+        premium,
+        duration_days,
+        admin_details:admin_details!policies_created_by_fkey1(
+          company:companies(name)
+        )
+      )
+    `,
+      )
       .eq('id', id)
       .single();
 
@@ -151,7 +168,15 @@ export class CoverageService {
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Coverage retrieved successfully',
-      data: coverage,
+      data: {
+        ...coverage,
+        policies: coverage.policies
+          ? {
+              ...coverage.policies,
+              provider: coverage.policies.admin_details?.company?.name || '',
+            }
+          : coverage.policies,
+      },
     });
   }
 
@@ -289,15 +314,15 @@ export class CoverageService {
     const approvalRate =
       totalClaims > 0 ? (approvedClaimsCount / totalClaims) * 100 : 0;
 
-    return {
+    return new CommonResponseDto<CoverageStatsDto>({
       statusCode: 200,
-      message: 'Coverage stats retrieved successfully',
+      message: 'Coverage stats fetched successfully',
       data: {
         activeCoverage,
         totalCoverageValue,
-        totalClaims,
         approvalRate,
+        totalClaims,
       },
-    };
+    });
   }
 }
