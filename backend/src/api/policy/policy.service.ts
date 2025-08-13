@@ -375,13 +375,13 @@ export class PolicyService {
     const { data, error } = await req.supabase
       .from('coverage')
       .select(
-        `policy:policies(
-          id,
-          name,
-          policy_claim_type:policy_claim_type(
-            claim_type:claim_types(name)
-          )
-        )`,
+        `id, 
+       policy:policies(
+         name,
+         policy_claim_type:policy_claim_type(
+           claim_type:claim_types(name)
+         )
+       )`,
       )
       .eq('user_id', userData.user.id);
 
@@ -391,25 +391,17 @@ export class PolicyService {
       );
     }
 
-    const map = new Map<number, PolicyClaimTypesDto>();
-
-    for (const row of data || []) {
-      const policy: any = (row as any).policy;
-      if (!policy) continue;
-      if (!map.has(policy.id)) {
-        map.set(policy.id, {
-          id: policy.id,
-          name: policy.name,
-          claim_types:
-            policy.policy_claim_type?.map((p: any) => p.claim_type.name) || [],
-        });
-      }
-    }
+    const result: PolicyClaimTypesDto[] = (data || []).map((row: any) => ({
+      id: Number(row.id),
+      name: row.policy?.name ?? '',
+      claim_types:
+        row.policy?.policy_claim_type?.map((p: any) => p.claim_type.name) || [],
+    }));
 
     return new CommonResponseDto<PolicyClaimTypesDto[]>({
       statusCode: 200,
       message: 'Policies with claim types retrieved successfully',
-      data: Array.from(map.values()),
+      data: result,
     });
   }
 

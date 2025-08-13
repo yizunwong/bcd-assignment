@@ -18,12 +18,12 @@ export function useInsuranceContract() {
   const { address } = useAccount();
   const { printMessage } = useToast();
 
-  // Create policy with payment
+  // Create coverage with payment
   const {
-    data: createPolicyData,
-    writeContract: createPolicy,
-    isPending: isCreatingPolicy,
-    error: createPolicyError,
+    data: createCoverageData,
+    writeContract: createCoverage,
+    isPending: isCreatingCoverage,
+    error: createCoverageError,
   } = useWriteContract();
 
   // Wait for transaction
@@ -31,7 +31,7 @@ export function useInsuranceContract() {
     isLoading: isWaitingForTransaction,
     isSuccess: isTransactionSuccess,
   } = useWaitForTransactionReceipt({
-    hash: createPolicyData,
+    hash: createCoverageData,
   });
 
   // Pay premium
@@ -50,24 +50,24 @@ export function useInsuranceContract() {
     error: fileClaimError,
   } = useWriteContract();
 
-  // Get user policies
+  // Get user coverages
   const {
-    data: userPolicies,
-    isLoading: isLoadingUserPolicies,
-    error: userPoliciesError,
-    refetch: refetchUserPolicies,
+    data: userCoverages,
+    isLoading: isLoadingUserCoverages,
+    error: userCoveragesError,
+    refetch: refetchUserCoverages,
   } = useReadContract({
     address: INSURANCE_CONTRACT_ADDRESS,
     abi: INSURANCE_CONTRACT_ABI,
-    functionName: "getUserPolicies",
+    functionName: "getUserCoverages",
     args: address ? [address] : undefined,
     query: {
       enabled: !!address,
     },
   });
 
-  // Create policy with ETH payment
-  const createPolicyWithPayment = async (
+  // Create coverage with ETH payment
+  const createCoverageWithPayment = async (
     coverage: number, // in ETH
     premium: number, // in ETH
     durationDays: number,
@@ -85,10 +85,10 @@ export function useInsuranceContract() {
       const coverageWei = parseEther(coverage.toString());
       const premiumWei = parseEther(premium.toString());
 
-      createPolicy({
+      createCoverage({
         address: INSURANCE_CONTRACT_ADDRESS,
         abi: INSURANCE_CONTRACT_ABI,
-        functionName: "createPolicyWithPayment",
+        functionName: "createCoverageWithPayment",
         args: [
           coverageWei,
           premiumWei,
@@ -101,13 +101,13 @@ export function useInsuranceContract() {
         value: premiumWei,
       });
     } catch (error) {
-      console.error("Error creating policy:", error);
-      printMessage("Failed to create policy", "error");
+      console.error("Error creating coverage:", error);
+      printMessage("Failed to create coverage", "error");
     }
   };
 
-  // Pay premium for existing policy
-  const payPremiumForPolicy = async (policyId: number, premium: number) => {
+  // Pay premium for existing coverage
+  const payPremiumForCoverage = async (coverageId: number, premium: number) => {
     if (!address) {
       printMessage("Please connect your wallet first", "error");
       return;
@@ -120,7 +120,7 @@ export function useInsuranceContract() {
         address: INSURANCE_CONTRACT_ADDRESS,
         abi: INSURANCE_CONTRACT_ABI,
         functionName: "payPremium",
-        args: [BigInt(policyId)],
+        args: [BigInt(coverageId)],
         value: premiumWei,
       });
     } catch (error) {
@@ -130,8 +130,8 @@ export function useInsuranceContract() {
   };
 
   // File a claim
-  const fileClaimForPolicy = async (
-    policyId: number,
+  const fileClaimForCoverage = async (
+    coverageId: number,
     amount: number, // in ETH
     description: string
   ) => {
@@ -147,7 +147,7 @@ export function useInsuranceContract() {
         address: INSURANCE_CONTRACT_ADDRESS,
         abi: INSURANCE_CONTRACT_ABI,
         functionName: "fileClaim",
-        args: [BigInt(policyId), amountWei, description],
+        args: [BigInt(coverageId), amountWei, description],
       });
     } catch (error) {
       console.error("Error filing claim:", error);
@@ -155,50 +155,50 @@ export function useInsuranceContract() {
     }
   };
 
-  // Get policy details
-  const getPolicyDetails = async (policyId: number) => {
+  // Get coverage details
+  const getCoverageDetails = async (coverageId: number) => {
     try {
       const { data } = await useReadContract({
         address: INSURANCE_CONTRACT_ADDRESS,
         abi: INSURANCE_CONTRACT_ABI,
-        functionName: "getPolicy",
-        args: [BigInt(policyId)],
+        functionName: "getCoverage",
+        args: [BigInt(coverageId)],
       });
       return data;
     } catch (error) {
-      console.error("Error getting policy details:", error);
+      console.error("Error getting coverage details:", error);
       return null;
     }
   };
 
   return {
     // Contract interactions
-    createPolicyWithPayment,
-    payPremiumForPolicy,
-    fileClaimForPolicy,
-    getPolicyDetails,
+    createCoverageWithPayment,
+    payPremiumForCoverage,
+    fileClaimForCoverage,
+    getCoverageDetails,
 
     // State
-    isCreatingPolicy,
+    isCreatingCoverage,
     isPayingPremium,
     isFilingClaim,
     isWaitingForTransaction,
     isTransactionSuccess,
-    isLoadingUserPolicies,
+    isLoadingUserCoverages,
 
     // Data
-    userPolicies,
-    createPolicyData,
+    userCoverages,
+    createCoverageData,
     payPremiumData,
     fileClaimData,
 
     // Errors
-    createPolicyError,
+    createCoverageError,
     payPremiumError,
     fileClaimError,
-    userPoliciesError,
+    userCoveragesError,
 
     // Utilities
-    refetchUserPolicies,
+    refetchUserCoverages,
   };
 }

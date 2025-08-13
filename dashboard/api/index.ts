@@ -475,6 +475,12 @@ export interface PolicyResponseDto {
   reviews: ReviewRespondDto[];
 }
 
+export interface PolicyClaimTypesDto {
+  id: number;
+  name: string;
+  claim_types: string[];
+}
+
 export interface PolicyStatsDto {
   activePolicies: number;
   deactivatedPolicies: number;
@@ -536,6 +542,8 @@ export interface CoverageResponseDto {
 }
 
 export interface CreateCoverageDto {
+  /** ID of the coverage */
+  id: number;
   /** ID of the policy this coverage is linked to */
   policy_id: number;
   /** Status of the coverage */
@@ -553,6 +561,8 @@ export interface CreateCoverageDto {
 }
 
 export interface UpdateCoverageDto {
+  /** ID of the coverage */
+  id?: number;
   /** ID of the policy this coverage is linked to */
   policy_id?: number;
   /** Status of the coverage */
@@ -946,6 +956,13 @@ export type PolicyControllerFindAll200AllOf = {
 
 export type PolicyControllerFindAll200 = CommonResponseDto &
   PolicyControllerFindAll200AllOf;
+
+export type PolicyControllerGetPoliciesWithClaimTypes200AllOf = {
+  data?: PolicyClaimTypesDto[];
+};
+
+export type PolicyControllerGetPoliciesWithClaimTypes200 = CommonResponseDto &
+  PolicyControllerGetPoliciesWithClaimTypes200AllOf;
 
 export type PolicyControllerGetStats200AllOf = {
   data?: PolicyStatsDto;
@@ -3297,6 +3314,152 @@ export const usePolicyControllerUploadDocuments = <
 
   return useMutation(mutationOptions, queryClient);
 };
+
+export const policyControllerGetPoliciesWithClaimTypes = (
+  signal?: AbortSignal,
+) => {
+  return customFetcher<PolicyControllerGetPoliciesWithClaimTypes200>({
+    url: `/policy/claim-types`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getPolicyControllerGetPoliciesWithClaimTypesQueryKey = () => {
+  return [`/policy/claim-types`] as const;
+};
+
+export const getPolicyControllerGetPoliciesWithClaimTypesQueryOptions = <
+  TData = Awaited<ReturnType<typeof policyControllerGetPoliciesWithClaimTypes>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof policyControllerGetPoliciesWithClaimTypes>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getPolicyControllerGetPoliciesWithClaimTypesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof policyControllerGetPoliciesWithClaimTypes>>
+  > = ({ signal }) => policyControllerGetPoliciesWithClaimTypes(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof policyControllerGetPoliciesWithClaimTypes>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type PolicyControllerGetPoliciesWithClaimTypesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof policyControllerGetPoliciesWithClaimTypes>>
+>;
+export type PolicyControllerGetPoliciesWithClaimTypesQueryError = unknown;
+
+export function usePolicyControllerGetPoliciesWithClaimTypes<
+  TData = Awaited<ReturnType<typeof policyControllerGetPoliciesWithClaimTypes>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetPoliciesWithClaimTypes>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof policyControllerGetPoliciesWithClaimTypes>>,
+          TError,
+          Awaited<ReturnType<typeof policyControllerGetPoliciesWithClaimTypes>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePolicyControllerGetPoliciesWithClaimTypes<
+  TData = Awaited<ReturnType<typeof policyControllerGetPoliciesWithClaimTypes>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetPoliciesWithClaimTypes>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof policyControllerGetPoliciesWithClaimTypes>>,
+          TError,
+          Awaited<ReturnType<typeof policyControllerGetPoliciesWithClaimTypes>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePolicyControllerGetPoliciesWithClaimTypes<
+  TData = Awaited<ReturnType<typeof policyControllerGetPoliciesWithClaimTypes>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetPoliciesWithClaimTypes>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function usePolicyControllerGetPoliciesWithClaimTypes<
+  TData = Awaited<ReturnType<typeof policyControllerGetPoliciesWithClaimTypes>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof policyControllerGetPoliciesWithClaimTypes>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions =
+    getPolicyControllerGetPoliciesWithClaimTypesQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
 
 export const policyControllerGetStats = (signal?: AbortSignal) => {
   return customFetcher<PolicyControllerGetStats200>({

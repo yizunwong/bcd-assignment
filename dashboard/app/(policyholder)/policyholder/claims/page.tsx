@@ -48,11 +48,10 @@ export default function Claims() {
   const [claimType, setClaimType] = useState("");
   const [claimAmount, setClaimAmount] = useState("");
   const [description, setDescription] = useState("");
-  const [claimType, setClaimType] = useState("");
 
   const priority = "low";
 
-  const { fileClaimForPolicy, isFilingClaim } = useInsuranceContract();
+  const { fileClaimForCoverage, isFilingClaim } = useInsuranceContract();
   const { data: policyClaimTypes } = usePolicyClaimTypesQuery();
   const policies = policyClaimTypes?.data ?? [];
   const selectedPolicyData = policies.find(
@@ -196,6 +195,8 @@ export default function Claims() {
   const removeFile = (index: number) => {
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
+
+  console.log(selectedPolicy)
 
   return (
     <div className="section-spacing">
@@ -628,7 +629,7 @@ export default function Claims() {
                           files: selectedFiles,
                         });
                       }
-                      fileClaimForPolicy(
+                      fileClaimForCoverage(
                         Number(selectedPolicy),
                         amount,
                         description,

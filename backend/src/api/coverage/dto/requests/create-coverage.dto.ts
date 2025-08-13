@@ -18,6 +18,14 @@ export enum CoverageStatus {
 export class CreateCoverageDto {
   @ApiProperty({
     example: 1,
+    description: 'ID of the coverage',
+  })
+  @IsInt({ message: 'id must be an integer' })
+  @IsNotEmpty({ message: 'id is required' })
+  id!: number;
+
+  @ApiProperty({
+    example: 1,
     description: 'ID of the policy this coverage is linked to',
   })
   @IsInt({ message: 'policy_id must be an integer' })

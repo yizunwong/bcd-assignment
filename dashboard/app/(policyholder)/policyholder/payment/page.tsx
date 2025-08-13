@@ -70,12 +70,12 @@ export default function PaymentSummary() {
 
   // Blockchain contract interactions
   const {
-    createPolicyWithPayment,
-    isCreatingPolicy,
+    createCoverageWithPayment,
+    isCreatingCoverage,
     isWaitingForTransaction,
     isTransactionSuccess,
-    createPolicyError,
-    createPolicyData,
+    createCoverageError,
+    createCoverageData,
   } = useInsuranceContract();
 
   const searchParams = useSearchParams();
@@ -173,20 +173,20 @@ export default function PaymentSummary() {
 
   // Handle blockchain transaction success
   useEffect(() => {
-    if (isTransactionSuccess && createPolicyData) {
-      console.log("Blockchain transaction successful:", createPolicyData);
+    if (isTransactionSuccess && createCoverageData) {
+      console.log("Blockchain transaction successful:", createCoverageData);
       handleBlockchainSuccess();
     }
-  }, [isTransactionSuccess, createPolicyData]);
+  }, [isTransactionSuccess, createCoverageData]);
 
   // Handle blockchain transaction error
   useEffect(() => {
-    if (createPolicyError) {
-      console.error("Blockchain transaction failed:", createPolicyError);
+    if (createCoverageError) {
+      console.error("Blockchain transaction failed:", createCoverageError);
       printMessage("Blockchain transaction failed. Please try again.", "error");
       setIsProcessing(false);
     }
-  }, [createPolicyError, printMessage]);
+  }, [createCoverageError, printMessage]);
 
   useEffect(() => {
     if (paymentMethod !== "STRIPE") return;
@@ -252,10 +252,10 @@ export default function PaymentSummary() {
     try {
       const coverageData = coverageRef.current!;
       const coverage = await createCoverage(coverageData);
-      if (coverage?.data?.id && createPolicyData) {
+      if (coverage?.data?.id && createCoverageData) {
         await createTransaction({
           coverageId: coverage.data.id,
-          txHash: createPolicyData,
+          txHash: createCoverageData,
           description: `${policyData?.name} Purchased`,
           amount: Number(tokenAmount),
           currency: "ETH",
@@ -266,7 +266,7 @@ export default function PaymentSummary() {
         // Set transaction details in store
         setTransaction({
           coverageId: coverage.data.id,
-          txHash: createPolicyData!,
+          txHash: createCoverageData!,
           description: `${policyData?.name} Purchased`,
           amount: Number(tokenAmount),
           currency: "ETH",
@@ -315,7 +315,7 @@ export default function PaymentSummary() {
 
     try {
       // Call the blockchain contract to create policy with payment
-      await createPolicyWithPayment(
+      const coverageId = await createCoverageWithPayment(
         policyData.coverageAmount, // coverage amount in ETH
         Number(tokenAmount), // premium amount in ETH
         parseInt(policyData.duration.split(" ")[0]), // duration in days
@@ -324,6 +324,8 @@ export default function PaymentSummary() {
         policyData.category,
         policyData.provider
       );
+
+      return coverageId;
 
       // The success will be handled by the useEffect that watches isTransactionSuccess
     } catch (error) {
@@ -405,7 +407,11 @@ export default function PaymentSummary() {
     const nextPaymentDate = new Date();
     nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
 
+    // ETH payment
+    const coverageId = await handleTokenPayment();
+
     const coverageData: CreateCoverageDto = {
+      id: coverageId,
       policy_id: policyData!.id,
       status: "active",
       utilization_rate: 0,
@@ -421,9 +427,6 @@ export default function PaymentSummary() {
       await handleStripePayment(coverageData);
       return;
     }
-
-    // ETH payment
-    await handleTokenPayment();
   };
 
   const steps = [
@@ -943,7 +946,7 @@ export default function PaymentSummary() {
                     onClick={handlePayment}
                     disabled={
                       isProcessing ||
-                      isCreatingPolicy ||
+                      isCreatingCoverage ||
                       isWaitingForTransaction ||
                       (paymentMethod === "ETH" && !isConnected) ||
                       (paymentMethod !== "STRIPE" && !tokenAmount)
@@ -951,7 +954,7 @@ export default function PaymentSummary() {
                     className="flex-1 gradient-accent text-white floating-button relative overflow-hidden"
                   >
                     {isProcessing ||
-                    isCreatingPolicy ||
+                    isCreatingCoverage ||
                     isWaitingForTransaction ? (
                       <div className="flex items-center space-x-2">
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

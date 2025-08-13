@@ -43,7 +43,7 @@
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "coverageId",
+        "name": "policyId",
         "type": "uint256"
       },
       {
@@ -68,7 +68,7 @@
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "coverageId",
+        "name": "policyId",
         "type": "uint256"
       },
       {
@@ -79,75 +79,6 @@
       }
     ],
     "name": "ClaimFiled",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "coverageId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "policyholder",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "coverage",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "premium",
-        "type": "uint256"
-      }
-    ],
-    "name": "CoverageCreated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "coverageId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "timestamp",
-        "type": "uint256"
-      }
-    ],
-    "name": "CoverageLapsed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "coverageId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "enum InsuranceContract.CoverageStatus",
-        "name": "newStatus",
-        "type": "uint8"
-      }
-    ],
-    "name": "CoverageStatusChanged",
     "type": "event"
   },
   {
@@ -200,7 +131,57 @@
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "coverageId",
+        "name": "policyId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "policyholder",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "coverage",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "premium",
+        "type": "uint256"
+      }
+    ],
+    "name": "PolicyCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum InsuranceContract.PolicyStatus",
+        "name": "newStatus",
+        "type": "uint8"
+      }
+    ],
+    "name": "PolicyStatusChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "policyId",
         "type": "uint256"
       },
       {
@@ -234,19 +215,6 @@
       }
     ],
     "name": "approveClaim",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "coverageId",
-        "type": "uint256"
-      }
-    ],
-    "name": "checkAndLapseCoverage",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -289,7 +257,7 @@
         "type": "string"
       }
     ],
-    "name": "createCoverageWithPayment",
+    "name": "createPolicyWithPayment",
     "outputs": [
       {
         "internalType": "uint256",
@@ -317,7 +285,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "coverageId",
+        "name": "policyId",
         "type": "uint256"
       },
       {
@@ -361,7 +329,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "coverageId",
+            "name": "policyId",
             "type": "uint256"
           },
           {
@@ -410,11 +378,62 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "coverageId",
+        "name": "paymentId",
         "type": "uint256"
       }
     ],
-    "name": "getCoverage",
+    "name": "getPayment",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "id",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "policyId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "payer",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum InsuranceContract.PaymentStatus",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "timestamp",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct InsuranceContract.Payment",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getPolicy",
     "outputs": [
       {
         "components": [
@@ -469,7 +488,7 @@
             "type": "uint256"
           },
           {
-            "internalType": "enum InsuranceContract.CoverageStatus",
+            "internalType": "enum InsuranceContract.PolicyStatus",
             "name": "status",
             "type": "uint8"
           },
@@ -494,7 +513,7 @@
             "type": "string"
           }
         ],
-        "internalType": "struct InsuranceContract.Coverage",
+        "internalType": "struct InsuranceContract.Policy",
         "name": "",
         "type": "tuple"
       }
@@ -506,24 +525,11 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "coverageId",
+        "name": "policyId",
         "type": "uint256"
       }
     ],
-    "name": "getCoveragePayments",
-    "outputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "",
-        "type": "uint256[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getMyCoverages",
+    "name": "getPolicyPayments",
     "outputs": [
       {
         "internalType": "uint256[]",
@@ -537,49 +543,17 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "paymentId",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
       }
     ],
-    "name": "getPayment",
+    "name": "getUserPolicies",
     "outputs": [
       {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "id",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "coverageId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "payer",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "enum InsuranceContract.PaymentStatus",
-            "name": "status",
-            "type": "uint8"
-          },
-          {
-            "internalType": "uint256",
-            "name": "timestamp",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct InsuranceContract.Payment",
+        "internalType": "uint256[]",
         "name": "",
-        "type": "tuple"
+        "type": "uint256[]"
       }
     ],
     "stateMutability": "view",
@@ -602,7 +576,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "coverageId",
+        "name": "policyId",
         "type": "uint256"
       }
     ],
@@ -635,16 +609,16 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "coverageId",
+        "name": "policyId",
         "type": "uint256"
       },
       {
-        "internalType": "enum InsuranceContract.CoverageStatus",
+        "internalType": "enum InsuranceContract.PolicyStatus",
         "name": "newStatus",
         "type": "uint8"
       }
     ],
-    "name": "updateCoverageStatus",
+    "name": "updatePolicyStatus",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

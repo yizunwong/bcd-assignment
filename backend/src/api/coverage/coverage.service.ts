@@ -33,16 +33,20 @@ export class CoverageService {
     //Insert into coverage table
     const { data: coverage, error: coverageError } = await req.supabase
       .from('coverage')
-      .insert({
-        policy_id: dto.policy_id,
-        user_id: req.user.id,
-        status: dto.status,
-        utilization_rate: dto.utilization_rate,
-        start_date: dto.start_date,
-        end_date: dto.end_date,
-        next_payment_date: dto.next_payment_date,
-        agreement_cid: dto.agreement_cid,
-      })
+      .upsert(
+        {
+          id: dto.id,
+          policy_id: dto.policy_id,
+          user_id: req.user.id,
+          status: dto.status,
+          utilization_rate: dto.utilization_rate,
+          start_date: dto.start_date,
+          end_date: dto.end_date,
+          next_payment_date: dto.next_payment_date,
+          agreement_cid: dto.agreement_cid,
+        },
+        { onConflict: 'coverage_id' },
+      )
       .select()
       .single();
 

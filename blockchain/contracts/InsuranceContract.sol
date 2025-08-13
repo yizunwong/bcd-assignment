@@ -35,7 +35,7 @@ library SafeMath {
 contract InsuranceContract is Ownable, ReentrancyGuard {
     using SafeMath for uint256;
 
-    enum PolicyStatus {
+    enum CoverageStatus {
         Active,
         Claimed,
         Inactive,
@@ -51,14 +51,14 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
 
     struct Claim {
         uint256 id;
-        uint256 policyId;
+        uint256 coverageId;
         uint256 amount;
         bool approved;
         uint256 timestamp;
         string description;
     }
 
-    struct Policy {
+    struct Coverage {
         uint256 id;
         address policyholder;
         string name;
@@ -69,7 +69,7 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
         uint256 startDate;
         uint256 endDate;
         uint256 nextPaymentDate;
-        PolicyStatus status;
+        CoverageStatus status;
         uint256[] claimIds;
         uint256 totalPaid;
         uint256 utilizationRate;
@@ -78,47 +78,51 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
 
     struct Payment {
         uint256 id;
-        uint256 policyId;
+        uint256 coverageId;
         address payer;
         uint256 amount;
         PaymentStatus status;
         uint256 timestamp;
     }
 
-    uint256 private nextPolicyId;
+    uint256 private nextCoverageId;
     uint256 private nextClaimId;
     uint256 private nextPaymentId;
 
-    mapping(uint256 => Policy) private policies;
+    mapping(uint256 => Coverage) private coverages;
     mapping(uint256 => Claim) private claims;
     mapping(uint256 => Payment) private payments;
-    mapping(address => uint256[]) private userPolicies;
-    mapping(uint256 => uint256[]) private policyPayments;
+    mapping(address => uint256[]) private userCoverages;
+    mapping(uint256 => uint256[]) private coveragePayments;
 
     // Events
-    event PolicyCreated(
-        uint256 indexed policyId,
+    event CoverageCreated(
+        uint256 indexed coverageId,
         address indexed policyholder,
         uint256 coverage,
         uint256 premium
     );
     event PremiumPaid(
-        uint256 indexed policyId,
+        uint256 indexed coverageId,
         address indexed payer,
         uint256 amount,
         uint256 paymentId
     );
     event ClaimFiled(
         uint256 indexed claimId,
-        uint256 indexed policyId,
+        uint256 indexed coverageId,
         uint256 amount
     );
     event ClaimApproved(
         uint256 indexed claimId,
-        uint256 indexed policyId,
+        uint256 indexed coverageId,
         uint256 amount
     );
-    event PolicyStatusChanged(uint256 indexed policyId, PolicyStatus newStatus);
+    event CoverageStatusChanged(
+        uint256 indexed coverageId,
+        CoverageStatus newStatus
+    );
+    event CoverageLapsed(uint256 indexed coverageId, uint256 timestamp);
     event PaymentRefunded(
         uint256 indexed paymentId,
         address indexed recipient,
@@ -126,39 +130,40 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
     );
 
     // Modifiers
-    modifier onlyPolicyholder(uint256 policyId) {
+    modifier onlyCoverageholder(uint256 coverageId) {
         require(
-            policies[policyId].policyholder == msg.sender,
+            coverages[coverageId].policyholder == msg.sender,
             "Not policyholder"
         );
         _;
     }
 
-    modifier policyExists(uint256 policyId) {
+    modifier coverageExists(uint256 coverageId) {
         require(
-            policies[policyId].policyholder != address(0),
-            "Policy does not exist"
+            coverages[coverageId].policyholder != address(0),
+            "Coverage does not exist"
         );
         _;
     }
 
-    modifier policyActive(uint256 policyId) {
+    modifier coverageActive(uint256 coverageId) {
         require(
-            policies[policyId].status == PolicyStatus.Active,
-            "Policy not active"
+            coverages[coverageId].status == CoverageStatus.Active,
+            "Coverage not active"
         );
         _;
     }
 
-    constructor() Ownable(msg.sender) {}
-
+    constructor() Ownable(msg.sender) {
+        nextCoverageId = 1;
+    }
     /**
-     * @dev Create a new insurance policy with ETH payment
+     * @dev Create a new insurance coverage with ETH payment
      * @param coverage The coverage amount in wei
      * @param premium The premium amount in wei
-     * @param durationDays Duration of the policy in days
+     * @param durationDays Duration of the coverage in days
      */
-    function createPolicyWithPayment(
+    function createCoverageWithPayment(
         uint256 coverage,
         uint256 premium,
         uint256 durationDays,
@@ -173,13 +178,13 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
         require(durationDays > 0, "Duration must be greater than 0");
         require(bytes(agreementCid).length > 0, "Agreement CID not set");
 
-        uint256 policyId = nextPolicyId;
+        uint256 coverageId = nextCoverageId;
         uint256 startDate = block.timestamp;
         uint256 endDate = startDate.add(durationDays.mul(1 days));
         uint256 nextPaymentDate = startDate.add(30 days); // Monthly payments
 
-        policies[policyId] = Policy({
-            id: policyId,
+        coverages[coverageId] = Coverage({
+            id: coverageId,
             policyholder: msg.sender,
             name: name,
             category: category,
@@ -189,7 +194,7 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
             startDate: startDate,
             endDate: endDate,
             nextPaymentDate: nextPaymentDate,
-            status: PolicyStatus.Active,
+            status: CoverageStatus.Active,
             claimIds: new uint256[](0),
             totalPaid: premium,
             utilizationRate: 0,
@@ -200,7 +205,7 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
         uint256 paymentId = nextPaymentId;
         payments[paymentId] = Payment({
             id: paymentId,
-            policyId: policyId,
+            coverageId: coverageId,
             payer: msg.sender,
             amount: premium,
             status: PaymentStatus.Completed,
@@ -208,95 +213,107 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
         });
 
         // Update mappings
-        userPolicies[msg.sender].push(policyId);
-        policyPayments[policyId].push(paymentId);
+        userCoverages[msg.sender].push(coverageId);
+        coveragePayments[coverageId].push(paymentId);
 
         // Update counters
-        nextPolicyId = nextPolicyId.add(1);
+        nextCoverageId = nextCoverageId.add(1);
         nextPaymentId = nextPaymentId.add(1);
 
-        emit PolicyCreated(policyId, msg.sender, coverage, premium);
-        emit PremiumPaid(policyId, msg.sender, premium, paymentId);
+        emit CoverageCreated(coverageId, msg.sender, coverage, premium);
+        emit PremiumPaid(coverageId, msg.sender, premium, paymentId);
 
-        return policyId;
+        return coverageId;
     }
 
     /**
-     * @dev Pay premium for an existing policy
-     * @param policyId The ID of the policy
+     * @dev Pay premium for an existing coverage
+     * @param coverageId The ID of the coverage
      */
     function payPremium(
-        uint256 policyId
+        uint256 coverageId
     )
         external
         payable
         nonReentrant
-        policyExists(policyId)
-        policyActive(policyId)
+        coverageExists(coverageId)
+        coverageActive(coverageId)
     {
-        Policy storage policy = policies[policyId];
-        require(policy.policyholder == msg.sender, "Not policyholder");
-        require(msg.value == policy.premium, "Incorrect premium amount");
+        Coverage storage coverage = coverages[coverageId];
+        require(coverage.policyholder == msg.sender, "Not policyholder");
+        require(msg.value == coverage.premium, "Incorrect premium amount");
+
+        uint256 gracePeriod = 7 days; // Can make this configurable per coverage type
+
+        // Check if payment is within allowed window
         require(
-            block.timestamp >= policy.nextPaymentDate,
-            "Payment not due yet"
+            block.timestamp <= coverage.nextPaymentDate + gracePeriod,
+            "Payment overdue"
         );
 
-        // Update policy
-        policy.totalPaid = policy.totalPaid.add(msg.value);
-        policy.nextPaymentDate = policy.nextPaymentDate.add(30 days);
+        // Update coverage payment info
+        coverage.totalPaid = coverage.totalPaid.add(msg.value);
 
-        // Create payment record
+        // If paying early, just push nextPaymentDate forward from current cycle
+        if (block.timestamp < coverage.nextPaymentDate) {
+            coverage.nextPaymentDate = coverage.nextPaymentDate.add(30 days);
+        }
+        // If paying late but still within grace period, set new cycle from now
+        else {
+            coverage.nextPaymentDate = block.timestamp.add(30 days);
+        }
+
+        // Record payment
         uint256 paymentId = nextPaymentId;
         payments[paymentId] = Payment({
             id: paymentId,
-            policyId: policyId,
+            coverageId: coverageId,
             payer: msg.sender,
             amount: msg.value,
             status: PaymentStatus.Completed,
             timestamp: block.timestamp
         });
 
-        policyPayments[policyId].push(paymentId);
+        coveragePayments[coverageId].push(paymentId);
         nextPaymentId = nextPaymentId.add(1);
 
-        emit PremiumPaid(policyId, msg.sender, msg.value, paymentId);
+        emit PremiumPaid(coverageId, msg.sender, msg.value, paymentId);
     }
 
     /**
-     * @dev File a claim for a policy
-     * @param policyId The ID of the policy
+     * @dev File a claim for a coverage
+     * @param coverageId The ID of the coverage
      * @param amount The claim amount in wei
      * @param description Description of the claim
      */
     function fileClaim(
-        uint256 policyId,
+        uint256 coverageId,
         uint256 amount,
         string memory description
     )
         external
-        onlyPolicyholder(policyId)
-        policyActive(policyId)
+        onlyCoverageholder(coverageId)
+        coverageActive(coverageId)
         returns (uint256)
     {
-        Policy storage policy = policies[policyId];
-        require(amount <= policy.coverage, "Claim amount exceeds coverage");
+        Coverage storage coverage = coverages[coverageId];
+        require(amount <= coverage.coverage, "Claim amount exceeds coverage");
         require(amount > 0, "Claim amount must be greater than 0");
 
         uint256 claimId = nextClaimId;
         claims[claimId] = Claim({
             id: claimId,
-            policyId: policyId,
+            coverageId: coverageId,
             amount: amount,
             approved: false,
             timestamp: block.timestamp,
             description: description
         });
 
-        policy.claimIds.push(claimId);
+        coverage.claimIds.push(claimId);
         nextClaimId = nextClaimId.add(1);
 
-        emit ClaimFiled(claimId, policyId, amount);
+        emit ClaimFiled(claimId, coverageId, amount);
         return claimId;
     }
 
@@ -309,40 +326,54 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
         require(!claim.approved, "Already approved");
         require(claim.id == claimId, "Claim does not exist");
 
-        Policy storage policy = policies[claim.policyId];
-        require(policy.status == PolicyStatus.Active, "Policy not active");
+        Coverage storage coverage = coverages[claim.coverageId];
+        require(
+            coverage.status == CoverageStatus.Active,
+            "Coverage not active"
+        );
 
         claim.approved = true;
 
         // Transfer claim amount to policyholder
-        (bool success, ) = policy.policyholder.call{value: claim.amount}("");
+        (bool success, ) = coverage.policyholder.call{value: claim.amount}("");
         require(success, "Transfer failed");
 
-        // Update policy utilization rate
-        policy.utilizationRate = policy.utilizationRate.add(claim.amount);
+        // Update coverage utilization rate
+        coverage.utilizationRate = coverage.utilizationRate.add(claim.amount);
 
-        emit ClaimApproved(claimId, claim.policyId, claim.amount);
+        emit ClaimApproved(claimId, claim.coverageId, claim.amount);
+    }
+
+    function checkAndLapseCoverage(uint256 coverageId) public {
+        Coverage storage coverage = coverages[coverageId];
+        uint256 gracePeriod = 7 days;
+        if (block.timestamp > coverage.nextPaymentDate + gracePeriod) {
+            coverage.status = CoverageStatus.Inactive;
+            emit CoverageLapsed(coverageId, block.timestamp);
+        }
     }
 
     /**
-     * @dev Update policy status
-     * @param policyId The ID of the policy
+     * @dev Update coverage status
+     * @param coverageId The ID of the coverage
      * @param newStatus The new status
      */
-    function updatePolicyStatus(
-        uint256 policyId,
-        PolicyStatus newStatus
-    ) external onlyOwner policyExists(policyId) {
-        policies[policyId].status = newStatus;
-        emit PolicyStatusChanged(policyId, newStatus);
+    function updateCoverageStatus(
+        uint256 coverageId,
+        CoverageStatus newStatus
+    ) external onlyOwner coverageExists(coverageId) {
+        coverages[coverageId].status = newStatus;
+        emit CoverageStatusChanged(coverageId, newStatus);
     }
 
     /**
-     * @dev Get policy details
-     * @param policyId The ID of the policy
+     * @dev Get coverage details
+     * @param coverageId The ID of the coverage
      */
-    function getPolicy(uint256 policyId) external view returns (Policy memory) {
-        return policies[policyId];
+    function getCoverage(
+        uint256 coverageId
+    ) external view returns (Coverage memory) {
+        return coverages[coverageId];
     }
 
     /**
@@ -364,23 +395,20 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Get all policies for a user
-     * @param user The user address
+     * @dev Get all coverages for the caller
      */
-    function getUserPolicies(
-        address user
-    ) external view returns (uint256[] memory) {
-        return userPolicies[user];
+    function getMyCoverages() external view returns (uint256[] memory) {
+        return userCoverages[msg.sender];
     }
 
     /**
-     * @dev Get all payments for a policy
-     * @param policyId The ID of the policy
+     * @dev Get all payments for a coverage
+     * @param coverageId The ID of the coverage
      */
-    function getPolicyPayments(
-        uint256 policyId
+    function getCoveragePayments(
+        uint256 coverageId
     ) external view returns (uint256[] memory) {
-        return policyPayments[policyId];
+        return coveragePayments[coverageId];
     }
 
     /**

@@ -19,6 +19,7 @@
     "noFallthroughCasesInSwitch": false,
     "strict": true,
     "resolveJsonModule": true,
-    "esModuleInterop": true,
-  }
+    "esModuleInterop": true
+  },
+  "include": ["src", "../blockchain/typechain-types"]
 }

@@ -1032,6 +1032,46 @@
         ]
       }
     },
+    "/policy/claim-types": {
+      "get": {
+        "operationId": "PolicyController_getPoliciesWithClaimTypes",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get policies with claim types",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/PolicyClaimTypesDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Policy"
+        ]
+      }
+    },
     "/policy/stats": {
       "get": {
         "operationId": "PolicyController_getStats",
@@ -2908,6 +2948,28 @@
           "reviews"
         ]
       },
+      "PolicyClaimTypesDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "claim_types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "claim_types"
+        ]
+      },
       "PolicyStatsDto": {
         "type": "object",
         "properties": {
@@ -3087,6 +3149,11 @@
       "CreateCoverageDto": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "number",
+            "example": 1,
+            "description": "ID of the coverage"
+          },
           "policy_id": {
             "type": "number",
             "example": 1,
@@ -3124,6 +3191,7 @@
           }
         },
         "required": [
+          "id",
           "policy_id",
           "status",
           "utilization_rate",
@@ -3136,6 +3204,11 @@
       "UpdateCoverageDto": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "number",
+            "example": 1,
+            "description": "ID of the coverage"
+          },
           "policy_id": {
             "type": "number",
             "example": 1,

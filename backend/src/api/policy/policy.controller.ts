@@ -65,6 +65,15 @@ export class PolicyController {
     return this.policyService.findAll(req, query);
   }
 
+  @Get('claim-types')
+  @UseGuards(AuthGuard)
+  @ApiCommonResponse(PolicyClaimTypesDto, true, 'Get policies with claim types')
+  getPoliciesWithClaimTypes(
+    @Req() req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto<PolicyClaimTypesDto[]>> {
+    return this.policyService.getPoliciesWithClaimTypes(req);
+  }
+
   @Get('stats')
   @UseGuards(AuthGuard)
   @ApiCommonResponse(PolicyStatsDto, false, 'Get policy stats')
@@ -91,15 +100,6 @@ export class PolicyController {
     @Req() req: AuthenticatedRequest,
   ) {
     return this.policyService.getPolicyholderSummary(userId, req);
-  }
-
-  @Get('claim-types')
-  @UseGuards(AuthGuard)
-  @ApiCommonResponse(PolicyClaimTypesDto, true, 'Get policies with claim types')
-  getPoliciesWithClaimTypes(
-    @Req() req: AuthenticatedRequest,
-  ): Promise<CommonResponseDto<PolicyClaimTypesDto[]>> {
-    return this.policyService.getPoliciesWithClaimTypes(req);
   }
 
   // GET /browse/categories?userId=xxx
