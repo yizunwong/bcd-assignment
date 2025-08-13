@@ -3,8 +3,9 @@ import {
   useReadContract,
   useWaitForTransactionReceipt,
   useAccount,
+  usePublicClient,
 } from "wagmi";
-import { parseEther, formatEther } from "viem";
+import { parseEther, decodeEventLog } from "viem";
 import { useToast } from "@/components/shared/ToastProvider";
 import InsuranceContractAbi from "@/abi/InsuranceContract.json";
 
@@ -16,12 +17,13 @@ const INSURANCE_CONTRACT_ADDRESS = process.env
 
 export function useInsuranceContract() {
   const { address } = useAccount();
+  const publicClient = usePublicClient();
   const { printMessage } = useToast();
 
   // Create coverage with payment
   const {
     data: createCoverageData,
-    writeContract: createCoverage,
+    writeContractAsync: createCoverage,
     isPending: isCreatingCoverage,
     error: createCoverageError,
   } = useWriteContract();
@@ -85,7 +87,7 @@ export function useInsuranceContract() {
       const coverageWei = parseEther(coverage.toString());
       const premiumWei = parseEther(premium.toString());
 
-      createCoverage({
+      const hash = await createCoverage({
         address: INSURANCE_CONTRACT_ADDRESS,
         abi: INSURANCE_CONTRACT_ABI,
         functionName: "createCoverageWithPayment",
@@ -100,6 +102,26 @@ export function useInsuranceContract() {
         ],
         value: premiumWei,
       });
+
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+
+      const event = receipt.logs
+        .map((log) => {
+          try {
+            return decodeEventLog({
+              abi: INSURANCE_CONTRACT_ABI,
+              data: log.data,
+              topics: log.topics,
+            });
+          } catch {
+            return null;
+          }
+        })
+        .find((e) => e && e.eventName === "CoverageCreated");
+
+      if (event) {
+        return Number((event as any).args.coverageId);
+      }
     } catch (error) {
       console.error("Error creating coverage:", error);
       printMessage("Failed to create coverage", "error");
