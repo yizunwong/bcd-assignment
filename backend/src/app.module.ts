@@ -14,6 +14,7 @@ import { ReviewsModule } from './api/reviews/reviews.module';
 import { CompanyModule } from './api/company/company.module';
 import { DashboardModule } from './api/dashboard/dashboard.module';
 import { PaymentModule } from './api/payment/payment.module';
+import { ActivityLogModule } from './api/activity-log/activity-log.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { PaymentModule } from './api/payment/payment.module';
     CompanyModule,
     DashboardModule,
     PaymentModule,
+    ActivityLogModule,
   ],
 
   controllers: [AppController],
