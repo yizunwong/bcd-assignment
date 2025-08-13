@@ -114,14 +114,6 @@ export default function Claims() {
     currentPage * ITEMS_PER_PAGE
   );
 
-  if (isLoading) {
-    return (
-      <div className="section-spacing">
-        <div className="max-w-7xl mx-auto">Loading...</div>
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="section-spacing">
@@ -348,7 +340,7 @@ export default function Claims() {
                         <h4 className="font-semibold text-slate-800 dark:text-slate-100 mb-3">
                           Processing Timeline
                         </h4>
-                        <div className="space-y-3">
+                        {/* <div className="space-y-3">
                           {claim.timeline.map((step, index) => (
                             <div
                               key={index}
@@ -391,7 +383,7 @@ export default function Claims() {
                               </div>
                             </div>
                           ))}
-                        </div>
+                        </div> */}
                       </div>
                     </div>
 
@@ -436,6 +428,18 @@ export default function Claims() {
               itemsPerPage={ITEMS_PER_PAGE}
               className="mt-8"
             />
+
+            {paginatedClaims.length === 0 && !isLoading && (
+              <div className="text-center py-12">
+                <FileText className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">
+                  No claims found
+                </h3>
+                <p className="text-slate-500 dark:text-slate-500">
+                  Try adjusting your search criteria or submit a new claim
+                </p>
+              </div>
+            )}
           </div>
         ) : (
           /* New Claim Tab */
@@ -455,14 +459,23 @@ export default function Claims() {
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                     Select Policy
                   </label>
-                  <Select value={selectedPolicy} onValueChange={setSelectedPolicy}>
+                  <Select
+                    value={selectedPolicy}
+                    onValueChange={setSelectedPolicy}
+                  >
                     <SelectTrigger className="form-input">
                       <SelectValue placeholder="Choose a policy" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">Comprehensive Health Coverage</SelectItem>
-                      <SelectItem value="2">Global Travel Protection</SelectItem>
-                      <SelectItem value="3">Weather-Based Crop Insurance</SelectItem>
+                      <SelectItem value="1">
+                        Comprehensive Health Coverage
+                      </SelectItem>
+                      <SelectItem value="2">
+                        Global Travel Protection
+                      </SelectItem>
+                      <SelectItem value="3">
+                        Weather-Based Crop Insurance
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
