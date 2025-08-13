@@ -2,6 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CoveragePolicyDto {
   @ApiProperty()
+  id!: number;
+
+  @ApiProperty()
   name!: string;
 
   @ApiProperty({ required: false })
@@ -17,6 +20,9 @@ export class CoveragePolicyDto {
   premium!: number;
 
   @ApiProperty()
+  duration_days!: number;
+
+  @ApiProperty()
   provider!: string;
 }
 
@@ -24,14 +30,14 @@ export class CoverageResponseDto {
   @ApiProperty()
   id!: number;
 
-  @ApiProperty({ required: false })
-  policy_id!: number | null;
+  @ApiProperty()
+  policy_id!: number;
 
-  @ApiProperty({ required: false })
-  user_id!: string | null;
+  @ApiProperty()
+  user_id!: string;
 
-  @ApiProperty({ required: false })
-  status!: string | null;
+  @ApiProperty()
+  status!: string;
 
   @ApiProperty()
   agreement_cid!: string;

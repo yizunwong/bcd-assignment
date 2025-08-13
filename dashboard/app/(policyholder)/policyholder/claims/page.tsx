@@ -26,9 +26,13 @@ import {
   Download,
   X,
 } from "lucide-react";
-import { claims } from "@/public/data/policyholder/claimsData";
+import { useClaimsQuery } from "@/hooks/useClaims";
 import { useInsuranceContract } from "@/hooks/useBlockchain";
 import { usePolicyClaimTypesQuery } from "@/hooks/usePolicies";
+import {
+  useCreateClaimMutation,
+  useUploadClaimDocumentsMutation,
+} from "@/hooks/useClaims";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -44,6 +48,9 @@ export default function Claims() {
   const [claimType, setClaimType] = useState("");
   const [claimAmount, setClaimAmount] = useState("");
   const [description, setDescription] = useState("");
+  const [claimType, setClaimType] = useState("");
+
+  const priority = "low";
 
   const { fileClaimForPolicy, isFilingClaim } = useInsuranceContract();
   const { data: policyClaimTypes } = usePolicyClaimTypesQuery();
@@ -57,6 +64,31 @@ export default function Claims() {
     setSelectedPolicy(val);
     setClaimType("");
   };
+  const { createClaim, isPending: isCreating } = useCreateClaimMutation();
+  const { uploadClaimDocuments, isPending: isUploading } =
+    useUploadClaimDocumentsMutation();
+  const { data: claimsData, isLoading, error } = useClaimsQuery();
+
+  const claims = useMemo(
+    () =>
+      (claimsData?.data ?? []).map((claim) => ({
+        id: claim.id.toString(),
+        policyName: claim.policy?.name ?? "",
+        type: claim.type,
+        amount: new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+        }).format(claim.amount ?? 0),
+        status: claim.status,
+        submittedDate: claim.submitted_date,
+        processedDate: undefined,
+        description: claim.description,
+        documents: claim.claim_documents?.map((doc) => doc.name) ?? [],
+        timeline: [],
+      })),
+    [claimsData]
+  );
+
   const sortedClaims = useMemo(() => {
     const sorted = [...claims].sort((a, b) => {
       switch (sortBy) {
@@ -87,13 +119,21 @@ export default function Claims() {
       }
     });
     return sorted;
-  }, [sortBy]);
+  }, [claims, sortBy]);
 
   const totalPages = Math.ceil(sortedClaims.length / ITEMS_PER_PAGE);
   const paginatedClaims = sortedClaims.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
+
+  if (error) {
+    return (
+      <div className="section-spacing">
+        <div className="max-w-7xl mx-auto">Error loading claims</div>
+      </div>
+    );
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -313,7 +353,7 @@ export default function Claims() {
                         <h4 className="font-semibold text-slate-800 dark:text-slate-100 mb-3">
                           Processing Timeline
                         </h4>
-                        <div className="space-y-3">
+                        {/* <div className="space-y-3">
                           {claim.timeline.map((step, index) => (
                             <div
                               key={index}
@@ -356,7 +396,7 @@ export default function Claims() {
                               </div>
                             </div>
                           ))}
-                        </div>
+                        </div> */}
                       </div>
                     </div>
 
@@ -401,6 +441,18 @@ export default function Claims() {
               itemsPerPage={ITEMS_PER_PAGE}
               className="mt-8"
             />
+
+            {paginatedClaims.length === 0 && !isLoading && (
+              <div className="text-center py-12">
+                <FileText className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">
+                  No claims found
+                </h3>
+                <p className="text-slate-500 dark:text-slate-500">
+                  Try adjusting your search criteria or submit a new claim
+                </p>
+              </div>
+            )}
           </div>
         ) : (
           /* New Claim Tab */
@@ -553,15 +605,39 @@ export default function Claims() {
                 </Button>
                 <Button
                   className="flex-1 gradient-accent text-white floating-button"
-                  onClick={() => {
-                    if (!selectedPolicy || !claimAmount || !description) return;
-                    fileClaimForPolicy(
-                      Number(selectedPolicy),
-                      parseFloat(claimAmount),
-                      description
-                    );
+                  onClick={async () => {
+                    if (
+                      !selectedPolicy ||
+                      !claimType ||
+                      !claimAmount ||
+                      !description
+                    )
+                      return;
+                    const amount = parseFloat(claimAmount);
+                    try {
+                      const res = await createClaim({
+                        coverage_id: Number(selectedPolicy),
+                        type: claimType,
+                        priority,
+                        amount,
+                        description,
+                      });
+                      const claimId = (res as any)?.data?.id;
+                      if (claimId && selectedFiles.length > 0) {
+                        await uploadClaimDocuments(String(claimId), {
+                          files: selectedFiles,
+                        });
+                      }
+                      fileClaimForPolicy(
+                        Number(selectedPolicy),
+                        amount,
+                        description,
+                      );
+                    } catch (error) {
+                      console.error(error);
+                    }
                   }}
-                  disabled={isFilingClaim}
+                  disabled={isFilingClaim || isCreating || isUploading}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Submit Claim

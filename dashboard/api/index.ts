@@ -512,25 +512,21 @@ export interface UpdatePolicyDto {
 export type CoveragePolicyDtoDescription = { [key: string]: unknown };
 
 export interface CoveragePolicyDto {
+  id: number;
   name: string;
   description?: CoveragePolicyDtoDescription;
   category: string;
   coverage: number;
   premium: number;
+  duration_days: number;
   provider: string;
 }
 
-export type CoverageResponseDtoPolicyId = { [key: string]: unknown };
-
-export type CoverageResponseDtoUserId = { [key: string]: unknown };
-
-export type CoverageResponseDtoStatus = { [key: string]: unknown };
-
 export interface CoverageResponseDto {
   id: number;
-  policy_id?: CoverageResponseDtoPolicyId;
-  user_id?: CoverageResponseDtoUserId;
-  status?: CoverageResponseDtoStatus;
+  policy_id: number;
+  user_id: string;
+  status: string;
   agreement_cid: string;
   utilization_rate: number;
   start_date: string;
@@ -571,6 +567,17 @@ export interface UpdateCoverageDto {
   next_payment_date?: string;
   /** CID of the signed agreement stored on IPFS */
   agreement_cid?: string;
+}
+
+export interface CoverageStatsDto {
+  /** Number of active coverage policies. */
+  activeCoverage: number;
+  /** Total value of coverage across active policies (choose your unit: USD/ETH/etc). */
+  totalCoverageValue: number;
+  /** Total number of claims filed. */
+  totalClaims: number;
+  /** Approval rate as a percentage (0–100). */
+  approvalRate: number;
 }
 
 export interface ExtractClaimDto {
@@ -1057,6 +1064,13 @@ export type CoverageControllerFindOne200AllOf = {
 
 export type CoverageControllerFindOne200 = CommonResponseDto &
   CoverageControllerFindOne200AllOf;
+
+export type CoverageControllerGetCoverageStats200AllOf = {
+  data?: CoverageStatsDto;
+};
+
+export type CoverageControllerGetCoverageStats200 = CommonResponseDto &
+  CoverageControllerGetCoverageStats200AllOf;
 
 export type DashboardControllerGetSummary200AllOf = {
   data?: AdminDashoboardDto;
@@ -4659,7 +4673,7 @@ export const useCoverageControllerRemove = <
 };
 
 export const coverageControllerGetCoverageStats = (signal?: AbortSignal) => {
-  return customFetcher<null>({
+  return customFetcher<CoverageControllerGetCoverageStats200>({
     url: `/coverage/policyholder/summary`,
     method: "GET",
     signal,
