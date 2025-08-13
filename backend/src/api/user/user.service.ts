@@ -201,6 +201,9 @@ export class UserService {
     if (role === UserRole.POLICYHOLDER) {
       await this.activityLogger.log('POLICYHOLDER_READ', user_id);
     }
+    if (role === UserRole.INSURANCE_ADMIN) {
+      await this.activityLogger.log('INSURANCE_ADMIN_READ', user_id);
+    }
 
     return new CommonResponseDto<UserResponseDto>({
       statusCode: 200,
@@ -229,6 +232,9 @@ export class UserService {
 
     if (dto.role === UserRole.POLICYHOLDER) {
       await this.activityLogger.log('POLICYHOLDER_CREATED', user_id);
+    }
+    if (dto.role === UserRole.INSURANCE_ADMIN) {
+      await this.activityLogger.log('INSURANCE_ADMIN_CREATED', user_id);
     }
 
     return new CommonResponseDto<UserResponseDto>({
@@ -449,6 +455,7 @@ export class UserService {
       if (dto.company) {
         await this.updateOrInsertCompany(supabase, user_id, dto.company);
       }
+      await this.activityLogger.log('INSURANCE_ADMIN_UPDATED', user_id);
     }
 
     if (dto.role === UserRole.POLICYHOLDER) {
