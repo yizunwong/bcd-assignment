@@ -39,7 +39,7 @@ export default function CoverageDetailsDialog({
   open,
   onClose,
 }: CoverageDetailsDialogProps) {
-  const { payPremiumForPolicy, isPayingPremium, payPremiumData } =
+  const { payPremiumForCoverage, isPayingPremium, payPremiumData } =
     useInsuranceContract();
   const { createTransaction } = usePaymentMutation();
 
@@ -62,7 +62,7 @@ export default function CoverageDetailsDialog({
     if (!Number.isFinite(premiumAmount)) return;
 
     payingAmountRef.current = premiumAmount;
-    payPremiumForPolicy(0, premiumAmount);
+    payPremiumForCoverage(Number(policy.id), premiumAmount);
   };
 
   // After tx confirms -> record it ONCE, do not send a new tx
@@ -79,6 +79,7 @@ export default function CoverageDetailsDialog({
       if (!Number.isFinite(amount)) return;
 
       await createTransaction({
+        description: `Paid premium for policy ${policy.name}`,
         coverageId: Number(policy.id),
         txHash: payPremiumData,
         amount,
