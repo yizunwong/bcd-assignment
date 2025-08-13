@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { claims } from "@/public/data/policyholder/claimsData";
 import { useInsuranceContract } from "@/hooks/useBlockchain";
+import { usePolicyClaimTypesQuery } from "@/hooks/usePolicies";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -40,10 +41,22 @@ export default function Claims() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("newest");
   const [selectedPolicy, setSelectedPolicy] = useState("");
+  const [claimType, setClaimType] = useState("");
   const [claimAmount, setClaimAmount] = useState("");
   const [description, setDescription] = useState("");
 
   const { fileClaimForPolicy, isFilingClaim } = useInsuranceContract();
+  const { data: policyClaimTypes } = usePolicyClaimTypesQuery();
+  const policies = policyClaimTypes?.data ?? [];
+  const selectedPolicyData = policies.find(
+    (p) => p.id.toString() === selectedPolicy,
+  );
+  const claimTypes = selectedPolicyData?.claim_types || [];
+
+  const handlePolicyChange = (val: string) => {
+    setSelectedPolicy(val);
+    setClaimType("");
+  };
   const sortedClaims = useMemo(() => {
     const sorted = [...claims].sort((a, b) => {
       switch (sortBy) {
@@ -407,14 +420,16 @@ export default function Claims() {
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                     Select Policy
                   </label>
-                  <Select value={selectedPolicy} onValueChange={setSelectedPolicy}>
+                  <Select value={selectedPolicy} onValueChange={handlePolicyChange}>
                     <SelectTrigger className="form-input">
                       <SelectValue placeholder="Choose a policy" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">Comprehensive Health Coverage</SelectItem>
-                      <SelectItem value="2">Global Travel Protection</SelectItem>
-                      <SelectItem value="3">Weather-Based Crop Insurance</SelectItem>
+                      {policies.map((policy) => (
+                        <SelectItem key={policy.id} value={policy.id.toString()}>
+                          {policy.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -423,16 +438,16 @@ export default function Claims() {
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                     Claim Type
                   </label>
-                  <Select>
+                  <Select value={claimType} onValueChange={setClaimType}>
                     <SelectTrigger className="form-input">
                       <SelectValue placeholder="Select claim type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="medical">Medical Expense</SelectItem>
-                      <SelectItem value="prescription">Prescription</SelectItem>
-                      <SelectItem value="emergency">Emergency Care</SelectItem>
-                      <SelectItem value="travel">Travel Incident</SelectItem>
-                      <SelectItem value="weather">Weather Damage</SelectItem>
+                      {claimTypes.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

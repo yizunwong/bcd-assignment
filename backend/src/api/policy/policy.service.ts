@@ -17,6 +17,7 @@ import { FindPoliciesQueryDto } from './dto/responses/policy-query.dto';
 import { ClaimService } from '../claim/claim.service';
 import { PolicyCategoryCountStatsDto } from './dto/responses/policy-category.dto';
 import { PolicyStatsDto } from './dto/responses/policy-stats.dto';
+import { PolicyClaimTypesDto } from './dto/responses/policy-claim-types.dto';
 import { PolicyCategory, PolicyStatus } from 'src/enums';
 
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return */
@@ -360,6 +361,56 @@ export class PolicyService {
         walletBalance: null, // Can implement later
       },
     };
+  }
+
+  async getPoliciesWithClaimTypes(
+    req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto<PolicyClaimTypesDto[]>> {
+    const { data: userData, error: userError } =
+      await req.supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    const { data, error } = await req.supabase
+      .from('coverage')
+      .select(
+        `policy:policies(
+          id,
+          name,
+          policy_claim_type:policy_claim_type(
+            claim_type:claim_types(name)
+          )
+        )`,
+      )
+      .eq('user_id', userData.user.id);
+
+    if (error) {
+      throw new InternalServerErrorException(
+        'Failed to fetch policies with claim types',
+      );
+    }
+
+    const map = new Map<number, PolicyClaimTypesDto>();
+
+    for (const row of data || []) {
+      const policy: any = (row as any).policy;
+      if (!policy) continue;
+      if (!map.has(policy.id)) {
+        map.set(policy.id, {
+          id: policy.id,
+          name: policy.name,
+          claim_types:
+            policy.policy_claim_type?.map((p: any) => p.claim_type.name) || [],
+        });
+      }
+    }
+
+    return new CommonResponseDto<PolicyClaimTypesDto[]>({
+      statusCode: 200,
+      message: 'Policies with claim types retrieved successfully',
+      data: Array.from(map.values()),
+    });
   }
 
   async getPolicyCountByCategory(req: AuthenticatedRequest) {

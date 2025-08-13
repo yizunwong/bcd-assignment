@@ -26,6 +26,7 @@ import { PolicyStatsDto } from './dto/responses/policy-stats.dto';
 import { FindPoliciesQueryDto } from './dto/responses/policy-query.dto';
 import { UploadDocDto } from '../file/requests/document-upload.dto';
 import { PolicyCategoryCountStatsDto } from './dto/responses/policy-category.dto';
+import { PolicyClaimTypesDto } from './dto/responses/policy-claim-types.dto';
 
 @Controller('policy')
 @ApiBearerAuth('supabase-auth')
@@ -90,6 +91,15 @@ export class PolicyController {
     @Req() req: AuthenticatedRequest,
   ) {
     return this.policyService.getPolicyholderSummary(userId, req);
+  }
+
+  @Get('claim-types')
+  @UseGuards(AuthGuard)
+  @ApiCommonResponse(PolicyClaimTypesDto, true, 'Get policies with claim types')
+  getPoliciesWithClaimTypes(
+    @Req() req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto<PolicyClaimTypesDto[]>> {
+    return this.policyService.getPoliciesWithClaimTypes(req);
   }
 
   // GET /browse/categories?userId=xxx
