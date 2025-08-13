@@ -28,6 +28,10 @@ import {
 } from "lucide-react";
 import { useClaimsQuery } from "@/hooks/useClaims";
 import { useInsuranceContract } from "@/hooks/useBlockchain";
+import {
+  useCreateClaimMutation,
+  useUploadClaimDocumentsMutation,
+} from "@/hooks/useClaims";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -42,8 +46,14 @@ export default function Claims() {
   const [selectedPolicy, setSelectedPolicy] = useState("");
   const [claimAmount, setClaimAmount] = useState("");
   const [description, setDescription] = useState("");
+  const [claimType, setClaimType] = useState("");
+
+  const priority = "low";
 
   const { fileClaimForPolicy, isFilingClaim } = useInsuranceContract();
+  const { createClaim, isPending: isCreating } = useCreateClaimMutation();
+  const { uploadClaimDocuments, isPending: isUploading } =
+    useUploadClaimDocumentsMutation();
   const { data: claimsData, isLoading, error } = useClaimsQuery();
 
   const claims = useMemo(
@@ -461,7 +471,7 @@ export default function Claims() {
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                     Claim Type
                   </label>
-                  <Select>
+                  <Select value={claimType} onValueChange={setClaimType}>
                     <SelectTrigger className="form-input">
                       <SelectValue placeholder="Select claim type" />
                     </SelectTrigger>
@@ -576,15 +586,39 @@ export default function Claims() {
                 </Button>
                 <Button
                   className="flex-1 gradient-accent text-white floating-button"
-                  onClick={() => {
-                    if (!selectedPolicy || !claimAmount || !description) return;
-                    fileClaimForPolicy(
-                      Number(selectedPolicy),
-                      parseFloat(claimAmount),
-                      description
-                    );
+                  onClick={async () => {
+                    if (
+                      !selectedPolicy ||
+                      !claimType ||
+                      !claimAmount ||
+                      !description
+                    )
+                      return;
+                    const amount = parseFloat(claimAmount);
+                    try {
+                      const res = await createClaim({
+                        coverage_id: Number(selectedPolicy),
+                        type: claimType,
+                        priority,
+                        amount,
+                        description,
+                      });
+                      const claimId = (res as any)?.data?.id;
+                      if (claimId && selectedFiles.length > 0) {
+                        await uploadClaimDocuments(String(claimId), {
+                          files: selectedFiles,
+                        });
+                      }
+                      fileClaimForPolicy(
+                        Number(selectedPolicy),
+                        amount,
+                        description,
+                      );
+                    } catch (error) {
+                      console.error(error);
+                    }
                   }}
-                  disabled={isFilingClaim}
+                  disabled={isFilingClaim || isCreating || isUploading}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Submit Claim
