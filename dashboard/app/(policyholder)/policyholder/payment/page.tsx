@@ -411,7 +411,7 @@ export default function PaymentSummary() {
     const coverageId = await handleTokenPayment();
 
     const coverageData: CreateCoverageDto = {
-      id: coverageId,
+      id: coverageId!,
       policy_id: policyData!.id,
       status: "active",
       utilization_rate: 0,

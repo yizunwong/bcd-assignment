@@ -103,7 +103,7 @@ export function useInsuranceContract() {
         value: premiumWei,
       });
 
-      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+      const receipt = await publicClient!.waitForTransactionReceipt({ hash });
 
       const event = receipt.logs
         .map((log) => {

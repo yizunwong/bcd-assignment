@@ -45,7 +45,7 @@ export class CoverageService {
           next_payment_date: dto.next_payment_date,
           agreement_cid: dto.agreement_cid,
         },
-        { onConflict: 'coverage_id' },
+        { onConflict: 'id' },
       )
       .select()
       .single();
