@@ -44,6 +44,11 @@ export function useInsuranceContract() {
     error: payPremiumError,
   } = useWriteContract();
 
+  const { isLoading: isWaitingPay, isSuccess: isPaySuccess } =
+    useWaitForTransactionReceipt({
+      hash: payPremiumData,
+    });
+
   // File claim
   const {
     data: fileClaimData,
@@ -207,6 +212,8 @@ export function useInsuranceContract() {
     isWaitingForTransaction,
     isTransactionSuccess,
     isLoadingUserCoverages,
+    isWaitingPay,
+    isPaySuccess,
 
     // Data
     userCoverages,
