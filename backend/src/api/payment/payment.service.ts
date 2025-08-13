@@ -66,6 +66,32 @@ export class PaymentService {
       throw new InternalServerErrorException('Failed to record transaction');
     }
 
+    // Update next payment date for premium payments
+    if (!dto.description.toLowerCase().includes('purchased')) {
+      const { data: coverage, error: coverageError } = await req.supabase
+        .from('coverage')
+        .select('next_payment_date')
+        .eq('id', dto.coverageId)
+        .single();
+
+      if (!coverageError && coverage?.next_payment_date) {
+        const nextPayment = new Date(coverage.next_payment_date);
+        nextPayment.setMonth(nextPayment.getMonth() + 1);
+        const { error: updateError } = await req.supabase
+          .from('coverage')
+          .update({
+            next_payment_date: nextPayment.toISOString().split('T')[0],
+          })
+          .eq('id', dto.coverageId);
+
+        if (updateError) {
+          console.error(updateError);
+        }
+      } else {
+        console.error(coverageError);
+      }
+    }
+
     return new CommonResponseDto({
       statusCode: 201,
       message: 'Transaction recorded successfully',
