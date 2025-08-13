@@ -85,6 +85,7 @@ export default function CoverageDetailsDialog({
         currency: "ETH",
         status: "confirmed",
         type: "sent",
+        description: "Premium Payment",
       });
     };
 
