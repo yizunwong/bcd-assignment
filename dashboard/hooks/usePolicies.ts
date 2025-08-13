@@ -12,8 +12,17 @@ import {
   type PolicyControllerFindAllParams,
   type CreatePolicyDto,
   type UpdatePolicyDto,
+  type CommonResponseDto,
 } from "@/api";
+import { customFetcher } from "@/api/fetch";
+import { useQuery } from "@tanstack/react-query";
 import { parseError } from "../utils/parseError";
+
+interface PolicyClaimTypesDto {
+  id: number;
+  name: string;
+  claim_types: string[];
+}
 
 export function usePoliciesQuery(params?: PolicyControllerFindAllParams) {
   const query = usePolicyControllerFindAll(params);
@@ -77,6 +86,22 @@ export function useCategoryCountsQuery() {
 
 export function usePolicyStatsQuery() {
   const query = usePolicyControllerGetStats();
+  return {
+    ...query,
+    error: parseError(query.error),
+  };
+}
+
+export function usePolicyClaimTypesQuery() {
+  const query = useQuery({
+    queryKey: ["policy-claim-types"],
+    queryFn: () =>
+      customFetcher<CommonResponseDto<PolicyClaimTypesDto[]>>({
+        url: "/policy/claim-types",
+        method: "GET",
+      }),
+  });
+
   return {
     ...query,
     error: parseError(query.error),
