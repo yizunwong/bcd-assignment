@@ -182,6 +182,33 @@ export function useInsuranceContract() {
     }
   };
 
+  // Approve a claim
+  const {
+    data: approveClaimData,
+    writeContract: approveClaimWrite,
+    isPending: isApprovingClaim,
+    error: approveClaimError,
+  } = useWriteContract();
+
+  const approveClaimOnChain = async (claimId: number) => {
+    if (!address) {
+      printMessage("Please connect your wallet first", "error");
+      return;
+    }
+
+    try {
+      approveClaimWrite({
+        address: INSURANCE_CONTRACT_ADDRESS,
+        abi: INSURANCE_CONTRACT_ABI,
+        functionName: "approveClaim",
+        args: [BigInt(claimId)],
+      });
+    } catch (error) {
+      console.error("Error approving claim:", error);
+      printMessage("Failed to approve claim", "error");
+    }
+  };
+
   // Get coverage details
   const getCoverageDetails = async (coverageId: number) => {
     try {
@@ -203,12 +230,14 @@ export function useInsuranceContract() {
     createCoverageWithPayment,
     payPremiumForCoverage,
     fileClaimForCoverage,
+    approveClaimOnChain,
     getCoverageDetails,
 
     // State
     isCreatingCoverage,
     isPayingPremium,
     isFilingClaim,
+    isApprovingClaim,
     isWaitingForTransaction,
     isTransactionSuccess,
     isLoadingUserCoverages,
@@ -220,11 +249,13 @@ export function useInsuranceContract() {
     createCoverageData,
     payPremiumData,
     fileClaimData,
+    approveClaimData,
 
     // Errors
     createCoverageError,
     payPremiumError,
     fileClaimError,
+    approveClaimError,
     userCoveragesError,
 
     // Utilities

@@ -21,7 +21,10 @@ import {
 import { FileText } from "lucide-react";
 
 import type { ReactNode } from "react";
-import { ClaimResponseDto } from "@/api";
+import { ClaimResponseDto, ClaimStatus } from "@/api";
+import { useToast } from "@/components/shared/ToastProvider";
+import { useInsuranceContract } from "@/hooks/useBlockchain";
+import { useUpdateClaimStatusMutation } from "@/hooks/useClaims";
 
 interface ClaimWithDetails extends ClaimResponseDto {
   policy: {
@@ -59,6 +62,10 @@ export function ClaimReviewDialog({ claim, trigger }: ClaimReviewDialogProps) {
     payment: "",
   });
 
+  const { printMessage } = useToast();
+  const { approveClaimOnChain } = useInsuranceContract();
+  const { updateClaimStatus } = useUpdateClaimStatusMutation();
+
   const validateForm = () => {
     const newErrors: any = {};
     if (!reviewForm.status) newErrors.status = "Status is required";
@@ -81,9 +88,22 @@ export function ClaimReviewDialog({ claim, trigger }: ClaimReviewDialogProps) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSaveChanges = () => {
+  const handleSaveChanges = async () => {
     if (!validateForm()) return;
-    setOpen(false);
+    try {
+      if (reviewForm.status === "approved") {
+        await approveClaimOnChain(Number(claim.id));
+      }
+      await updateClaimStatus(
+        String(claim.id),
+        reviewForm.status as ClaimStatus
+      );
+      printMessage("Claim updated successfully", "success");
+      setOpen(false);
+    } catch (error) {
+      console.error("Error updating claim:", error);
+      printMessage("Failed to update claim", "error");
+    }
   };
 
   return (
