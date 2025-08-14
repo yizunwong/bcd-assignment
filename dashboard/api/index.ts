@@ -733,6 +733,13 @@ export interface TransactionResponseDto {
   createdAt: string;
 }
 
+export interface PaymentStatsDto {
+  /** Total amount of payouts received by the user. */
+  totalPayoutsReceived: number;
+  /** Total premium amount the user needs to pay. */
+  totalPremiumToPay: number;
+}
+
 export interface ActivityLogDto {
   id: string;
   action: string;
@@ -1147,6 +1154,13 @@ export type PaymentControllerFindAll200AllOf = {
 
 export type PaymentControllerFindAll200 = CommonResponseDto &
   PaymentControllerFindAll200AllOf;
+
+export type PaymentControllerGetStats200AllOf = {
+  data?: PaymentStatsDto;
+};
+
+export type PaymentControllerGetStats200 = CommonResponseDto &
+  PaymentControllerGetStats200AllOf;
 
 export type PaymentControllerFindOne200AllOf = {
   data?: TransactionResponseDto;
@@ -6342,6 +6356,148 @@ export function usePaymentControllerFindAll<
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions = getPaymentControllerFindAllQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const paymentControllerGetStats = (signal?: AbortSignal) => {
+  return customFetcher<PaymentControllerGetStats200>({
+    url: `/payments/stats`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getPaymentControllerGetStatsQueryKey = () => {
+  return [`/payments/stats`] as const;
+};
+
+export const getPaymentControllerGetStatsQueryOptions = <
+  TData = Awaited<ReturnType<typeof paymentControllerGetStats>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof paymentControllerGetStats>>,
+      TError,
+      TData
+    >
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getPaymentControllerGetStatsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof paymentControllerGetStats>>
+  > = ({ signal }) => paymentControllerGetStats(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof paymentControllerGetStats>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type PaymentControllerGetStatsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof paymentControllerGetStats>>
+>;
+export type PaymentControllerGetStatsQueryError = unknown;
+
+export function usePaymentControllerGetStats<
+  TData = Awaited<ReturnType<typeof paymentControllerGetStats>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof paymentControllerGetStats>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof paymentControllerGetStats>>,
+          TError,
+          Awaited<ReturnType<typeof paymentControllerGetStats>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePaymentControllerGetStats<
+  TData = Awaited<ReturnType<typeof paymentControllerGetStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof paymentControllerGetStats>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof paymentControllerGetStats>>,
+          TError,
+          Awaited<ReturnType<typeof paymentControllerGetStats>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePaymentControllerGetStats<
+  TData = Awaited<ReturnType<typeof paymentControllerGetStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof paymentControllerGetStats>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function usePaymentControllerGetStats<
+  TData = Awaited<ReturnType<typeof paymentControllerGetStats>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof paymentControllerGetStats>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getPaymentControllerGetStatsQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

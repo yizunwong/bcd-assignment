@@ -2085,6 +2085,38 @@
         ]
       }
     },
+    "/payments/stats": {
+      "get": {
+        "operationId": "PaymentController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get payment stats",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/PaymentStatsDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
     "/payments/transactions/{txHash}": {
       "get": {
         "operationId": "PaymentController_findOne",
@@ -3859,6 +3891,25 @@
           "status",
           "type",
           "createdAt"
+        ]
+      },
+      "PaymentStatsDto": {
+        "type": "object",
+        "properties": {
+          "totalPayoutsReceived": {
+            "type": "number",
+            "example": 1000,
+            "description": "Total amount of payouts received by the user."
+          },
+          "totalPremiumToPay": {
+            "type": "number",
+            "example": 500,
+            "description": "Total premium amount the user needs to pay."
+          }
+        },
+        "required": [
+          "totalPayoutsReceived",
+          "totalPremiumToPay"
         ]
       },
       "ActivityLogDto": {
