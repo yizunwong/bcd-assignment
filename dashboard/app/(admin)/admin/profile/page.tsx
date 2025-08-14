@@ -12,17 +12,16 @@ import {
   profileData as defaultProfileData,
   notifications as defaultNotifications,
   adminStats,
-  activityLog,
   permissions,
 } from "@/public/data/admin/profileData";
 import { useMeQuery } from "@/hooks/useAuth";
+import { useActivityLogsQuery } from "@/hooks/useActivityLog";
 import { useUpdateUserMutation } from "@/hooks/useUsers";
 import { useToast } from "@/components/shared/ToastProvider";
 import {
   User,
   Shield,
   Bell,
-  Lock,
   Camera,
   CheckCircle,
   AlertTriangle,
@@ -34,12 +33,9 @@ import {
   MapPin,
   Calendar,
   Building,
-  FileText,
   Key,
-  Activity,
   Award,
   Users,
-  BarChart3,
 } from "lucide-react";
 import {
   CompanyDetailsDtoEmployeesNumber,
@@ -59,6 +55,12 @@ export default function AdminProfile() {
     useState<ProfileResponseDto>(defaultProfileData);
   const [notifications, setNotifications] = useState(defaultNotifications);
   const { data } = useMeQuery();
+  const { data: activityLogs, isLoading: isActivityLoading } =
+    useActivityLogsQuery({
+      userId: data?.data?.id,
+      page: 1,
+      limit: 5,
+    });
   const { updateUser, isPending } = useUpdateUserMutation();
   const { printMessage } = useToast();
 
@@ -443,45 +445,32 @@ export default function AdminProfile() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {activityLog.map((activity, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-4 p-4 bg-slate-50/50 dark:bg-slate-700/30 rounded-xl"
-                        >
+                      {isActivityLoading ? (
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          Loading...
+                        </p>
+                      ) : (
+                        (activityLogs?.data ?? []).map((activity) => (
                           <div
-                            className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                              activity.type === "claim"
-                                ? "bg-gradient-to-r from-blue-500 to-cyan-500"
-                                : activity.type === "policy"
-                                  ? "bg-gradient-to-r from-emerald-500 to-green-600"
-                                  : activity.type === "report"
-                                    ? "bg-gradient-to-r from-purple-500 to-indigo-500"
-                                    : "bg-gradient-to-r from-orange-500 to-red-500"
-                            }`}
+                            key={activity.id}
+                            className="flex items-center space-x-4 p-4 bg-slate-50/50 dark:bg-slate-700/30 rounded-xl"
                           >
-                            {activity.type === "claim" && (
-                              <FileText className="w-5 h-5 text-white" />
-                            )}
-                            {activity.type === "policy" && (
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-r from-blue-500 to-cyan-500">
                               <Shield className="w-5 h-5 text-white" />
-                            )}
-                            {activity.type === "report" && (
-                              <BarChart3 className="w-5 h-5 text-white" />
-                            )}
-                            {activity.type === "offer" && (
-                              <Activity className="w-5 h-5 text-white" />
-                            )}
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium text-slate-800 dark:text-slate-100">
+                                {activity.action}
+                              </p>
+                              <p className="text-sm text-slate-600 dark:text-slate-400">
+                                {activity.timestamp
+                                  ? new Date(activity.timestamp).toLocaleDateString()
+                                  : ""}
+                              </p>
+                            </div>
                           </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-slate-800 dark:text-slate-100">
-                              {activity.action}
-                            </p>
-                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                              {new Date(activity.date).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
+                        ))
+                      )}
                     </div>
                   </CardContent>
                 </Card>
