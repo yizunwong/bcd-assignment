@@ -563,7 +563,8 @@ export default function Profile() {
                   style={{
                     width: "auto",
                     height: "auto",
-                    transform: `translate(${position.x}px, ${position.y}px) scale(${zoom})`,
+                    transform: `scale(${zoom}) translate(${position.x}px, ${position.y}px)`,
+                    transformOrigin: "top left",
                     cursor: dragStart.current ? "grabbing" : "grab",
                   }}
                   onMouseDown={onStartDrag}
