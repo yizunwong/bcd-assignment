@@ -482,7 +482,7 @@ export class ClaimService {
 
     // 3️⃣ If approved, update utilization rate
     if (status === ClaimStatus.APPROVED) {
-      if (!body?.txHash) {
+      if (!body?.txHash || body.txHash.trim() === '') {
         throw new BadRequestException('txHash is required for approved claims');
       }
       if (!coverage?.id || !coverage?.user_id) {

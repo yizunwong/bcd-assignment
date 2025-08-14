@@ -111,6 +111,9 @@ export function ClaimReviewDialog({ claim, trigger }: ClaimReviewDialogProps) {
         await updateClaimStatus(
           String(claim.id),
           reviewForm.status as ClaimStatus,
+          {
+            txHash: '',
+          }
         );
       }
 
