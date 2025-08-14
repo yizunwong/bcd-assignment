@@ -157,19 +157,26 @@ export default function Profile() {
     canvas.height = size;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const sx = -position.x / zoom;
-    const sy = -position.y / zoom;
-    const sWidth = size / zoom;
-    const sHeight = size / zoom;
+    const img = imgRef.current;
+    const scale = img.naturalWidth / img.width;
+    const sx = (-position.x / zoom) * scale;
+    const sy = (-position.y / zoom) * scale;
+    const sWidth = (size / zoom) * scale;
+    const sHeight = (size / zoom) * scale;
+    ctx.clearRect(0, 0, size, size);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
     ctx.drawImage(imgRef.current, sx, sy, sWidth, sHeight, 0, 0, size, size);
+    ctx.restore();
     canvas.toBlob(async (blob) => {
       if (!blob) return;
       try {
-        const avatarFile = new File(
-          [blob],
-          selectedFile?.name || "avatar.png",
-          { type: blob.type }
-        );
+        const avatarFile = new File([blob], selectedFile?.name || "avatar.png", {
+          type: "image/png",
+        });
         const res = await uploadAvatar(userResponse.data!.id, {
           files: [avatarFile],
         });
@@ -184,7 +191,7 @@ export default function Profile() {
       } finally {
         handleCropCancel();
       }
-    }, selectedFile?.type || "image/png");
+    }, "image/png");
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -548,7 +555,7 @@ export default function Profile() {
             <DialogTitle>Crop Image</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col items-center gap-4">
-            <div className="relative w-64 h-64 overflow-hidden bg-slate-200">
+            <div className="relative w-64 h-64 overflow-hidden bg-slate-200 rounded-full">
               {imageSrc && (
                 <img
                   ref={imgRef}
@@ -559,6 +566,7 @@ export default function Profile() {
                     width: "auto",
                     height: "auto",
                     transform: `translate(${position.x}px, ${position.y}px) scale(${zoom})`,
+                    transformOrigin: "top left",
                     cursor: dragStart.current ? "grabbing" : "grab",
                   }}
                   onMouseDown={onStartDrag}
@@ -571,6 +579,7 @@ export default function Profile() {
                   draggable={false}
                 />
               )}
+              <div className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-white" />
             </div>
             <input
               type="range"
