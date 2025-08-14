@@ -439,235 +439,148 @@ export class ClaimService {
     status: ClaimStatus,
     req: AuthenticatedRequest,
   ): Promise<CommonResponseDto> {
-    // Authenticate the user
+    // 1️⃣ Authenticate the user
     const { data: userData, error: userError } =
       await req.supabase.auth.getUser();
     if (userError || !userData?.user) {
       throw new UnauthorizedException('Invalid or expired token');
     }
 
-    // Update only the status field
-    const { data, error } = await req.supabase
+    // 2️⃣ Update claim status
+    const { data: updatedClaim, error: updateError } = await req.supabase
       .from('claims')
-      .update({
-        status: status,
-      })
+      .update({ status })
       .eq('id', id)
-      .select()
+      .select(
+        `
+        *,
+        coverage:coverage_id(
+          id,
+          user_id,
+          policy:policy_id(
+            id,
+            name,
+            coverage,
+            admin_details:admin_details!policies_created_by_fkey1(
+              user_id
+            )
+          )
+        )
+      `,
+      )
       .single();
 
-    // Handle errors
-    if (error || !data) {
+    if (updateError || !updatedClaim) {
       throw new Error(
-        'Failed to update claim status: ' + (error?.message || 'Unknown error'),
+        'Failed to update claim status: ' +
+          (updateError?.message || 'Unknown error'),
       );
     }
 
+    const { coverage } = updatedClaim;
+    const policy = coverage?.policy;
+    const policyName = policy?.name || 'Unknown Policy';
+
+    // 3️⃣ If approved, update utilization rate
     if (status === ClaimStatus.APPROVED) {
-      // Fetch the claim to get policy_id and user_id
-      const { data: claim, error: claimError } = await req.supabase
-        .from('claims')
-        .select('*')
-        .eq('id', id)
-        .single();
-      if (!claim || claimError) {
-        throw new Error('Failed to fetch claim for utilization update');
+      if (!coverage?.id || !coverage?.user_id) {
+        throw new Error('Claim is missing valid coverage details');
       }
-      if (claim.coverage_id == null || claim.submitted_by == null) {
-        throw new Error('Claim is missing policy_id or user_id');
-      }
-      // Fetch the coverage for this user and policy
-      const { data: coverage, error: coverageError } = await req.supabase
-        .from('coverage')
-        .select('*')
-        .eq('id', claim.coverage_id)
-        .eq('submitted_by', claim.submitted_by)
-        .single();
-      if (!coverage || coverageError) {
-        throw new Error('Failed to fetch coverage for utilization update');
-      }
-      // Fetch the policy to get the coverage amount
-      const { data: policy, error: policyError } = await req.supabase
-        .from('policies')
-        .select('coverage')
-        .eq('id', coverage.policy_id)
-        .single();
-      if (!policy || policyError || typeof policy.coverage !== 'number') {
-        throw new Error('Failed to fetch policy for utilization update');
-      }
-      // Sum all approved claim amounts for this coverage
+
+      // Sum all approved claims for this coverage
       const { data: approvedClaims, error: approvedClaimsError } =
         await req.supabase
           .from('claims')
           .select('amount')
           .eq('coverage_id', coverage.id)
-          .eq('user_id', claim.submitted_by)
-          .eq('status', 'approved');
-      if (!approvedClaims || approvedClaimsError) {
+          .eq('submitted_by', updatedClaim.submitted_by)
+          .eq('status', ClaimStatus.APPROVED);
+
+      if (approvedClaimsError || !approvedClaims) {
         throw new Error(
           'Failed to fetch approved claims for utilization update',
         );
       }
+
       const totalApprovedAmount = approvedClaims.reduce(
         (sum, c) => sum + (c.amount || 0),
         0,
       );
       const newUtilizationRate =
-        policy.coverage > 0 ? (totalApprovedAmount / policy.coverage) * 100 : 0;
+        policy?.coverage > 0
+          ? (totalApprovedAmount / policy.coverage) * 100
+          : 0;
 
-      // Update the coverage utilization_rate
-      const { error: updateCoverageError } = await req.supabase
+      // Update coverage utilization_rate
+      const { error: utilizationError } = await req.supabase
         .from('coverage')
         .update({ utilization_rate: newUtilizationRate })
         .eq('id', coverage.id);
-      if (updateCoverageError) {
+
+      if (utilizationError) {
         throw new Error('Failed to update coverage utilization rate');
       }
     }
 
-    // Return the response
+    // 4️⃣ Send notifications
+    const notificationType =
+      status === ClaimStatus.APPROVED
+        ? 'success'
+        : status === ClaimStatus.REJECTED
+          ? 'error'
+          : 'info';
+
+    const statusMessage =
+      status === ClaimStatus.APPROVED
+        ? 'approved'
+        : status === ClaimStatus.REJECTED
+          ? 'rejected'
+          : status.toLowerCase();
+
+    const userNotificationMessage =
+      status === ClaimStatus.APPROVED
+        ? `Your claim #${id} for policy "${policyName}" has been approved. Payment will be processed shortly.`
+        : status === ClaimStatus.REJECTED
+          ? `Your claim #${id} for policy "${policyName}" has been rejected. Please contact support for more details.`
+          : `Your claim #${id} for policy "${policyName}" has been ${statusMessage}.`;
+
+    // Send to user
+    await this.notificationsService.createSystemNotification(
+      updatedClaim.submitted_by,
+      `Claim ${statusMessage.charAt(0).toUpperCase() + statusMessage.slice(1)}`,
+      userNotificationMessage,
+      notificationType,
+    );
+
+    // Send to admin if different from user
+    const adminUserId = policy?.admin_details?.user_id;
+    if (adminUserId && adminUserId !== updatedClaim.submitted_by) {
+      const adminNotificationMessage =
+        status === ClaimStatus.APPROVED
+          ? `You have approved claim #${id} for policy "${policyName}". The user has been notified.`
+          : status === ClaimStatus.REJECTED
+            ? `You have rejected claim #${id} for policy "${policyName}". The user has been notified.`
+            : `You have updated claim #${id} for policy "${policyName}" to ${statusMessage}. The user has been notified.`;
+
+      await this.notificationsService.createSystemNotification(
+        adminUserId,
+        `Claim ${statusMessage.charAt(0).toUpperCase() + statusMessage.slice(1)}`,
+        adminNotificationMessage,
+        notificationType,
+      );
+    }
+
+    // 5️⃣ Log activity
     await this.activityLogger.log(
       'CLAIM_STATUS_UPDATED',
       userData.user.id,
       req.ip,
     );
 
-    // Create notification for claim status update
-    try {
-      // Fetch policy information for better notification message
-      const { data: claimWithPolicy } = await req.supabase
-        .from('claims')
-        .select(
-          `
-          *,
-          coverage:coverage_id(
-            policy:policy_id(
-              name
-            )
-          )
-        `,
-        )
-        .eq('id', id)
-        .single();
-
-      const policyName =
-        claimWithPolicy?.coverage?.policy?.name || 'Unknown Policy';
-
-      const notificationType =
-        status === ClaimStatus.APPROVED
-          ? 'success'
-          : status === ClaimStatus.REJECTED
-            ? 'error'
-            : 'info';
-
-      const statusMessage =
-        status === ClaimStatus.APPROVED
-          ? 'approved'
-          : status === ClaimStatus.REJECTED
-            ? 'rejected'
-            : status.toLowerCase();
-
-      const notificationMessage =
-        status === ClaimStatus.APPROVED
-          ? `Your claim #${id} for policy "${policyName}" has been approved. Payment will be processed shortly.`
-          : status === ClaimStatus.REJECTED
-            ? `Your claim #${id} for policy "${policyName}" has been rejected. Please contact support for more details.`
-            : `Your claim #${id} for policy "${policyName}" has been ${statusMessage}.`;
-
-      // Create notification for user about claim status update DEBUG
-      console.log(`Creating user notification for claim #${id}:`, {
-        userId: data.submitted_by,
-        title: `Claim ${statusMessage.charAt(0).toUpperCase() + statusMessage.slice(1)}`,
-        message: notificationMessage,
-        type: notificationType,
-      });
-
-      await this.notificationsService.createSystemNotification(
-        data.submitted_by,
-        `Claim ${statusMessage.charAt(0).toUpperCase() + statusMessage.slice(1)}`,
-        notificationMessage,
-        notificationType,
-      );
-
-      console.log(
-        `User notification created successfully for claim #${id} DEBUG`,
-      );
-
-      // Create notification for admin about the action taken
-      try {
-        const { data: claimWithAdmin } = await req.supabase
-          .from('claims')
-          .select(
-            `
-            *,
-            coverage:coverage_id(
-              policy:policy_id(
-                admin_details:admin_details!policies_created_by_fkey1(
-                  user_id
-                )
-              )
-            )
-          `,
-          )
-          .eq('id', id)
-          .single();
-
-        const adminUserId =
-          claimWithAdmin?.coverage?.policy?.admin_details?.user_id;
-
-        if (adminUserId && adminUserId !== data.submitted_by) {
-          const adminNotificationMessage =
-            status === ClaimStatus.APPROVED
-              ? `You have approved claim #${id} for policy "${policyName}". The user has been notified.`
-              : status === ClaimStatus.REJECTED
-                ? `You have rejected claim #${id} for policy "${policyName}". The user has been notified.`
-                : `You have updated claim #${id} for policy "${policyName}" to ${statusMessage}. The user has been notified.`;
-
-          console.log(`Creating admin notification for claim #${id} DEBUG:`, {
-            adminUserId,
-            title: `Claim ${statusMessage.charAt(0).toUpperCase() + statusMessage.slice(1)}`,
-            message: adminNotificationMessage,
-            type: notificationType,
-          });
-
-          await this.notificationsService.createSystemNotification(
-            adminUserId,
-            `Claim ${statusMessage.charAt(0).toUpperCase() + statusMessage.slice(1)}`,
-            adminNotificationMessage,
-            notificationType,
-          );
-
-          console.log(
-            `Admin notification created successfully for claim #${id} DEBUG`,
-          );
-        } else {
-          console.log(`Skipping admin notification for claim #${id}: DEBUG`, {
-            adminUserId,
-            submittedBy: data.submitted_by,
-            reason: adminUserId
-              ? 'Admin and user are the same'
-              : 'No admin found',
-          });
-        }
-      } catch (adminNotificationError) {
-        console.error(
-          'Failed to create admin status notification:',
-          adminNotificationError,
-        );
-        // Don't throw error here as claim status was updated successfully
-      }
-    } catch (notificationError) {
-      console.error(
-        'Failed to create claim status notification:',
-        notificationError,
-      );
-      // Don't throw error here as claim status was updated successfully
-    }
-
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Claim status updated successfully',
-      data,
+      data: updatedClaim,
     });
   }
 
