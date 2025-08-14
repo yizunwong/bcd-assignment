@@ -247,7 +247,6 @@ export class PolicyService {
         revenue: revenueMap.get(policy.id) || 0,
       };
     });
-    await this.activityLogger.log('POLICY_READ', userData.user.id, req.ip);
 
     return new CommonResponseDto<PolicyResponseDto[]>({
       statusCode: 200,
@@ -322,7 +321,6 @@ export class PolicyService {
       policy as any;
 
     console.log(enrichedDocuments);
-    await this.activityLogger.log('POLICY_READ', userData.user.id, req.ip);
 
     return new CommonResponseDto<PolicyResponseDto>({
       statusCode: 200,
@@ -419,7 +417,6 @@ export class PolicyService {
       claim_types:
         row.policy?.policy_claim_type?.map((p: any) => p.claim_type.name) || [],
     }));
-    await this.activityLogger.log('POLICY_READ', userData.user.id, req.ip);
 
     return new CommonResponseDto<PolicyClaimTypesDto[]>({
       statusCode: 200,

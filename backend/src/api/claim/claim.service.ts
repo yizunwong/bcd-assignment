@@ -139,7 +139,6 @@ export class ClaimService {
     if (userError || !userData?.user) {
       throw new UnauthorizedException('Invalid or expired token');
     }
-    const user_id = userData.user.id;
 
     if (
       query.sortBy &&
@@ -243,8 +242,6 @@ export class ClaimService {
       };
     });
 
-    await this.activityLogger.log('CLAIM_READ', user_id, req.ip);
-
     return new CommonResponseDto<ClaimResponseDto[]>({
       statusCode: 200,
       message: 'Claims retrieved successfully',
@@ -262,7 +259,6 @@ export class ClaimService {
     if (userError || !userData?.user) {
       throw new UnauthorizedException('Invalid or expired token');
     }
-    const user_id = userData.user.id;
 
     const { data, error } = await req.supabase
       .from('claims')
@@ -326,8 +322,6 @@ export class ClaimService {
         premium: data.coverage?.policy?.premium || 0,
       },
     };
-
-    await this.activityLogger.log('CLAIM_READ', user_id, req.ip);
 
     return new CommonResponseDto({
       statusCode: 200,
