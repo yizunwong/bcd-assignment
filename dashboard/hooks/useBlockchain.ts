@@ -208,7 +208,9 @@ export function useInsuranceContract() {
     error: approveClaimError,
   } = useWriteContract();
 
-  const approveClaimOnChain = async (claimId: number) => {
+  const approveClaimOnChain = async (
+    claimId: number,
+  ): Promise<`0x${string}` | undefined> => {
     if (!address) {
       printMessage("Please connect your wallet first", "error");
       return;
@@ -222,10 +224,14 @@ export function useInsuranceContract() {
         args: [BigInt(claimId)],
       });
 
+      // Wait for the transaction to be mined to ensure it succeeded
+      await publicClient!.waitForTransactionReceipt({ hash });
+
       return hash;
     } catch (error) {
       console.error("Error approving claim:", error);
       printMessage("Failed to approve claim", "error");
+      throw error;
     }
   };
 
