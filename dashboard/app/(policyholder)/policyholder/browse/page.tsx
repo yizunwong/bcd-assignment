@@ -17,7 +17,7 @@ import { Shield, Search, Filter, Star } from "lucide-react";
 import { policyCategories } from "@/public/data/policyholder/browseData";
 import PolicyDetailsDialog, {
   Policy,
-} from "@/app/(admin)/admin/policies/components/PolicyDetailsDialog";
+} from "@/components/shared/PolicyDetailsDialog";
 import Link from "next/link";
 import { logEvent } from "@/lib/analytics";
 import { usePoliciesQuery, useCategoryCountsQuery } from "@/hooks/usePolicies";

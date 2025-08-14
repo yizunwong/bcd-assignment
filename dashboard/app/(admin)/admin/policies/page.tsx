@@ -41,7 +41,7 @@ import {
 } from "lucide-react";
 import PolicyDetailsDialog, {
   Policy,
-} from "@/app/(admin)/admin/policies/components/PolicyDetailsDialog";
+} from "@/components/shared/PolicyDetailsDialog";
 import EditPolicyDialog from "@/app/(admin)/admin/policies/components/EditPolicyDialog";
 import {
   usePoliciesQuery,

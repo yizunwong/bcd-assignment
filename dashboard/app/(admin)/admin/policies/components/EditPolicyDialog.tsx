@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Save, X } from "lucide-react";
 import { PolicyControllerFindAllCategory } from "@/api";
-import type { Policy } from "./PolicyDetailsDialog";
+import { Policy } from '@/components/shared/PolicyDetailsDialog';
 
 export interface EditPolicyDialogProps {
   policy: Policy;
@@ -74,9 +74,7 @@ export default function EditPolicyDialog({
       >
         <DialogHeader>
           <DialogTitle>Edit Policy</DialogTitle>
-          <DialogDescription>
-            Edit the details of the policy.
-          </DialogDescription>
+          <DialogDescription>Edit the details of the policy.</DialogDescription>
         </DialogHeader>
         <div className="space-y-6">
           <div className="grid md:grid-cols-2 gap-6">
