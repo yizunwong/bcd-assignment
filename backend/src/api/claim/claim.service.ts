@@ -234,6 +234,10 @@ export class ClaimService {
       dbQuery = dbQuery.eq('status', query.status);
     }
 
+    if (query.userId) {
+      dbQuery = dbQuery.eq('submitted_by', query.userId);
+    }
+
     if (query.search) {
       dbQuery = dbQuery.or(
         `type.ilike.%${query.search}%,description.ilike.%${query.search}%`,

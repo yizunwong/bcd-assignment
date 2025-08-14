@@ -335,6 +335,7 @@ export default function PaymentSummary() {
 
     const coverageData: CreateCoverageDto = {
       id: 0,
+      policy_name: policyData!.name,
       policy_id: policyData!.id,
       status: "active",
       utilization_rate: 0,

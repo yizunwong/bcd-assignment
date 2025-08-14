@@ -29,4 +29,9 @@ export class FindClaimsQueryDto extends PaginatedQueryDto {
   @IsOptional()
   @IsIn(['asc', 'desc'])
   sortOrder: 'asc' | 'desc' = 'asc';
+
+  @ApiPropertyOptional({ description: 'Filter by user ID' })
+  @IsOptional()
+  @IsString()
+  userId?: string;
 }

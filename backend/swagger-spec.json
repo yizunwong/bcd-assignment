@@ -487,6 +487,15 @@
                 "desc"
               ]
             }
+          },
+          {
+            "name": "userId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by user ID",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {

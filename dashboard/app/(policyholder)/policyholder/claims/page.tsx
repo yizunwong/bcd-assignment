@@ -33,6 +33,7 @@ import {
   useCreateClaimMutation,
   useUploadClaimDocumentsMutation,
 } from "@/hooks/useClaims";
+import { useMeQuery } from '@/hooks/useAuth';
 
 const ITEMS_PER_PAGE = 8;
 
@@ -48,6 +49,7 @@ export default function Claims() {
   const [claimType, setClaimType] = useState("");
   const [claimAmount, setClaimAmount] = useState("");
   const [description, setDescription] = useState("");
+  const { data: meData } = useMeQuery();
 
   const priority = "low";
 
@@ -66,7 +68,7 @@ export default function Claims() {
   const { createClaim, isPending: isCreating } = useCreateClaimMutation();
   const { uploadClaimDocuments, isPending: isUploading } =
     useUploadClaimDocumentsMutation();
-  const { data: claimsData, isLoading, error } = useClaimsQuery();
+  const { data: claimsData, isLoading, error } = useClaimsQuery({ userId: meData?.data?.id });
 
   const claims = useMemo(
     () =>
