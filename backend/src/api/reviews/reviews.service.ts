@@ -58,6 +58,32 @@ export class ReviewsService {
       );
     }
 
+    // ✅ Step 4: Recalculate average rating for the policy
+    const { data: ratings, error: ratingsError } = await req.supabase
+      .from('reviews')
+      .select('rating')
+      .eq('policy_id', policyId);
+
+    if (ratingsError || !ratings) {
+      throw new InternalServerErrorException(
+        'Failed to recalculate policy rating',
+      );
+    }
+
+    const avgRating =
+      ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
+
+    const { error: updateError } = await req.supabase
+      .from('policies')
+      .update({ rating: avgRating })
+      .eq('id', policyId);
+
+    if (updateError) {
+      throw new InternalServerErrorException(
+        'Failed to update policy rating',
+      );
+    }
+
     return new CommonResponseDto({
       statusCode: 201,
       message: 'Review submitted successfully',

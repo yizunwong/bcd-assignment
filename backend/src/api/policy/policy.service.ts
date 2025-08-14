@@ -156,6 +156,7 @@ export class PolicyService {
       .select(
         `*,
      policy_documents(*),
+     reviews(*),
      policy_claim_type:policy_claim_type(
        claim_type:claim_types(name)
      ),
@@ -230,7 +231,8 @@ export class PolicyService {
 
     let urlIndex = 0;
     const enrichedPolicies: PolicyResponseDto[] = data.map((policy) => {
-      const { policy_claim_type, admin_details, ...rest } = policy as any;
+      const { policy_claim_type, admin_details, reviews, ...rest } =
+        policy as any;
 
       return {
         ...rest,
@@ -246,6 +248,7 @@ export class PolicyService {
               signedUrl: signedUrls[urlIndex++] || '',
             }))
           : [],
+        reviews: reviews || [],
         claim_types:
           policy_claim_type?.map((link) => link.claim_type.name) || [],
         sales: coverageMap.get(policy.id) || 0,
