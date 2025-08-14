@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import ClaimReviewDialog from "@/app/(admin)/admin/claims/components/ClaimReviewDialog";
 import { Pagination } from "@/components/shared/Pagination";
+import { useToast } from "@/components/shared/ToastProvider";
 import {
   FileText,
   Search,
@@ -46,6 +47,7 @@ export default function ClaimsReview() {
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const { updateClaimStatus } = useUpdateClaimStatusMutation();
   const { approveClaimOnChain } = useInsuranceContract();
+  const { printMessage } = useToast();
 
   const hasFilters = filterStatus !== "all" || !!debouncedSearchTerm;
 
@@ -129,8 +131,21 @@ export default function ClaimsReview() {
   };
 
   const handleApprove = async (claimId: number) => {
-    updateClaimStatus(String(claimId), "approved");
-    await approveClaimOnChain(Number(claimId));
+    try {
+      const claimHash = await approveClaimOnChain(Number(claimId));
+      if (!claimHash) {
+        printMessage("Failed to approve claim", "error");
+        return;
+      }
+
+      await updateClaimStatus(String(claimId), "approved", {
+        txHash: claimHash,
+      });
+      printMessage("Claim approved successfully", "success");
+    } catch (error) {
+      console.error("Error approving claim:", error);
+      printMessage("Failed to approve claim", "error");
+    }
   };
 
   const handleReject = async (claimId: number) => {
