@@ -134,7 +134,7 @@ export function Navbar({ initialRole, initialUserId }: NavbarProps) {
           <div className="hidden lg:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             <NavTabs
               tabs={navigationLinks}
-              className="bg-transparent p-0 rounded-none gap-2 xl:gap-4 2xl:gap-6"
+              className="p-0 rounded-none gap-2 xl:gap-4 2xl:gap-6"
             />
           </div>
 
