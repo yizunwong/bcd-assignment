@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import NavTabs from '@/components/animata/container/nav-tabs';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -115,7 +116,7 @@ export function Navbar({ initialRole, initialUserId }: NavbarProps) {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/20 dark:border-slate-700/50 overflow-visible">
       <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
-        <div className="flex justify-between items-center h-16">
+        <div className="relative flex items-center h-16 justify-between">
           {/* Logo */}
           <Link
             href="/"
@@ -129,24 +130,12 @@ export function Navbar({ initialRole, initialUserId }: NavbarProps) {
             </span>
           </Link>
 
-          {/* Desktop Navigation - Responsive spacing */}
-          <div className="hidden lg:flex items-center space-x-2 xl:space-x-4 2xl:space-x-6 flex-1 justify-center max-w-4xl mx-8">
-            {navigationLinks.map((link, index) => (
-              <Link
-                key={index}
-                href={link.href}
-                className={cn(
-                  'nav-item whitespace-nowrap px-2 xl:px-3 2xl:px-4',
-                  pathname === link.href && 'nav-item-active'
-                )}
-              >
-                {link.icon && <link.icon className="w-4 h-4 flex-shrink-0" />}
-                <span className="hidden xl:block">{link.label}</span>
-                <span className="xl:hidden text-xs">
-                  {link.label.split(' ')[0]}
-                </span>
-              </Link>
-            ))}
+          {/* Desktop Navigation - Centered */}
+          <div className="hidden lg:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <NavTabs
+              tabs={navigationLinks}
+              className="p-0 rounded-none gap-2 xl:gap-4 2xl:gap-6"
+            />
           </div>
 
           {/* Right Side Actions */}
