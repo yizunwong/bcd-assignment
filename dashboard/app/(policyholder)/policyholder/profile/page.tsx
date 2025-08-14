@@ -30,8 +30,15 @@ import {
   useUploadAvatarMutation,
 } from "@/hooks/useUsers";
 import { useToast } from "@/components/shared/ToastProvider";
-import { ProfileResponseDto, UploadDocDto } from "@/api";
+import { ProfileResponseDto } from "@/api";
 import ConfirmationDialog from "@/components/shared/ConfirmationDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
@@ -50,6 +57,14 @@ export default function Profile() {
   const { uploadAvatar } = useUploadAvatarMutation();
   const { printMessage } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [cropOpen, setCropOpen] = useState(false);
+  const [imageSrc, setImageSrc] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const imgRef = useRef<HTMLImageElement>(null);
+  const dragStart = useRef<{ x: number; y: number } | null>(null);
+  const startPos = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     if (userResponse?.data) {
@@ -98,25 +113,95 @@ export default function Profile() {
     // Reset form data if needed
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !userResponse?.data?.id) return;
-    try {
-      const res = await uploadAvatar(
-        userResponse.data.id,
-        {
-          files: [file]
-        }
-      );
-      setProfileData((prev) => ({
-        ...prev,
-        avatarUrl: res.data?.url as string,
-      }));
-      printMessage("Profile picture updated", "success");
-    } catch (err) {
-      console.error(err);
-      printMessage("Upload failed", "error");
+  const onStartDrag = (
+    e: React.MouseEvent<HTMLImageElement> | React.TouchEvent<HTMLImageElement>
+  ) => {
+    e.preventDefault();
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    dragStart.current = { x: clientX, y: clientY };
+    startPos.current = { ...position };
+  };
+
+  const onDrag = (
+    e: React.MouseEvent<HTMLImageElement> | React.TouchEvent<HTMLImageElement>
+  ) => {
+    if (!dragStart.current) return;
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    const dx = clientX - dragStart.current.x;
+    const dy = clientY - dragStart.current.y;
+    setPosition({ x: startPos.current.x + dx, y: startPos.current.y + dy });
+  };
+
+  const onEndDrag = () => {
+    dragStart.current = null;
+  };
+
+  const handleCropCancel = () => {
+    setCropOpen(false);
+    setSelectedFile(null);
+    setImageSrc("");
+    setZoom(1);
+    setPosition({ x: 0, y: 0 });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
+  };
+
+  const handleCropConfirm = () => {
+    if (!userResponse?.data?.id || !imgRef.current) return;
+    const canvas = document.createElement("canvas");
+    const size = 256;
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const sx = -position.x / zoom;
+    const sy = -position.y / zoom;
+    const sWidth = size / zoom;
+    const sHeight = size / zoom;
+    ctx.drawImage(imgRef.current, sx, sy, sWidth, sHeight, 0, 0, size, size);
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+      try {
+        const avatarFile = new File(
+          [blob],
+          selectedFile?.name || "avatar.png",
+          { type: blob.type }
+        );
+        const res = await uploadAvatar(userResponse.data!.id, {
+          files: [avatarFile],
+        });
+        setProfileData((prev) => ({
+          ...prev,
+          avatarUrl: res.data?.url as string,
+        }));
+        printMessage("Profile picture updated", "success");
+      } catch (err) {
+        console.error(err);
+        printMessage("Upload failed", "error");
+      } finally {
+        handleCropCancel();
+      }
+    }, selectedFile?.type || "image/png");
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      printMessage("Please select an image file", "error");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImageSrc(reader.result as string);
+      setCropOpen(true);
+    };
+    reader.readAsDataURL(file);
+    setSelectedFile(file);
   };
 
   const getStatusColor = (status: string) => {
@@ -457,6 +542,56 @@ export default function Profile() {
         onCancel={() => setConfirmOpen(false)}
         onConfirm={handleSave}
       />
+      <Dialog open={cropOpen} onOpenChange={(o) => !o && handleCropCancel()}>
+        <DialogContent onOpenAutoFocus={(e) => e.preventDefault()} className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Crop Image</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative w-64 h-64 overflow-hidden bg-slate-200">
+              {imageSrc && (
+                <img
+                  ref={imgRef}
+                  src={imageSrc}
+                  alt="Preview"
+                  className="select-none"
+                  style={{
+                    width: "auto",
+                    height: "auto",
+                    transform: `translate(${position.x}px, ${position.y}px) scale(${zoom})`,
+                    cursor: dragStart.current ? "grabbing" : "grab",
+                  }}
+                  onMouseDown={onStartDrag}
+                  onMouseMove={onDrag}
+                  onMouseUp={onEndDrag}
+                  onMouseLeave={onEndDrag}
+                  onTouchStart={onStartDrag}
+                  onTouchMove={onDrag}
+                  onTouchEnd={onEndDrag}
+                  draggable={false}
+                />
+              )}
+            </div>
+            <input
+              type="range"
+              min="1"
+              max="3"
+              step="0.1"
+              value={zoom}
+              onChange={(e) => setZoom(Number(e.target.value))}
+              className="w-full"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCropCancel} className="flex-1">
+              Cancel
+            </Button>
+            <Button onClick={handleCropConfirm} className="flex-1 gradient-accent text-white">
+              Upload
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
