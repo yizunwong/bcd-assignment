@@ -59,6 +59,8 @@ import {
   PolicyControllerFindAllParams,
 } from "@/api";
 
+const ITEMS_PER_PAGE = 10;
+
 export default function ManagePolicies() {
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -70,7 +72,6 @@ export default function ManagePolicies() {
   const [showDetails, setShowDetails] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(15);
   const [uploadedTermsFiles, setUploadedTermsFiles] = useState<File[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const { printMessage } = useToast();
@@ -114,17 +115,15 @@ export default function ManagePolicies() {
   const params: PolicyControllerFindAllParams = {
     ...(filters as PolicyControllerFindAllParams),
     page: currentPage,
-    limit: itemsPerPage,
+    limit: ITEMS_PER_PAGE,
+    sortBy: "id",
+    sortOrder: "asc",
   };
   if (userId) {
     params.userId = userId;
   }
 
-  const {
-    data: policiesData,
-    isLoading,
-    error,
-  } = usePoliciesQuery(params);
+  const { data: policiesData, isLoading, error } = usePoliciesQuery(params);
 
   useEffect(() => {}, [policiesData]);
 
@@ -199,18 +198,11 @@ export default function ManagePolicies() {
       (policy) => activeTab === "all" || policy.status === activeTab
     );
 
-    return filtered.sort((a, b) => {
-      const dateA = a.created ? new Date(a.created) : new Date(0);
-      const dateB = b.created ? new Date(b.created) : new Date(0);
-      return dateB.getTime() - dateA.getTime();
-    });
+    return filtered; // server returns sorted by id asc
   }, [policies, activeTab]);
 
-  const totalPages = Math.ceil(filteredPolicies.length / itemsPerPage);
-  const paginatedPolicies = filteredPolicies.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const totalPages = Math.ceil((policiesData?.count || 0) / ITEMS_PER_PAGE);
+  const paginatedPolicies = filteredPolicies; // server already paginates
 
   // Reset to page 1 when filters change
   const handleFilterChange = (filterFn: () => void) => {
@@ -279,7 +271,9 @@ export default function ManagePolicies() {
 
   const handleUpdatePolicy = async (policy: Policy) => {
     const parseNumber = (value: string | number | undefined) =>
-      typeof value === "string" ? Number(value.replace(/[^\d.]/g, "")) : value || 0;
+      typeof value === "string"
+        ? Number(value.replace(/[^\d.]/g, ""))
+        : value || 0;
     try {
       await updatePolicy(String(policy.id), {
         name: policy.name,
@@ -334,9 +328,20 @@ export default function ManagePolicies() {
   };
 
   const addFiles = (files: FileList) => {
-    const accepted = Array.from(files).filter(
-      (file) => file.type === "application/pdf" || file.name.endsWith(".pdf")
-    );
+    const accepted = Array.from(files).filter((file) => {
+      const isPdf =
+        file.type === "application/pdf" || file.name.endsWith(".pdf");
+      const isSizeOk = file.size <= 10 * 1024 * 1024; // 10MB
+      if (!isPdf) {
+        alert("Only PDF files are allowed.");
+        return false;
+      }
+      if (!isSizeOk) {
+        alert("Each file must be 10MB or less.");
+        return false;
+      }
+      return true;
+    });
     if (accepted.length + uploadedTermsFiles.length > 3) {
       alert("You can only upload up to 3 documents.");
       accepted.splice(3 - uploadedTermsFiles.length);
@@ -820,22 +825,7 @@ export default function ManagePolicies() {
                       <SelectItem value="crop">Crop Insurance</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Select
-                    value={itemsPerPage.toString()}
-                    onValueChange={(value) => {
-                      setItemsPerPage(parseInt(value));
-                      setCurrentPage(1);
-                    }}
-                  >
-                    <SelectTrigger className="w-full md:w-32 form-input">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="15">15 per page</SelectItem>
-                      <SelectItem value="30">30 per page</SelectItem>
-                      <SelectItem value="50">50 per page</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Select></Select>
                 </div>
               </div>
             </Tabs>
@@ -863,7 +853,9 @@ export default function ManagePolicies() {
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-3">
                         <div
-                          className={`w-12 h-12 rounded-xl bg-gradient-to-r ${getCategoryColor(policy.category)} flex items-center justify-center`}
+                          className={`w-12 h-12 rounded-xl bg-gradient-to-r ${getCategoryColor(
+                            policy.category
+                          )} flex items-center justify-center`}
                         >
                           <CategoryIcon className="w-6 h-6 text-white" />
                         </div>
@@ -986,8 +978,8 @@ export default function ManagePolicies() {
           totalPages={totalPages}
           onPageChange={setCurrentPage}
           showInfo={true}
-          totalItems={filteredPolicies.length}
-          itemsPerPage={itemsPerPage}
+          totalItems={policiesData?.count || 0}
+          itemsPerPage={ITEMS_PER_PAGE}
           className="mb-8"
         />
 
