@@ -5,6 +5,9 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ethers } from 'ethers';
+import { InsuranceContract } from '../../../../blockchain/typechain-types/contracts/InsuranceContract';
+import { InsuranceContract__factory } from '../../../../blockchain/typechain-types/factories/contracts/InsuranceContract__factory';
 import { UpdateClaimDto } from './dto/requests/update-claim.dto';
 import { CreateClaimDto } from './dto/requests/create-claim.dto';
 import { UploadClaimDocDto } from './dto/requests/upload-claim-doc.dto';
@@ -34,39 +37,45 @@ export class ClaimService {
 
     const user_id = userData.user.id;
 
-    const { data, error } = await req.supabase
-      .from('claims')
-      .insert([
-        {
-          coverage_id: createClaimDto.coverage_id,
-          submitted_by: user_id,
-          type: createClaimDto.type,
-          priority: createClaimDto.priority,
-          amount: createClaimDto.amount,
-          status: 'pending',
-          submitted_date: new Date().toISOString(),
-          processed_date: null,
-          claimed_date: null,
-          description: createClaimDto.description ?? null,
-        },
-      ])
-      .select()
-      .single();
+    const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
+    const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
+    const contract: InsuranceContract = InsuranceContract__factory.connect(
+      process.env.INSURANCE_CONTRACT_ADDRESS!,
+      wallet,
+    );
 
-    if (error || !data) {
+    try {
+      const tx = await contract.fileClaim(
+        BigInt(createClaimDto.coverage_id),
+        BigInt(createClaimDto.amount),
+        createClaimDto.description ?? '',
+      );
+      const receipt = await tx.wait();
+      let claimId: number | null = null;
+      for (const log of receipt.logs || []) {
+        try {
+          const parsed = contract.interface.parseLog(log);
+          if (parsed.name === 'ClaimFiled') {
+            claimId = Number(parsed.args.claimId);
+            break;
+          }
+        } catch {
+          // ignore logs that do not match
+        }
+      }
+
+      await this.activityLogger.log('CLAIM_ONCHAIN_SUBMITTED', user_id, req.ip);
+
+      return new CommonResponseDto({
+        statusCode: 201,
+        message: 'Claim filed on-chain successfully',
+        data: claimId ? { id: claimId } : undefined,
+      });
+    } catch (err: any) {
       throw new InternalServerErrorException(
-        'Failed to create claim: ' + (error?.message || 'Unknown error'),
+        'Failed to file claim on-chain: ' + (err?.message || 'Unknown error'),
       );
     }
-
-    const claimId = data.id;
-    await this.activityLogger.log('CLAIM_CREATED', user_id, req.ip);
-
-    return new CommonResponseDto({
-      statusCode: 201,
-      message: 'Claim created successfully',
-      data: { id: claimId },
-    });
   }
 
   async addClaimDocuments(
