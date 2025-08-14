@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { useState, useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Pagination } from '@/components/shared/Pagination';
+} from "@/components/ui/select";
+import { Pagination } from "@/components/shared/Pagination";
 import {
   Shield,
   Calendar,
@@ -23,17 +23,21 @@ import {
   Clock,
   Download,
   Filter,
-} from 'lucide-react';
-import { useCoverageListQuery, useCoverageStatsQuery } from '@/hooks/useCoverage';
-import { useToast } from '@/components/shared/ToastProvider';
-import type { CoverageControllerFindAllParams } from '@/api';
-import CoverageDetailsDialog from './components/CoverageDetailsDialog';
+} from "lucide-react";
+import {
+  useCoverageListQuery,
+  useCoverageStatsQuery,
+} from "@/hooks/useCoverage";
+import { useToast } from "@/components/shared/ToastProvider";
+import type { CoverageControllerFindAllParams } from "@/api";
+import CoverageDetailsDialog from "./components/CoverageDetailsDialog";
 
 const ITEMS_PER_PAGE = 5;
 
 // Transform API data to match the expected format
-interface TransformedPolicy {
+interface TransformedCoverage {
   id: string;
+  policyId: string;
   name: string;
   type: string;
   provider: string;
@@ -55,7 +59,7 @@ interface TransformedPolicy {
   }>;
 }
 
-const transformCoverageData = (coverageData: any[]): TransformedPolicy[] => {
+const transformCoverageData = (coverageData: any[]): TransformedCoverage[] => {
   return coverageData.map((coverage) => {
     const policy = coverage.policies;
     const coverageAmount = policy?.coverage || 0;
@@ -64,12 +68,13 @@ const transformCoverageData = (coverageData: any[]): TransformedPolicy[] => {
 
     return {
       id: coverage.id.toString(),
-      name: policy?.name || 'Unknown Policy',
-      type: policy?.category || 'General',
-      provider: policy?.provider || 'Unknown Provider',
+      policyId: coverage.policy_id.toString() || "Unknown",
+      name: policy?.name || "Unknown Policy",
+      type: policy?.category || "General",
+      provider: policy?.provider || "Unknown Provider",
       coverage: `$${coverageAmount.toLocaleString()}`,
-      premium: policy?.premium || '0 ETH/month',
-      status: coverage.status || 'active',
+      premium: policy?.premium || "0 ETH/month",
+      status: coverage.status || "active",
       startDate: coverage.start_date,
       endDate: coverage.end_date,
       nextPayment: coverage.next_payment_date,
@@ -81,20 +86,20 @@ const transformCoverageData = (coverageData: any[]): TransformedPolicy[] => {
     };
   });
 };
-
 export default function MyCoverage() {
   const { printMessage } = useToast();
-  const [selectedPolicy, setSelectedPolicy] = useState<TransformedPolicy | null>(null);
+  const [selectedCoverage, setSelectedCoverage] =
+    useState<TransformedCoverage | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [sortBy, setSortBy] = useState('newest');
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
 
-  const hasFilters = filterStatus !== 'all';
+  const hasFilters = filterStatus !== "all";
 
   const filters = hasFilters
     ? {
-        ...(filterStatus !== 'all' && { status: filterStatus }),
+        ...(filterStatus !== "all" && { status: filterStatus }),
       }
     : {};
 
@@ -118,49 +123,49 @@ export default function MyCoverage() {
   const summaryData = summaryResponse?.data;
 
   // Transform the data
-  const allPolicies: TransformedPolicy[] = useMemo(() => {
+  const allCoverages: TransformedCoverage[] = useMemo(() => {
     if (!coverageResponse?.data) return [];
     const transformed = transformCoverageData(coverageResponse.data);
 
     return transformed;
   }, [coverageResponse]);
 
-  const filteredPolicies = useMemo(() => {
-    let filtered = allPolicies;
+  const filteredCoverages = useMemo(() => {
+    let filtered = allCoverages;
 
     // Filter by status
-    if (filterStatus !== 'all') {
-      filtered = filtered.filter((policy) => {
+    if (filterStatus !== "all") {
+      filtered = filtered.filter((coverage) => {
         const matches =
-          policy.status.toLowerCase() === filterStatus.toLowerCase();
+          coverage.status.toLowerCase() === filterStatus.toLowerCase();
         return matches;
       });
     }
 
-    // Sort policies
+    // Sort Coverages
     filtered.sort((a, b) => {
       switch (sortBy) {
-        case 'newest':
+        case "newest":
           return (
             new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
           );
-        case 'oldest':
+        case "oldest":
           return (
             new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
           );
-        case 'coverage-high':
+        case "coverage-high":
           return (
-            parseFloat(b.coverage.replace(/[$,]/g, '')) -
-            parseFloat(a.coverage.replace(/[$,]/g, ''))
+            parseFloat(b.coverage.replace(/[$,]/g, "")) -
+            parseFloat(a.coverage.replace(/[$,]/g, ""))
           );
-        case 'coverage-low':
+        case "coverage-low":
           return (
-            parseFloat(a.coverage.replace(/[$,]/g, '')) -
-            parseFloat(b.coverage.replace(/[$,]/g, ''))
+            parseFloat(a.coverage.replace(/[$,]/g, "")) -
+            parseFloat(b.coverage.replace(/[$,]/g, ""))
           );
-        case 'utilization':
+        case "utilization":
           return b.utilizationRate - a.utilizationRate;
-        case 'name':
+        case "name":
           return a.name.localeCompare(b.name);
         default:
           return 0;
@@ -168,73 +173,73 @@ export default function MyCoverage() {
     });
 
     return filtered;
-  }, [filterStatus, sortBy, allPolicies]);
+  }, [filterStatus, sortBy, allCoverages]);
 
-  const totalPages = Math.ceil(filteredPolicies.length / ITEMS_PER_PAGE);
-  const paginatedPolicies = filteredPolicies.slice(
+  const totalPages = Math.ceil(filteredCoverages.length / ITEMS_PER_PAGE);
+  const paginatedCoverages = filteredCoverages.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'status-active';
-      case 'limitExceeded':
-        return 'status-info';
-      case 'expired':
-        return 'bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300';
-      case 'suspended':
-        return 'status-error';
+      case "active":
+        return "status-active";
+      case "limitExceeded":
+        return "status-info";
+      case "expired":
+        return "bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300";
+      case "suspended":
+        return "status-error";
       default:
-        return 'bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300';
+        return "bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300";
     }
   };
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'Health':
-        return 'from-red-500 to-pink-500';
-      case 'Travel':
-        return 'from-blue-500 to-cyan-500';
-      case 'Crop':
-        return 'from-green-500 to-emerald-500';
+      case "Health":
+        return "from-red-500 to-pink-500";
+      case "Travel":
+        return "from-blue-500 to-cyan-500";
+      case "Crop":
+        return "from-green-500 to-emerald-500";
       default:
-        return 'from-slate-500 to-slate-600';
+        return "from-slate-500 to-slate-600";
     }
   };
 
-  const handleDownloadAgreement = async (policy: TransformedPolicy) => {
-    if (!policy.agreementCid) {
-      printMessage('No agreement available to download', 'error');
+  const handleDownloadAgreement = async (coverage: TransformedCoverage) => {
+    if (!coverage.agreementCid) {
+      printMessage("No agreement available to download", "error");
       return;
     }
     try {
-      const res = await fetch(`https://ipfs.io/ipfs/${policy.agreementCid}`);
+      const res = await fetch(`https://ipfs.io/ipfs/${coverage.agreementCid}`);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = `${policy.name}-agreement.pdf`;
+      link.download = `${coverage.name}-agreement.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch {
-      printMessage('Failed to download agreement', 'error');
+      printMessage("Failed to download agreement", "error");
     }
   };
 
   const getStatusDisplayText = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'Active';
-      case 'limitExceeded':
-        return 'Limit Exceeded';
-      case 'expired':
-        return 'Expired';
-      case 'suspended':
-        return 'Suspended';
+      case "active":
+        return "Active";
+      case "limitExceeded":
+        return "Limit Exceeded";
+      case "expired":
+        return "Expired";
+      case "suspended":
+        return "Suspended";
       default:
         return status;
     }
@@ -246,8 +251,8 @@ export default function MyCoverage() {
     setCurrentPage(1);
   };
 
-  const openDetails = (policy: TransformedPolicy) => {
-    setSelectedPolicy(policy);
+  const openDetails = (coverage: TransformedCoverage) => {
+    setSelectedCoverage(coverage);
     setShowDetails(true);
   };
 
@@ -283,7 +288,7 @@ export default function MyCoverage() {
             <div>
               <h1 className="page-header-title">My Coverage</h1>
               <p className="page-header-subtitle">
-                Manage your active policies and track coverage details
+                Manage your active Coverages and track coverage details
               </p>
             </div>
           </div>
@@ -302,9 +307,9 @@ export default function MyCoverage() {
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
                 {summaryData?.activeCoverage ?? 0}
               </h3>
-                <p className="text-slate-600 dark:text-slate-400">
-                  Active Coverage
-                </p>
+              <p className="text-slate-600 dark:text-slate-400">
+                Active Coverage
+              </p>
             </CardContent>
           </Card>
 
@@ -317,12 +322,9 @@ export default function MyCoverage() {
                 <Badge className="status-badge status-info">Claimed</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                $
-                {(summaryData?.totalCoverageValue ?? 0).toLocaleString()}
+                ${(summaryData?.totalCoverageValue ?? 0).toLocaleString()}
               </h3>
-              <p className="text-slate-600 dark:text-slate-400">
-                Claimed
-              </p>
+              <p className="text-slate-600 dark:text-slate-400">Claimed</p>
             </CardContent>
           </Card>
 
@@ -352,7 +354,9 @@ export default function MyCoverage() {
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
                 {Math.round(summaryData?.approvalRate ?? 0)}%
               </h3>
-              <p className="text-slate-600 dark:text-slate-400">Approval Rate</p>
+              <p className="text-slate-600 dark:text-slate-400">
+                Approval Rate
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -363,11 +367,11 @@ export default function MyCoverage() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-                  Your Policies
+                  Your Coverages
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400">
-                  Showing {paginatedPolicies.length} of{' '}
-                  {filteredPolicies.length} policies
+                  Showing {paginatedCoverages.length} of{" "}
+                  {filteredCoverages.length} Coverages
                 </p>
               </div>
 
@@ -422,33 +426,38 @@ export default function MyCoverage() {
           </CardContent>
         </Card>
 
-        {/* Policy Cards */}
+        {/* Coverage Cards */}
         <div className="grid lg:grid-cols-2 gap-6 mb-8">
-          {paginatedPolicies.map((policy) => (
-            <Card key={policy.id} className="glass-card rounded-2xl card-hover">
+          {paginatedCoverages.map((coverage) => (
+            <Card
+              key={coverage.id}
+              className="glass-card rounded-2xl card-hover"
+            >
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
                     <div
                       className={`w-12 h-12 rounded-xl bg-gradient-to-r ${getTypeColor(
-                        policy.type
+                        coverage.type
                       )} flex items-center justify-center`}
                     >
                       <Shield className="w-6 h-6 text-white" />
                     </div>
                     <div>
                       <CardTitle className="text-lg text-slate-800 dark:text-slate-100">
-                        {policy.name}
+                        {coverage.name}
                       </CardTitle>
                       <p className="text-sm text-slate-600 dark:text-slate-400">
-                        {policy.provider} • {policy.id}
+                        {coverage.provider} • {coverage.id}
                       </p>
                     </div>
                   </div>
                   <Badge
-                    className={`status-badge ${getStatusColor(policy.status)}`}
+                    className={`status-badge ${getStatusColor(
+                      coverage.status
+                    )}`}
                   >
-                    {getStatusDisplayText(policy.status)}
+                    {getStatusDisplayText(coverage.status)}
                   </Badge>
                 </div>
               </CardHeader>
@@ -461,7 +470,7 @@ export default function MyCoverage() {
                       Coverage Amount
                     </p>
                     <p className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-                      {policy.coverage}
+                      {coverage.coverage}
                     </p>
                   </div>
                   <div>
@@ -469,7 +478,7 @@ export default function MyCoverage() {
                       Premium
                     </p>
                     <p className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">
-                      {policy.premium}
+                      {coverage.premium}
                     </p>
                   </div>
                 </div>
@@ -481,29 +490,29 @@ export default function MyCoverage() {
                       Coverage Utilized
                     </p>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                      {policy.utilizationRate}%
+                      {coverage.utilizationRate}%
                     </p>
                   </div>
                   <Progress
-                    value={policy.utilizationRate}
+                    value={coverage.utilizationRate}
                     className="h-2 mb-2"
                   />
                   <p className="text-xs text-slate-500 dark:text-slate-500">
-                    {policy.claimsUsed} of {policy.coverage} used
+                    {coverage.claimsUsed} of {coverage.coverage} used
                   </p>
                 </div>
 
-                {/* Policy Dates */}
+                {/* coverage Dates */}
                 <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50/50 dark:bg-slate-700/30 rounded-xl">
                   <div className="flex items-center space-x-2">
                     <Calendar className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                     <div>
                       <p className="text-xs text-slate-500 dark:text-slate-500">
-                        Policy Period
+                        coverage Period
                       </p>
                       <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                        {new Date(policy.startDate).toLocaleDateString()} -{' '}
-                        {new Date(policy.endDate).toLocaleDateString()}
+                        {new Date(coverage.startDate).toLocaleDateString()} -{" "}
+                        {new Date(coverage.endDate).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -514,7 +523,7 @@ export default function MyCoverage() {
                         Next Payment
                       </p>
                       <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                        {new Date(policy.nextPayment).toLocaleDateString()}
+                        {new Date(coverage.nextPayment).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -526,7 +535,7 @@ export default function MyCoverage() {
                     Covered Benefits:
                   </p>
                   <div className="flex flex-wrap gap-1">
-                    {policy.benefits
+                    {coverage.benefits
                       .slice(0, 4)
                       .map((benefit: string, index: number) => (
                         <Badge
@@ -537,25 +546,25 @@ export default function MyCoverage() {
                           {benefit}
                         </Badge>
                       ))}
-                    {policy.benefits.length > 4 && (
+                    {coverage.benefits.length > 4 && (
                       <Badge
                         variant="secondary"
                         className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
                       >
-                        +{policy.benefits.length - 4} more
+                        +{coverage.benefits.length - 4} more
                       </Badge>
                     )}
                   </div>
                 </div>
 
                 {/* Recent Claims */}
-                {policy.recentClaims.length > 0 && (
+                {coverage.recentClaims.length > 0 && (
                   <div>
                     <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                       Recent Claims:
                     </p>
                     <div className="space-y-2">
-                      {policy.recentClaims
+                      {coverage.recentClaims
                         .slice(0, 2)
                         .map((claim, index: number) => (
                           <div
@@ -587,7 +596,7 @@ export default function MyCoverage() {
                   <Button
                     variant="outline"
                     className="flex-1 floating-button"
-                    onClick={() => openDetails(policy)}
+                    onClick={() => openDetails(coverage)}
                   >
                     <FileText className="w-4 h-4 mr-2" />
                     View Details
@@ -595,7 +604,7 @@ export default function MyCoverage() {
                   <Button
                     variant="outline"
                     className="flex-1 floating-button"
-                    onClick={() => handleDownloadAgreement(policy)}
+                    onClick={() => handleDownloadAgreement(coverage)}
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Download Agreement
@@ -606,9 +615,9 @@ export default function MyCoverage() {
           ))}
         </div>
 
-        {selectedPolicy && (
+        {selectedCoverage && (
           <CoverageDetailsDialog
-            policy={selectedPolicy}
+            coverage={selectedCoverage}
             open={showDetails}
             onClose={closeDetails}
           />
@@ -620,21 +629,21 @@ export default function MyCoverage() {
           totalPages={totalPages}
           onPageChange={setCurrentPage}
           showInfo={true}
-          totalItems={filteredPolicies.length}
+          totalItems={filteredCoverages.length}
           itemsPerPage={ITEMS_PER_PAGE}
           className="mt-8"
         />
 
-        {filteredPolicies.length === 0 && (
+        {filteredCoverages.length === 0 && (
           <div className="text-center py-12">
             <Shield className="w-16 h-16 text-slate-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">
-              No policies found
+              No Coverages found
             </h3>
             <p className="text-slate-500 dark:text-slate-500">
-              {allPolicies.length === 0
-                ? "You don't have any coverage policies yet."
-                : 'Try adjusting your filter criteria'}
+              {allCoverages.length === 0
+                ? "You don't have any coverage Coverages yet."
+                : "Try adjusting your filter criteria"}
             </p>
           </div>
         )}
