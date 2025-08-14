@@ -5,21 +5,27 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StatsCard } from "@/components/shared/StatsCard";
 import { usePolicyholderDashboardSummaryQuery } from "@/hooks/useDashboard";
+import { useActivityLogsQuery } from "@/hooks/useActivityLog";
+import { useMeQuery } from "@/hooks/useAuth";
 import {
   Shield,
   Clock,
-  CheckCircle,
-  AlertTriangle,
   TrendingUp,
   Coins,
   FileText,
 } from "lucide-react";
 import Link from "next/link";
-import { recentActivity } from "@/public/data/policyholder/dashboardData";
 import { formatValue } from "@/utils/formatHelper";
 
 export default function PolicyholderDashboard() {
   const { data: summary } = usePolicyholderDashboardSummaryQuery();
+  const { data: me } = useMeQuery();
+  const { data: activityLogs, isLoading: isActivityLoading } =
+    useActivityLogsQuery({
+      userId: me?.data?.id,
+      page: 1,
+      limit: 5,
+    });
   return (
     <div className="section-spacing">
       <div className="max-w-7xl mx-auto">
@@ -168,41 +174,35 @@ export default function PolicyholderDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="element-spacing">
-                  {recentActivity.map((activity) => (
-                    <div
-                      key={activity.id}
-                      className="flex items-start space-x-3"
-                    >
+                  {isActivityLoading ? (
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                      Loading...
+                    </p>
+                  ) : (
+                    (activityLogs?.data ?? []).map((activity) => (
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          activity.status === "completed"
-                            ? "bg-emerald-100 dark:bg-emerald-900/30"
-                            : activity.status === "pending"
-                            ? "bg-yellow-100 dark:bg-yellow-900/30"
-                            : "bg-blue-100 dark:bg-blue-900/30"
-                        }`}
+                        key={activity.id}
+                        className="flex items-start space-x-3"
                       >
-                        {activity.status === "completed" ? (
-                          <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                        ) : activity.status === "pending" ? (
-                          <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-                        ) : (
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-100 dark:bg-blue-900/30">
                           <Shield className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                        )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
+                            {activity.action}
+                          </p>
+                          <p className="text-sm text-slate-600 dark:text-slate-400 truncate">
+                            IP: {activity.ip}
+                          </p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            {activity.timestamp
+                              ? new Date(activity.timestamp).toLocaleString()
+                              : ""}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
-                          {activity.type}
-                        </p>
-                        <p className="text-sm text-slate-600 dark:text-slate-400 truncate">
-                          {activity.description}
-                        </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          {activity.date}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
