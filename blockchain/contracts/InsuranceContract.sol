@@ -156,6 +156,8 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
 
     constructor() Ownable(msg.sender) {
         nextCoverageId = 1;
+        nextClaimId = 1;
+        nextPaymentId = 1;
     }
     /**
      * @dev Create a new insurance coverage with ETH payment
