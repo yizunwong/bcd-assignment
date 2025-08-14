@@ -77,9 +77,8 @@ export function Navbar({ initialRole, initialUserId }: NavbarProps) {
     { href: '/help', label: 'Help Center', icon: undefined },
   ];
 
-  const navigationLinks = role ? allLinks[role] : defaultLinks;
-
   const isRolePage = role ? pathname.startsWith(`/${role}`) : false;
+  const navigationLinks = role && isRolePage ? allLinks[role] : defaultLinks;
 
   // Get the correct profile link based on role
   const getProfileLink = () => {

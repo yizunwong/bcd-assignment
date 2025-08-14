@@ -64,7 +64,7 @@ export class ClaimService {
     }
 
     const claimId = data.id;
-    await this.activityLogger.log('CLAIM_CREATED', user_id, req.ip);
+    await this.activityLogger.log(`Claim Created: ${claimId}`, user_id, req.ip);
 
     // Create notification for claim submission (user)
     try {
@@ -176,8 +176,9 @@ export class ClaimService {
         'Failed to create claim documents',
       );
     }
+    const fileNames = files.map((f) => f.originalname).join(', ');
     await this.activityLogger.log(
-      'CLAIM_DOCUMENTS_UPLOADED',
+      `Uploaded Claim Documents: ${fileNames}`,
       userData.user.id,
       req.ip,
     );
@@ -424,7 +425,7 @@ export class ClaimService {
       );
     }
 
-    await this.activityLogger.log('CLAIM_UPDATED', user_id, req.ip);
+    await this.activityLogger.log(`Claim Updated: ${id}`, user_id, req.ip);
 
     return new CommonResponseDto({
       statusCode: 200,
@@ -572,7 +573,7 @@ export class ClaimService {
 
     // 5️⃣ Log activity
     await this.activityLogger.log(
-      'CLAIM_STATUS_UPDATED',
+      `Claim ${statusMessage.charAt(0).toUpperCase() + statusMessage.slice(1)}`,
       userData.user.id,
       req.ip,
     );
@@ -641,7 +642,11 @@ export class ClaimService {
       throw new NotFoundException(`Claim with ID ${id} not found`);
     }
 
-    await this.activityLogger.log('CLAIM_DELETED', userData.user.id, req.ip);
+    await this.activityLogger.log(
+      `Claim Deleted: ${id}`,
+      userData.user.id,
+      req.ip,
+    );
 
     return new CommonResponseDto({
       statusCode: 200,
@@ -692,7 +697,7 @@ export class ClaimService {
     }
 
     await this.activityLogger.log(
-      'CLAIM_DOCUMENT_DELETED',
+      `Claim Document Deleted: ${data.name}`,
       userData.user.id,
       req.ip,
     );
