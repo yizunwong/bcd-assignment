@@ -295,8 +295,8 @@ export default function PaymentSummary() {
     }
   };
 
-  const handleTokenPayment = async () => {
-    if (!agreementCid) {
+  const handleTokenPayment = async (cid: string) => {
+    if (!cid) {
       printMessage("Please upload the signed agreement.", "error");
       return;
     }
@@ -319,7 +319,7 @@ export default function PaymentSummary() {
         policyData.coverageAmount, // coverage amount in ETH
         Number(tokenAmount), // premium amount in ETH
         parseInt(policyData.duration.split(" ")[0]), // duration in days
-        agreementCid,
+        cid,
         policyData.name,
         policyData.category,
         policyData.provider
@@ -408,7 +408,7 @@ export default function PaymentSummary() {
     nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
 
     // ETH payment
-    const coverageId = await handleTokenPayment();
+    const coverageId = await handleTokenPayment(cid);
 
     const coverageData: CreateCoverageDto = {
       id: coverageId!,
