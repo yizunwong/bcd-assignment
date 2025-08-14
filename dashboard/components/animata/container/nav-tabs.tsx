@@ -49,14 +49,14 @@ const Tab = ({ tab, selected, setSelected }: TabProps) => {
       href={tab.href}
       onClick={() => setSelected(tab.href)}
       className={cn(
-        "relative rounded-md p-2 text-sm transition-all flex items-center gap-1",
+        "relative flex items-center justify-center gap-1 rounded-md p-2 text-sm transition-all min-w-20",
         selected
           ? "text-slate-900 dark:text-white"
           : "text-slate-600 dark:text-slate-300 hover:font-black",
       )}
     >
-      {Icon && <Icon className="w-4 h-4" />}
-      <p className="relative z-50 min-w-20">{tab.label}</p>
+      {Icon && <Icon className="relative z-50 h-4 w-4" />}
+      <p className="relative z-50 text-center">{tab.label}</p>
       {selected && (
         <motion.span
           layoutId="tabs"
