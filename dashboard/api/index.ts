@@ -1140,6 +1140,13 @@ export type PaymentControllerFindAll200AllOf = {
 export type PaymentControllerFindAll200 = CommonResponseDto &
   PaymentControllerFindAll200AllOf;
 
+export type PaymentControllerFindOne200AllOf = {
+  data?: TransactionResponseDto;
+};
+
+export type PaymentControllerFindOne200 = CommonResponseDto &
+  PaymentControllerFindOne200AllOf;
+
 export type ActivityLogControllerFindAllParams = {
   /**
    * @minimum 1
@@ -6241,6 +6248,163 @@ export function usePaymentControllerFindAll<
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions = getPaymentControllerFindAllQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const paymentControllerFindOne = (
+  txHash: string,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<PaymentControllerFindOne200>({
+    url: `/payments/transactions/${txHash}`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getPaymentControllerFindOneQueryKey = (txHash?: string) => {
+  return [`/payments/transactions/${txHash}`] as const;
+};
+
+export const getPaymentControllerFindOneQueryOptions = <
+  TData = Awaited<ReturnType<typeof paymentControllerFindOne>>,
+  TError = unknown,
+>(
+  txHash: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof paymentControllerFindOne>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getPaymentControllerFindOneQueryKey(txHash);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof paymentControllerFindOne>>
+  > = ({ signal }) => paymentControllerFindOne(txHash, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!txHash,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof paymentControllerFindOne>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type PaymentControllerFindOneQueryResult = NonNullable<
+  Awaited<ReturnType<typeof paymentControllerFindOne>>
+>;
+export type PaymentControllerFindOneQueryError = unknown;
+
+export function usePaymentControllerFindOne<
+  TData = Awaited<ReturnType<typeof paymentControllerFindOne>>,
+  TError = unknown,
+>(
+  txHash: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof paymentControllerFindOne>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof paymentControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof paymentControllerFindOne>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePaymentControllerFindOne<
+  TData = Awaited<ReturnType<typeof paymentControllerFindOne>>,
+  TError = unknown,
+>(
+  txHash: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof paymentControllerFindOne>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof paymentControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof paymentControllerFindOne>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function usePaymentControllerFindOne<
+  TData = Awaited<ReturnType<typeof paymentControllerFindOne>>,
+  TError = unknown,
+>(
+  txHash: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof paymentControllerFindOne>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function usePaymentControllerFindOne<
+  TData = Awaited<ReturnType<typeof paymentControllerFindOne>>,
+  TError = unknown,
+>(
+  txHash: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof paymentControllerFindOne>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getPaymentControllerFindOneQueryOptions(txHash, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

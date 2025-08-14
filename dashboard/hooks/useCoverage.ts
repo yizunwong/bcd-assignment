@@ -19,13 +19,14 @@ export function useCoverageListQuery(params?: CoverageControllerFindAllParams) {
   };
 }
 
-export function useCoverageQuery(id: string) {
-  const query = useCoverageControllerFindOne(id);
+export function useCoverageQuery(id: string, options?: any) {
+  const query = useCoverageControllerFindOne(id, options);
   return {
     ...query,
     error: parseError(query.error),
   };
 }
+
 
 export function useCreateCoverageMutation() {
   const mutation = useCoverageControllerCreate();

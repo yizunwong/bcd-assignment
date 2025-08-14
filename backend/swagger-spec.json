@@ -2029,6 +2029,47 @@
         ]
       }
     },
+    "/payments/transactions/{txHash}": {
+      "get": {
+        "operationId": "PaymentController_findOne",
+        "parameters": [
+          {
+            "name": "txHash",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fetch user transaction",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/TransactionResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
     "/activity-logs": {
       "get": {
         "operationId": "ActivityLogController_findAll",

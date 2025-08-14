@@ -141,4 +141,44 @@ export class PaymentService {
       count: mapped.length,
     });
   }
+
+  async fetchTransaction(
+    req: AuthenticatedRequest,
+    txHash: string,
+  ): Promise<CommonResponseDto<TransactionResponseDto>> {
+    const { data: userData, error: userError } =
+      await req.supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    const { data, error } = await req.supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', userData.user.id)
+      .order('created_at', { ascending: false })
+      .eq('tx_hash', txHash)
+      .single();
+
+    if (error || !data) {
+      console.error(error);
+      throw new InternalServerErrorException('Failed to fetch transactions');
+    }
+
+    return new CommonResponseDto<TransactionResponseDto>({
+      statusCode: 200,
+      message: 'Transactions fetched successfully',
+      data: new TransactionResponseDto({
+        id: data.id,
+        coverageId: data.coverage_id,
+        txHash: data.tx_hash,
+        description: data.description,
+        amount: data.amount,
+        currency: data.currency,
+        status: data.status as TransactionStatus,
+        type: data.type as TransactionType,
+        createdAt: data.created_at,
+      }),
+    });
+  }
 }

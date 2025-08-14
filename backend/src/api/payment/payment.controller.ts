@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ApiCommonResponse, CommonResponseDto } from 'src/common/common.dto';
 import { PaymentService } from './payment.service';
@@ -41,5 +49,15 @@ export class PaymentController {
     @Req() req: AuthenticatedRequest,
   ): Promise<CommonResponseDto<TransactionResponseDto[]>> {
     return await this.paymentService.fetchTransactions(req);
+  }
+
+  @Get('transactions/:txHash')
+  @UseGuards(AuthGuard)
+  @ApiCommonResponse(TransactionResponseDto, false, 'Fetch user transaction')
+  async findOne(
+    @Req() req: AuthenticatedRequest,
+    @Param('txHash') txHash: string,
+  ): Promise<CommonResponseDto<TransactionResponseDto>> {
+    return await this.paymentService.fetchTransaction(req, txHash);
   }
 }

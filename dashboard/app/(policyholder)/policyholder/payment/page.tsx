@@ -36,8 +36,9 @@ import { usePaymentMutation } from "@/hooks/usePayment";
 import { useInsuranceContract } from "@/hooks/useBlockchain";
 import { CreateCoverageDto } from "@/api";
 import { useTransactionStore } from "@/store/useTransactionStore";
-import { useAccount } from "wagmi";
+import { useAccount, useBalance } from "wagmi";
 import { useAgreementUploadMutation } from "@/hooks/useAgreement";
+import { formatUnits } from "viem";
 
 declare global {
   interface Window {
@@ -49,6 +50,9 @@ export default function PaymentSummary() {
   const router = useRouter();
   const { printMessage } = useToast();
   const { address, isConnected } = useAccount();
+  const { data: balanceData } = useBalance({ address });
+  const balance = balanceData ?? "0";
+  const eth = balanceData ? parseFloat(formatUnits(balanceData.value, 18)) : 0;
   const [currentStep] = useState(2);
   const [tokenAmount, setTokenAmount] = useState("");
   const [showTokenDetails, setShowTokenDetails] = useState(false);
@@ -226,7 +230,7 @@ export default function PaymentSummary() {
     }
   };
 
-  const { uploadAgreement } = useAgreementUploadMutation();
+  const { uploadAgreement, isPending } = useAgreementUploadMutation();
 
   const handleTokenPayment = async (cid: string) => {
     if (!cid) {
@@ -298,7 +302,12 @@ export default function PaymentSummary() {
           });
 
           printMessage("Stripe payment successful", "success");
-          router.push("/policyholder/payment/confirmation");
+          const params = new URLSearchParams({
+            coverageId: (coverage?.data?.id ?? 0).toString(),
+          });
+          router.push(
+            `/policyholder/payment/confirmation?${params.toString()}`
+          );
         }
       } else {
         printMessage("Payment failed. Please try again.", "error");
@@ -390,7 +399,11 @@ export default function PaymentSummary() {
         "Blockchain payment successful! Coverage created.",
         "success"
       );
-      router.push("/policyholder/payment/confirmation");
+      const params = new URLSearchParams({
+        coverageId: (coverageData.id ?? 0).toString(),
+        txHash: data.txHash!,
+      });
+      router.push(`/policyholder/payment/confirmation?${params.toString()}`);
     } catch (error) {
       console.error(
         "Failed to create coverage after blockchain payment:",
@@ -631,6 +644,11 @@ export default function PaymentSummary() {
                     {isConnected && (
                       <p className="text-sm text-green-700 dark:text-green-300 mt-1">
                         Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
+                      </p>
+                    )}
+                    {isConnected && (
+                      <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                        Balance: {eth} ETH
                       </p>
                     )}
                     {!isConnected && (
@@ -923,6 +941,7 @@ export default function PaymentSummary() {
                     disabled={
                       isProcessing ||
                       isCreatingCoverage ||
+                      isPending ||
                       isWaitingForTransaction ||
                       (paymentMethod === "ETH" && !isConnected) ||
                       (paymentMethod !== "STRIPE" && !tokenAmount)
@@ -931,6 +950,7 @@ export default function PaymentSummary() {
                   >
                     {isProcessing ||
                     isCreatingCoverage ||
+                    isPending ||
                     isWaitingForTransaction ? (
                       <div className="flex items-center space-x-2">
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

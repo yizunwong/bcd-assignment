@@ -39,7 +39,7 @@ export default function Profile() {
     useActivityLogsQuery({
       userId: userId,
       page: 1,
-      limit: 5,
+      limit: 10,
     });
   const { updateUser, isPending } = useUpdateUserMutation();
   const { printMessage } = useToast();
