@@ -15,6 +15,7 @@ import { CompanyModule } from './api/company/company.module';
 import { DashboardModule } from './api/dashboard/dashboard.module';
 import { PaymentModule } from './api/payment/payment.module';
 import { ActivityLogModule } from './api/activity-log/activity-log.module';
+import { LoggerModule } from './logger/logger.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { ActivityLogModule } from './api/activity-log/activity-log.module';
     DashboardModule,
     PaymentModule,
     ActivityLogModule,
+    LoggerModule,
   ],
 
   controllers: [AppController],

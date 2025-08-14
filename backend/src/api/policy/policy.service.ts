@@ -15,6 +15,7 @@ import { CommonResponseDto } from 'src/common/common.dto';
 import { PolicyResponseDto } from './dto/responses/policy.dto';
 import { FindPoliciesQueryDto } from './dto/responses/policy-query.dto';
 import { ClaimService } from '../claim/claim.service';
+import { ActivityLoggerService } from 'src/logger/activity-logger.service';
 import { PolicyCategoryCountStatsDto } from './dto/responses/policy-category.dto';
 import { PolicyStatsDto } from './dto/responses/policy-stats.dto';
 import { PolicyClaimTypesDto } from './dto/responses/policy-claim-types.dto';
@@ -28,6 +29,7 @@ export class PolicyService {
     private readonly fileService: FileService,
     private readonly supabaseService: SupabaseService,
     private readonly pinataService: PinataService,
+    private readonly activityLogger: ActivityLoggerService,
   ) {}
   async addPolicyDocuments(
     id: number,
@@ -59,6 +61,11 @@ export class PolicyService {
         'Failed to create policy documents',
       );
     }
+    await this.activityLogger.log(
+      'POLICY_DOCUMENTS_UPLOADED',
+      userData.user.id,
+      req.ip,
+    );
 
     return new CommonResponseDto({
       statusCode: 201,
@@ -107,6 +114,7 @@ export class PolicyService {
           req,
         );
       }
+      await this.activityLogger.log('POLICY_CREATED', userData.user.id, req.ip);
 
       return new CommonResponseDto({
         statusCode: 201,
@@ -125,6 +133,12 @@ export class PolicyService {
     req: AuthenticatedRequest,
     query: FindPoliciesQueryDto,
   ): Promise<CommonResponseDto<PolicyResponseDto[]>> {
+    const { data: userData, error: userError } =
+      await req.supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
     const sortableFields = ['id', 'name', 'rating', 'premium', 'popular'];
     if (query.sortBy && !sortableFields.includes(query.sortBy)) {
       throw new BadRequestException(`Invalid sortBy field: ${query.sortBy}`);
@@ -233,6 +247,7 @@ export class PolicyService {
         revenue: revenueMap.get(policy.id) || 0,
       };
     });
+    await this.activityLogger.log('POLICY_READ', userData.user.id, req.ip);
 
     return new CommonResponseDto<PolicyResponseDto[]>({
       statusCode: 200,
@@ -246,6 +261,12 @@ export class PolicyService {
     id: number,
     req: AuthenticatedRequest,
   ): Promise<CommonResponseDto<PolicyResponseDto>> {
+    const { data: userData, error: userError } =
+      await req.supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
     // Step 1: Get the policy + claim types
     const { data: policy, error: policyError } = await req.supabase
       .from('policies')
@@ -301,6 +322,7 @@ export class PolicyService {
       policy as any;
 
     console.log(enrichedDocuments);
+    await this.activityLogger.log('POLICY_READ', userData.user.id, req.ip);
 
     return new CommonResponseDto<PolicyResponseDto>({
       statusCode: 200,
@@ -397,6 +419,7 @@ export class PolicyService {
       claim_types:
         row.policy?.policy_claim_type?.map((p: any) => p.claim_type.name) || [],
     }));
+    await this.activityLogger.log('POLICY_READ', userData.user.id, req.ip);
 
     return new CommonResponseDto<PolicyClaimTypesDto[]>({
       statusCode: 200,
@@ -491,6 +514,10 @@ export class PolicyService {
   }
   async update(id: number, dto: UpdatePolicyDto, req: AuthenticatedRequest) {
     const supabase = req.supabase;
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
 
     // Step 1: Fetch existing policy
     const { data: existing, error: fetchError } = await supabase
@@ -540,6 +567,7 @@ export class PolicyService {
         req,
       );
     }
+    await this.activityLogger.log('POLICY_UPDATED', userData.user.id, req.ip);
 
     return new CommonResponseDto({
       statusCode: 200,
@@ -549,6 +577,12 @@ export class PolicyService {
   }
 
   async remove(id: number, req: AuthenticatedRequest) {
+    const { data: userData, error: userError } =
+      await req.supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
     // Step 1: Fetch policy documents
     const { data: documents, error: docsError } = await req.supabase
       .from('policy_documents')
@@ -598,6 +632,8 @@ export class PolicyService {
     if (!deleted) {
       throw new NotFoundException(`Policy with ID ${id} not found`);
     }
+
+    await this.activityLogger.log('POLICY_DELETED', userData.user.id, req.ip);
 
     return new CommonResponseDto({
       statusCode: 200,

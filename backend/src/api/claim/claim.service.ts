@@ -15,9 +15,13 @@ import { ClaimResponseDto } from './dto/responses/claim.dto';
 import { ClaimStatsDto } from './dto/responses/claim-stats.dto';
 import { CommonResponseDto } from 'src/common/common.dto';
 import { ClaimStatus } from 'src/enums';
+import { ActivityLoggerService } from 'src/logger/activity-logger.service';
 @Injectable()
 export class ClaimService {
-  constructor(private readonly fileService: FileService) {}
+  constructor(
+    private readonly fileService: FileService,
+    private readonly activityLogger: ActivityLoggerService,
+  ) {}
   async createClaim(
     createClaimDto: CreateClaimDto,
     req: AuthenticatedRequest,
@@ -56,6 +60,7 @@ export class ClaimService {
     }
 
     const claimId = data.id;
+    await this.activityLogger.log('CLAIM_CREATED', user_id, req.ip);
 
     return new CommonResponseDto({
       statusCode: 201,
@@ -96,6 +101,11 @@ export class ClaimService {
         'Failed to create claim documents',
       );
     }
+    await this.activityLogger.log(
+      'CLAIM_DOCUMENTS_UPLOADED',
+      userData.user.id,
+      req.ip,
+    );
 
     return new CommonResponseDto({
       statusCode: 201,
@@ -107,6 +117,13 @@ export class ClaimService {
     req: AuthenticatedRequest,
     query: FindClaimsQueryDto,
   ): Promise<CommonResponseDto<ClaimResponseDto[]>> {
+    const { data: userData, error: userError } =
+      await req.supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+    const user_id = userData.user.id;
+
     if (
       query.sortBy &&
       !['id', 'type', 'amount', 'status', 'submitted_date'].includes(
@@ -209,6 +226,8 @@ export class ClaimService {
       };
     });
 
+    await this.activityLogger.log('CLAIM_READ', user_id, req.ip);
+
     return new CommonResponseDto<ClaimResponseDto[]>({
       statusCode: 200,
       message: 'Claims retrieved successfully',
@@ -221,6 +240,13 @@ export class ClaimService {
     req: AuthenticatedRequest,
     id: number,
   ): Promise<CommonResponseDto<ClaimResponseDto>> {
+    const { data: userData, error: userError } =
+      await req.supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+    const user_id = userData.user.id;
+
     const { data, error } = await req.supabase
       .from('claims')
       .select(
@@ -284,6 +310,8 @@ export class ClaimService {
       },
     };
 
+    await this.activityLogger.log('CLAIM_READ', user_id, req.ip);
+
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Claim retrieved successfully',
@@ -322,6 +350,8 @@ export class ClaimService {
         'Failed to fetch claims: ' + (error.message || 'Unknown error'),
       );
     }
+
+    await this.activityLogger.log('CLAIM_UPDATED', user_id, req.ip);
 
     return new CommonResponseDto({
       statusCode: 200,
@@ -423,6 +453,12 @@ export class ClaimService {
     }
 
     // Return the response
+    await this.activityLogger.log(
+      'CLAIM_STATUS_UPDATED',
+      userData.user.id,
+      req.ip,
+    );
+
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Claim status updated successfully',
@@ -434,6 +470,12 @@ export class ClaimService {
     id: number,
     req: AuthenticatedRequest,
   ): Promise<CommonResponseDto> {
+    const { data: userData, error: userError } =
+      await req.supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
     // Step 1: Fetch claim documents
     const { data: documents, error: fetchDocError } = await req.supabase
       .from('claim_documents')
@@ -481,6 +523,8 @@ export class ClaimService {
       throw new NotFoundException(`Claim with ID ${id} not found`);
     }
 
+    await this.activityLogger.log('CLAIM_DELETED', userData.user.id, req.ip);
+
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Claim removed successfully',
@@ -492,6 +536,12 @@ export class ClaimService {
     req: AuthenticatedRequest,
     id: number,
   ): Promise<CommonResponseDto> {
+    const { data: userData, error: userError } =
+      await req.supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
     // Step 1: Fetch the document to get its path
     const { data: document, error: fetchError } = await req.supabase
       .from('claim_documents')
@@ -522,6 +572,12 @@ export class ClaimService {
           (deleteError?.message || 'Unknown error'),
       );
     }
+
+    await this.activityLogger.log(
+      'CLAIM_DOCUMENT_DELETED',
+      userData.user.id,
+      req.ip,
+    );
 
     return new CommonResponseDto({
       statusCode: 200,
