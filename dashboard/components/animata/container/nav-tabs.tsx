@@ -31,7 +31,7 @@ export default function NavTabs({ tabs, className }: { tabs: NavTab[]; className
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center justify-center gap-4 rounded-md bg-violet-100 dark:bg-violet-950 p-6",
+        "w-full flex flex-wrap items-center justify-center gap-4 rounded-md bg-slate-100 dark:bg-slate-900 p-6",
         className,
       )}
     >
@@ -61,7 +61,7 @@ const Tab = ({ tab, selected, setSelected }: TabProps) => {
         <motion.span
           layoutId="tabs"
           transition={{ type: "spring", duration: 0.5 }}
-          className="absolute inset-0 rounded-sm bg-gradient-to-r from-indigo-600 to-pink-600"
+          className="absolute inset-0 rounded-sm bg-slate-300 dark:bg-slate-700"
         />
       )}
     </Link>
