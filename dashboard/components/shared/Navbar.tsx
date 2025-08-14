@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import NavTabs from '@/components/animata/container/nav-tabs';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -130,24 +131,9 @@ export function Navbar({ initialRole, initialUserId }: NavbarProps) {
           </Link>
 
           {/* Desktop Navigation - Responsive spacing */}
-          <div className="hidden lg:flex items-center space-x-2 xl:space-x-4 2xl:space-x-6 flex-1 justify-center max-w-4xl mx-8">
-            {navigationLinks.map((link, index) => (
-              <Link
-                key={index}
-                href={link.href}
-                className={cn(
-                  'nav-item whitespace-nowrap px-2 xl:px-3 2xl:px-4',
-                  pathname === link.href && 'nav-item-active'
-                )}
-              >
-                {link.icon && <link.icon className="w-4 h-4 flex-shrink-0" />}
-                <span className="hidden xl:block">{link.label}</span>
-                <span className="xl:hidden text-xs">
-                  {link.label.split(' ')[0]}
-                </span>
-              </Link>
-            ))}
-          </div>
+            <div className="hidden lg:flex flex-1 justify-center max-w-4xl mx-8">
+              <NavTabs tabs={navigationLinks} className="bg-transparent p-0 rounded-none gap-2 xl:gap-4 2xl:gap-6" />
+            </div>
 
           {/* Right Side Actions */}
           <div className="hidden md:flex items-center space-x-2 lg:space-x-3 xl:space-x-4 flex-shrink-0">
