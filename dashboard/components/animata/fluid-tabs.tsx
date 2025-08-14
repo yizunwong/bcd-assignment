@@ -13,11 +13,21 @@ export interface FluidTab {
 interface FluidTabsProps {
   tabs: FluidTab[];
   defaultTab?: string;
+  value?: string;
+  onValueChange?: (tabId: string) => void;
+  renderContent?: boolean;
 }
 
-export default function FluidTabs({ tabs, defaultTab }: FluidTabsProps) {
+export default function FluidTabs({
+  tabs,
+  defaultTab,
+  value,
+  onValueChange,
+  renderContent = true,
+}: FluidTabsProps) {
   const initialTab = defaultTab ?? tabs[0]?.id;
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const [internalActiveTab, setInternalActiveTab] = useState(initialTab);
+  const activeTab = value ?? internalActiveTab;
   const [touchedTab, setTouchedTab] = useState<string | null>(null);
   const [prevActiveTab, setPrevActiveTab] = useState(initialTab);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -30,9 +40,19 @@ export default function FluidTabs({ tabs, defaultTab }: FluidTabsProps) {
     };
   }, []);
 
+  useEffect(() => {
+    if (value !== undefined && value !== activeTab) {
+      setPrevActiveTab(activeTab);
+    }
+  }, [value]);
+
   const handleTabClick = (tabId: string) => {
     setPrevActiveTab(activeTab);
-    setActiveTab(tabId);
+    if (onValueChange) {
+      onValueChange(tabId);
+    } else {
+      setInternalActiveTab(tabId);
+    }
     setTouchedTab(tabId);
 
     if (timeoutRef.current) {
@@ -73,13 +93,15 @@ export default function FluidTabs({ tabs, defaultTab }: FluidTabsProps) {
           </motion.button>
         ))}
       </div>
-      <div>
-        {tabs.map((tab) => (
-          <div key={tab.id} hidden={tab.id !== activeTab}>
-            {tab.content}
-          </div>
-        ))}
-      </div>
+      {renderContent && (
+        <div>
+          {tabs.map((tab) => (
+            <div key={tab.id} hidden={tab.id !== activeTab}>
+              {tab.content}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
