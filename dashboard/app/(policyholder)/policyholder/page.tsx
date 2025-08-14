@@ -7,19 +7,15 @@ import { StatsCard } from "@/components/shared/StatsCard";
 import { usePolicyholderDashboardSummaryQuery } from "@/hooks/useDashboard";
 import { useActivityLogsQuery } from "@/hooks/useActivityLog";
 import { useAuthStore } from "@/store/useAuthStore";
-import {
-  Shield,
-  Clock,
-  TrendingUp,
-  Coins,
-  FileText,
-} from "lucide-react";
+import { Shield, Clock, TrendingUp, Coins, FileText } from "lucide-react";
 import Link from "next/link";
 import { formatValue } from "@/utils/formatHelper";
+import { useMeQuery } from "@/hooks/useAuth";
 
 export default function PolicyholderDashboard() {
   const { data: summary } = usePolicyholderDashboardSummaryQuery();
   const userId = useAuthStore((state) => state.userId);
+  const { data: userResponse } = useMeQuery();
   const { data: activityLogs, isLoading: isActivityLoading } =
     useActivityLogsQuery({
       userId: userId,
@@ -36,7 +32,10 @@ export default function PolicyholderDashboard() {
               <Shield className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="page-header-title">Welcome back, Alex!</h1>
+              <h1 className="page-header-title">
+                Welcome back, {userResponse?.data?.firstName}{" "}
+                {userResponse?.data?.lastName}!
+              </h1>
               <p className="page-header-subtitle">
                 Manage your policies and track your coverage
               </p>

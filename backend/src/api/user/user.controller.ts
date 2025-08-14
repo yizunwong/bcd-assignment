@@ -71,7 +71,7 @@ export class UserController {
 
   @Post(':id/avatar')
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('files'))
   @ApiCommonResponse(
     CommonResponseDto<{ url: string }>,
     false,
