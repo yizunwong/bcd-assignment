@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { StatsCard } from "@/components/shared/StatsCard";
 import { usePolicyholderDashboardSummaryQuery } from "@/hooks/useDashboard";
 import { useActivityLogsQuery } from "@/hooks/useActivityLog";
-import { useMeQuery } from "@/hooks/useAuth";
+import { useAuthStore } from "@/store/useAuthStore";
 import {
   Shield,
   Clock,
@@ -19,10 +19,10 @@ import { formatValue } from "@/utils/formatHelper";
 
 export default function PolicyholderDashboard() {
   const { data: summary } = usePolicyholderDashboardSummaryQuery();
-  const { data: me } = useMeQuery();
+  const userId = useAuthStore((state) => state.userId);
   const { data: activityLogs, isLoading: isActivityLoading } =
     useActivityLogsQuery({
-      userId: me?.data?.id,
+      userId: userId,
       page: 1,
       limit: 5,
     });
