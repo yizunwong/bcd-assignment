@@ -269,7 +269,7 @@ export type Database = {
         Insert: {
           agreement_cid: string;
           end_date: string;
-          id?: number;
+          id: number;
           next_payment_date: string;
           policy_id: number;
           start_date: string;
@@ -298,10 +298,44 @@ export type Database = {
           },
         ];
       };
+      notifications: {
+        Row: {
+          created_at: string | null;
+          id: number;
+          message: string;
+          notification_type: Database['public']['Enums']['notification_type'];
+          read: boolean | null;
+          title: string;
+          updated_at: string | null;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string | null;
+          id?: number;
+          message: string;
+          notification_type?: Database['public']['Enums']['notification_type'];
+          read?: boolean | null;
+          title: string;
+          updated_at?: string | null;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string | null;
+          id?: number;
+          message?: string;
+          notification_type?: Database['public']['Enums']['notification_type'];
+          read?: boolean | null;
+          title?: string;
+          updated_at?: string | null;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       policies: {
         Row: {
           category: Database['public']['Enums']['policy_category'];
           coverage: number;
+          created_at: string;
           created_by: string;
           description: string | null;
           duration_days: number;
@@ -315,6 +349,7 @@ export type Database = {
         Insert: {
           category?: Database['public']['Enums']['policy_category'];
           coverage: number;
+          created_at?: string;
           created_by: string;
           description?: string | null;
           duration_days?: number;
@@ -328,6 +363,7 @@ export type Database = {
         Update: {
           category?: Database['public']['Enums']['policy_category'];
           coverage?: number;
+          created_at?: string;
           created_by?: string;
           description?: string | null;
           duration_days?: number;
@@ -592,6 +628,7 @@ export type Database = {
       claim_priority: 'high' | 'medium' | 'low';
       claim_status: 'pending' | 'approved' | 'rejected' | 'claimed';
       coverage_status: 'active' | 'limitExceeded' | 'expired' | 'suspended';
+      notification_type: 'info' | 'success' | 'warning' | 'error' | 'alert';
       number_of_employees:
         | '1-10 employees'
         | '11-50 employees'
@@ -743,6 +780,7 @@ export const Constants = {
       claim_priority: ['high', 'medium', 'low'],
       claim_status: ['pending', 'approved', 'rejected', 'claimed'],
       coverage_status: ['active', 'limitExceeded', 'expired', 'suspended'],
+      notification_type: ['info', 'success', 'warning', 'error', 'alert'],
       number_of_employees: [
         '1-10 employees',
         '11-50 employees',

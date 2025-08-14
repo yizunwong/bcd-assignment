@@ -55,7 +55,7 @@ export default function Claims() {
   const { data: policyClaimTypes } = usePolicyClaimTypesQuery();
   const policies = policyClaimTypes?.data ?? [];
   const selectedPolicyData = policies.find(
-    (p) => p.id.toString() === selectedPolicy,
+    (p) => p.id.toString() === selectedPolicy
   );
   const claimTypes = selectedPolicyData?.claim_types || [];
 
@@ -196,7 +196,7 @@ export default function Claims() {
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  console.log(selectedPolicy)
+  console.log(selectedPolicy);
 
   return (
     <div className="section-spacing">
@@ -473,13 +473,19 @@ export default function Claims() {
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                     Select Policy
                   </label>
-                  <Select value={selectedPolicy} onValueChange={handlePolicyChange}>
+                  <Select
+                    value={selectedPolicy}
+                    onValueChange={handlePolicyChange}
+                  >
                     <SelectTrigger className="form-input">
                       <SelectValue placeholder="Choose a policy" />
                     </SelectTrigger>
                     <SelectContent>
                       {policies.map((policy) => (
-                        <SelectItem key={policy.id} value={policy.id.toString()}>
+                        <SelectItem
+                          key={policy.id}
+                          value={policy.id.toString()}
+                        >
                           {policy.name}
                         </SelectItem>
                       ))}
@@ -616,24 +622,29 @@ export default function Claims() {
                       return;
                     const amount = parseFloat(claimAmount);
                     try {
-                      const res = await createClaim({
+                      const claimId = await fileClaimForCoverage(
+                        Number(selectedPolicy),
+                        amount,
+                        description
+                      );
+                      if (!claimId) {
+                        console.error("Failed to file claim on blockchain");
+                        return;
+                      }
+
+                      await createClaim({
+                        id: claimId,
                         coverage_id: Number(selectedPolicy),
                         type: claimType,
                         priority,
                         amount,
                         description,
                       });
-                      const claimId = (res as any)?.data?.id;
                       if (claimId && selectedFiles.length > 0) {
                         await uploadClaimDocuments(String(claimId), {
                           files: selectedFiles,
                         });
                       }
-                      fileClaimForCoverage(
-                        Number(selectedPolicy),
-                        amount,
-                        description,
-                      );
                     } catch (error) {
                       console.error(error);
                     }

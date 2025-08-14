@@ -2571,6 +2571,11 @@
       "CreateClaimDto": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "number",
+            "example": 1,
+            "description": "ID of the claim"
+          },
           "coverage_id": {
             "type": "number",
             "example": 1,
@@ -2603,6 +2608,7 @@
           }
         },
         "required": [
+          "id",
           "coverage_id",
           "type",
           "priority",
@@ -2777,6 +2783,11 @@
       "UpdateClaimDto": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "number",
+            "example": 1,
+            "description": "ID of the claim to update"
+          },
           "coverage_id": {
             "type": "number",
             "example": 1,
@@ -2806,11 +2817,6 @@
             "type": "string",
             "example": "Accident on highway, car damaged.",
             "description": "Description of the claim"
-          },
-          "id": {
-            "type": "number",
-            "example": 1,
-            "description": "ID of the claim to update"
           },
           "status": {
             "type": "string",

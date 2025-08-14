@@ -36,8 +36,9 @@ export class ClaimService {
 
     const { data, error } = await req.supabase
       .from('claims')
-      .insert([
+      .upsert(
         {
+          id: createClaimDto.id,
           coverage_id: createClaimDto.coverage_id,
           submitted_by: user_id,
           type: createClaimDto.type,
@@ -49,7 +50,8 @@ export class ClaimService {
           claimed_date: null,
           description: createClaimDto.description ?? null,
         },
-      ])
+        { onConflict: 'id' },
+      )
       .select()
       .single();
 

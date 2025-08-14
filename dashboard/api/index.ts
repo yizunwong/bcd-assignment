@@ -312,6 +312,8 @@ export const CreateClaimDtoPriority = {
 } as const;
 
 export interface CreateClaimDto {
+  /** ID of the claim */
+  id: number;
   /** ID of the policy associated with the claim */
   coverage_id: number;
   /** Type of the claim */
@@ -387,6 +389,8 @@ export const UpdateClaimDtoPriority = {
 } as const;
 
 export interface UpdateClaimDto {
+  /** ID of the claim to update */
+  id: number;
   /** ID of the policy associated with the claim */
   coverage_id?: number;
   /** Type of the claim */
@@ -397,8 +401,6 @@ export interface UpdateClaimDto {
   amount?: number;
   /** Description of the claim */
   description?: string;
-  /** ID of the claim to update */
-  id: number;
   /** Status of the claim */
   status: string;
 }
@@ -724,6 +726,32 @@ export interface TransactionResponseDto {
   status: TransactionResponseDtoStatus;
   type: TransactionResponseDtoType;
   createdAt: string;
+}
+
+/**
+ * @nullable
+ */
+export type ActivityLogDtoUserId = { [key: string]: unknown } | null;
+
+/**
+ * @nullable
+ */
+export type ActivityLogDtoIp = { [key: string]: unknown } | null;
+
+/**
+ * @nullable
+ */
+export type ActivityLogDtoTimestamp = { [key: string]: unknown } | null;
+
+export interface ActivityLogDto {
+  id: string;
+  action: string;
+  /** @nullable */
+  user_id?: ActivityLogDtoUserId;
+  /** @nullable */
+  ip?: ActivityLogDtoIp;
+  /** @nullable */
+  timestamp?: ActivityLogDtoTimestamp;
 }
 
 export type AuthControllerLogin200AllOf = {
@@ -1116,6 +1144,32 @@ export type PaymentControllerFindAll200AllOf = {
 
 export type PaymentControllerFindAll200 = CommonResponseDto &
   PaymentControllerFindAll200AllOf;
+
+export type ActivityLogControllerFindAllParams = {
+  /**
+   * @minimum 1
+   */
+  page?: number;
+  /**
+   * @minimum 1
+   */
+  limit?: number;
+  /**
+   * Filter by user ID
+   */
+  userId?: string;
+  /**
+   * Filter by action
+   */
+  action?: string;
+};
+
+export type ActivityLogControllerFindAll200AllOf = {
+  data?: ActivityLogDto[];
+};
+
+export type ActivityLogControllerFindAll200 = CommonResponseDto &
+  ActivityLogControllerFindAll200AllOf;
 
 export const authControllerLogin = (
   loginDto: LoginDto,
@@ -5812,6 +5866,164 @@ export function usePaymentControllerFindAll<
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions = getPaymentControllerFindAllQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+export const activityLogControllerFindAll = (
+  params?: ActivityLogControllerFindAllParams,
+  signal?: AbortSignal,
+) => {
+  return customFetcher<ActivityLogControllerFindAll200>({
+    url: `/activity-logs`,
+    method: "GET",
+    params,
+    signal,
+  });
+};
+
+export const getActivityLogControllerFindAllQueryKey = (
+  params?: ActivityLogControllerFindAllParams,
+) => {
+  return [`/activity-logs`, ...(params ? [params] : [])] as const;
+};
+
+export const getActivityLogControllerFindAllQueryOptions = <
+  TData = Awaited<ReturnType<typeof activityLogControllerFindAll>>,
+  TError = unknown,
+>(
+  params?: ActivityLogControllerFindAllParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof activityLogControllerFindAll>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getActivityLogControllerFindAllQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof activityLogControllerFindAll>>
+  > = ({ signal }) => activityLogControllerFindAll(params, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof activityLogControllerFindAll>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ActivityLogControllerFindAllQueryResult = NonNullable<
+  Awaited<ReturnType<typeof activityLogControllerFindAll>>
+>;
+export type ActivityLogControllerFindAllQueryError = unknown;
+
+export function useActivityLogControllerFindAll<
+  TData = Awaited<ReturnType<typeof activityLogControllerFindAll>>,
+  TError = unknown,
+>(
+  params: undefined | ActivityLogControllerFindAllParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof activityLogControllerFindAll>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof activityLogControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof activityLogControllerFindAll>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useActivityLogControllerFindAll<
+  TData = Awaited<ReturnType<typeof activityLogControllerFindAll>>,
+  TError = unknown,
+>(
+  params?: ActivityLogControllerFindAllParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof activityLogControllerFindAll>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof activityLogControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof activityLogControllerFindAll>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useActivityLogControllerFindAll<
+  TData = Awaited<ReturnType<typeof activityLogControllerFindAll>>,
+  TError = unknown,
+>(
+  params?: ActivityLogControllerFindAllParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof activityLogControllerFindAll>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useActivityLogControllerFindAll<
+  TData = Awaited<ReturnType<typeof activityLogControllerFindAll>>,
+  TError = unknown,
+>(
+  params?: ActivityLogControllerFindAllParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof activityLogControllerFindAll>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getActivityLogControllerFindAllQueryOptions(
+    params,
+    options,
+  );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

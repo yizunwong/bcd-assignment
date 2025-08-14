@@ -16,6 +16,13 @@ export enum ClaimPriority {
 export class CreateClaimDto {
   @ApiProperty({
     example: 1,
+    description: 'ID of the claim',
+  })
+  @IsNotEmpty({ message: 'Claim ID is required' })
+  id!: number;
+
+  @ApiProperty({
+    example: 1,
     description: 'ID of the policy associated with the claim',
   })
   @IsNotEmpty({ message: 'Policy ID is required' })

@@ -52,7 +52,7 @@ export function useInsuranceContract() {
   // File claim
   const {
     data: fileClaimData,
-    writeContract: fileClaim,
+    writeContractAsync: fileClaim,
     isPending: isFilingClaim,
     error: fileClaimError,
   } = useWriteContract();
@@ -170,12 +170,34 @@ export function useInsuranceContract() {
     try {
       const amountWei = parseEther(amount.toString());
 
-      fileClaim({
+      const hash = await fileClaim({
         address: INSURANCE_CONTRACT_ADDRESS,
         abi: INSURANCE_CONTRACT_ABI,
         functionName: "fileClaim",
         args: [BigInt(coverageId), amountWei, description],
       });
+
+      const receipt = await publicClient!.waitForTransactionReceipt({
+        hash,
+      });
+
+      const event = receipt.logs
+        .map((log) => {
+          try {
+            return decodeEventLog({
+              abi: INSURANCE_CONTRACT_ABI,
+              data: log.data,
+              topics: log.topics,
+            });
+          } catch {
+            return null;
+          }
+        })
+        .find((e) => e && e.eventName === "ClaimFiled");
+
+      if (event) {
+        return Number((event as any).args.claimId);
+      }
     } catch (error) {
       console.error("Error filing claim:", error);
       printMessage("Failed to file claim", "error");
