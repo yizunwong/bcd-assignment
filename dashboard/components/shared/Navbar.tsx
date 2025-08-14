@@ -116,7 +116,7 @@ export function Navbar({ initialRole, initialUserId }: NavbarProps) {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/20 dark:border-slate-700/50 overflow-visible">
       <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
-        <div className="flex justify-between items-center h-16">
+        <div className="relative flex items-center h-16 justify-between">
           {/* Logo */}
           <Link
             href="/"
@@ -130,10 +130,13 @@ export function Navbar({ initialRole, initialUserId }: NavbarProps) {
             </span>
           </Link>
 
-          {/* Desktop Navigation - Responsive spacing */}
-            <div className="hidden lg:flex flex-1 justify-center max-w-4xl mx-8">
-              <NavTabs tabs={navigationLinks} className="bg-transparent p-0 rounded-none gap-2 xl:gap-4 2xl:gap-6" />
-            </div>
+          {/* Desktop Navigation - Centered */}
+          <div className="hidden lg:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <NavTabs
+              tabs={navigationLinks}
+              className="bg-transparent p-0 rounded-none gap-2 xl:gap-4 2xl:gap-6"
+            />
+          </div>
 
           {/* Right Side Actions */}
           <div className="hidden md:flex items-center space-x-2 lg:space-x-3 xl:space-x-4 flex-shrink-0">
