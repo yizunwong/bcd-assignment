@@ -381,7 +381,9 @@ export default function Claims() {
 
         <FluidTabs
           value={activeTab}
-          onValueChange={setActiveTab}
+          onValueChange={(tabId) =>
+            setActiveTab(tabId as "my-claims" | "new-claim")
+          }
           renderContent={false}
           tabs={[
             {
@@ -403,7 +405,7 @@ export default function Claims() {
           /* My Claims Tab */
           <div>
             {/* Sort Controls */}
-            <Card className="glass-card rounded-2xl mb-6">
+            <Card className="glass-card rounded-2xl mb-6 mt-4">
               <CardContent className="p-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
@@ -583,7 +585,7 @@ export default function Claims() {
           </div>
         ) : (
           /* New Claim Tab */
-          <Card className="glass-card rounded-2xl">
+          <Card className="glass-card rounded-2xl mt-4">
             <CardHeader>
               <CardTitle className="text-xl text-slate-800 dark:text-slate-100">
                 Submit New Claim
