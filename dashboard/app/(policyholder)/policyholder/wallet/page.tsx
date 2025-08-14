@@ -29,7 +29,7 @@ import {
 import FluidTabs from "@/components/animata/fluid-tabs";
 import { walletBalance } from "@/public/data/policyholder/walletData";
 import WalletSection from "@/components/shared/WalletSectiom";
-import { useTransactionsQuery } from "@/hooks/usePayment";
+import { useTransactionsQuery, usePaymentStatsQuery } from "@/hooks/usePayment";
 import { TransactionResponseDto } from "@/api";
 
 const ITEMS_PER_PAGE = 10;
@@ -40,6 +40,7 @@ export default function WalletPage() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [dateRange, setDateRange] = useState("all");
   const { data: savedTxs, error: chainTxsError } = useTransactionsQuery();
+  const { data: paymentStats } = usePaymentStatsQuery();
   const txArray = (savedTxs?.data ?? []) as TransactionResponseDto[];
 
   const transactions = useMemo(() => [...txArray], [txArray]);
@@ -150,7 +151,7 @@ export default function WalletPage() {
                 <Badge className="status-badge status-active">+12.5%</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                $162,950
+                {paymentStats?.data?.totalPayoutsReceived ?? 0} ETH
               </h3>
               <p className="text-slate-600 dark:text-slate-400">
                 Total Payouts Received
@@ -168,10 +169,10 @@ export default function WalletPage() {
                 <Badge className="status-badge status-info">Active</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                $3.5 ETH
+                {paymentStats?.data?.totalPremiumToPay ?? 0} ETH
               </h3>
               <p className="text-slate-600 dark:text-slate-400">
-                Monthly Premiums
+                Premiums Due
               </p>
             </CardContent>
           </Card>
