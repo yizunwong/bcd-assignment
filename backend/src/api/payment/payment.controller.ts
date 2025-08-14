@@ -16,6 +16,7 @@ import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { AuthGuard } from '../auth/auth.guard';
 import { CreateTransactionDto } from './dto/requests/create-transaction.dto';
 import { TransactionResponseDto } from './dto/responses/transaction.dto';
+import { PaymentStatsDto } from './dto/responses/payment-stats.dto';
 
 @ApiTags('Payments')
 @Controller('payments')
@@ -49,6 +50,15 @@ export class PaymentController {
     @Req() req: AuthenticatedRequest,
   ): Promise<CommonResponseDto<TransactionResponseDto[]>> {
     return await this.paymentService.fetchTransactions(req);
+  }
+
+  @Get('stats')
+  @UseGuards(AuthGuard)
+  @ApiCommonResponse(PaymentStatsDto, false, 'Get payment stats')
+  async getStats(
+    @Req() req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto<PaymentStatsDto>> {
+    return await this.paymentService.getPaymentStats(req);
   }
 
   @Get('transactions/:txHash')
