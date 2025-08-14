@@ -42,7 +42,7 @@ export default function WalletPage() {
   const [dateRange, setDateRange] = useState("all");
   const { data: savedTxs, error: chainTxsError } = useTransactionsQuery();
   const { data: paymentStats } = usePaymentStatsQuery();
-  const { data: pendingClaims } = useClaimsQuery({ status: ClaimStatus.approved });
+  const { data: pendingClaims } = useClaimsQuery({ status: ClaimStatus.pending });
   const txArray = (savedTxs?.data ?? []) as TransactionResponseDto[];
   const pendingPayouts = (pendingClaims?.data ?? []) as ClaimResponseDto[];
 
