@@ -416,6 +416,11 @@ export const ClaimStatus = {
   claimed: "claimed",
 } as const;
 
+export interface UpdateClaimStatusDto {
+  /** Transaction hash associated with the claim status update */
+  txHash: string;
+}
+
 export type CreatePolicyDtoCategory =
   (typeof CreatePolicyDtoCategory)[keyof typeof CreatePolicyDtoCategory];
 
@@ -3011,10 +3016,13 @@ export const useClaimControllerRemove = <TError = unknown, TContext = unknown>(
 export const claimControllerUpdateClaimStatus = (
   id: string,
   status: ClaimStatus,
+  updateClaimStatusDto: UpdateClaimStatusDto,
 ) => {
   return customFetcher<ClaimControllerUpdateClaimStatus200>({
     url: `/claim/${id}/${status}`,
     method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    data: updateClaimStatusDto,
   });
 };
 
@@ -3025,13 +3033,13 @@ export const getClaimControllerUpdateClaimStatusMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
     TError,
-    { id: string; status: ClaimStatus },
+    { id: string; status: ClaimStatus; data: UpdateClaimStatusDto },
     TContext
   >;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
   TError,
-  { id: string; status: ClaimStatus },
+  { id: string; status: ClaimStatus; data: UpdateClaimStatusDto },
   TContext
 > => {
   const mutationKey = ["claimControllerUpdateClaimStatus"];
@@ -3045,11 +3053,11 @@ export const getClaimControllerUpdateClaimStatusMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
-    { id: string; status: ClaimStatus }
+    { id: string; status: ClaimStatus; data: UpdateClaimStatusDto }
   > = (props) => {
-    const { id, status } = props ?? {};
+    const { id, status, data } = props ?? {};
 
-    return claimControllerUpdateClaimStatus(id, status);
+    return claimControllerUpdateClaimStatus(id, status, data);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -3058,7 +3066,7 @@ export const getClaimControllerUpdateClaimStatusMutationOptions = <
 export type ClaimControllerUpdateClaimStatusMutationResult = NonNullable<
   Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>
 >;
-
+export type ClaimControllerUpdateClaimStatusMutationBody = UpdateClaimStatusDto;
 export type ClaimControllerUpdateClaimStatusMutationError = unknown;
 
 export const useClaimControllerUpdateClaimStatus = <
@@ -3069,7 +3077,7 @@ export const useClaimControllerUpdateClaimStatus = <
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
       TError,
-      { id: string; status: ClaimStatus },
+      { id: string; status: ClaimStatus; data: UpdateClaimStatusDto },
       TContext
     >;
   },
@@ -3077,7 +3085,7 @@ export const useClaimControllerUpdateClaimStatus = <
 ): UseMutationResult<
   Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
   TError,
-  { id: string; status: ClaimStatus },
+  { id: string; status: ClaimStatus; data: UpdateClaimStatusDto },
   TContext
 > => {
   const mutationOptions =

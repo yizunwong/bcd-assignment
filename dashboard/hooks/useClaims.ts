@@ -13,6 +13,7 @@ import {
   type UpdateClaimDto,
   ClaimStatus,
   useClaimControllerGetStats,
+  UpdateClaimStatusDto,
 } from "@/api";
 import { parseError } from "../utils/parseError";
 
@@ -72,8 +73,11 @@ export function useUpdateClaimStatusMutation() {
   const mutation = useClaimControllerUpdateClaimStatus();
   return {
     ...mutation,
-    updateClaimStatus: (id: string, status: ClaimStatus) =>
-      mutation.mutateAsync({ id, status }),
+    updateClaimStatus: (
+      id: string,
+      status: ClaimStatus,
+      data: UpdateClaimStatusDto
+    ) => mutation.mutateAsync({ id, status, data }),
     error: parseError(mutation.error),
   };
 }

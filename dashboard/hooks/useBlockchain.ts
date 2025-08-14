@@ -75,62 +75,58 @@ export function useInsuranceContract() {
 
   // Create coverage with ETH payment
   const createCoverageWithPayment = async (
-    coverage: number,
-    premium: number,
+    coverage: number, // in ETH
+    premium: number, // in ETH
     durationDays: number,
     agreementCid: string,
     name: string,
     category: string,
     provider: string
-  ) => {
+  ): Promise<{ coverageId: number; txHash: `0x${string}` }> => {
     if (!address) {
       printMessage("Please connect your wallet first", "error");
-      return;
+      throw new Error("WALLET_NOT_CONNECTED");
     }
 
-    try {
-      const coverageWei = parseEther(coverage.toString());
-      const premiumWei = parseEther(premium.toString());
+    const coverageWei = parseEther(coverage.toString());
+    const premiumWei = parseEther(premium.toString());
 
-      const hash = await createCoverage({
-        address: INSURANCE_CONTRACT_ADDRESS,
-        abi: INSURANCE_CONTRACT_ABI,
-        functionName: "createCoverageWithPayment",
-        args: [
-          coverageWei,
-          premiumWei,
-          BigInt(durationDays),
-          agreementCid,
-          name,
-          category,
-          provider,
-        ],
-        value: premiumWei,
-      });
+    const hash = await createCoverage({
+      address: INSURANCE_CONTRACT_ADDRESS,
+      abi: INSURANCE_CONTRACT_ABI,
+      functionName: "createCoverageWithPayment",
+      args: [
+        coverageWei,
+        premiumWei,
+        BigInt(durationDays),
+        agreementCid,
+        name,
+        category,
+        provider,
+      ],
+      value: premiumWei,
+    });
 
-      const receipt = await publicClient!.waitForTransactionReceipt({ hash });
+    const receipt = await publicClient!.waitForTransactionReceipt({ hash });
 
-      const event = receipt.logs
-        .map((log) => {
-          try {
-            return decodeEventLog({
-              abi: INSURANCE_CONTRACT_ABI,
-              data: log.data,
-              topics: log.topics,
-            });
-          } catch {
-            return null;
-          }
-        })
-        .find((e) => e && e.eventName === "CoverageCreated");
+    const event = receipt.logs
+      .map((log) => {
+        try {
+          return decodeEventLog({
+            abi: INSURANCE_CONTRACT_ABI,
+            data: log.data,
+            topics: log.topics,
+          });
+        } catch {
+          return null;
+        }
+      })
+      .find((e) => e && e.eventName === "CoverageCreated");
 
-      const coverageId = event ? Number((event as any).args.coverageId) : null;
+    if (!event) throw new Error("COVERAGE_EVENT_NOT_FOUND");
 
-      return { coverageId, txHash: hash }; 
-    } catch (error) {
-      console.error("Error creating coverage:", error);
-      printMessage("Failed to create coverage", "error");
-    }
+    const coverageId = Number((event as any).args.coverageId);
+    return { coverageId, txHash: hash };
   };
 
   // Pay premium for existing coverage
@@ -207,7 +203,7 @@ export function useInsuranceContract() {
   // Approve a claim
   const {
     data: approveClaimData,
-    writeContract: approveClaimWrite,
+    writeContractAsync: approveClaimWrite,
     isPending: isApprovingClaim,
     error: approveClaimError,
   } = useWriteContract();
@@ -219,12 +215,14 @@ export function useInsuranceContract() {
     }
 
     try {
-      approveClaimWrite({
+      const hash = await approveClaimWrite({
         address: INSURANCE_CONTRACT_ADDRESS,
         abi: INSURANCE_CONTRACT_ABI,
         functionName: "approveClaim",
         args: [BigInt(claimId)],
       });
+
+      return hash;
     } catch (error) {
       console.error("Error approving claim:", error);
       printMessage("Failed to approve claim", "error");
