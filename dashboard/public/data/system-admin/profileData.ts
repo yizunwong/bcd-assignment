@@ -11,6 +11,7 @@ export const profileData = {
   companyLicenseNo: "SYS-001-SEC",
   clearanceLevel: "Level 5 - Full Access",
   bio: "Senior system administrator with 10+ years experience in blockchain infrastructure and platform security.",
+  avatarUrl: '',
 };
 
 export const notifications = {

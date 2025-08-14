@@ -390,6 +390,34 @@
         ]
       }
     },
+    "/users/{id}/avatar": {
+      "post": {
+        "operationId": "UserController_uploadAvatar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Users"
+        ]
+      }
+    },
     "/claim": {
       "post": {
         "operationId": "ClaimController_create",
@@ -2442,6 +2470,9 @@
             "type": "string"
           },
           "bio": {
+            "type": "string"
+          },
+          "avatarUrl": {
             "type": "string"
           },
           "status": {

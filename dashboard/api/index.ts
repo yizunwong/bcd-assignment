@@ -171,6 +171,7 @@ export interface ProfileResponseDto {
   email: string;
   phone: string;
   bio: string;
+  avatarUrl?: string;
   status: string;
   address?: string;
   dateOfBirth?: string;
