@@ -233,119 +233,28 @@ export default function PaymentSummary() {
     }
   };
 
-  const { uploadAgreement, isPending } = useAgreementUploadMutation();
+  const {
+    uploadAgreement: uploadAgreementPdf,
+    isPending: isUploadingAgreement,
+  } = useAgreementUploadMutation();
 
-  const handleTokenPayment = async (cid: string) => {
-    if (!cid) {
-      printMessage("Please upload the signed agreement.", "error");
-      throw new Error("Missing agreement CID");
-    }
-
-    if (!isConnected) {
-      printMessage("Please connect your wallet first", "error");
-      throw new Error("Wallet not connected");
-    }
-
-    if (!policyData) {
-      printMessage("Policy data not available", "error");
-      throw new Error("Missing policy data");
-    }
-
-    const data = await createCoverageWithPayment(
-      policyData.coverageAmount, // coverage amount in ETH
-      Number(tokenAmount), // premium amount in ETH
-      parseInt(policyData.duration.split(" ")[0]), // duration in days
-      cid,
-      policyData.name,
-      policyData.category,
-      policyData.provider
-    );
-
-    if (!data) {
-      throw new Error("Coverage creation failed");
-    }
-
-    return { data };
-  };
-
-  const handleStripePayment = async (coverageData: CreateCoverageDto) => {
-    setIsProcessing(true);
-    try {
-      const response = await makePayment({
-        amount: policyData!.total,
-        currency: "usd",
-      });
-      const clientSecret = response?.data?.clientSecret;
-      if (clientSecret && stripeRef.current && cardElementRef.current) {
-        const result = await stripeRef.current.confirmCardPayment(
-          clientSecret,
-          {
-            payment_method: { card: cardElementRef.current },
-          }
-        );
-
-        if (result.error || result.paymentIntent?.status !== "succeeded") {
-          printMessage("Payment failed. Please try again.", "error");
-        } else {
-          const coverage = await createCoverage(coverageData);
-
-          const txId = `PI-${Date.now()}`;
-          const blockHash = `0x${Array.from({ length: 40 }, () =>
-            Math.floor(Math.random() * 16).toString(16)
-          ).join("")}`;
-          setTransaction({
-            coverageId: coverage?.data?.id ?? 0,
-            txHash: blockHash,
-            description: `${policyData?.name} Purchased`,
-            amount: policyData!.total,
-            currency: "USD",
-            status: "confirmed",
-            type: "sent",
-            createdAt: new Date().toISOString(),
-          });
-
-          printMessage("Stripe payment successful", "success");
-          const params = new URLSearchParams({
-            coverageId: (coverage?.data?.id ?? 0).toString(),
-          });
-          router.push(
-            `/policyholder/payment/confirmation?${params.toString()}`
-          );
-        }
-      } else {
-        printMessage("Payment failed. Please try again.", "error");
-      }
-    } catch (error) {
-      console.error("Stripe payment failed:", error);
-      printMessage("Payment failed. Please try again.", "error");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handlePayment = async () => {
-    if (!agreementFile && !agreementCid) {
-      printMessage("Please upload the signed agreement.", "error");
-      return;
-    }
-
-    let cid = agreementCid;
-    if (!cid) {
-      cid = await uploadAgreement(agreementFile!);
-      if (!cid) {
-        printMessage("Failed to upload agreement.", "error");
-        return;
-      }
-    }
+  const ensureAgreementCid = async (): Promise<string> => {
+    if (agreementCid) return agreementCid;
+    if (!agreementFile) throw new Error("NO_AGREEMENT_FILE");
+    const cid = await uploadAgreementPdf(agreementFile);
+    if (!cid) throw new Error("AGREEMENT_UPLOAD_FAILED");
     setAgreementCid(cid);
+    return cid;
+  };
 
+  const buildCoverageDto = (cid: string): CreateCoverageDto => {
     const startDate = new Date();
     const endDate = new Date();
     endDate.setFullYear(endDate.getFullYear() + 1);
     const nextPaymentDate = new Date();
     nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
 
-    const coverageData: CreateCoverageDto = {
+    return {
       id: 0,
       policy_name: policyData!.name,
       policy_id: policyData!.id,
@@ -356,66 +265,123 @@ export default function PaymentSummary() {
       next_payment_date: nextPaymentDate.toISOString().split("T")[0],
       agreement_cid: cid,
     };
+  };
 
-    if (paymentMethod === "STRIPE") {
-      await handleStripePayment(coverageData);
+  const payWithStripe = async (coverageData: CreateCoverageDto) => {
+    const response = await makePayment({
+      amount: policyData!.total,
+      currency: "usd",
+    });
+    const clientSecret = response?.data?.clientSecret;
+    if (!clientSecret || !stripeRef.current || !cardElementRef.current)
+      throw new Error("STRIPE_INIT_FAILED");
+
+    const result = await stripeRef.current.confirmCardPayment(clientSecret, {
+      payment_method: { card: cardElementRef.current },
+    });
+    if (result.error || result.paymentIntent?.status !== "succeeded")
+      throw new Error("STRIPE_PAYMENT_FAILED");
+
+    const coverage = await createCoverage(coverageData);
+
+    const txId = result.paymentIntent.id; // use PI as reference
+    setTransaction({
+      coverageId: coverage?.data?.id ?? 0,
+      txHash: txId,
+      description: `${policyData?.name} Purchased`,
+      amount: policyData!.total,
+      currency: "USD",
+      status: "confirmed",
+      type: "sent",
+      createdAt: new Date().toISOString(),
+    });
+
+    const params = new URLSearchParams({
+      coverageId: String(coverage?.data?.id ?? 0),
+      txHash: txId,
+    });
+    router.push(`/policyholder/payment/confirmation?${params.toString()}`);
+  };
+
+  const payOnChain = async (cid: string, coverageData: CreateCoverageDto) => {
+    // Optional: basic funds check (non-blocking; you can remove if not needed)
+    const needed = Number(tokenAmount || 0);
+    if (eth < needed) throw new Error("INSUFFICIENT_FUNDS");
+
+    const { coverageId, txHash } = await createCoverageWithPayment(
+      policyData!.coverageAmount,
+      Number(tokenAmount),
+      parseInt(policyData!.duration.split(" ")[0]),
+      cid,
+      policyData!.name,
+      policyData!.category,
+      policyData!.provider
+    );
+
+    coverageData.id = coverageId;
+
+    const coverage = await createCoverage(coverageData);
+
+    await createTransaction({
+      coverageId: coverage.data!.id,
+      txHash,
+      description: `${policyData?.name} Purchased`,
+      amount: Number(tokenAmount),
+      currency: "ETH",
+      status: "confirmed",
+      type: "sent",
+    });
+
+    setTransaction({
+      coverageId: coverage.data!.id,
+      txHash,
+      description: `${policyData?.name} Purchased`,
+      amount: Number(tokenAmount),
+      currency: "ETH",
+      status: "confirmed",
+      type: "sent",
+      createdAt: new Date().toISOString(),
+    });
+
+    const params = new URLSearchParams({
+      coverageId: String(coverage.data!.id),
+      txHash,
+    });
+    router.push(`/policyholder/payment/confirmation?${params.toString()}`);
+  };
+
+  const handlePayment = async () => {
+    if (isProcessing) return;
+    if (!policyData) {
+      printMessage("Policy data not available", "error");
       return;
     }
-
     setIsProcessing(true);
-    try {
-      const { data } = await handleTokenPayment(cid);
-      coverageData.id = data.coverageId!;
-      console.log("Coverage Hash:", data.txHash);
-      try {
-        const coverage = await createCoverage(coverageData);
-        if (coverage?.data?.id && data.txHash) {
-          await createTransaction({
-            coverageId: coverage.data.id,
-            txHash: data.txHash,
-            description: `${policyData?.name} Purchased`,
-            amount: Number(tokenAmount),
-            currency: "ETH",
-            status: "confirmed",
-            type: "sent",
-          });
 
-          setTransaction({
-            coverageId: coverage.data.id,
-            txHash: data.txHash!,
-            description: `${policyData?.name} Purchased`,
-            amount: Number(tokenAmount),
-            currency: "ETH",
-            status: "confirmed",
-            type: "sent",
-            createdAt: new Date().toISOString(),
-          });
-        }
-      } catch (error) {
-        console.error("Blockchain payment failed:", error);
-        printMessage("Blockchain payment failed. Please try again.", "error");
-        setIsProcessing(false);
+    try {
+      const cid = await ensureAgreementCid();
+      const coverageDto = buildCoverageDto(cid);
+
+      if (paymentMethod === "STRIPE") {
+        await payWithStripe(coverageDto);
+        printMessage("Stripe payment successful", "success");
         return;
       }
 
+      await payOnChain(cid, coverageDto);
       printMessage(
         "Blockchain payment successful! Coverage created.",
         "success"
       );
-      const params = new URLSearchParams({
-        coverageId: (coverageData.id ?? 0).toString(),
-        txHash: data.txHash!,
-      });
-      router.push(`/policyholder/payment/confirmation?${params.toString()}`);
-    } catch (error) {
-      console.error(
-        "Failed to create coverage after blockchain payment:",
-        error
-      );
-      printMessage(
-        "Payment successful but failed to create coverage. Please contact support.",
-        "error"
-      );
+    } catch (err: any) {
+      console.error(err);
+      const message =
+        err?.message === "INSUFFICIENT_FUNDS"
+          ? "Not enough ETH for premium and gas."
+          : err?.message === "NO_AGREEMENT_FILE"
+          ? "Please upload the signed agreement."
+          : "Payment failed. Please try again.";
+      printMessage(message, "error");
     } finally {
       setIsProcessing(false);
     }
@@ -949,7 +915,7 @@ export default function PaymentSummary() {
                     disabled={
                       isProcessing ||
                       isCreatingCoverage ||
-                      isPending ||
+                      isUploadingAgreement ||
                       isWaitingForTransaction ||
                       (paymentMethod === "ETH" && !isConnected) ||
                       (paymentMethod !== "STRIPE" && !tokenAmount)
@@ -958,7 +924,7 @@ export default function PaymentSummary() {
                   >
                     {isProcessing ||
                     isCreatingCoverage ||
-                    isPending ||
+                    isUploadingAgreement ||
                     isWaitingForTransaction ? (
                       <div className="flex items-center space-x-2">
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

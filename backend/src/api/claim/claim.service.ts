@@ -17,6 +17,7 @@ import { CommonResponseDto } from 'src/common/common.dto';
 import { ClaimStatus, TransactionStatus, TransactionType } from 'src/enums';
 import { ActivityLoggerService } from 'src/logger/activity-logger.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { UpdateClaimStatusDto } from './dto/requests/update-claim-status.dto';
 @Injectable()
 export class ClaimService {
   constructor(
@@ -439,7 +440,7 @@ export class ClaimService {
     id: number,
     status: ClaimStatus,
     req: AuthenticatedRequest,
-    txHash?: string,
+    body?: UpdateClaimStatusDto,
   ): Promise<CommonResponseDto> {
     // 1️⃣ Authenticate the user
     const { data: userData, error: userError } =
@@ -485,7 +486,7 @@ export class ClaimService {
 
     // 3️⃣ If approved, update utilization rate
     if (status === ClaimStatus.APPROVED) {
-      if (!txHash) {
+      if (!body?.txHash) {
         throw new BadRequestException('txHash is required for approved claims');
       }
       if (!coverage?.id || !coverage?.user_id) {
@@ -532,7 +533,7 @@ export class ClaimService {
           user_id: updatedClaim.submitted_by,
           coverage_id: coverage.id,
           description: `Claim Payout #${id}`,
-          tx_hash: txHash,
+          tx_hash: body?.txHash,
           amount: updatedClaim.amount,
           currency: 'ETH',
           created_at: new Date().toISOString(),

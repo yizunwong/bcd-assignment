@@ -92,12 +92,27 @@ export function ClaimReviewDialog({ claim, trigger }: ClaimReviewDialogProps) {
     if (!validateForm()) return;
     try {
       if (reviewForm.status === "approved") {
-        await approveClaimOnChain(Number(claim.id));
+        const claimHash = await approveClaimOnChain(Number(claim.id));
+
+        console.log("Claim approved on-chain:", claimHash);
+
+        await updateClaimStatus(
+          String(claim.id),
+          reviewForm.status as ClaimStatus,
+          {
+            txHash: claimHash as string,
+          }
+        );
+      } else {
+        await updateClaimStatus(
+          String(claim.id),
+          reviewForm.status as ClaimStatus,
+          {
+            txHash: '', 
+          }
+        );
       }
-      await updateClaimStatus(
-        String(claim.id),
-        reviewForm.status as ClaimStatus
-      );
+
       printMessage("Claim updated successfully", "success");
       setOpen(false);
     } catch (error) {

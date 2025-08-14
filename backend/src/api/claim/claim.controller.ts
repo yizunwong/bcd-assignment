@@ -26,6 +26,7 @@ import { ApiCommonResponse, CommonResponseDto } from 'src/common/common.dto';
 import { ApiBearerAuth, ApiConsumes, ApiParam } from '@nestjs/swagger';
 import { UploadDocDto } from '../file/requests/document-upload.dto';
 import { ClaimStatus } from 'src/enums';
+import { UpdateClaimStatusDto } from './dto/requests/update-claim-status.dto';
 
 @Controller('claim')
 @ApiBearerAuth('supabase-auth')
@@ -106,10 +107,10 @@ export class ClaimController {
   updateClaimStatus(
     @Param('id') id: string,
     @Param('status') status: ClaimStatus,
-    @Body('txHash') txHash: string | undefined,
+    @Body() body: UpdateClaimStatusDto,
     @Req() req: AuthenticatedRequest,
   ): Promise<CommonResponseDto> {
-    return this.claimService.updateClaimStatus(+id, status, req, txHash);
+    return this.claimService.updateClaimStatus(+id, status, req, body);
   }
 
   @Delete(':id/file')

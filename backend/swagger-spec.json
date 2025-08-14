@@ -831,6 +831,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateClaimStatusDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Update claim",
@@ -3025,6 +3035,19 @@
           "approved",
           "rejected",
           "claimed"
+        ]
+      },
+      "UpdateClaimStatusDto": {
+        "type": "object",
+        "properties": {
+          "txHash": {
+            "type": "string",
+            "description": "Transaction hash associated with the claim status update",
+            "example": "0x123abc456def789..."
+          }
+        },
+        "required": [
+          "txHash"
         ]
       },
       "CreatePolicyDto": {
