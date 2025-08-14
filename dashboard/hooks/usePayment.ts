@@ -5,6 +5,7 @@ import {
   usePaymentControllerCreate,
   usePaymentControllerFindAll,
   usePaymentControllerFindOne,
+  usePaymentControllerGetStats,
 } from "@/api";
 import { parseError } from "@/utils/parseError";
 
@@ -24,6 +25,14 @@ export function usePaymentMutation() {
 export function useTransactionsQuery() {
   const query = usePaymentControllerFindAll();
 
+  return {
+    ...query,
+    error: parseError(query.error),
+  };
+}
+
+export function usePaymentStatsQuery() {
+  const query = usePaymentControllerGetStats();
   return {
     ...query,
     error: parseError(query.error),
