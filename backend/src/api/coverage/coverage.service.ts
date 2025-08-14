@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { PinataService } from 'src/pinata/pinata.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateCoverageDto } from './dto/requests/create-coverage.dto';
 import { FindCoverageQueryDto } from './dto/responses/coverage-query.dto';
 import { CoverageResponseDto } from './dto/responses/coverage.dto';
@@ -16,7 +17,10 @@ import { CoverageStatsDto } from './dto/responses/coverage-stats.dto';
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return */
 @Injectable()
 export class CoverageService {
-  constructor(private readonly pinataService: PinataService) {}
+  constructor(
+    private readonly pinataService: PinataService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   async uploadAgreement(file: Express.Multer.File, req: AuthenticatedRequest) {
     const cid = await this.pinataService.uploadPolicyDocument(file, {
@@ -53,6 +57,19 @@ export class CoverageService {
     if (coverageError || !coverage) {
       console.error(coverageError);
       throw new InternalServerErrorException('Failed to create coverage');
+    }
+
+    // Create notification for successful coverage creation
+    try {
+      await this.notificationsService.createSystemNotification(
+        req.user.id,
+        'Coverage Created Successfully',
+        `Your coverage for policy ${dto.policy_id} has been created successfully. You can now file claims under this coverage.`,
+        'success',
+      );
+    } catch (notificationError) {
+      console.error('Failed to create notification:', notificationError);
+      // Don't throw error here as coverage was created successfully
     }
 
     return new CommonResponseDto({

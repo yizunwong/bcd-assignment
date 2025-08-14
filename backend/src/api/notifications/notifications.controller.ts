@@ -8,8 +8,13 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
   Req,
+  Post,
+  Body,
 } from '@nestjs/common';
-import { NotificationsService } from './notifications.service';
+import {
+  NotificationsService,
+  CreateNotificationDto,
+} from './notifications.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 
@@ -38,5 +43,13 @@ export class NotificationsController {
   @Patch('read-all')
   async markAllAsRead(@Req() req: AuthenticatedRequest) {
     return this.notificationsService.markAllAsRead(req);
+  }
+
+  @Post()
+  async createNotification(
+    @Body() notificationData: CreateNotificationDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.notificationsService.createNotification(req, notificationData);
   }
 }

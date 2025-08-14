@@ -17,6 +17,13 @@ export interface Notification {
   updated_at: string | null;
 }
 
+export interface CreateNotificationDto {
+  user_id: string;
+  title: string;
+  message: string;
+  notification_type?: 'info' | 'success' | 'warning' | 'error' | 'alert';
+}
+
 export interface NotificationsResponse {
   data: Notification[];
   total: number;
@@ -129,5 +136,76 @@ export class NotificationsService {
     }
 
     return { success: true };
+  }
+
+  async createNotification(
+    req: AuthenticatedRequest,
+    notificationData: CreateNotificationDto,
+  ): Promise<Notification> {
+    const { data: notification, error } = await req.supabase
+      .from('notifications')
+      .insert({
+        user_id: notificationData.user_id,
+        title: notificationData.title,
+        message: notificationData.message,
+        notification_type: notificationData.notification_type || 'info',
+      })
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to create notification: ${error.message}`);
+    }
+
+    return {
+      id: notification.id,
+      user_id: notification.user_id,
+      title: notification.title,
+      message: notification.message,
+      notification_type: notification.notification_type,
+      read: notification.read ?? false,
+      created_at: notification.created_at ?? new Date().toISOString(),
+      updated_at: notification.updated_at,
+    };
+  }
+
+  async createSystemNotification(
+    userId: string,
+    title: string,
+    message: string,
+    notificationType:
+      | 'info'
+      | 'success'
+      | 'warning'
+      | 'error'
+      | 'alert' = 'info',
+  ): Promise<Notification> {
+    // Use the supabase service directly for system notifications
+    const supabaseClient = this.supabaseService.createClientWithToken();
+    const { data: notification, error } = await supabaseClient
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        title,
+        message,
+        notification_type: notificationType,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to create system notification: ${error.message}`);
+    }
+
+    return {
+      id: notification.id,
+      user_id: notification.user_id,
+      title: notification.title,
+      message: notification.message,
+      notification_type: notification.notification_type,
+      read: notification.read ?? false,
+      created_at: notification.created_at ?? new Date().toISOString(),
+      updated_at: notification.updated_at,
+    };
   }
 }

@@ -16,11 +16,13 @@ import { ClaimStatsDto } from './dto/responses/claim-stats.dto';
 import { CommonResponseDto } from 'src/common/common.dto';
 import { ClaimStatus } from 'src/enums';
 import { ActivityLoggerService } from 'src/logger/activity-logger.service';
+import { NotificationsService } from '../notifications/notifications.service';
 @Injectable()
 export class ClaimService {
   constructor(
     private readonly fileService: FileService,
     private readonly activityLogger: ActivityLoggerService,
+    private readonly notificationsService: NotificationsService,
   ) {}
   async createClaim(
     createClaimDto: CreateClaimDto,
@@ -63,6 +65,19 @@ export class ClaimService {
 
     const claimId = data.id;
     await this.activityLogger.log('CLAIM_CREATED', user_id, req.ip);
+
+    // Create notification for claim submission
+    try {
+      await this.notificationsService.createSystemNotification(
+        user_id,
+        'Claim Submitted Successfully',
+        `Your claim #${claimId} has been submitted successfully and is now under review. We will notify you once it's processed.`,
+        'info',
+      );
+    } catch (notificationError) {
+      console.error('Failed to create claim notification:', notificationError);
+      // Don't throw error here as claim was created successfully
+    }
 
     return new CommonResponseDto({
       statusCode: 201,
@@ -460,6 +475,36 @@ export class ClaimService {
       userData.user.id,
       req.ip,
     );
+
+    // Create notification for claim status update
+    try {
+      const notificationType =
+        status === ClaimStatus.APPROVED
+          ? 'success'
+          : status === ClaimStatus.REJECTED
+            ? 'error'
+            : 'info';
+
+      const statusMessage =
+        status === ClaimStatus.APPROVED
+          ? 'approved'
+          : status === ClaimStatus.REJECTED
+            ? 'rejected'
+            : status.toLowerCase();
+
+      await this.notificationsService.createSystemNotification(
+        data.submitted_by,
+        `Claim ${statusMessage.charAt(0).toUpperCase() + statusMessage.slice(1)}`,
+        `Your claim #${id} has been ${statusMessage}. ${status === ClaimStatus.APPROVED ? 'Payment will be processed shortly.' : status === ClaimStatus.REJECTED ? 'Please contact support for more details.' : ''}`,
+        notificationType,
+      );
+    } catch (notificationError) {
+      console.error(
+        'Failed to create claim status notification:',
+        notificationError,
+      );
+      // Don't throw error here as claim status was updated successfully
+    }
 
     return new CommonResponseDto({
       statusCode: 200,
