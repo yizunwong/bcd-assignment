@@ -157,10 +157,12 @@ export default function Profile() {
     canvas.height = size;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const sx = -position.x / zoom;
-    const sy = -position.y / zoom;
-    const sWidth = size / zoom;
-    const sHeight = size / zoom;
+    const img = imgRef.current;
+    const scale = img.naturalWidth / img.width;
+    const sx = (-position.x / zoom) * scale;
+    const sy = (-position.y / zoom) * scale;
+    const sWidth = (size / zoom) * scale;
+    const sHeight = (size / zoom) * scale;
     ctx.clearRect(0, 0, size, size);
     ctx.save();
     ctx.beginPath();
@@ -563,7 +565,7 @@ export default function Profile() {
                   style={{
                     width: "auto",
                     height: "auto",
-                    transform: `scale(${zoom}) translate(${position.x}px, ${position.y}px)`,
+                    transform: `translate(${position.x}px, ${position.y}px) scale(${zoom})`,
                     transformOrigin: "top left",
                     cursor: dragStart.current ? "grabbing" : "grab",
                   }}
