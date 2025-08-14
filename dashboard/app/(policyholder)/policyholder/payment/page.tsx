@@ -34,7 +34,7 @@ import { usePolicyQuery } from "@/hooks/usePolicies";
 import { useToast } from "@/components/shared/ToastProvider";
 import { usePaymentMutation } from "@/hooks/usePayment";
 import { useInsuranceContract } from "@/hooks/useBlockchain";
-import { CreateCoverageDto, UploadDocDto } from "@/api";
+import { CreateCoverageDto } from "@/api";
 import { useTransactionStore } from "@/store/useTransactionStore";
 import { useAccount } from "wagmi";
 import { useAgreementUploadMutation } from "@/hooks/useAgreement";
@@ -61,7 +61,6 @@ export default function PaymentSummary() {
   const stripeRef = useRef<any>(null);
   const cardElementRef = useRef<any>(null);
   const cardContainerRef = useRef<HTMLDivElement>(null);
-  const coverageRef = useRef<CreateCoverageDto | null>(null);
 
   // Coverage creation mutation
   const { makePayment, createTransaction } = usePaymentMutation();
@@ -73,8 +72,6 @@ export default function PaymentSummary() {
     createCoverageWithPayment,
     isCreatingCoverage,
     isWaitingForTransaction,
-    isTransactionSuccess,
-    createCoverageError,
     createCoverageData,
   } = useInsuranceContract();
 
@@ -171,22 +168,6 @@ export default function PaymentSummary() {
     setAgreementCid(null);
   };
 
-  // Handle blockchain transaction success
-  useEffect(() => {
-    if (isTransactionSuccess && createCoverageData) {
-      console.log("Blockchain transaction successful:", createCoverageData);
-      handleBlockchainSuccess();
-    }
-  }, [isTransactionSuccess, createCoverageData]);
-
-  // Handle blockchain transaction error
-  useEffect(() => {
-    if (createCoverageError) {
-      console.error("Blockchain transaction failed:", createCoverageError);
-      printMessage("Blockchain transaction failed. Please try again.", "error");
-      setIsProcessing(false);
-    }
-  }, [createCoverageError, printMessage]);
 
   useEffect(() => {
     if (paymentMethod !== "STRIPE") return;
@@ -248,91 +229,37 @@ export default function PaymentSummary() {
 
   const { uploadAgreement } = useAgreementUploadMutation();
 
-  const handleBlockchainSuccess = async () => {
-    try {
-      const coverageData = coverageRef.current!;
-      const coverage = await createCoverage(coverageData);
-      if (coverage?.data?.id && createCoverageData) {
-        await createTransaction({
-          coverageId: coverage.data.id,
-          txHash: createCoverageData,
-          description: `${policyData?.name} Purchased`,
-          amount: Number(tokenAmount),
-          currency: "ETH",
-          status: "confirmed",
-          type: "sent",
-        });
-
-        // Set transaction details in store
-        setTransaction({
-          coverageId: coverage.data.id,
-          txHash: createCoverageData!,
-          description: `${policyData?.name} Purchased`,
-          amount: Number(tokenAmount),
-          currency: "ETH",
-          status: "confirmed",
-          type: "sent",
-          createdAt: new Date().toISOString(),
-        });
-      }
-
-      printMessage(
-        "Blockchain payment successful! Coverage created.",
-        "success"
-      );
-      router.push("/policyholder/payment/confirmation");
-    } catch (error) {
-      console.error(
-        "Failed to create coverage after blockchain payment:",
-        error
-      );
-      printMessage(
-        "Payment successful but failed to create coverage. Please contact support.",
-        "error"
-      );
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
   const handleTokenPayment = async (cid: string) => {
     if (!cid) {
       printMessage("Please upload the signed agreement.", "error");
-      return;
+      throw new Error("Missing agreement CID");
     }
 
     if (!isConnected) {
       printMessage("Please connect your wallet first", "error");
-      return;
+      throw new Error("Wallet not connected");
     }
 
     if (!policyData) {
       printMessage("Policy data not available", "error");
-      return;
+      throw new Error("Missing policy data");
     }
 
-    setIsProcessing(true);
+    const coverageId = await createCoverageWithPayment(
+      policyData.coverageAmount, // coverage amount in ETH
+      Number(tokenAmount), // premium amount in ETH
+      parseInt(policyData.duration.split(" ")[0]), // duration in days
+      cid,
+      policyData.name,
+      policyData.category,
+      policyData.provider
+    );
 
-    try {
-      // Call the blockchain contract to create policy with payment
-      const coverageId = await createCoverageWithPayment(
-        policyData.coverageAmount, // coverage amount in ETH
-        Number(tokenAmount), // premium amount in ETH
-        parseInt(policyData.duration.split(" ")[0]), // duration in days
-        cid,
-        policyData.name,
-        policyData.category,
-        policyData.provider
-      );
-
-      return coverageId;
-
-      // The success will be handled by the useEffect that watches isTransactionSuccess
-    } catch (error) {
-      console.error("Blockchain payment failed:", error);
-      printMessage("Blockchain payment failed. Please try again.", "error");
-      setIsProcessing(false);
+    if (!coverageId) {
+      throw new Error("Coverage creation failed");
     }
+
+    return coverageId;
   };
 
   const handleStripePayment = async (coverageData: CreateCoverageDto) => {
@@ -407,11 +334,8 @@ export default function PaymentSummary() {
     const nextPaymentDate = new Date();
     nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
 
-    // ETH payment
-    const coverageId = await handleTokenPayment(cid);
-
     const coverageData: CreateCoverageDto = {
-      id: coverageId!,
+      id: 0,
       policy_id: policyData!.id,
       status: "active",
       utilization_rate: 0,
@@ -421,11 +345,64 @@ export default function PaymentSummary() {
       agreement_cid: cid,
     };
 
-    coverageRef.current = coverageData;
-
     if (paymentMethod === "STRIPE") {
       await handleStripePayment(coverageData);
       return;
+    }
+
+    setIsProcessing(true);
+    let coverageId: number;
+    try {
+      coverageId = await handleTokenPayment(cid);
+      coverageData.id = coverageId!;
+    } catch (error) {
+      console.error("Blockchain payment failed:", error);
+      printMessage("Blockchain payment failed. Please try again.", "error");
+      setIsProcessing(false);
+      return;
+    }
+
+    try {
+      const coverage = await createCoverage(coverageData);
+      if (coverage?.data?.id && createCoverageData) {
+        await createTransaction({
+          coverageId: coverage.data.id,
+          txHash: createCoverageData,
+          description: `${policyData?.name} Purchased`,
+          amount: Number(tokenAmount),
+          currency: "ETH",
+          status: "confirmed",
+          type: "sent",
+        });
+
+        setTransaction({
+          coverageId: coverage.data.id,
+          txHash: createCoverageData!,
+          description: `${policyData?.name} Purchased`,
+          amount: Number(tokenAmount),
+          currency: "ETH",
+          status: "confirmed",
+          type: "sent",
+          createdAt: new Date().toISOString(),
+        });
+      }
+
+      printMessage(
+        "Blockchain payment successful! Coverage created.",
+        "success"
+      );
+      router.push("/policyholder/payment/confirmation");
+    } catch (error) {
+      console.error(
+        "Failed to create coverage after blockchain payment:",
+        error
+      );
+      printMessage(
+        "Payment successful but failed to create coverage. Please contact support.",
+        "error"
+      );
+    } finally {
+      setIsProcessing(false);
     }
   };
 
