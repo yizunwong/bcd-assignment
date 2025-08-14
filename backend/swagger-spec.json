@@ -3771,21 +3771,21 @@
             "type": "string"
           },
           "user_id": {
-            "type": "object",
-            "nullable": true
+            "type": "string"
           },
           "ip": {
-            "type": "object",
-            "nullable": true
+            "type": "string"
           },
           "timestamp": {
-            "type": "object",
-            "nullable": true
+            "type": "string"
           }
         },
         "required": [
           "id",
-          "action"
+          "action",
+          "user_id",
+          "ip",
+          "timestamp"
         ]
       }
     }

@@ -7,14 +7,14 @@ export class ActivityLogDto {
   @ApiProperty()
   action!: string;
 
-  @ApiProperty({ required: false, nullable: true })
-  user_id!: string | null;
+  @ApiProperty()
+  user_id!: string;
 
-  @ApiProperty({ required: false, nullable: true })
-  ip!: string | null;
+  @ApiProperty()
+  ip!: string;
 
-  @ApiProperty({ required: false, nullable: true })
-  timestamp!: string | null;
+  @ApiProperty()
+  timestamp!: string;
 
   constructor(partial: Partial<ActivityLogDto>) {
     Object.assign(this, partial);

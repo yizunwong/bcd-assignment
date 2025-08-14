@@ -31,22 +31,26 @@ import { useAuthStore, type Role } from '@/store/useAuthStore';
 
 interface NavbarProps {
   initialRole?: Role;
+  initialUserId?: string;
 }
 
-export function Navbar({ initialRole }: NavbarProps) {
+export function Navbar({ initialRole, initialUserId }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const pathname = usePathname();
   const { logout } = useAuth();
   const router = useRouter();
   const { printMessage } = useToast();
-  const { role, setRole } = useAuthStore();
+  const { role, setRole, setUserId } = useAuthStore();
 
   useEffect(() => {
     if (initialRole) {
       setRole(initialRole);
     }
-  }, [initialRole, setRole]);
+    if (initialUserId) {
+      setUserId(initialUserId);
+    }
+  }, [initialRole, initialUserId, setRole, setUserId]);
 
   const allLinks = {
     policyholder: [
@@ -207,6 +211,7 @@ export function Navbar({ initialRole }: NavbarProps) {
                           setIsUserMenuOpen(false);
                           await logout();
                           setRole(null);
+                          setUserId(undefined);
                           printMessage('Logged out successfully', 'success');
                           router.push('/');
                           router.refresh();
@@ -313,6 +318,8 @@ export function Navbar({ initialRole }: NavbarProps) {
                     onClick={async () => {
                       setIsOpen(false);
                       await logout();
+                      setRole(null);
+                      setUserId(undefined);
                       printMessage('Logged out successfully', 'success');
                       router.push('/');
                       router.refresh();

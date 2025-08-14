@@ -75,8 +75,8 @@ export function useInsuranceContract() {
 
   // Create coverage with ETH payment
   const createCoverageWithPayment = async (
-    coverage: number, // in ETH
-    premium: number, // in ETH
+    coverage: number,
+    premium: number,
     durationDays: number,
     agreementCid: string,
     name: string,
@@ -124,9 +124,9 @@ export function useInsuranceContract() {
         })
         .find((e) => e && e.eventName === "CoverageCreated");
 
-      if (event) {
-        return Number((event as any).args.coverageId);
-      }
+      const coverageId = event ? Number((event as any).args.coverageId) : null;
+
+      return { coverageId, txHash: hash }; 
     } catch (error) {
       console.error("Error creating coverage:", error);
       printMessage("Failed to create coverage", "error");

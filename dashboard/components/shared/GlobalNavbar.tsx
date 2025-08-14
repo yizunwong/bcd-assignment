@@ -8,6 +8,7 @@ interface DecodedToken {
   app_metadata?: {
     role?: string;
   };
+  sub?: string;
   [key: string]: any;
 }
 
@@ -18,11 +19,13 @@ export default async function GlobalNavbar() {
   const token = cookieStore.get("access_token")?.value;
 
   let role: Role | undefined;
+  let userId: string | undefined;
 
   if (token) {
     try {
       const decoded = jwtDecode<DecodedToken>(token);
       const rawRole = decoded.app_metadata?.role;
+      userId = decoded.sub;
       switch (rawRole) {
         case "policyholder":
           role = "policyholder";
@@ -42,5 +45,5 @@ export default async function GlobalNavbar() {
     }
   }
 
-  return <Navbar initialRole={role} />;
+  return <Navbar initialRole={role} initialUserId={userId} />;
 }

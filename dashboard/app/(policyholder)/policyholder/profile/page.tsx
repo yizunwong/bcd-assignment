@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,53 +21,32 @@ import {
 } from "lucide-react";
 import {
   profileData as initialProfileData,
-  notifications as initialNotifications,
 } from "@/public/data/policyholder/profileData";
-import { useMeQuery } from "@/hooks/useAuth";
 import { useActivityLogsQuery } from "@/hooks/useActivityLog";
 import { useUpdateUserMutation } from "@/hooks/useUsers";
 import { useToast } from "@/components/shared/ToastProvider";
 import { ProfileResponseDto } from "@/api";
-import ConfirmationDialog from '@/components/shared/ConfirmationDialog';
+import ConfirmationDialog from "@/components/shared/ConfirmationDialog";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [profileData, setProfileData] =
     useState<ProfileResponseDto>(initialProfileData);
-  const [notifications, setNotifications] = useState(initialNotifications);
-  const { data } = useMeQuery();
+  const userId = useAuthStore((state) => state.userId);
   const { data: activityLogs, isLoading: isActivityLoading } =
     useActivityLogsQuery({
-      userId: data?.data?.id,
+      userId: userId,
       page: 1,
       limit: 5,
     });
   const { updateUser, isPending } = useUpdateUserMutation();
   const { printMessage } = useToast();
-
-  useEffect(() => {
-    if (data?.data) {
-      const user: ProfileResponseDto = data.data;
-      setProfileData((prev) => ({
-        ...prev,
-        id: user.id ?? prev.id,
-        role: user.role ?? prev.role,
-        firstName: user.firstName ?? prev.firstName,
-        lastName: user.lastName ?? prev.lastName,
-        email: user.email ?? prev.email,
-        phone: user.phone ?? prev.phone,
-        address: user.address ?? prev.address,
-        occupation: user.occupation ?? prev.occupation,
-        dateOfBirth: user.dateOfBirth ?? prev.dateOfBirth,
-        bio: user.bio ?? prev.bio,
-      }));
-    }
-  }, [data]);
   const handleSave = async () => {
-    if (!data?.data?.id) return;
+    if (!userId) return;
     try {
-      await updateUser(data.data.id, {
+      await updateUser(userId, {
         role: profileData.role,
         firstName: profileData.firstName,
         lastName: profileData.lastName,

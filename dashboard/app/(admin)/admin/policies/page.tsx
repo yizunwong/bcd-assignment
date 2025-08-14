@@ -51,8 +51,8 @@ import {
   useUpdatePolicyMutation,
 } from "@/hooks/usePolicies";
 import { useDebounce } from "@/hooks/useDebounce";
-import { useMeQuery } from "@/hooks/useAuth";
 import { useToast } from "@/components/shared/ToastProvider";
+import { useAuthStore } from "@/store/useAuthStore";
 import {
   PolicyControllerFindAllCategory,
   CreatePolicyDtoCategory,
@@ -75,7 +75,7 @@ export default function ManagePolicies() {
   const [dragActive, setDragActive] = useState(false);
   const { printMessage } = useToast();
 
-  const { data: meData } = useMeQuery();
+  const userId = useAuthStore((state) => state.userId);
   const { createPolicy, error: createError } = useCreatePolicyMutation();
   const { uploadPolicyDocuments } = useUploadPolicyDocumentsMutation();
   const { data: statsData } = usePolicyStatsQuery();
@@ -116,8 +116,8 @@ export default function ManagePolicies() {
     page: currentPage,
     limit: itemsPerPage,
   };
-  if (meData?.data?.id) {
-    params.userId = meData.data.id;
+  if (userId) {
+    params.userId = userId;
   }
 
   const {

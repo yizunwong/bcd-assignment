@@ -732,30 +732,12 @@ export interface TransactionResponseDto {
   createdAt: string;
 }
 
-/**
- * @nullable
- */
-export type ActivityLogDtoUserId = { [key: string]: unknown } | null;
-
-/**
- * @nullable
- */
-export type ActivityLogDtoIp = { [key: string]: unknown } | null;
-
-/**
- * @nullable
- */
-export type ActivityLogDtoTimestamp = { [key: string]: unknown } | null;
-
 export interface ActivityLogDto {
   id: string;
   action: string;
-  /** @nullable */
-  user_id?: ActivityLogDtoUserId;
-  /** @nullable */
-  ip?: ActivityLogDtoIp;
-  /** @nullable */
-  timestamp?: ActivityLogDtoTimestamp;
+  user_id: string;
+  ip: string;
+  timestamp: string;
 }
 
 export type AuthControllerLogin200AllOf = {
