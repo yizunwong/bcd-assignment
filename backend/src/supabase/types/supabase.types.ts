@@ -133,7 +133,7 @@ export type Database = {
           type: string;
         };
         Insert: {
-          amount?: number;
+          amount: number;
           claimed_date?: string | null;
           coverage_id: number;
           description?: string | null;

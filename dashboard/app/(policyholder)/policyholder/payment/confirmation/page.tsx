@@ -33,6 +33,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import autoTable from "jspdf-autotable";
+import { useSearchParams } from "next/navigation";
+import { useTransactionQuery } from "@/hooks/usePayment";
 
 // ------- Helpers -------
 function formatAmount(a: any) {
@@ -217,24 +219,20 @@ function addTermsAndConditions(doc: jsPDF, startY: number) {
 
 export default function PaymentConfirmation() {
   const [copied, setCopied] = useState(false);
-  const [currentStep] = useState(3);
-  const transaction = useTransactionStore((state) => state.data);
-  const { data: coverage } = useCoverageQuery(
-    transaction.coverageId.toString()
+
+  const searchParams = useSearchParams();
+  const coverageId = searchParams.get("coverageId") || "";
+  const txHash = searchParams.get("txHash") || "";
+  const { data: coverage, isLoading: isCoverageLoading } = useCoverageQuery(
+    coverageId,
+    { enabled: !!coverageId }
   );
-
-  const transactionData = {
-    blockHash: transaction.txHash,
-    amount: `${transaction.amount} ${transaction.currency}`,
-    usdAmount: `$${(transaction.amount * 3500).toFixed(2)}`,
-    paymentMethod: transaction.currency,
-    timestamp: transaction.createdAt || new Date().toISOString(),
-    networkFee: "0.02 ETH",
-    status: transaction.status,
-    confirmations: 1,
-  };
-
-  console.log("transactionData", coverage);
+  const { data: transactionRaw, isLoading: isTransactionLoading } =
+    useTransactionQuery(txHash, { enabled: !!txHash });
+  if (!transactionRaw?.data || !coverage) {
+    return <div className="p-8">Loading...</div>;
+  }
+  const transactionData = transactionRaw.data;
 
   const policyData = coverage?.data
     ? {
@@ -248,8 +246,6 @@ export default function PaymentConfirmation() {
         expiryDate: coverage.data.end_date,
       }
     : null;
-
-  console.log("policyData", policyData);
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -311,9 +307,7 @@ export default function PaymentConfirmation() {
       ],
       [
         "Due Date",
-        policyData
-          ? new Date(policyData.expiryDate).toLocaleDateString()
-          : "-",
+        policyData ? new Date(policyData.expiryDate).toLocaleDateString() : "-",
       ],
     ];
     drawBox(doc, RIGHT.x, RIGHT.y, RIGHT.w, RIGHT.h, policyDetails);
@@ -325,11 +319,11 @@ export default function PaymentConfirmation() {
     // ---- TABLE ----
     const tableBody = [
       [
-        new Date(transactionData.timestamp).toLocaleDateString(),
+        new Date(transactionData?.createdAt!).toLocaleDateString(),
         String(policyData?.id ?? "-"),
         String(policyData?.name ?? "-"),
-        formatAmount(transactionData.amount),
-        formatAmount(transactionData.amount),
+        formatAmount(transactionData?.amount),
+        formatAmount(transactionData?.amount),
       ],
     ];
 
@@ -401,9 +395,7 @@ export default function PaymentConfirmation() {
       ],
       [
         "Due Date",
-        policyData
-          ? new Date(policyData.expiryDate).toLocaleDateString()
-          : "-",
+        policyData ? new Date(policyData.expiryDate).toLocaleDateString() : "-",
       ],
       ["Payment in Full", formatAmount(transactionData.amount)],
       ["Minimum Due", formatAmount(transactionData.amount)],
@@ -438,7 +430,7 @@ export default function PaymentConfirmation() {
     },
   ];
 
-  if (!policyData || !transaction.txHash) {
+  if (!policyData) {
     return <div className="p-8">Loading...</div>;
   }
 
@@ -520,9 +512,6 @@ export default function PaymentConfirmation() {
                       Payment Confirmed
                     </span>
                   </div>
-                  <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
-                    {transactionData.confirmations} confirmations
-                  </Badge>
                 </div>
 
                 <div className="space-y-3">
@@ -535,35 +524,26 @@ export default function PaymentConfirmation() {
                         {transactionData.amount}
                       </p>
                       <p className="text-sm text-slate-500 dark:text-slate-400">
-                        {transactionData.usdAmount}
+                        {transactionData.currency}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex justify-between items-center">
+                  {/* <div className="flex justify-between items-center">
                     <span className="text-slate-600 dark:text-slate-400">
                       Payment Method:
                     </span>
                     <span className="font-medium text-slate-800 dark:text-slate-100">
                       {transactionData.paymentMethod}
                     </span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-600 dark:text-slate-400">
-                      Network Fee:
-                    </span>
-                    <span className="font-medium text-slate-800 dark:text-slate-100">
-                      {transactionData.networkFee}
-                    </span>
-                  </div>
+                  </div> */}
 
                   <div className="flex justify-between items-center">
                     <span className="text-slate-600 dark:text-slate-400">
                       Transaction Date:
                     </span>
                     <span className="font-medium text-slate-800 dark:text-slate-100">
-                      {new Date(transactionData.timestamp).toLocaleDateString()}
+                      {new Date(transactionData.createdAt).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
@@ -576,12 +556,12 @@ export default function PaymentConfirmation() {
                 </label>
                 <div className="flex items-center space-x-2 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border">
                   <code className="flex-1 text-sm font-mono text-slate-700 dark:text-slate-300">
-                    {formatAddress(transactionData.blockHash)}
+                    {formatAddress(transactionData.txHash)}
                   </code>
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => copyToClipboard(transactionData.blockHash)}
+                    onClick={() => copyToClipboard(transactionData.txHash)}
                     className="h-8 w-8 p-0"
                     aria-label="Copy transaction hash"
                   >
@@ -602,7 +582,6 @@ export default function PaymentConfirmation() {
                   </p>
                 )}
               </div>
-
             </CardContent>
           </Card>
 
@@ -682,7 +661,6 @@ export default function PaymentConfirmation() {
                   </div>
                 </div>
               </div>
-
             </CardContent>
           </Card>
         </div>

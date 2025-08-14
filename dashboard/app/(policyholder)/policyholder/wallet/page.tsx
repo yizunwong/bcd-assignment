@@ -29,8 +29,8 @@ import {
 import FluidTabs from "@/components/animata/fluid-tabs";
 import { walletBalance } from "@/public/data/policyholder/walletData";
 import WalletSection from "@/components/shared/WalletSectiom";
-import { useFetchTransactions } from "@/hooks/usePayment";
-import { TransactionResponseDto } from '@/api';
+import { useTransactionsQuery } from "@/hooks/usePayment";
+import { TransactionResponseDto } from "@/api";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -39,7 +39,7 @@ export default function WalletPage() {
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [dateRange, setDateRange] = useState("all");
-  const { data: savedTxs, error: chainTxsError } = useFetchTransactions();
+  const { data: savedTxs, error: chainTxsError } = useTransactionsQuery();
   const txArray = (savedTxs?.data ?? []) as TransactionResponseDto[];
 
   const transactions = useMemo(() => [...txArray], [txArray]);
@@ -77,13 +77,16 @@ export default function WalletPage() {
       }
 
       if (dateRange !== "all") {
-        filtered = filtered.filter((tx) => new Date(tx.createdAt) >= filterDate);
+        filtered = filtered.filter(
+          (tx) => new Date(tx.createdAt) >= filterDate
+        );
       }
     }
 
     // Sort by date (newest first)
     return filtered.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }, [filterType, filterStatus, dateRange, transactions]);
 
