@@ -16,6 +16,7 @@ import { DashboardModule } from './api/dashboard/dashboard.module';
 import { PaymentModule } from './api/payment/payment.module';
 import { ActivityLogModule } from './api/activity-log/activity-log.module';
 import { LoggerModule } from './logger/logger.module';
+import { NotificationsModule } from './api/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { LoggerModule } from './logger/logger.module';
     PaymentModule,
     ActivityLogModule,
     LoggerModule,
+    NotificationsModule,
   ],
 
   controllers: [AppController],

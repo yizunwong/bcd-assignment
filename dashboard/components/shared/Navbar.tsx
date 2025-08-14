@@ -1,17 +1,17 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "./ThemeToggle";
-import { Connect } from "./Connect";
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { ThemeToggle } from './ThemeToggle';
+import { Connect } from './Connect';
+import { NotificationsDropdown } from './NotificationsDropdown';
 import {
   Shield,
   Menu,
   X,
-  Bell,
   User,
   Home,
   Search,
@@ -24,10 +24,10 @@ import {
   Users,
   ChevronDown,
   Wallet,
-} from "lucide-react";
-import useAuth from "@/hooks/useAuth";
-import { useToast } from "./ToastProvider";
-import { useAuthStore, type Role } from "@/store/useAuthStore";
+} from 'lucide-react';
+import useAuth from '@/hooks/useAuth';
+import { useToast } from './ToastProvider';
+import { useAuthStore, type Role } from '@/store/useAuthStore';
 
 interface NavbarProps {
   initialRole?: Role;
@@ -50,27 +50,27 @@ export function Navbar({ initialRole }: NavbarProps) {
 
   const allLinks = {
     policyholder: [
-      { href: "/policyholder", label: "Dashboard", icon: Home },
-      { href: "/policyholder/browse", label: "Browse Policies", icon: Search },
-      { href: "/policyholder/coverage", label: "My Coverage", icon: Shield },
-      { href: "/policyholder/claims", label: "Claims", icon: FileText },
+      { href: '/policyholder', label: 'Dashboard', icon: Home },
+      { href: '/policyholder/browse', label: 'Browse Policies', icon: Search },
+      { href: '/policyholder/coverage', label: 'My Coverage', icon: Shield },
+      { href: '/policyholder/claims', label: 'Claims', icon: FileText },
     ],
     admin: [
-      { href: "/admin", label: "Dashboard", icon: BarChart3 },
-      { href: "/admin/claims", label: "Claims Review", icon: FileText },
-      { href: "/admin/policies", label: "Manage Policies", icon: Plus },
-      { href: "/admin/reports", label: "Reports", icon: Download },
+      { href: '/admin', label: 'Dashboard', icon: BarChart3 },
+      { href: '/admin/claims', label: 'Claims Review', icon: FileText },
+      { href: '/admin/policies', label: 'Manage Policies', icon: Plus },
+      { href: '/admin/reports', label: 'Reports', icon: Download },
     ],
-    "system-admin": [],
+    'system-admin': [],
   };
 
   const defaultLinks = [
-    { href: "/solutions", label: "Solutions", icon: undefined },
-    { href: "/how-it-works", label: "How It Works", icon: undefined },
-    { href: "/benefits", label: "Benefits", icon: undefined },
-    { href: "/plans", label: "Plans & Pricing", icon: undefined },
-    { href: "/trust", label: "Trust & Security", icon: undefined },
-    { href: "/help", label: "Help Center", icon: undefined },
+    { href: '/solutions', label: 'Solutions', icon: undefined },
+    { href: '/how-it-works', label: 'How It Works', icon: undefined },
+    { href: '/benefits', label: 'Benefits', icon: undefined },
+    { href: '/plans', label: 'Plans & Pricing', icon: undefined },
+    { href: '/trust', label: 'Trust & Security', icon: undefined },
+    { href: '/help', label: 'Help Center', icon: undefined },
   ];
 
   const navigationLinks = role ? allLinks[role] : defaultLinks;
@@ -80,32 +80,32 @@ export function Navbar({ initialRole }: NavbarProps) {
   // Get the correct profile link based on role
   const getProfileLink = () => {
     switch (role) {
-      case "policyholder":
-        return "/policyholder/profile";
-      case "admin":
-        return "/admin/profile";
-      case "system-admin":
-        return "/system-admin/profile";
+      case 'policyholder':
+        return '/policyholder/profile';
+      case 'admin':
+        return '/admin/profile';
+      case 'system-admin':
+        return '/system-admin/profile';
       default:
-        return "/profile";
+        return '/profile';
     }
   };
 
   // Get the correct dashboard link based on role
   const getDashboardLink = () => {
     switch (role) {
-      case "policyholder":
-        return "/policyholder";
-      case "admin":
-        return "/admin";
-      case "system-admin":
-        return "/system-admin";
+      case 'policyholder':
+        return '/policyholder';
+      case 'admin':
+        return '/admin';
+      case 'system-admin':
+        return '/system-admin';
       default:
-        return "/dashboard";
+        return '/dashboard';
     }
   };
 
-  if (pathname.startsWith("/auth")) {
+  if (pathname.startsWith('/auth')) {
     return null;
   }
 
@@ -133,14 +133,14 @@ export function Navbar({ initialRole }: NavbarProps) {
                 key={index}
                 href={link.href}
                 className={cn(
-                  "nav-item whitespace-nowrap px-2 xl:px-3 2xl:px-4",
-                  pathname === link.href && "nav-item-active"
+                  'nav-item whitespace-nowrap px-2 xl:px-3 2xl:px-4',
+                  pathname === link.href && 'nav-item-active'
                 )}
               >
                 {link.icon && <link.icon className="w-4 h-4 flex-shrink-0" />}
                 <span className="hidden xl:block">{link.label}</span>
                 <span className="xl:hidden text-xs">
-                  {link.label.split(" ")[0]}
+                  {link.label.split(' ')[0]}
                 </span>
               </Link>
             ))}
@@ -148,21 +148,12 @@ export function Navbar({ initialRole }: NavbarProps) {
 
           {/* Right Side Actions */}
           <div className="hidden md:flex items-center space-x-2 lg:space-x-3 xl:space-x-4 flex-shrink-0">
-            {role === "policyholder" && <Connect />}
+            {role === 'policyholder' && <Connect />}
             <ThemeToggle />
 
             {role && (
               <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="relative floating-button w-9 h-9 p-0"
-                >
-                  <Bell className="w-5 h-5" />
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs flex items-center justify-center">
-                    <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
-                  </span>
-                </Button>
+                <NotificationsDropdown />
 
                 {/* User Avatar Dropdown */}
                 <div className="relative">
@@ -181,7 +172,7 @@ export function Navbar({ initialRole }: NavbarProps) {
                   {/* Dropdown Menu */}
                   {isUserMenuOpen && (
                     <div className="absolute right-0 mt-2 w-48 glass-card rounded-xl shadow-lg border border-white/20 dark:border-slate-700/50 py-2 z-50">
-                      {role !== "system-admin" && (
+                      {role !== 'system-admin' && (
                         <Link
                           href={getProfileLink()}
                           className="flex items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors"
@@ -191,7 +182,7 @@ export function Navbar({ initialRole }: NavbarProps) {
                           Profile
                         </Link>
                       )}
-                      {role === "policyholder" && (
+                      {role === 'policyholder' && (
                         <Link
                           href="/policyholder/wallet"
                           className="flex items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors"
@@ -202,12 +193,12 @@ export function Navbar({ initialRole }: NavbarProps) {
                         </Link>
                       )}
                       <Link
-                        href={isRolePage ? "/" : getDashboardLink()}
+                        href={isRolePage ? '/' : getDashboardLink()}
                         className="flex items-center px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         <Home className="w-4 h-4 mr-3" />
-                        {isRolePage ? "Home" : "Dashboard"}
+                        {isRolePage ? 'Home' : 'Dashboard'}
                       </Link>
                       <hr className="my-2 border-slate-200 dark:border-slate-700" />
                       <button
@@ -216,8 +207,8 @@ export function Navbar({ initialRole }: NavbarProps) {
                           setIsUserMenuOpen(false);
                           await logout();
                           setRole(null);
-                          printMessage("Logged out successfully", "success");
-                          router.push("/");
+                          printMessage('Logged out successfully', 'success');
+                          router.push('/');
                           router.refresh();
                         }}
                       >
@@ -272,14 +263,14 @@ export function Navbar({ initialRole }: NavbarProps) {
         {isOpen && (
           <div className="md:hidden border-t border-white/20 dark:border-slate-700/50 py-4">
             <div className="flex flex-col space-y-4">
-              {role === "policyholder" && <Connect />}
+              {role === 'policyholder' && <Connect />}
               {navigationLinks.map((link, index) => (
                 <Link
                   key={index}
                   href={link.href}
                   className={cn(
-                    "nav-item",
-                    pathname === link.href && "nav-item-active"
+                    'nav-item',
+                    pathname === link.href && 'nav-item-active'
                   )}
                   onClick={() => setIsOpen(false)}
                 >
@@ -290,18 +281,10 @@ export function Navbar({ initialRole }: NavbarProps) {
 
               {role && (
                 <div className="flex flex-col space-y-2 pt-4 border-t border-white/20 dark:border-slate-700/50">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="relative floating-button justify-start"
-                  >
-                    <Bell className="w-5 h-5 mr-2" />
-                    Notifications
-                    <span className="absolute top-1 right-1 w-3 h-3 bg-red-500 rounded-full text-xs flex items-center justify-center">
-                      <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
-                    </span>
-                  </Button>
-                  {role !== "system-admin" && (
+                  <div className="px-2">
+                    <NotificationsDropdown />
+                  </div>
+                  {role !== 'system-admin' && (
                     <Link href={getProfileLink()}>
                       <Button
                         variant="ghost"
@@ -313,14 +296,14 @@ export function Navbar({ initialRole }: NavbarProps) {
                       </Button>
                     </Link>
                   )}
-                  <Link href={isRolePage ? "/" : getDashboardLink()}>
+                  <Link href={isRolePage ? '/' : getDashboardLink()}>
                     <Button
                       variant="ghost"
                       size="sm"
                       className="floating-button w-full justify-start"
                     >
                       <Home className="w-5 h-5 mr-2" />
-                      {isRolePage ? "Home" : "Dashboard"}
+                      {isRolePage ? 'Home' : 'Dashboard'}
                     </Button>
                   </Link>
                   <Button
@@ -330,8 +313,8 @@ export function Navbar({ initialRole }: NavbarProps) {
                     onClick={async () => {
                       setIsOpen(false);
                       await logout();
-                      printMessage("Logged out successfully", "success");
-                      router.push("/");
+                      printMessage('Logged out successfully', 'success');
+                      router.push('/');
                       router.refresh();
                     }}
                   >

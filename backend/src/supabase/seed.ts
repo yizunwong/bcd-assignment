@@ -109,6 +109,34 @@ async function seed() {
       },
     ]);
 
+    // Add sample notifications
+    await supabase.from('notifications').insert([
+      {
+        user_id: userId,
+        title: 'Welcome to Coverly!',
+        message:
+          "Thank you for joining our platform. We're excited to have you on board.",
+        notification_type: 'success',
+        read: false,
+      },
+      {
+        user_id: userId,
+        title: 'Account Setup Complete',
+        message:
+          'Your account has been successfully set up. You can now start exploring our services.',
+        notification_type: 'info',
+        read: false,
+      },
+      {
+        user_id: userId,
+        title: 'Security Reminder',
+        message:
+          'Please ensure your password is strong and enable two-factor authentication for enhanced security.',
+        notification_type: 'warning',
+        read: true,
+      },
+    ]);
+
     console.log(`✅ Created user and profile: ${user.email}`);
   }
 

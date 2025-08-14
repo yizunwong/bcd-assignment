@@ -314,7 +314,7 @@ export type Database = {
           id?: number;
           message: string;
           notification_type?: Database['public']['Enums']['notification_type'];
-          read?: boolean | null;
+          read?: boolean;
           title: string;
           updated_at?: string | null;
           user_id: string;
@@ -324,7 +324,7 @@ export type Database = {
           id?: number;
           message?: string;
           notification_type?: Database['public']['Enums']['notification_type'];
-          read?: boolean | null;
+          read?: boolean;
           title?: string;
           updated_at?: string | null;
           user_id?: string;
