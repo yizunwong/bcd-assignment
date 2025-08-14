@@ -12,6 +12,7 @@ export const profileData = {
   occupation: '',
   bio: '',
   status: 'active',
+  avatarUrl: '',
   companyName: '',
   companyAddress: '',
   companyContactNo: '',

@@ -575,6 +575,7 @@ export type Database = {
           bio: string | null;
           first_name: string;
           last_name: string;
+          avatar_url: string | null;
           phone: string | null;
           status: Database['public']['Enums']['user_status'];
           user_id: string;
@@ -583,6 +584,7 @@ export type Database = {
           bio?: string | null;
           first_name: string;
           last_name: string;
+          avatar_url?: string | null;
           phone?: string | null;
           status?: Database['public']['Enums']['user_status'];
           user_id: string;
@@ -591,6 +593,7 @@ export type Database = {
           bio?: string | null;
           first_name?: string;
           last_name?: string;
+          avatar_url?: string | null;
           phone?: string | null;
           status?: Database['public']['Enums']['user_status'];
           user_id?: string;

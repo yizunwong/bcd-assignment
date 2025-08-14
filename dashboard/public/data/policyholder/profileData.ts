@@ -11,7 +11,8 @@ export const profileData = {
   dateOfBirth: '1990-05-15',
   occupation: '',
   bio: '',
-  status: 'active'
+  status: 'active',
+  avatarUrl: ''
 };
 
 export const notifications = {

@@ -7,8 +7,11 @@ import {
   type UserControllerFindAllParams,
   type CreateUserDto,
   type UpdateUserDto,
+  type CommonResponseDto,
 } from "@/api";
 import { parseError } from "../utils/parseError";
+import { useMutation } from "@tanstack/react-query";
+import { customFetcher } from "@/api/fetch";
 
 export function useUsersQuery(filters: UserControllerFindAllParams) {
   const query = useUserControllerFindAll(filters);
@@ -50,5 +53,25 @@ export function useUserStatsQuery() {
   return {
     ...query,
     error: parseError(query.error),
+  };
+}
+
+export function useUploadAvatarMutation() {
+  const mutation = useMutation({
+    mutationFn: async ({ id, file }: { id: string; file: File }) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      return customFetcher<CommonResponseDto>({
+        url: `/users/${id}/avatar`,
+        method: "POST",
+        data: formData,
+      });
+    },
+  });
+
+  return {
+    ...mutation,
+    uploadAvatar: (id: string, file: File) => mutation.mutateAsync({ id, file }),
+    error: parseError(mutation.error),
   };
 }

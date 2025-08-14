@@ -24,6 +24,9 @@ export class ProfileResponseDto {
   @ApiProperty()
   bio!: string;
 
+  @ApiProperty({ required: false })
+  avatarUrl?: string;
+
   @ApiProperty()
   status!: string;
 

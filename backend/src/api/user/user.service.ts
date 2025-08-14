@@ -9,6 +9,10 @@ import { CommonResponseDto } from 'src/common/common.dto';
 import { UserResponseDto } from './dto/responses/user.dto';
 import { UserStatsResponseDto } from './dto/responses/user-stats.dto';
 import { ActivityLoggerService } from 'src/logger/activity-logger.service';
+import { FileService } from '../file/file.service';
+import { config } from 'dotenv';
+
+config();
 import {
   UserRole,
   UserStatus,
@@ -23,6 +27,7 @@ export class UserService {
   constructor(
     private readonly supabaseService: SupabaseService,
     private readonly activityLogger: ActivityLoggerService,
+    private readonly fileService: FileService,
   ) {}
 
   async getAllUsers(
@@ -482,6 +487,39 @@ export class UserService {
       statusCode: 200,
       message: 'User updated successfully',
       data: updated.data,
+    });
+  }
+
+  async uploadAvatar(
+    user_id: string,
+    file: Express.Multer.File,
+  ): Promise<CommonResponseDto<{ url: string }>> {
+    const supabase = this.supabaseService.createClientWithToken();
+
+    const [path] = await this.fileService.uploadFiles(
+      supabase,
+      [file],
+      'profile_pictures',
+      user_id,
+    );
+
+    const { error } = await supabase
+      .from('user_details')
+      .update({ avatar_url: path })
+      .eq('user_id', user_id);
+
+    if (error) {
+      throw new SupabaseException('Failed to update profile picture', error);
+    }
+
+    const { data: signed } = await supabase.storage
+      .from(process.env.BUCKET_NAME!)
+      .createSignedUrl(path, 60 * 60);
+
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Profile picture uploaded successfully',
+      data: { url: signed?.signedUrl ?? '' },
     });
   }
 

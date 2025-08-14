@@ -14,6 +14,9 @@ import { Response } from 'express';
 import { UserService } from '../user/user.service';
 import { UserRole } from 'src/enums';
 import { ProfileResponseDto } from './dto/responses/profile.dto';
+import { config } from 'dotenv';
+
+config();
 
 @Injectable()
 export class AuthService {
@@ -157,12 +160,20 @@ export class AuthService {
     const { data: profile } = await req.supabase
       .from('user_details')
       .select(
-        `first_name, last_name, phone, bio, status,
+        `first_name, last_name, phone, bio, status, avatar_url,
         policyholder_details(address, date_of_birth, occupation),
         admin_details(company:companies(name, address, contact_no, license_number))`,
       )
       .eq('user_id', req.user.id)
       .single();
+
+    let avatarUrl = '';
+    if (profile?.avatar_url) {
+      const { data: signed } = await req.supabase.storage
+        .from(process.env.BUCKET_NAME!)
+        .createSignedUrl(profile.avatar_url, 60 * 60);
+      avatarUrl = signed?.signedUrl ?? '';
+    }
 
     const dto = new ProfileResponseDto({
       id: req.user.id,
@@ -173,6 +184,7 @@ export class AuthService {
       phone: profile?.phone ?? '',
       bio: profile?.bio ?? '',
       status: profile?.status ?? '',
+      avatarUrl,
     });
 
     if (appMeta.role === UserRole.POLICYHOLDER) {
