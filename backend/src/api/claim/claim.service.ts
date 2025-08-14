@@ -248,10 +248,6 @@ export class ClaimService {
     const { data, error, count } = await dbQuery;
 
     if (error) {
-      console.error(
-        '[Supabase] Failed to fetch claims with documents:',
-        error.message,
-      );
       throw new InternalServerErrorException('Error fetching claim data');
     }
 

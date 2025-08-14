@@ -25,6 +25,7 @@ import {
   Eye,
   Download,
   X,
+  Shield,
 } from "lucide-react";
 import {
   Dialog,
@@ -100,8 +101,6 @@ export default function Claims() {
   const [errors, setErrors] = useState<
     Partial<Record<keyof z.infer<typeof NewClaimSchema>, string>>
   >({});
-  const { data: meData } = useMeQuery();
-
   const priority = "low";
 
   const { fileClaimForCoverage, isFilingClaim } = useInsuranceContract();
@@ -125,7 +124,7 @@ export default function Claims() {
   // Map UI sort selection to backend sort params
   const listParams = (() => {
     const base: any = {
-      userId: meData?.data?.id,
+      userId: userId,
       page: currentPage,
       limit: ITEMS_PER_PAGE,
     };
@@ -442,103 +441,123 @@ export default function Claims() {
 
             {/* Claims List */}
             <div className="grid lg:grid-cols-2 gap-6 mb-8">
-              {displayedClaims.map((claim) => (
-                <Card key={claim.id} className="glass-card rounded-2xl">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="text-xl text-slate-800 dark:text-slate-100">
-                          {claim.id}
-                        </CardTitle>
-                        <p className="text-slate-600 dark:text-slate-400">
-                          {claim.policyName} • {claim.type}
-                        </p>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <Badge
-                          className={`status-badge ${getStatusColor(
-                            claim.status
-                          )}`}
-                        >
-                          {getStatusIcon(claim.status)}
-                          <span className="ml-1 capitalize">
-                            {claim.status.replace("-", " ")}
-                          </span>
-                        </Badge>
-                        <p className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-                          {claim.amount}
-                        </p>
-                      </div>
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="space-y-6">
-                    {/* Claim Details */}
-                    <div>
-                      <h4 className="font-semibold text-slate-800 dark:text-slate-100 mb-3">
-                        Claim Details
-                      </h4>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-slate-600 dark:text-slate-400">
-                            Submitted:
-                          </span>
-                          <span className="text-slate-800 dark:text-slate-100">
-                            {new Date(claim.submittedDate).toLocaleDateString()}
-                          </span>
+              {isLoading ? (
+                <div className="col-span-full text-center py-12">
+                  <FileText className="w-16 h-16 text-slate-400 mx-auto mb-4 animate-spin" />
+                  <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">
+                    Loading claims...
+                  </h3>
+                </div>
+              ) : displayedClaims.length === 0 ? (
+                <div className="col-span-full text-center py-12">
+                  <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                  <p className="text-slate-600 dark:text-slate-400">
+                    No claims found.
+                  </p>
+                </div>
+              ) : (
+                displayedClaims.map((claim) => (
+                  <Card key={claim.id} className="glass-card rounded-2xl">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-xl text-slate-800 dark:text-slate-100">
+                            {claim.id}
+                          </CardTitle>
+                          <p className="text-slate-600 dark:text-slate-400">
+                            {claim.policyName} • {claim.type}
+                          </p>
                         </div>
-                        {claim.processedDate && (
-                          <div className="flex justify-between">
-                            <span className="text-slate-600 dark:text-slate-400">
-                              Processed:
+                        <div className="flex items-center space-x-3">
+                          <Badge
+                            className={`status-badge ${getStatusColor(
+                              claim.status
+                            )}`}
+                          >
+                            {getStatusIcon(claim.status)}
+                            <span className="ml-1 capitalize">
+                              {claim.status.replace("-", " ")}
                             </span>
-                            <span className="text-slate-800 dark:text-slate-100">
-                              {new Date(
-                                claim.processedDate
-                              ).toLocaleDateString()}
-                            </span>
-                          </div>
-                        )}
-                        <div className="pt-2">
-                          <span className="text-slate-600 dark:text-slate-400">
-                            Description:
-                          </span>
-                          <p className="text-slate-800 dark:text-slate-100 mt-1">
-                            {claim.description}
+                          </Badge>
+                          <p className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                            {claim.amount}
                           </p>
                         </div>
                       </div>
-                    </div>
+                    </CardHeader>
 
-                    {/* Documents */}
-                    <div>
-                      <h4 className="font-semibold text-slate-800 dark:text-slate-100 mb-3">
-                        Supporting Documents
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {claim.documents.map((doc, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center space-x-2 bg-slate-50 dark:bg-slate-700/50 px-3 py-2 rounded-lg"
-                          >
-                            <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                            <span className="text-sm text-slate-700 dark:text-slate-300">
-                              {doc}
+                    <CardContent className="space-y-6">
+                      {/* Claim Details */}
+                      <div>
+                        <h4 className="font-semibold text-slate-800 dark:text-slate-100 mb-3">
+                          Claim Details
+                        </h4>
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-slate-600 dark:text-slate-400">
+                              Submitted:
                             </span>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 w-6 p-0"
-                            >
-                              <Download className="w-3 h-3" />
-                            </Button>
+                            <span className="text-slate-800 dark:text-slate-100">
+                              {new Date(
+                                claim.submittedDate
+                              ).toLocaleDateString()}
+                            </span>
                           </div>
-                        ))}
+                          {!!claim.processedDate && (
+                            <div className="flex justify-between">
+                              <span className="text-slate-600 dark:text-slate-400">
+                                Processed:
+                              </span>
+                              <span className="text-slate-800 dark:text-slate-100">
+                                {new Date(
+                                  claim.processedDate
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
+                          )}
+                          <div className="pt-2">
+                            <span className="text-slate-600 dark:text-slate-400">
+                              Description:
+                            </span>
+                            <p className="text-slate-800 dark:text-slate-100 mt-1">
+                              {claim.description}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+
+                      {/* Documents */}
+                      <div>
+                        <h4 className="font-semibold text-slate-800 dark:text-slate-100 mb-3">
+                          Supporting Documents
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {(claim.documents ?? []).map(
+                            (doc: string, index: number) => (
+                              <div
+                                key={index}
+                                className="flex items-center space-x-2 bg-slate-50 dark:bg-slate-700/50 px-3 py-2 rounded-lg"
+                              >
+                                <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                                <span className="text-sm text-slate-700 dark:text-slate-300">
+                                  {doc}
+                                </span>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <Download className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
 
             {/* Pagination */}
