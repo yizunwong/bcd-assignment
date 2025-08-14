@@ -743,13 +743,6 @@ export default function PaymentConfirmation() {
             <Download className="w-4 h-4 mr-2" />
             Download Receipt
           </Button>
-
-          <Link href="/policyholder/coverage" className="flex-1">
-            <Button variant="outline" className="w-full floating-button">
-              <FileText className="w-4 h-4 mr-2" />
-              View Policy Details
-            </Button>
-          </Link>
         </div>
 
         {/* Support Information */}

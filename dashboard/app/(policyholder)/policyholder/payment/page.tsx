@@ -244,7 +244,7 @@ export default function PaymentSummary() {
       throw new Error("Missing policy data");
     }
 
-    const coverageId = await createCoverageWithPayment(
+    const data = await createCoverageWithPayment(
       policyData.coverageAmount, // coverage amount in ETH
       Number(tokenAmount), // premium amount in ETH
       parseInt(policyData.duration.split(" ")[0]), // duration in days
@@ -254,11 +254,11 @@ export default function PaymentSummary() {
       policyData.provider
     );
 
-    if (!coverageId) {
+    if (!data) {
       throw new Error("Coverage creation failed");
     }
 
-    return coverageId;
+    return { data };
   };
 
   const handleStripePayment = async (coverageData: CreateCoverageDto) => {
@@ -351,40 +351,39 @@ export default function PaymentSummary() {
     }
 
     setIsProcessing(true);
-    let coverageId: number;
     try {
-      coverageId = await handleTokenPayment(cid);
-      coverageData.id = coverageId!;
-    } catch (error) {
-      console.error("Blockchain payment failed:", error);
-      printMessage("Blockchain payment failed. Please try again.", "error");
-      setIsProcessing(false);
-      return;
-    }
+      const { data } = await handleTokenPayment(cid);
+      coverageData.id = data.coverageId!;
+      console.log("Coverage Hash:", data.txHash);
+      try {
+        const coverage = await createCoverage(coverageData);
+        if (coverage?.data?.id && data.txHash) {
+          await createTransaction({
+            coverageId: coverage.data.id,
+            txHash: data.txHash,
+            description: `${policyData?.name} Purchased`,
+            amount: Number(tokenAmount),
+            currency: "ETH",
+            status: "confirmed",
+            type: "sent",
+          });
 
-    try {
-      const coverage = await createCoverage(coverageData);
-      if (coverage?.data?.id && createCoverageData) {
-        await createTransaction({
-          coverageId: coverage.data.id,
-          txHash: createCoverageData,
-          description: `${policyData?.name} Purchased`,
-          amount: Number(tokenAmount),
-          currency: "ETH",
-          status: "confirmed",
-          type: "sent",
-        });
-
-        setTransaction({
-          coverageId: coverage.data.id,
-          txHash: createCoverageData!,
-          description: `${policyData?.name} Purchased`,
-          amount: Number(tokenAmount),
-          currency: "ETH",
-          status: "confirmed",
-          type: "sent",
-          createdAt: new Date().toISOString(),
-        });
+          setTransaction({
+            coverageId: coverage.data.id,
+            txHash: data.txHash!,
+            description: `${policyData?.name} Purchased`,
+            amount: Number(tokenAmount),
+            currency: "ETH",
+            status: "confirmed",
+            type: "sent",
+            createdAt: new Date().toISOString(),
+          });
+        }
+      } catch (error) {
+        console.error("Blockchain payment failed:", error);
+        printMessage("Blockchain payment failed. Please try again.", "error");
+        setIsProcessing(false);
+        return;
       }
 
       printMessage(
