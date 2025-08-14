@@ -2,10 +2,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 interface StatsCardProps {
   title: string;
-  value: string;
+  value: ReactNode;
   change?: string;
   changeType?: 'positive' | 'negative' | 'neutral';
   icon: LucideIcon;

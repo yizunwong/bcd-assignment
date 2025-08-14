@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Pagination } from "@/components/shared/Pagination";
+import Ticker from "@/components/animata/text/ticker";
 import {
   Shield,
   Calendar,
@@ -304,9 +305,10 @@ export default function MyCoverage() {
                 </div>
                 <Badge className="status-badge status-active">Active</Badge>
               </div>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {summaryData?.activeCoverage ?? 0}
-              </h3>
+              <Ticker
+                value={String(summaryData?.activeCoverage ?? 0)}
+                className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1"
+              />
               <p className="text-slate-600 dark:text-slate-400">
                 Active Coverage
               </p>
@@ -321,9 +323,10 @@ export default function MyCoverage() {
                 </div>
                 <Badge className="status-badge status-info">Claimed</Badge>
               </div>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                ${(summaryData?.totalCoverageValue ?? 0).toLocaleString()}
-              </h3>
+              <Ticker
+                value={String(summaryData?.totalCoverageValue ?? 0)}
+                className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1"
+              />
               <p className="text-slate-600 dark:text-slate-400">Claimed</p>
             </CardContent>
           </Card>
@@ -336,9 +339,10 @@ export default function MyCoverage() {
                 </div>
                 <Badge className="status-badge status-warning">Claims</Badge>
               </div>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {summaryData?.totalClaims ?? 0}
-              </h3>
+              <Ticker
+                value={String(summaryData?.totalClaims ?? 0)}
+                className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1"
+              />
               <p className="text-slate-600 dark:text-slate-400">Total Claims</p>
             </CardContent>
           </Card>
@@ -351,9 +355,13 @@ export default function MyCoverage() {
                 </div>
                 <Badge className="status-badge status-active">Rate</Badge>
               </div>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {Math.round(summaryData?.approvalRate ?? 0)}%
-              </h3>
+              <div className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1 flex items-baseline">
+                <Ticker
+                  value={String(Math.round(summaryData?.approvalRate ?? 0))}
+                  className="text-slate-800 dark:text-slate-100"
+                />
+                <span className="ml-1">%</span>
+              </div>
               <p className="text-slate-600 dark:text-slate-400">
                 Approval Rate
               </p>
