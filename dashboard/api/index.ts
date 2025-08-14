@@ -299,6 +299,11 @@ export interface UpdateUserDto {
   status?: UpdateUserDtoStatus;
 }
 
+export interface UploadDocDto {
+  /** Files to upload for the document */
+  files?: Blob[];
+}
+
 /**
  * Priority of the claim
  */
@@ -325,11 +330,6 @@ export interface CreateClaimDto {
   amount: number;
   /** Description of the claim */
   description?: string;
-}
-
-export interface UploadDocDto {
-  /** Files to upload for the document */
-  files?: Blob[];
 }
 
 export interface ClaimDocumentResponseDto {
@@ -817,6 +817,13 @@ export type UserControllerUpdate200AllOf = {
 
 export type UserControllerUpdate200 = CommonResponseDto &
   UserControllerUpdate200AllOf;
+
+export type UserControllerUploadAvatar200AllOf = {
+  data?: CommonResponseDto;
+};
+
+export type UserControllerUploadAvatar200 = CommonResponseDto &
+  UserControllerUploadAvatar200AllOf;
 
 export type ClaimControllerFindAllParams = {
   /**
@@ -2135,6 +2142,92 @@ export const useUserControllerUpdate = <TError = unknown, TContext = unknown>(
   TContext
 > => {
   const mutationOptions = getUserControllerUpdateMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+export const userControllerUploadAvatar = (
+  id: string,
+  uploadDocDto: UploadDocDto,
+  signal?: AbortSignal,
+) => {
+  const formData = new FormData();
+  if (uploadDocDto.files !== undefined) {
+    uploadDocDto.files.forEach((value) => formData.append(`files`, value));
+  }
+
+  return customFetcher<UserControllerUploadAvatar200>({
+    url: `/users/${id}/avatar`,
+    method: "POST",
+    headers: { "Content-Type": "multipart/form-data" },
+    data: formData,
+    signal,
+  });
+};
+
+export const getUserControllerUploadAvatarMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof userControllerUploadAvatar>>,
+    TError,
+    { id: string; data: UploadDocDto },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof userControllerUploadAvatar>>,
+  TError,
+  { id: string; data: UploadDocDto },
+  TContext
+> => {
+  const mutationKey = ["userControllerUploadAvatar"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof userControllerUploadAvatar>>,
+    { id: string; data: UploadDocDto }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return userControllerUploadAvatar(id, data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UserControllerUploadAvatarMutationResult = NonNullable<
+  Awaited<ReturnType<typeof userControllerUploadAvatar>>
+>;
+export type UserControllerUploadAvatarMutationBody = UploadDocDto;
+export type UserControllerUploadAvatarMutationError = unknown;
+
+export const useUserControllerUploadAvatar = <
+  TError = unknown,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof userControllerUploadAvatar>>,
+      TError,
+      { id: string; data: UploadDocDto },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof userControllerUploadAvatar>>,
+  TError,
+  { id: string; data: UploadDocDto },
+  TContext
+> => {
+  const mutationOptions = getUserControllerUploadAvatarMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

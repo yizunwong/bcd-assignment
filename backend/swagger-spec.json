@@ -403,9 +403,37 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadDocDto"
+              }
+            }
+          }
+        },
         "responses": {
-          "201": {
-            "description": ""
+          "200": {
+            "description": "Upload user avatar",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/CommonResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2729,6 +2757,19 @@
           }
         }
       },
+      "UploadDocDto": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "description": "Files to upload for the document",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        }
+      },
       "CreateClaimDto": {
         "type": "object",
         "properties": {
@@ -2775,19 +2816,6 @@
           "priority",
           "amount"
         ]
-      },
-      "UploadDocDto": {
-        "type": "object",
-        "properties": {
-          "files": {
-            "description": "Files to upload for the document",
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "binary"
-            }
-          }
-        }
       },
       "ClaimDocumentResponseDto": {
         "type": "object",

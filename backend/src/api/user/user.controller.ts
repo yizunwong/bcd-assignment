@@ -20,6 +20,7 @@ import { UserStatsResponseDto } from './dto/responses/user-stats.dto';
 import { FindUsersQueryDto } from './dto/responses/user-query.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadedFile, UseInterceptors } from '@nestjs/common';
+import { UploadDocDto } from '../file/requests/document-upload.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -71,8 +72,14 @@ export class UserController {
   @Post(':id/avatar')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
+  @ApiCommonResponse(
+    CommonResponseDto<{ url: string }>,
+    false,
+    'Upload user avatar',
+  )
   async uploadAvatar(
     @Param('id') id: string,
+    @Body() body: UploadDocDto,
     @UploadedFile() file: Express.Multer.File,
   ): Promise<CommonResponseDto<{ url: string }>> {
     return this.userService.uploadAvatar(id, file);

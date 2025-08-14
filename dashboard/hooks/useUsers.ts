@@ -8,6 +8,8 @@ import {
   type CreateUserDto,
   type UpdateUserDto,
   type CommonResponseDto,
+  useUserControllerUploadAvatar,
+  UploadDocDto,
 } from "@/api";
 import { parseError } from "../utils/parseError";
 import { useMutation } from "@tanstack/react-query";
@@ -57,21 +59,11 @@ export function useUserStatsQuery() {
 }
 
 export function useUploadAvatarMutation() {
-  const mutation = useMutation({
-    mutationFn: async ({ id, file }: { id: string; file: File }) => {
-      const formData = new FormData();
-      formData.append("file", file);
-      return customFetcher<CommonResponseDto>({
-        url: `/users/${id}/avatar`,
-        method: "POST",
-        data: formData,
-      });
-    },
-  });
-
+  const mutation = useUserControllerUploadAvatar();
   return {
     ...mutation,
-    uploadAvatar: (id: string, file: File) => mutation.mutateAsync({ id, file }),
+    uploadAvatar: (id: string, data: UploadDocDto) =>
+      mutation.mutateAsync({ id, data }),
     error: parseError(mutation.error),
   };
 }
