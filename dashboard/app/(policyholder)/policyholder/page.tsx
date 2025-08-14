@@ -10,6 +10,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { Shield, Clock, TrendingUp, Coins, FileText } from "lucide-react";
 import Link from "next/link";
 import { formatValue } from "@/utils/formatHelper";
+import Ticker from "@/components/animata/text/ticker";
 import { useMeQuery } from "@/hooks/useAuth";
 
 export default function PolicyholderDashboard() {
@@ -47,19 +48,32 @@ export default function PolicyholderDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <StatsCard
             title="Active Coverage"
-            value={(summary?.data?.activeCoverage ?? 0).toString()}
+            value={
+              <Ticker
+                value={String(summary?.data?.activeCoverage ?? 0)}
+                className="text-slate-800 dark:text-slate-100"
+              />
+            }
             icon={Shield}
           />
           <StatsCard
             title="Claimed"
-            value={formatValue(summary?.data?.totalCoverage, {
-              currency: typeof summary?.data?.totalCoverage === "number",
-            })}
+            value={
+              <Ticker
+                value={String(summary?.data?.totalCoverage ?? 0)}
+                className="text-slate-800 dark:text-slate-100"
+              />
+            }
             icon={TrendingUp}
           />
           <StatsCard
             title="Pending Claims"
-            value={(summary?.data?.pendingClaims ?? 0).toString()}
+            value={
+              <Ticker
+                value={String(summary?.data?.pendingClaims ?? 0)}
+                className="text-slate-800 dark:text-slate-100"
+              />
+            }
             icon={Clock}
           />
         </div>
