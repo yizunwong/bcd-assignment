@@ -9,6 +9,7 @@ import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { CreateTransactionDto } from './dto/requests/create-transaction.dto';
 import { TransactionResponseDto } from './dto/responses/transaction.dto';
 import { TransactionStatus, TransactionType } from 'src/enums';
+import { PaymentStatsDto } from './dto/responses/payment-stats.dto';
 
 @Injectable()
 export class PaymentService {
@@ -179,6 +180,59 @@ export class PaymentService {
         type: data.type as TransactionType,
         createdAt: data.created_at,
       }),
+    });
+  }
+
+  async getPaymentStats(
+    req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto<PaymentStatsDto>> {
+    const { data: userData, error: userError } =
+      await req.supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    const userId = userData.user.id;
+
+    const { data: payouts, error: payoutsError } = await req.supabase
+      .from('transactions')
+      .select('amount')
+      .eq('user_id', userId)
+      .eq('type', 'received');
+
+    if (payoutsError || !payouts) {
+      console.error(payoutsError);
+      throw new InternalServerErrorException('Failed to fetch transactions');
+    }
+
+    const totalPayoutsReceived = payouts.reduce(
+      (sum: number, tx: { amount: number }) => sum + (tx.amount || 0),
+      0,
+    );
+
+    const { data: coverages, error: coverageError } = await req.supabase
+      .from('coverage')
+      .select('policy:policy_id (premium)')
+      .eq('user_id', userId)
+      .eq('status', 'active');
+
+    if (coverageError || !coverages) {
+      console.error(coverageError);
+      throw new InternalServerErrorException('Failed to fetch coverage premiums');
+    }
+
+    const totalPremiumToPay = coverages.reduce(
+      (sum: number, c: any) => sum + (c.policy?.premium || 0),
+      0,
+    );
+
+    return new CommonResponseDto<PaymentStatsDto>({
+      statusCode: 200,
+      message: 'Payment stats fetched successfully',
+      data: {
+        totalPayoutsReceived,
+        totalPremiumToPay,
+      },
     });
   }
 }
