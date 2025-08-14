@@ -218,11 +218,15 @@ export class PaymentService {
 
     if (coverageError || !coverages) {
       console.error(coverageError);
-      throw new InternalServerErrorException('Failed to fetch coverage premiums');
+      throw new InternalServerErrorException(
+        'Failed to fetch coverage premiums',
+      );
     }
 
-    const totalPremiumToPay = coverages.reduce(
-      (sum: number, c: any) => sum + (c.policy?.premium || 0),
+    type CoverageWithPolicy = { policy?: { premium?: number } };
+
+    const totalPremiumToPay = (coverages as CoverageWithPolicy[]).reduce(
+      (sum: number, c: CoverageWithPolicy) => sum + (c.policy?.premium ?? 0),
       0,
     );
 
