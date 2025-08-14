@@ -465,7 +465,8 @@ export class UserService {
           date_of_birth: dto.dateOfBirth,
           occupation: dto.occupation,
           address: dto.address,
-        });
+        })
+        .eq('user_id', user_id);
 
       if (holderError) {
         throw new SupabaseException(

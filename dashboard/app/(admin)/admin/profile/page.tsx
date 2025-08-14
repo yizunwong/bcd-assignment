@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,13 +10,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   profileData as defaultProfileData,
+  notifications as defaultNotifications,
   adminStats,
   permissions,
 } from "@/public/data/admin/profileData";
+import { useMeQuery } from "@/hooks/useAuth";
 import { useActivityLogsQuery } from "@/hooks/useActivityLog";
 import { useUpdateUserMutation } from "@/hooks/useUsers";
 import { useToast } from "@/components/shared/ToastProvider";
-import { useAuthStore } from "@/store/useAuthStore";
 import {
   User,
   Shield,
@@ -52,20 +53,40 @@ export default function AdminProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] =
     useState<ProfileResponseDto>(defaultProfileData);
-  const userId = useAuthStore((state) => state.userId);
+  const [notifications, setNotifications] = useState(defaultNotifications);
+  const { data } = useMeQuery();
   const { data: activityLogs, isLoading: isActivityLoading } =
     useActivityLogsQuery({
-      userId: userId,
+      userId: data?.data?.id,
       page: 1,
       limit: 5,
     });
   const { updateUser, isPending } = useUpdateUserMutation();
   const { printMessage } = useToast();
 
+  useEffect(() => {
+    if (data?.data) {
+      const user = data.data;
+      setProfileData((prev) => ({
+        ...prev,
+        firstName: user.firstName ?? prev.firstName,
+        lastName: user.lastName ?? prev.lastName,
+        role: user.role ?? prev.role,
+        email: user.email ?? prev.email,
+        phone: user.phone ?? prev.phone,
+        companyName: user.companyName ?? prev.companyName,
+        companyAddress: user.companyAddress ?? prev.companyAddress,
+        companyContactNo: user.companyContactNo ?? prev.companyContactNo,
+        companyLicenseNo: user.companyLicenseNo ?? prev.companyLicenseNo,
+        bio: user.bio ?? prev.bio,
+      }));
+    }
+  }, [data]);
+
   const handleSave = async () => {
-    if (!userId) return;
+    if (!data?.data?.id) return;
     try {
-      await updateUser(userId, {
+      await updateUser(data.data.id, {
         firstName: profileData.firstName,
         lastName: profileData.lastName,
         phone: profileData.phone,
@@ -157,48 +178,7 @@ export default function AdminProfile() {
               </CardContent>
             </Card>
 
-            {/* Quick Stats */}
-            <Card className="glass-card rounded-2xl mt-6">
-              <CardHeader>
-                <CardTitle className="text-lg text-slate-800 dark:text-slate-100">
-                  Performance Stats
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-600 dark:text-slate-400">
-                    Claims Reviewed
-                  </span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-100">
-                    {adminStats.claimsReviewed}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-600 dark:text-slate-400">
-                    Policies Managed
-                  </span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-100">
-                    {adminStats.policiesManaged}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-600 dark:text-slate-400">
-                    Reports Generated
-                  </span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-100">
-                    {adminStats.reportsGenerated}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-600 dark:text-slate-400">
-                    Avg Processing
-                  </span>
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                    {adminStats.avgProcessingTime}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
+
           </div>
 
           {/* Main Content */}
@@ -443,7 +423,9 @@ export default function AdminProfile() {
                               </p>
                               <p className="text-sm text-slate-600 dark:text-slate-400">
                                 {activity.timestamp
-                                  ? new Date(activity.timestamp).toLocaleDateString()
+                                  ? new Date(
+                                      activity.timestamp
+                                    ).toLocaleDateString()
                                   : ""}
                               </p>
                             </div>

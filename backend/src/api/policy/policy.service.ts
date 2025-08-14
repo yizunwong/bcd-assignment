@@ -61,12 +61,13 @@ export class PolicyService {
         'Failed to create policy documents',
       );
     }
+    const fileNames = files.map((f) => f.originalname).join(', ');
+
     await this.activityLogger.log(
-      'POLICY_DOCUMENTS_UPLOADED',
+      `Uploaded Policy Documents: ${fileNames}`,
       userData.user.id,
       req.ip,
     );
-
     return new CommonResponseDto({
       statusCode: 201,
       message: 'Policy Documents uploaded successfully',
@@ -114,7 +115,11 @@ export class PolicyService {
           req,
         );
       }
-      await this.activityLogger.log('POLICY_CREATED', userData.user.id, req.ip);
+      await this.activityLogger.log(
+        `Created Policy: ${dto.name}`,
+        userData.user.id,
+        req.ip,
+      );
 
       return new CommonResponseDto({
         statusCode: 201,
@@ -564,7 +569,11 @@ export class PolicyService {
         req,
       );
     }
-    await this.activityLogger.log('POLICY_UPDATED', userData.user.id, req.ip);
+    await this.activityLogger.log(
+      `Updated Policy: ${dto.name}`,
+      userData.user.id,
+      req.ip,
+    );
 
     return new CommonResponseDto({
       statusCode: 200,
@@ -630,7 +639,11 @@ export class PolicyService {
       throw new NotFoundException(`Policy with ID ${id} not found`);
     }
 
-    await this.activityLogger.log('POLICY_DELETED', userData.user.id, req.ip);
+    await this.activityLogger.log(
+      `Deleted Policy: ${deleted.name}`,
+      userData.user.id,
+      req.ip,
+    );
 
     return new CommonResponseDto({
       statusCode: 200,
