@@ -182,6 +182,14 @@ export class NotificationsService {
   ): Promise<Notification> {
     // Use the supabase service directly for system notifications
     const supabaseClient = this.supabaseService.createClientWithToken();
+
+    console.log('Creating system notification with DEBUG:', {
+      userId,
+      title,
+      message,
+      notificationType,
+    });
+
     const { data: notification, error } = await supabaseClient
       .from('notifications')
       .insert({
@@ -194,8 +202,11 @@ export class NotificationsService {
       .single();
 
     if (error) {
+      console.error('System notification creation failed:', error);
       throw new Error(`Failed to create system notification: ${error.message}`);
     }
+
+    console.log('System notification created successfully:', notification);
 
     return {
       id: notification.id,

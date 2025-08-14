@@ -66,16 +66,74 @@ export class ClaimService {
     const claimId = data.id;
     await this.activityLogger.log('CLAIM_CREATED', user_id, req.ip);
 
-    // Create notification for claim submission
+    // Create notification for claim submission (user)
     try {
+      // Fetch policy information for better notification message
+      const { data: claimWithPolicy } = await req.supabase
+        .from('claims')
+        .select(
+          `
+          *,
+          coverage:coverage_id(
+            policy:policy_id(
+              name
+            )
+          )
+        `,
+        )
+        .eq('id', claimId)
+        .single();
+
+      const policyName =
+        claimWithPolicy?.coverage?.policy?.name || 'Unknown Policy';
+
       await this.notificationsService.createSystemNotification(
         user_id,
         'Claim Submitted Successfully',
-        `Your claim #${claimId} has been submitted successfully and is now under review. We will notify you once it's processed.`,
+        `Your claim #${claimId} for policy "${policyName}" has been submitted successfully and is now under review. We will notify you once it's processed.`,
         'info',
       );
     } catch (notificationError) {
       console.error('Failed to create claim notification:', notificationError);
+      // Don't throw error here as claim was created successfully
+    }
+
+    // Create notification for admin about pending claim
+    try {
+      // Fetch policy information to get admin details
+      const { data: claimWithPolicy } = await req.supabase
+        .from('claims')
+        .select(
+          `
+          *,
+          coverage:coverage_id(
+            policy:policy_id(
+              admin_details:admin_details!policies_created_by_fkey1(
+                user_id
+              )
+            )
+          )
+        `,
+        )
+        .eq('id', claimId)
+        .single();
+
+      const adminUserId =
+        claimWithPolicy?.coverage?.policy?.admin_details?.user_id;
+
+      if (adminUserId && adminUserId !== user_id) {
+        await this.notificationsService.createSystemNotification(
+          adminUserId,
+          'New Claim Pending Approval',
+          `A new claim #${claimId} has been submitted and is pending your approval. Please review and take action.`,
+          'info',
+        );
+      }
+    } catch (adminNotificationError) {
+      console.error(
+        'Failed to create admin notification:',
+        adminNotificationError,
+      );
       // Don't throw error here as claim was created successfully
     }
 
@@ -512,12 +570,88 @@ export class ClaimService {
             ? `Your claim #${id} for policy "${policyName}" has been rejected. Please contact support for more details.`
             : `Your claim #${id} for policy "${policyName}" has been ${statusMessage}.`;
 
+      // Create notification for user about claim status update DEBUG
+      console.log(`Creating user notification for claim #${id}:`, {
+        userId: data.submitted_by,
+        title: `Claim ${statusMessage.charAt(0).toUpperCase() + statusMessage.slice(1)}`,
+        message: notificationMessage,
+        type: notificationType,
+      });
+
       await this.notificationsService.createSystemNotification(
         data.submitted_by,
         `Claim ${statusMessage.charAt(0).toUpperCase() + statusMessage.slice(1)}`,
         notificationMessage,
         notificationType,
       );
+
+      console.log(
+        `User notification created successfully for claim #${id} DEBUG`,
+      );
+
+      // Create notification for admin about the action taken
+      try {
+        const { data: claimWithAdmin } = await req.supabase
+          .from('claims')
+          .select(
+            `
+            *,
+            coverage:coverage_id(
+              policy:policy_id(
+                admin_details:admin_details!policies_created_by_fkey1(
+                  user_id
+                )
+              )
+            )
+          `,
+          )
+          .eq('id', id)
+          .single();
+
+        const adminUserId =
+          claimWithAdmin?.coverage?.policy?.admin_details?.user_id;
+
+        if (adminUserId && adminUserId !== data.submitted_by) {
+          const adminNotificationMessage =
+            status === ClaimStatus.APPROVED
+              ? `You have approved claim #${id} for policy "${policyName}". The user has been notified.`
+              : status === ClaimStatus.REJECTED
+                ? `You have rejected claim #${id} for policy "${policyName}". The user has been notified.`
+                : `You have updated claim #${id} for policy "${policyName}" to ${statusMessage}. The user has been notified.`;
+
+          console.log(`Creating admin notification for claim #${id} DEBUG:`, {
+            adminUserId,
+            title: `Claim ${statusMessage.charAt(0).toUpperCase() + statusMessage.slice(1)}`,
+            message: adminNotificationMessage,
+            type: notificationType,
+          });
+
+          await this.notificationsService.createSystemNotification(
+            adminUserId,
+            `Claim ${statusMessage.charAt(0).toUpperCase() + statusMessage.slice(1)}`,
+            adminNotificationMessage,
+            notificationType,
+          );
+
+          console.log(
+            `Admin notification created successfully for claim #${id} DEBUG`,
+          );
+        } else {
+          console.log(`Skipping admin notification for claim #${id}: DEBUG`, {
+            adminUserId,
+            submittedBy: data.submitted_by,
+            reason: adminUserId
+              ? 'Admin and user are the same'
+              : 'No admin found',
+          });
+        }
+      } catch (adminNotificationError) {
+        console.error(
+          'Failed to create admin status notification:',
+          adminNotificationError,
+        );
+        // Don't throw error here as claim status was updated successfully
+      }
     } catch (notificationError) {
       console.error(
         'Failed to create claim status notification:',
