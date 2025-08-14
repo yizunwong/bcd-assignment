@@ -131,6 +131,11 @@ export default function BrowsePolicies() {
       description:
         typeof policy.description === "string" ? policy.description : "",
       sales: policy.sales,
+      reviews: (policy.reviews || []).map((review: any) => ({
+        user: review.user_name,
+        rating: review.rating,
+        comment: typeof review.comment === "string" ? review.comment : "",
+      })),
     }));
   }, [policiesData]);
 
