@@ -30,7 +30,8 @@ import FluidTabs from "@/components/animata/fluid-tabs";
 import { walletBalance } from "@/public/data/policyholder/walletData";
 import WalletSection from "@/components/shared/WalletSectiom";
 import { useTransactionsQuery, usePaymentStatsQuery } from "@/hooks/usePayment";
-import { TransactionResponseDto } from "@/api";
+import { useClaimsQuery } from "@/hooks/useClaims";
+import { ClaimStatus, ClaimResponseDto, TransactionResponseDto } from "@/api";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -41,7 +42,9 @@ export default function WalletPage() {
   const [dateRange, setDateRange] = useState("all");
   const { data: savedTxs, error: chainTxsError } = useTransactionsQuery();
   const { data: paymentStats } = usePaymentStatsQuery();
+  const { data: pendingClaims } = useClaimsQuery({ status: ClaimStatus.approved });
   const txArray = (savedTxs?.data ?? []) as TransactionResponseDto[];
+  const pendingPayouts = (pendingClaims?.data ?? []) as ClaimResponseDto[];
 
   const transactions = useMemo(() => [...txArray], [txArray]);
   const filteredTransactions = useMemo(() => {
@@ -96,17 +99,6 @@ export default function WalletPage() {
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
-
-  const pendingPayouts = [
-    {
-      id: "payout-001",
-      claimId: "CL-002",
-      amount: "450 USDC",
-      description: "Prescription Medication Claim",
-      estimatedDate: "2024-12-25",
-      status: "processing",
-    },
-  ];
 
   const formatAddress = (address?: string) => {
     if (!address) return "";
@@ -363,10 +355,7 @@ export default function WalletPage() {
                                   {payout.description}
                                 </h3>
                                 <p className="text-sm text-slate-600 dark:text-slate-400">
-                                  Claim ID: {payout.claimId} • Est.{" "}
-                                  {new Date(
-                                    payout.estimatedDate
-                                  ).toLocaleDateString()}
+                                  Claim ID: {payout.id}
                                 </p>
                               </div>
                             </div>
@@ -374,9 +363,9 @@ export default function WalletPage() {
                               <p className="font-semibold text-slate-800 dark:text-slate-100">
                                 +{payout.amount}
                               </p>
-                              <Badge className="status-badge status-pending">
+                              <Badge className="status-badge status-pending capitalize">
                                 <Clock className="w-3 h-3 mr-1" />
-                                Processing
+                                {payout.status}
                               </Badge>
                             </div>
                           </div>
