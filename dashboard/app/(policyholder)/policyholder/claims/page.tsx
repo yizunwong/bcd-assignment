@@ -25,7 +25,6 @@ import {
   Eye,
   Download,
   X,
-  Shield,
 } from "lucide-react";
 import {
   Dialog,
@@ -33,6 +32,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import FluidTabs from "@/components/animata/fluid-tabs";
 import { useClaimsQuery } from "@/hooks/useClaims";
 import { useInsuranceContract } from "@/hooks/useBlockchain";
 import { usePolicyClaimTypesQuery } from "@/hooks/usePolicies";
@@ -379,29 +379,25 @@ export default function Claims() {
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex space-x-1 mb-8 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-fit">
-          <button
-            onClick={() => setActiveTab("my-claims")}
-            className={`px-6 py-2 rounded-lg font-medium transition-all ${
-              activeTab === "my-claims"
-                ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-sm"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-            }`}
-          >
-            My Claims
-          </button>
-          <button
-            onClick={() => setActiveTab("new-claim")}
-            className={`px-6 py-2 rounded-lg font-medium transition-all ${
-              activeTab === "new-claim"
-                ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-sm"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-            }`}
-          >
-            Submit New Claim
-          </button>
-        </div>
+        <FluidTabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          renderContent={false}
+          tabs={[
+            {
+              id: "my-claims",
+              label: "My Claims",
+              icon: <FileText size={18} />,
+              content: null,
+            },
+            {
+              id: "new-claim",
+              label: "Submit New Claim",
+              icon: <Plus size={18} />,
+              content: null,
+            },
+          ]}
+        />
 
         {activeTab === "my-claims" ? (
           /* My Claims Tab */
