@@ -148,7 +148,6 @@ export default function WalletPage() {
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center">
                   <TrendingUp className="w-6 h-6 text-white" />
                 </div>
-                <Badge className="status-badge status-active">+12.5%</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
                 {paymentStats?.data?.totalPayoutsReceived ?? 0} ETH
