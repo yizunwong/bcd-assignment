@@ -61,11 +61,7 @@ export function Navbar({ initialRole }: NavbarProps) {
       { href: "/admin/policies", label: "Manage Policies", icon: Plus },
       { href: "/admin/reports", label: "Reports", icon: Download },
     ],
-    "system-admin": [
-      { href: "/system-admin", label: "Monitoring", icon: Monitor },
-      { href: "/system-admin/users", label: "User Management", icon: Users },
-      { href: "/system-admin/contracts", label: "Smart Contracts", icon: Code },
-    ],
+    "system-admin": [],
   };
 
   const defaultLinks = [

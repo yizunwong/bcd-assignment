@@ -30,7 +30,12 @@ import {
   Shield,
 } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
-import { useClaimsQuery, useClaimStatsQuery } from "@/hooks/useClaims";
+import {
+  useClaimsQuery,
+  useClaimStatsQuery,
+  useUpdateClaimStatusMutation,
+} from "@/hooks/useClaims";
+import { useInsuranceContract } from "@/hooks/useBlockchain";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -39,6 +44,8 @@ export default function ClaimsReview() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const { updateClaimStatus } = useUpdateClaimStatusMutation();
+  const { approveClaimOnChain } = useInsuranceContract();
 
   const hasFilters = filterStatus !== "all" || !!debouncedSearchTerm;
 
@@ -119,6 +126,15 @@ export default function ClaimsReview() {
       default:
         return <Clock className="w-4 h-4" />;
     }
+  };
+
+  const handleApprove = async (claimId: number) => {
+    updateClaimStatus(String(claimId), "approved");
+    await approveClaimOnChain(Number(claimId));
+  };
+
+  const handleReject = async (claimId: number) => {
+    updateClaimStatus(String(claimId), "rejected");
   };
 
   return (
@@ -263,7 +279,10 @@ export default function ClaimsReview() {
             </div>
           ) : (
             paginatedClaims.map((claim) => (
-              <Card key={claim.id} className="glass-card rounded-2xl card-hover">
+              <Card
+                key={claim.id}
+                className="glass-card rounded-2xl card-hover"
+              >
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-4">
@@ -288,7 +307,9 @@ export default function ClaimsReview() {
                         {claim.priority.toUpperCase()}
                       </Badge>
                       <Badge
-                        className={`status-badge ${getStatusColor(claim.status)}`}
+                        className={`status-badge ${getStatusColor(
+                          claim.status
+                        )}`}
                       >
                         {getStatusIcon(claim.status)}
                         <span className="ml-1 capitalize">
@@ -350,8 +371,28 @@ export default function ClaimsReview() {
                         }
                       />
                     </div>
-
-                    {claim.status === "pending" && null}
+                    {(claim.status === "pending" ||
+                      claim.status === "under-review") && (
+                      <div className="flex space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleReject(claim.id)}
+                          className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        >
+                          <X className="w-4 h-4 mr-1" />
+                          Reject
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleApprove(claim.id)}
+                          className="gradient-accent text-white floating-button"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-1" />
+                          Approve
+                        </Button>
+                      </div>
+                    )}{" "}
                   </div>
                 </CardContent>
               </Card>

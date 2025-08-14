@@ -223,12 +223,9 @@ export default function AdminProfile() {
           {/* Main Content */}
           <div className="lg:col-span-3">
             <Tabs defaultValue="personal" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+              <TabsList className="grid w-full grid-cols-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                 <TabsTrigger value="personal" className="rounded-lg">
                   Personal Info
-                </TabsTrigger>
-                <TabsTrigger value="permissions" className="rounded-lg">
-                  Permissions
                 </TabsTrigger>
                 <TabsTrigger value="activity" className="rounded-lg">
                   Activity
@@ -429,55 +426,6 @@ export default function AdminProfile() {
                         disabled={!isEditing}
                         className="form-input min-h-[100px]"
                       />
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="permissions">
-                <Card className="glass-card rounded-2xl">
-                  <CardHeader>
-                    <CardTitle className="text-xl text-slate-800 dark:text-slate-100">
-                      Admin Permissions
-                    </CardTitle>
-                    <p className="text-slate-600 dark:text-slate-400">
-                      Your current access permissions and capabilities
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      {permissions.map((permission, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-700/30 rounded-xl"
-                        >
-                          <div className="flex items-center space-x-3">
-                            {permission.enabled ? (
-                              <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                            ) : (
-                              <X className="w-5 h-5 text-slate-400" />
-                            )}
-                            <span
-                              className={`font-medium ${
-                                permission.enabled
-                                  ? "text-slate-800 dark:text-slate-100"
-                                  : "text-slate-500 dark:text-slate-500"
-                              }`}
-                            >
-                              {permission.name}
-                            </span>
-                          </div>
-                          <Badge
-                            className={`status-badge ${
-                              permission.enabled
-                                ? "status-active"
-                                : "bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-400"
-                            }`}
-                          >
-                            {permission.enabled ? "Enabled" : "Disabled"}
-                          </Badge>
-                        </div>
-                      ))}
                     </div>
                   </CardContent>
                 </Card>
