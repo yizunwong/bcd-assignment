@@ -14,7 +14,7 @@ import { FileService } from '../file/file.service';
 import { ClaimResponseDto } from './dto/responses/claim.dto';
 import { ClaimStatsDto } from './dto/responses/claim-stats.dto';
 import { CommonResponseDto } from 'src/common/common.dto';
-import { ClaimStatus } from 'src/enums';
+import { ClaimStatus, TransactionStatus, TransactionType } from 'src/enums';
 import { ActivityLoggerService } from 'src/logger/activity-logger.service';
 import { NotificationsService } from '../notifications/notifications.service';
 @Injectable()
@@ -439,6 +439,7 @@ export class ClaimService {
     id: number,
     status: ClaimStatus,
     req: AuthenticatedRequest,
+    txHash?: string,
   ): Promise<CommonResponseDto> {
     // 1️⃣ Authenticate the user
     const { data: userData, error: userError } =
@@ -484,6 +485,9 @@ export class ClaimService {
 
     // 3️⃣ If approved, update utilization rate
     if (status === ClaimStatus.APPROVED) {
+      if (!txHash) {
+        throw new BadRequestException('txHash is required for approved claims');
+      }
       if (!coverage?.id || !coverage?.user_id) {
         throw new Error('Claim is missing valid coverage details');
       }
@@ -521,9 +525,26 @@ export class ClaimService {
       if (utilizationError) {
         throw new Error('Failed to update coverage utilization rate');
       }
+
+      // 4️⃣ Record approved claim transaction
+      try {
+        await req.supabase.from('transactions').insert({
+          user_id: updatedClaim.submitted_by,
+          coverage_id: coverage.id,
+          description: `Claim Payout #${id}`,
+          tx_hash: txHash,
+          amount: updatedClaim.amount,
+          currency: 'ETH',
+          created_at: new Date().toISOString(),
+          status: TransactionStatus.CONFIRMED,
+          type: TransactionType.RECEIVED,
+        });
+      } catch (txError) {
+        console.error('Failed to record claim payout transaction', txError);
+      }
     }
 
-    // 4️⃣ Send notifications
+    // 5️⃣ Send notifications
     const notificationType =
       status === ClaimStatus.APPROVED
         ? 'success'
@@ -571,7 +592,7 @@ export class ClaimService {
       );
     }
 
-    // 5️⃣ Log activity
+    // 6️⃣ Log activity
     await this.activityLogger.log(
       `Claim ${statusMessage.charAt(0).toUpperCase() + statusMessage.slice(1)}`,
       userData.user.id,

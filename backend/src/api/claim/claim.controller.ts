@@ -106,9 +106,10 @@ export class ClaimController {
   updateClaimStatus(
     @Param('id') id: string,
     @Param('status') status: ClaimStatus,
+    @Body('txHash') txHash: string | undefined,
     @Req() req: AuthenticatedRequest,
   ): Promise<CommonResponseDto> {
-    return this.claimService.updateClaimStatus(+id, status, req);
+    return this.claimService.updateClaimStatus(+id, status, req, txHash);
   }
 
   @Delete(':id/file')

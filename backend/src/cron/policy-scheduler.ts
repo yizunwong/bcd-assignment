@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ethers } from 'ethers';
@@ -35,7 +35,7 @@ export class PolicySchedulerService {
       .from('coverage')
       .select('id')
       .eq('status', 'active')
-      .lt('nextPaymentDate', now); // overdue
+      .lt('next_payment_date', now); // overdue
 
     if (error) {
       this.logger.error('Error fetching overdue policies', error);
