@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 import {
   Shield,
   ArrowLeft,
@@ -27,17 +27,17 @@ import {
   Heart,
   Plane,
   Sprout,
-} from "lucide-react";
-import Link from "next/link";
-import { useCreateCoverageMutation } from "@/hooks/useCoverage";
-import { usePolicyQuery } from "@/hooks/usePolicies";
-import { useToast } from "@/components/shared/ToastProvider";
-import { usePaymentMutation } from "@/hooks/usePayment";
-import { useInsuranceContract } from "@/hooks/useBlockchain";
-import { CreateCoverageDto, UploadDocDto } from "@/api";
-import { useTransactionStore } from "@/store/useTransactionStore";
-import { useAccount } from "wagmi";
-import { useAgreementUploadMutation } from "@/hooks/useAgreement";
+} from 'lucide-react';
+import Link from 'next/link';
+import { useCreateCoverageMutation } from '@/hooks/useCoverage';
+import { usePolicyQuery } from '@/hooks/usePolicies';
+import { useToast } from '@/components/shared/ToastProvider';
+import { usePaymentMutation } from '@/hooks/usePayment';
+import { useInsuranceContract } from '@/hooks/useBlockchain';
+import { CreateCoverageDto, UploadDocDto } from '@/api';
+import { useTransactionStore } from '@/store/useTransactionStore';
+import { useAccount } from 'wagmi';
+import { useAgreementUploadMutation } from '@/hooks/useAgreement';
 
 declare global {
   interface Window {
@@ -50,10 +50,10 @@ export default function PaymentSummary() {
   const { printMessage } = useToast();
   const { address, isConnected } = useAccount();
   const [currentStep] = useState(2);
-  const [tokenAmount, setTokenAmount] = useState("");
+  const [tokenAmount, setTokenAmount] = useState('');
   const [showTokenDetails, setShowTokenDetails] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("ETH");
+  const [paymentMethod, setPaymentMethod] = useState('ETH');
   const [agreementFile, setAgreementFile] = useState<File | null>(null);
   const [agreementCid, setAgreementCid] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -79,7 +79,7 @@ export default function PaymentSummary() {
   } = useInsuranceContract();
 
   const searchParams = useSearchParams();
-  const policyId = searchParams.get("policy") ?? "";
+  const policyId = searchParams.get('policy') ?? '';
   const { data: policy } = usePolicyQuery(Number(policyId));
 
   const policyData = useMemo(() => {
@@ -93,7 +93,7 @@ export default function PaymentSummary() {
       premium: `${policy.data.premium} ETH/month`,
       rating: policy.data.rating,
       features: policy.data.claim_types ?? [],
-      description: String(policy.data.description ?? ""),
+      description: String(policy.data.description ?? ''),
       duration: `${policy.data.duration_days} days`,
       basePrice: policy.data.premium,
       discount: 0,
@@ -105,7 +105,7 @@ export default function PaymentSummary() {
 
   const agreementTemplateUrls = useMemo(() => {
     return (policy?.data?.policy_documents ?? []).map((doc) => ({
-      name: doc.name ?? "Download Agreement",
+      name: doc.name ?? 'Download Agreement',
       url: doc.signedUrl,
     }));
   }, [policy]);
@@ -118,12 +118,12 @@ export default function PaymentSummary() {
 
   const handleAgreementFile = useCallback(
     (file: File) => {
-      if (file.type !== "application/pdf") {
-        printMessage("Only PDF files are allowed", "error");
+      if (file.type !== 'application/pdf') {
+        printMessage('Only PDF files are allowed', 'error');
         return;
       }
       if (file.size > 10 * 1024 * 1024) {
-        printMessage("File is too large. Maximum size is 10MB.", "error");
+        printMessage('File is too large. Maximum size is 10MB.', 'error');
         return;
       }
       setAgreementFile(file);
@@ -145,9 +145,9 @@ export default function PaymentSummary() {
     (e: React.DragEvent<HTMLDivElement>) => {
       e.preventDefault();
       e.stopPropagation();
-      if (e.type === "dragenter" || e.type === "dragover") {
+      if (e.type === 'dragenter' || e.type === 'dragover') {
         setDragActive(true);
-      } else if (e.type === "dragleave") {
+      } else if (e.type === 'dragleave') {
         setDragActive(false);
       }
     },
@@ -174,7 +174,7 @@ export default function PaymentSummary() {
   // Handle blockchain transaction success
   useEffect(() => {
     if (isTransactionSuccess && createCoverageData) {
-      console.log("Blockchain transaction successful:", createCoverageData);
+      console.log('Blockchain transaction successful:', createCoverageData);
       handleBlockchainSuccess();
     }
   }, [isTransactionSuccess, createCoverageData]);
@@ -182,29 +182,29 @@ export default function PaymentSummary() {
   // Handle blockchain transaction error
   useEffect(() => {
     if (createCoverageError) {
-      console.error("Blockchain transaction failed:", createCoverageError);
-      printMessage("Blockchain transaction failed. Please try again.", "error");
+      console.error('Blockchain transaction failed:', createCoverageError);
+      printMessage('Blockchain transaction failed. Please try again.', 'error');
       setIsProcessing(false);
     }
   }, [createCoverageError, printMessage]);
 
   useEffect(() => {
-    if (paymentMethod !== "STRIPE") return;
+    if (paymentMethod !== 'STRIPE') return;
 
     const setupStripe = () => {
       if (!stripeRef.current) {
         stripeRef.current = window.Stripe(
-          process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
+          process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ''
         );
       }
       const elements = stripeRef.current.elements();
-      cardElementRef.current = elements.create("card");
+      cardElementRef.current = elements.create('card');
       cardElementRef.current.mount(cardContainerRef.current!);
     };
 
     if (!window.Stripe) {
-      const script = document.createElement("script");
-      script.src = "https://js.stripe.com/v3";
+      const script = document.createElement('script');
+      script.src = 'https://js.stripe.com/v3';
       script.async = true;
       script.onload = setupStripe;
       document.body.appendChild(script);
@@ -222,11 +222,11 @@ export default function PaymentSummary() {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case "health":
+      case 'health':
         return Heart;
-      case "travel":
+      case 'travel':
         return Plane;
-      case "crop":
+      case 'crop':
         return Sprout;
       default:
         return Shield;
@@ -235,14 +235,14 @@ export default function PaymentSummary() {
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case "health":
-        return "from-red-500 to-pink-500";
-      case "travel":
-        return "from-blue-500 to-cyan-500";
-      case "crop":
-        return "from-green-500 to-emerald-500";
+      case 'health':
+        return 'from-red-500 to-pink-500';
+      case 'travel':
+        return 'from-blue-500 to-cyan-500';
+      case 'crop':
+        return 'from-green-500 to-emerald-500';
       default:
-        return "from-slate-500 to-slate-600";
+        return 'from-slate-500 to-slate-600';
     }
   };
 
@@ -258,9 +258,9 @@ export default function PaymentSummary() {
           txHash: createCoverageData,
           description: `${policyData?.name} Purchased`,
           amount: Number(tokenAmount),
-          currency: "ETH",
-          status: "confirmed",
-          type: "sent",
+          currency: 'ETH',
+          status: 'confirmed',
+          type: 'sent',
         });
 
         // Set transaction details in store
@@ -269,26 +269,26 @@ export default function PaymentSummary() {
           txHash: createCoverageData!,
           description: `${policyData?.name} Purchased`,
           amount: Number(tokenAmount),
-          currency: "ETH",
-          status: "confirmed",
-          type: "sent",
+          currency: 'ETH',
+          status: 'confirmed',
+          type: 'sent',
           createdAt: new Date().toISOString(),
         });
       }
 
       printMessage(
-        "Blockchain payment successful! Coverage created.",
-        "success"
+        'Blockchain payment successful! Coverage created.',
+        'success'
       );
-      router.push("/policyholder/payment/confirmation");
+      router.push('/policyholder/payment/confirmation');
     } catch (error) {
       console.error(
-        "Failed to create coverage after blockchain payment:",
+        'Failed to create coverage after blockchain payment:',
         error
       );
       printMessage(
-        "Payment successful but failed to create coverage. Please contact support.",
-        "error"
+        'Payment successful but failed to create coverage. Please contact support.',
+        'error'
       );
     } finally {
       setIsProcessing(false);
@@ -297,17 +297,17 @@ export default function PaymentSummary() {
 
   const handleTokenPayment = async (cid: string) => {
     if (!cid) {
-      printMessage("Please upload the signed agreement.", "error");
+      printMessage('Please upload the signed agreement.', 'error');
       return;
     }
 
     if (!isConnected) {
-      printMessage("Please connect your wallet first", "error");
+      printMessage('Please connect your wallet first', 'error');
       return;
     }
 
     if (!policyData) {
-      printMessage("Policy data not available", "error");
+      printMessage('Policy data not available', 'error');
       return;
     }
 
@@ -318,7 +318,7 @@ export default function PaymentSummary() {
       const coverageId = await createCoverageWithPayment(
         policyData.coverageAmount, // coverage amount in ETH
         Number(tokenAmount), // premium amount in ETH
-        parseInt(policyData.duration.split(" ")[0]), // duration in days
+        parseInt(policyData.duration.split(' ')[0]), // duration in days
         cid,
         policyData.name,
         policyData.category,
@@ -329,8 +329,8 @@ export default function PaymentSummary() {
 
       // The success will be handled by the useEffect that watches isTransactionSuccess
     } catch (error) {
-      console.error("Blockchain payment failed:", error);
-      printMessage("Blockchain payment failed. Please try again.", "error");
+      console.error('Blockchain payment failed:', error);
+      printMessage('Blockchain payment failed. Please try again.', 'error');
       setIsProcessing(false);
     }
   };
@@ -340,7 +340,7 @@ export default function PaymentSummary() {
     try {
       const response = await makePayment({
         amount: policyData!.total,
-        currency: "usd",
+        currency: 'usd',
       });
       const clientSecret = response?.data?.clientSecret;
       if (clientSecret && stripeRef.current && cardElementRef.current) {
@@ -351,35 +351,35 @@ export default function PaymentSummary() {
           }
         );
 
-        if (result.error || result.paymentIntent?.status !== "succeeded") {
-          printMessage("Payment failed. Please try again.", "error");
+        if (result.error || result.paymentIntent?.status !== 'succeeded') {
+          printMessage('Payment failed. Please try again.', 'error');
         } else {
           const coverage = await createCoverage(coverageData);
 
           const txId = `PI-${Date.now()}`;
           const blockHash = `0x${Array.from({ length: 40 }, () =>
             Math.floor(Math.random() * 16).toString(16)
-          ).join("")}`;
+          ).join('')}`;
           setTransaction({
             coverageId: coverage?.data?.id ?? 0,
             txHash: blockHash,
             description: `${policyData?.name} Purchased`,
             amount: policyData!.total,
-            currency: "USD",
-            status: "confirmed",
-            type: "sent",
+            currency: 'USD',
+            status: 'confirmed',
+            type: 'sent',
             createdAt: new Date().toISOString(),
           });
 
-          printMessage("Stripe payment successful", "success");
-          router.push("/policyholder/payment/confirmation");
+          printMessage('Stripe payment successful', 'success');
+          router.push('/policyholder/payment/confirmation');
         }
       } else {
-        printMessage("Payment failed. Please try again.", "error");
+        printMessage('Payment failed. Please try again.', 'error');
       }
     } catch (error) {
-      console.error("Stripe payment failed:", error);
-      printMessage("Payment failed. Please try again.", "error");
+      console.error('Stripe payment failed:', error);
+      printMessage('Payment failed. Please try again.', 'error');
     } finally {
       setIsProcessing(false);
     }
@@ -387,7 +387,7 @@ export default function PaymentSummary() {
 
   const handlePayment = async () => {
     if (!agreementFile && !agreementCid) {
-      printMessage("Please upload the signed agreement.", "error");
+      printMessage('Please upload the signed agreement.', 'error');
       return;
     }
 
@@ -395,7 +395,7 @@ export default function PaymentSummary() {
     if (!cid) {
       cid = await uploadAgreement(agreementFile!);
       if (!cid) {
-        printMessage("Failed to upload agreement.", "error");
+        printMessage('Failed to upload agreement.', 'error');
         return;
       }
     }
@@ -413,29 +413,30 @@ export default function PaymentSummary() {
     const coverageData: CreateCoverageDto = {
       id: coverageId!,
       policy_id: policyData!.id,
-      status: "active",
+      policy_name: policyData!.name,
+      status: 'active',
       utilization_rate: 0,
-      start_date: startDate.toISOString().split("T")[0],
-      end_date: endDate.toISOString().split("T")[0],
-      next_payment_date: nextPaymentDate.toISOString().split("T")[0],
+      start_date: startDate.toISOString().split('T')[0],
+      end_date: endDate.toISOString().split('T')[0],
+      next_payment_date: nextPaymentDate.toISOString().split('T')[0],
       agreement_cid: cid,
     };
 
     coverageRef.current = coverageData;
 
-    if (paymentMethod === "STRIPE") {
+    if (paymentMethod === 'STRIPE') {
       await handleStripePayment(coverageData);
       return;
     }
   };
 
   const steps = [
-    { id: 1, name: "Policy Selection", status: "completed" },
-    { id: 2, name: "Payment Details", status: "current" },
-    { id: 3, name: "Confirmation", status: "pending" },
+    { id: 1, name: 'Policy Selection', status: 'completed' },
+    { id: 2, name: 'Payment Details', status: 'current' },
+    { id: 3, name: 'Confirmation', status: 'pending' },
   ];
 
-  const CategoryIcon = getCategoryIcon(policyData?.category || "");
+  const CategoryIcon = getCategoryIcon(policyData?.category || '');
 
   if (!policyData) {
     return <div className="p-8">Loading...</div>;
@@ -472,14 +473,14 @@ export default function PaymentSummary() {
                 <div key={step.id} className="flex items-center">
                   <div
                     className={`flex items-center justify-center w-10 h-10 rounded-full ${
-                      step.status === "completed"
-                        ? "bg-emerald-500 text-white"
-                        : step.status === "current"
-                        ? "bg-blue-500 text-white"
-                        : "bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+                      step.status === 'completed'
+                        ? 'bg-emerald-500 text-white'
+                        : step.status === 'current'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
                     }`}
                   >
-                    {step.status === "completed" ? (
+                    {step.status === 'completed' ? (
                       <CheckCircle className="w-5 h-5" />
                     ) : (
                       <span className="text-sm font-medium">{step.id}</span>
@@ -487,11 +488,11 @@ export default function PaymentSummary() {
                   </div>
                   <span
                     className={`ml-3 text-sm font-medium ${
-                      step.status === "current"
-                        ? "text-blue-600 dark:text-blue-400"
-                        : step.status === "completed"
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-slate-500 dark:text-slate-400"
+                      step.status === 'current'
+                        ? 'text-blue-600 dark:text-blue-400'
+                        : step.status === 'completed'
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-slate-500 dark:text-slate-400'
                     }`}
                   >
                     {step.name}
@@ -499,9 +500,9 @@ export default function PaymentSummary() {
                   {index < steps.length - 1 && (
                     <div
                       className={`w-16 h-1 mx-4 ${
-                        step.status === "completed"
-                          ? "bg-emerald-500"
-                          : "bg-slate-200 dark:bg-slate-700"
+                        step.status === 'completed'
+                          ? 'bg-emerald-500'
+                          : 'bg-slate-200 dark:bg-slate-700'
                       }`}
                     />
                   )}
@@ -626,30 +627,30 @@ export default function PaymentSummary() {
               </CardHeader>
               <CardContent className="space-y-8">
                 {/* Wallet Connection Status */}
-                {paymentMethod === "ETH" && (
+                {paymentMethod === 'ETH' && (
                   <div
                     className={`p-4 rounded-xl border-2 ${
                       isConnected
-                        ? "border-green-200 bg-green-50/50 dark:bg-green-900/20"
-                        : "border-red-200 bg-red-50/50 dark:bg-red-900/20"
+                        ? 'border-green-200 bg-green-50/50 dark:bg-green-900/20'
+                        : 'border-red-200 bg-red-50/50 dark:bg-red-900/20'
                     }`}
                   >
                     <div className="flex items-center space-x-2">
                       <Wallet
                         className={`w-5 h-5 ${
-                          isConnected ? "text-green-600" : "text-red-600"
+                          isConnected ? 'text-green-600' : 'text-red-600'
                         }`}
                       />
                       <span
                         className={`font-medium ${
                           isConnected
-                            ? "text-green-800 dark:text-green-200"
-                            : "text-red-800 dark:text-red-200"
+                            ? 'text-green-800 dark:text-green-200'
+                            : 'text-red-800 dark:text-red-200'
                         }`}
                       >
                         {isConnected
-                          ? "Wallet Connected"
-                          : "Wallet Not Connected"}
+                          ? 'Wallet Connected'
+                          : 'Wallet Not Connected'}
                       </span>
                     </div>
                     {isConnected && (
@@ -671,14 +672,14 @@ export default function PaymentSummary() {
                     Payment Method
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
-                    {["ETH", "STRIPE"].map((method) => (
+                    {['ETH', 'STRIPE'].map((method) => (
                       <button
                         key={method}
                         onClick={() => setPaymentMethod(method)}
                         className={`p-4 rounded-xl border-2 transition-all duration-200 ${
                           paymentMethod === method
-                            ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
-                            : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
+                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                         }`}
                       >
                         <div className="flex items-center justify-center space-x-2">
@@ -690,7 +691,7 @@ export default function PaymentSummary() {
                   </div>
                 </div>
 
-                {paymentMethod === "STRIPE" && (
+                {paymentMethod === 'STRIPE' && (
                   <div className="space-y-2">
                     <div className="text-sm text-slate-600 dark:text-slate-400">
                       Card Details
@@ -769,7 +770,7 @@ export default function PaymentSummary() {
                 </div>
 
                 {/* Token Amount Input */}
-                {paymentMethod !== "STRIPE" && (
+                {paymentMethod !== 'STRIPE' && (
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
@@ -785,7 +786,7 @@ export default function PaymentSummary() {
                           <Eye className="w-4 h-4" />
                         )}
                         <span>
-                          {showTokenDetails ? "Hide" : "Show"} Details
+                          {showTokenDetails ? 'Hide' : 'Show'} Details
                         </span>
                       </button>
                     </div>
@@ -887,8 +888,8 @@ export default function PaymentSummary() {
                   <div
                     className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
                       dragActive
-                        ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
-                        : "border-slate-300 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-700/30"
+                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                        : 'border-slate-300 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-700/30'
                     }`}
                     onDragEnter={handleAgreementDrag}
                     onDragLeave={handleAgreementDrag}
@@ -897,7 +898,7 @@ export default function PaymentSummary() {
                   >
                     <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
                     <p className="text-slate-700 dark:text-slate-300 mb-2">
-                      Drag and drop signed agreement here, or{" "}
+                      Drag and drop signed agreement here, or{' '}
                       <label className="text-emerald-600 dark:text-emerald-400 cursor-pointer hover:text-emerald-700 dark:hover:text-emerald-300">
                         browse
                         <input
@@ -948,8 +949,8 @@ export default function PaymentSummary() {
                       isProcessing ||
                       isCreatingCoverage ||
                       isWaitingForTransaction ||
-                      (paymentMethod === "ETH" && !isConnected) ||
-                      (paymentMethod !== "STRIPE" && !tokenAmount)
+                      (paymentMethod === 'ETH' && !isConnected) ||
+                      (paymentMethod !== 'STRIPE' && !tokenAmount)
                     }
                     className="flex-1 gradient-accent text-white floating-button relative overflow-hidden"
                   >
@@ -960,8 +961,8 @@ export default function PaymentSummary() {
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                         <span>
                           {isWaitingForTransaction
-                            ? "Confirming Transaction..."
-                            : "Processing..."}
+                            ? 'Confirming Transaction...'
+                            : 'Processing...'}
                         </span>
                       </div>
                     ) : (
@@ -976,14 +977,14 @@ export default function PaymentSummary() {
                 {/* Additional Info */}
                 <div className="text-center">
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    By proceeding, you agree to our{" "}
+                    By proceeding, you agree to our{' '}
                     <a
                       href="#"
                       className="text-emerald-600 dark:text-emerald-400 hover:underline"
                     >
                       Terms of Service
-                    </a>{" "}
-                    and{" "}
+                    </a>{' '}
+                    and{' '}
                     <a
                       href="#"
                       className="text-emerald-600 dark:text-emerald-400 hover:underline"

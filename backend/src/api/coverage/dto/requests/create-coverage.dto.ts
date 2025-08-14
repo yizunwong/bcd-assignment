@@ -82,4 +82,13 @@ export class CreateCoverageDto {
   @IsString({ message: 'agreement_cid must be a string' })
   @IsNotEmpty({ message: 'agreement_cid is required' })
   agreement_cid!: string;
+
+  @ApiProperty({
+    example: 'Policy Name',
+    description:
+      'Name of the policy (optional - will be fetched from database)',
+    required: false,
+  })
+  @IsString({ message: 'policy_name must be a string' })
+  policy_name!: string;
 }

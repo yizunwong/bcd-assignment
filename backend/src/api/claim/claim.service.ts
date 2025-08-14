@@ -478,6 +478,25 @@ export class ClaimService {
 
     // Create notification for claim status update
     try {
+      // Fetch policy information for better notification message
+      const { data: claimWithPolicy } = await req.supabase
+        .from('claims')
+        .select(
+          `
+          *,
+          coverage:coverage_id(
+            policy:policy_id(
+              name
+            )
+          )
+        `,
+        )
+        .eq('id', id)
+        .single();
+
+      const policyName =
+        claimWithPolicy?.coverage?.policy?.name || 'Unknown Policy';
+
       const notificationType =
         status === ClaimStatus.APPROVED
           ? 'success'
@@ -492,10 +511,17 @@ export class ClaimService {
             ? 'rejected'
             : status.toLowerCase();
 
+      const notificationMessage =
+        status === ClaimStatus.APPROVED
+          ? `Your claim #${id} for policy "${policyName}" has been approved. Payment will be processed shortly.`
+          : status === ClaimStatus.REJECTED
+            ? `Your claim #${id} for policy "${policyName}" has been rejected. Please contact support for more details.`
+            : `Your claim #${id} for policy "${policyName}" has been ${statusMessage}.`;
+
       await this.notificationsService.createSystemNotification(
         data.submitted_by,
         `Claim ${statusMessage.charAt(0).toUpperCase() + statusMessage.slice(1)}`,
-        `Your claim #${id} has been ${statusMessage}. ${status === ClaimStatus.APPROVED ? 'Payment will be processed shortly.' : status === ClaimStatus.REJECTED ? 'Please contact support for more details.' : ''}`,
+        notificationMessage,
         notificationType,
       );
     } catch (notificationError) {

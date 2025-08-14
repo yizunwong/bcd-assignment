@@ -3353,6 +3353,11 @@
             "type": "string",
             "example": "QmHash",
             "description": "CID of the signed agreement stored on IPFS"
+          },
+          "policy_name": {
+            "type": "string",
+            "example": "Policy Name",
+            "description": "Name of the policy (optional - will be fetched from database)"
           }
         },
         "required": [
@@ -3408,6 +3413,11 @@
             "type": "string",
             "example": "QmHash",
             "description": "CID of the signed agreement stored on IPFS"
+          },
+          "policy_name": {
+            "type": "string",
+            "example": "Policy Name",
+            "description": "Name of the policy (optional - will be fetched from database)"
           }
         }
       },

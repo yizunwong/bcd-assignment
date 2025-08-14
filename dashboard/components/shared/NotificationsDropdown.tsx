@@ -1,7 +1,14 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Bell, AlertCircle, Info, CheckCircle } from 'lucide-react';
+import {
+  Bell,
+  AlertCircle,
+  Info,
+  CheckCircle,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
@@ -13,6 +20,9 @@ import { formatDistanceToNow } from 'date-fns';
 
 export function NotificationsDropdown() {
   const [isOpen, setIsOpen] = useState(false);
+  const [expandedNotifications, setExpandedNotifications] = useState<
+    Set<string>
+  >(new Set());
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { data: notificationsData, isLoading } = useNotifications();
   const markAsRead = useMarkNotificationAsRead();
@@ -62,6 +72,20 @@ export function NotificationsDropdown() {
     }
   };
 
+  const toggleNotificationExpansion = (notificationId: string) => {
+    setExpandedNotifications((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(notificationId)) {
+        newSet.delete(notificationId);
+      } else {
+        newSet.add(notificationId);
+      }
+      return newSet;
+    });
+  };
+
+  const isLongMessage = (message: string) => message.length > 150;
+
   return (
     <div className="relative" ref={dropdownRef}>
       <Button
@@ -79,7 +103,7 @@ export function NotificationsDropdown() {
       </Button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 glass-card rounded-xl shadow-lg border border-white/20 dark:border-slate-700/50 py-2 z-50 max-h-96 overflow-hidden">
+        <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 lg:w-[32rem] xl:w-[36rem] max-w-[36rem] glass-card rounded-xl shadow-lg border border-white/20 dark:border-slate-700/50 py-2 z-50 max-h-[32rem] overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-2 border-b border-white/20 dark:border-slate-700/50">
             <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
@@ -99,7 +123,7 @@ export function NotificationsDropdown() {
           </div>
 
           {/* Notifications List */}
-          <div className="max-h-80 overflow-y-auto">
+          <div className="max-h-[24rem] overflow-y-auto">
             {isLoading ? (
               <div className="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
                 Loading notifications...
@@ -129,10 +153,10 @@ export function NotificationsDropdown() {
                         {getNotificationIcon(notification.notification_type)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between">
+                        <div className="flex items-start justify-between gap-2">
                           <p
                             className={cn(
-                              'text-sm font-medium',
+                              'text-sm font-medium flex-1 min-w-0',
                               notification.read
                                 ? 'text-slate-600 dark:text-slate-400'
                                 : 'text-slate-900 dark:text-slate-100'
@@ -141,12 +165,42 @@ export function NotificationsDropdown() {
                             {notification.title}
                           </p>
                           {!notification.read && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 ml-2 mt-1"></div>
+                            <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1"></div>
                           )}
                         </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-                          {notification.message}
-                        </p>
+                        <div className="mt-1">
+                          <p
+                            className={cn(
+                              'text-xs text-slate-500 dark:text-slate-400 leading-relaxed whitespace-normal break-words',
+                              !expandedNotifications.has(notification.id) &&
+                                isLongMessage(notification.message) &&
+                                'line-clamp-2'
+                            )}
+                          >
+                            {notification.message}
+                          </p>
+                          {isLongMessage(notification.message) && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleNotificationExpansion(notification.id);
+                              }}
+                              className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 mt-1 flex items-center gap-1 transition-colors"
+                            >
+                              {expandedNotifications.has(notification.id) ? (
+                                <>
+                                  <ChevronUp className="w-3 h-3" />
+                                  Show less
+                                </>
+                              ) : (
+                                <>
+                                  <ChevronDown className="w-3 h-3" />
+                                  Show more
+                                </>
+                              )}
+                            </button>
+                          )}
+                        </div>
                         <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
                           {formatDistanceToNow(
                             new Date(notification.created_at),

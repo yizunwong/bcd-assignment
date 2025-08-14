@@ -34,7 +34,7 @@ export class CoverageService {
   }
 
   async create(dto: CreateCoverageDto, req: AuthenticatedRequest) {
-    //Insert into coverage table
+    // Insert into coverage table
     const { data: coverage, error: coverageError } = await req.supabase
       .from('coverage')
       .upsert(
@@ -64,7 +64,7 @@ export class CoverageService {
       await this.notificationsService.createSystemNotification(
         req.user.id,
         'Coverage Created Successfully',
-        `Your coverage for policy ${dto.policy_id} has been created successfully. You can now file claims under this coverage.`,
+        `Your coverage for policy "${dto.policy_name}" has been created successfully. You can now file claims under this coverage.`,
         'success',
       );
     } catch (notificationError) {
