@@ -76,7 +76,7 @@ export function useUpdateClaimStatusMutation() {
     updateClaimStatus: (
       id: string,
       status: ClaimStatus,
-      data: UpdateClaimStatusDto
+      data?: UpdateClaimStatusDto
     ) => mutation.mutateAsync({ id, status, data }),
     error: parseError(mutation.error),
   };

@@ -93,6 +93,10 @@ export function ClaimReviewDialog({ claim, trigger }: ClaimReviewDialogProps) {
     try {
       if (reviewForm.status === "approved") {
         const claimHash = await approveClaimOnChain(Number(claim.id));
+        if (!claimHash) {
+          printMessage("Failed to approve claim", "error");
+          return;
+        }
 
         console.log("Claim approved on-chain:", claimHash);
 
@@ -100,16 +104,13 @@ export function ClaimReviewDialog({ claim, trigger }: ClaimReviewDialogProps) {
           String(claim.id),
           reviewForm.status as ClaimStatus,
           {
-            txHash: claimHash as string,
+            txHash: claimHash,
           }
         );
       } else {
         await updateClaimStatus(
           String(claim.id),
           reviewForm.status as ClaimStatus,
-          {
-            txHash: '', 
-          }
         );
       }
 
