@@ -57,6 +57,7 @@ export default function PaymentSummary() {
   const [agreementFile, setAgreementFile] = useState<File | null>(null);
   const [agreementCid, setAgreementCid] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [agreementError, setAgreementError] = useState<string | null>(null);
 
   const stripeRef = useRef<any>(null);
   const cardElementRef = useRef<any>(null);
@@ -116,15 +117,16 @@ export default function PaymentSummary() {
   const handleAgreementFile = useCallback(
     (file: File) => {
       if (file.type !== "application/pdf") {
-        printMessage("Only PDF files are allowed", "error");
+        setAgreementError("Only PDF files are allowed");
         return;
       }
       if (file.size > 10 * 1024 * 1024) {
-        printMessage("File is too large. Maximum size is 10MB.", "error");
+        setAgreementError("File is too large. Maximum size is 10MB.");
         return;
       }
       setAgreementFile(file);
       setAgreementCid(null);
+      setAgreementError(null);
     },
     [printMessage]
   );
@@ -166,6 +168,7 @@ export default function PaymentSummary() {
   const handleRemoveAgreement = () => {
     setAgreementFile(null);
     setAgreementCid(null);
+    setAgreementError(null);
   };
 
   useEffect(() => {
@@ -873,21 +876,26 @@ export default function PaymentSummary() {
                     onDrop={handleAgreementDrop}
                   >
                     <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                    <p className="text-slate-700 dark:text-slate-300 mb-2">
-                      Drag and drop signed agreement here, or{" "}
+                    <p className="text-slate-600 dark:text-slate-400 mb-2">
+                      Drag and drop your signed agreement PDF here, or{" "}
                       <label className="text-emerald-600 dark:text-emerald-400 cursor-pointer hover:text-emerald-700 dark:hover:text-emerald-300">
                         browse
                         <input
                           type="file"
-                          accept="application/pdf"
                           className="hidden"
+                          accept=".pdf,application/pdf"
                           onChange={handleAgreementSelect}
                         />
                       </label>
                     </p>
                     <p className="text-sm text-slate-500 dark:text-slate-500">
-                      PDF only, max 10MB
+                      Supported formats: PDF only. Max 10MB.
                     </p>
+                    {agreementError && (
+                      <p className="mt-2 text-sm text-red-500">
+                        {agreementError}
+                      </p>
+                    )}
                   </div>
 
                   {agreementFile && (

@@ -134,6 +134,11 @@ export default function BrowsePolicies() {
     }));
   }, [policiesData]);
 
+  // Safety: in case the API returns more than requested, strictly render max ITEMS_PER_PAGE
+  const displayedPolicies = useMemo<Policy[]>(() => {
+    return policies.slice(0, ITEMS_PER_PAGE);
+  }, [policies]);
+
   const totalPages = Math.ceil((policiesData?.count || 0) / ITEMS_PER_PAGE);
 
   // Reset to page 1 when filters change
@@ -274,7 +279,8 @@ export default function BrowsePolicies() {
         {/* Results Summary */}
         <div className="mb-6">
           <p className="text-slate-600 dark:text-slate-400">
-            Showing {policies.length} of {policiesData?.count || 0} policies
+            Showing {displayedPolicies.length} of {policiesData?.count || 0}{" "}
+            policies
             {selectedCategory !== "all" && (
               <span>
                 {" "}
@@ -295,7 +301,7 @@ export default function BrowsePolicies() {
               </h3>
             </div>
           ) : (
-            policies.map((policy) => {
+            displayedPolicies.map((policy) => {
               const categoryInfo = policyCategories.find(
                 (cat) => cat.id === policy.category
               );
@@ -431,7 +437,7 @@ export default function BrowsePolicies() {
           className="mt-8"
         />
 
-        {policies.length === 0 && !isLoading && (
+        {displayedPolicies.length === 0 && !isLoading && (
           <div className="text-center py-12">
             <Shield className="w-16 h-16 text-slate-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">

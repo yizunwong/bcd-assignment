@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -7,7 +7,7 @@
   | Json[];
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: '12.2.3 (519615d)';
@@ -18,23 +18,23 @@ export type Database = {
         Row: {
           action: string;
           id: string;
-          ip: string | null;
-          timestamp: string | null;
-          user_id: string | null;
+          ip: string;
+          timestamp: string;
+          user_id: string;
         };
         Insert: {
           action: string;
           id?: string;
-          ip?: string | null;
-          timestamp?: string | null;
-          user_id?: string | null;
+          ip?: string;
+          timestamp?: string;
+          user_id: string;
         };
         Update: {
           action?: string;
           id?: string;
-          ip?: string | null;
-          timestamp?: string | null;
-          user_id?: string | null;
+          ip?: string;
+          timestamp?: string;
+          user_id?: string;
         };
         Relationships: [];
       };
@@ -133,7 +133,7 @@ export type Database = {
           type: string;
         };
         Insert: {
-          amount?: number;
+          amount: number;
           claimed_date?: string | null;
           coverage_id: number;
           description?: string | null;
@@ -304,7 +304,7 @@ export type Database = {
           id: number;
           message: string;
           notification_type: Database['public']['Enums']['notification_type'];
-          read: boolean | null;
+          read: boolean;
           title: string;
           updated_at: string | null;
           user_id: string;
@@ -612,8 +612,8 @@ export type Database = {
       count_active_users_by_company: {
         Args: Record<PropertyKey, never>;
         Returns: {
-          company_id: number;
           active_users: number;
+          company_id: number;
         }[];
       };
       count_policy_sales: {

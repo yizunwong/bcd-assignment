@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { useState, useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Pagination } from '@/components/shared/Pagination';
+} from "@/components/ui/select";
+import { Pagination } from "@/components/shared/Pagination";
 import {
   Shield,
   Calendar,
@@ -23,11 +23,14 @@ import {
   Clock,
   Download,
   Filter,
-} from 'lucide-react';
-import { useCoverageListQuery, useCoverageStatsQuery } from '@/hooks/useCoverage';
-import { useToast } from '@/components/shared/ToastProvider';
-import type { CoverageControllerFindAllParams } from '@/api';
-import CoverageDetailsDialog from './components/CoverageDetailsDialog';
+} from "lucide-react";
+import {
+  useCoverageListQuery,
+  useCoverageStatsQuery,
+} from "@/hooks/useCoverage";
+import { useToast } from "@/components/shared/ToastProvider";
+import type { CoverageControllerFindAllParams } from "@/api";
+import CoverageDetailsDialog from "./components/CoverageDetailsDialog";
 
 const ITEMS_PER_PAGE = 5;
 
@@ -64,12 +67,12 @@ const transformCoverageData = (coverageData: any[]): TransformedPolicy[] => {
 
     return {
       id: coverage.id.toString(),
-      name: policy?.name || 'Unknown Policy',
-      type: policy?.category || 'General',
-      provider: policy?.provider || 'Unknown Provider',
+      name: policy?.name || "Unknown Policy",
+      type: policy?.category || "General",
+      provider: policy?.provider || "Unknown Provider",
       coverage: `$${coverageAmount.toLocaleString()}`,
-      premium: policy?.premium || '0 ETH/month',
-      status: coverage.status || 'active',
+      premium: policy?.premium || "0 ETH/month",
+      status: coverage.status || "active",
       startDate: coverage.start_date,
       endDate: coverage.end_date,
       nextPayment: coverage.next_payment_date,
@@ -84,17 +87,18 @@ const transformCoverageData = (coverageData: any[]): TransformedPolicy[] => {
 
 export default function MyCoverage() {
   const { printMessage } = useToast();
-  const [selectedPolicy, setSelectedPolicy] = useState<TransformedPolicy | null>(null);
+  const [selectedPolicy, setSelectedPolicy] =
+    useState<TransformedPolicy | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [sortBy, setSortBy] = useState('newest');
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [sortBy, setSortBy] = useState("all");
 
-  const hasFilters = filterStatus !== 'all';
+  const hasFilters = filterStatus !== "all";
 
   const filters = hasFilters
     ? {
-        ...(filterStatus !== 'all' && { status: filterStatus }),
+        ...(filterStatus !== "all" && { status: filterStatus }),
       }
     : {};
 
@@ -129,7 +133,7 @@ export default function MyCoverage() {
     let filtered = allPolicies;
 
     // Filter by status
-    if (filterStatus !== 'all') {
+    if (filterStatus !== "all") {
       filtered = filtered.filter((policy) => {
         const matches =
           policy.status.toLowerCase() === filterStatus.toLowerCase();
@@ -138,34 +142,31 @@ export default function MyCoverage() {
     }
 
     // Sort policies
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'newest':
-          return (
-            new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
-          );
-        case 'oldest':
-          return (
-            new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
-          );
-        case 'coverage-high':
-          return (
-            parseFloat(b.coverage.replace(/[$,]/g, '')) -
-            parseFloat(a.coverage.replace(/[$,]/g, ''))
-          );
-        case 'coverage-low':
-          return (
-            parseFloat(a.coverage.replace(/[$,]/g, '')) -
-            parseFloat(b.coverage.replace(/[$,]/g, ''))
-          );
-        case 'utilization':
-          return b.utilizationRate - a.utilizationRate;
-        case 'name':
-          return a.name.localeCompare(b.name);
-        default:
-          return 0;
-      }
-    });
+    if (sortBy !== "all") {
+      filtered.sort((a, b) => {
+        switch (sortBy) {
+          case "newest":
+            // Newest = largest numeric id first
+            return Number(b.id) - Number(a.id);
+          case "coverage-high":
+            return (
+              parseFloat(b.coverage.replace(/[$,]/g, "")) -
+              parseFloat(a.coverage.replace(/[$,]/g, ""))
+            );
+          case "coverage-low":
+            return (
+              parseFloat(a.coverage.replace(/[$,]/g, "")) -
+              parseFloat(b.coverage.replace(/[$,]/g, ""))
+            );
+          case "utilization":
+            return b.utilizationRate - a.utilizationRate;
+          case "name":
+            return a.name.localeCompare(b.name);
+          default:
+            return 0;
+        }
+      });
+    }
 
     return filtered;
   }, [filterStatus, sortBy, allPolicies]);
@@ -178,42 +179,42 @@ export default function MyCoverage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'status-active';
-      case 'limitExceeded':
-        return 'status-info';
-      case 'expired':
-        return 'bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300';
-      case 'suspended':
-        return 'status-error';
+      case "active":
+        return "status-active";
+      case "limitExceeded":
+        return "status-info";
+      case "expired":
+        return "bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300";
+      case "suspended":
+        return "status-error";
       default:
-        return 'bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300';
+        return "bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300";
     }
   };
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'Health':
-        return 'from-red-500 to-pink-500';
-      case 'Travel':
-        return 'from-blue-500 to-cyan-500';
-      case 'Crop':
-        return 'from-green-500 to-emerald-500';
+      case "Health":
+        return "from-red-500 to-pink-500";
+      case "Travel":
+        return "from-blue-500 to-cyan-500";
+      case "Crop":
+        return "from-green-500 to-emerald-500";
       default:
-        return 'from-slate-500 to-slate-600';
+        return "from-slate-500 to-slate-600";
     }
   };
 
   const handleDownloadAgreement = async (policy: TransformedPolicy) => {
     if (!policy.agreementCid) {
-      printMessage('No agreement available to download', 'error');
+      printMessage("No agreement available to download", "error");
       return;
     }
     try {
       const res = await fetch(`https://ipfs.io/ipfs/${policy.agreementCid}`);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = `${policy.name}-agreement.pdf`;
       document.body.appendChild(link);
@@ -221,20 +222,20 @@ export default function MyCoverage() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch {
-      printMessage('Failed to download agreement', 'error');
+      printMessage("Failed to download agreement", "error");
     }
   };
 
   const getStatusDisplayText = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'Active';
-      case 'limitExceeded':
-        return 'Limit Exceeded';
-      case 'expired':
-        return 'Expired';
-      case 'suspended':
-        return 'Suspended';
+      case "active":
+        return "Active";
+      case "limitExceeded":
+        return "Limit Exceeded";
+      case "expired":
+        return "Expired";
+      case "suspended":
+        return "Suspended";
       default:
         return status;
     }
@@ -302,9 +303,9 @@ export default function MyCoverage() {
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
                 {summaryData?.activeCoverage ?? 0}
               </h3>
-                <p className="text-slate-600 dark:text-slate-400">
-                  Active Coverage
-                </p>
+              <p className="text-slate-600 dark:text-slate-400">
+                Active Coverage
+              </p>
             </CardContent>
           </Card>
 
@@ -317,12 +318,9 @@ export default function MyCoverage() {
                 <Badge className="status-badge status-info">Claimed</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                $
-                {(summaryData?.totalCoverageValue ?? 0).toLocaleString()}
+                ${(summaryData?.totalCoverageValue ?? 0).toLocaleString()}
               </h3>
-              <p className="text-slate-600 dark:text-slate-400">
-                Claimed
-              </p>
+              <p className="text-slate-600 dark:text-slate-400">Claimed</p>
             </CardContent>
           </Card>
 
@@ -352,7 +350,9 @@ export default function MyCoverage() {
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
                 {Math.round(summaryData?.approvalRate ?? 0)}%
               </h3>
-              <p className="text-slate-600 dark:text-slate-400">Approval Rate</p>
+              <p className="text-slate-600 dark:text-slate-400">
+                Approval Rate
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -366,7 +366,7 @@ export default function MyCoverage() {
                   Your Policies
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400">
-                  Showing {paginatedPolicies.length} of{' '}
+                  Showing {paginatedPolicies.length} of{" "}
                   {filteredPolicies.length} policies
                 </p>
               </div>
@@ -403,8 +403,8 @@ export default function MyCoverage() {
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
                     <SelectItem value="newest">Newest First</SelectItem>
-                    <SelectItem value="oldest">Oldest First</SelectItem>
                     <SelectItem value="coverage-high">
                       Coverage: High to Low
                     </SelectItem>
@@ -502,7 +502,7 @@ export default function MyCoverage() {
                         Policy Period
                       </p>
                       <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                        {new Date(policy.startDate).toLocaleDateString()} -{' '}
+                        {new Date(policy.startDate).toLocaleDateString()} -{" "}
                         {new Date(policy.endDate).toLocaleDateString()}
                       </p>
                     </div>
@@ -634,7 +634,7 @@ export default function MyCoverage() {
             <p className="text-slate-500 dark:text-slate-500">
               {allPolicies.length === 0
                 ? "You don't have any coverage policies yet."
-                : 'Try adjusting your filter criteria'}
+                : "Try adjusting your filter criteria"}
             </p>
           </div>
         )}

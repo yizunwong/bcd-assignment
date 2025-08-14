@@ -26,6 +26,12 @@ import {
   Download,
   X,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useClaimsQuery } from "@/hooks/useClaims";
 import { useInsuranceContract } from "@/hooks/useBlockchain";
 import { usePolicyClaimTypesQuery } from "@/hooks/usePolicies";
@@ -33,9 +39,48 @@ import {
   useCreateClaimMutation,
   useUploadClaimDocumentsMutation,
 } from "@/hooks/useClaims";
-import { useMeQuery } from '@/hooks/useAuth';
+import { useMeQuery } from "@/hooks/useAuth";
+import { z } from "zod";
 
-const ITEMS_PER_PAGE = 8;
+const ITEMS_PER_PAGE = 4;
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+
+const NewClaimSchema = z.object({
+  selectedPolicy: z.string().min(1, "Please select a policy"),
+  claimType: z.string().min(1, "Please select a claim type"),
+  claimAmount: z
+    .string()
+    .min(1, "Please enter a claim amount")
+    .refine((v) => !Number.isNaN(parseFloat(v)) && parseFloat(v) > 0, {
+      message: "Amount must be a positive number",
+    }),
+  description: z.string().min(1, "Please provide a description"),
+  // at least 1 file, max 3 files
+  files: z
+    .array(z.instanceof(File))
+    .min(1, "Please attach at least one supporting document")
+    .max(3, "You can upload up to 3 files only")
+    .superRefine((files, ctx) => {
+      const seen = new Set<string>();
+      for (const f of files) {
+        const name = f.name.toLowerCase();
+        if (seen.has(name)) {
+          ctx.addIssue({
+            code: "custom",
+            message: "Duplicate file are not allowed",
+          });
+        } else {
+          seen.add(name);
+        }
+        if (f.size > MAX_FILE_SIZE_BYTES) {
+          ctx.addIssue({
+            code: "custom",
+            message: "Each file must be 10MB or less",
+          });
+        }
+      }
+    }),
+});
 
 export default function Claims() {
   const [activeTab, setActiveTab] = useState<"my-claims" | "new-claim">(
@@ -44,11 +89,15 @@ export default function Claims() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortBy, setSortBy] = useState("newest");
+  const [sortBy, setSortBy] = useState("all");
   const [selectedPolicy, setSelectedPolicy] = useState("");
   const [claimType, setClaimType] = useState("");
   const [claimAmount, setClaimAmount] = useState("");
   const [description, setDescription] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof z.infer<typeof NewClaimSchema>, string>>
+  >({});
   const { data: meData } = useMeQuery();
 
   const priority = "low";
@@ -64,11 +113,41 @@ export default function Claims() {
   const handlePolicyChange = (val: string) => {
     setSelectedPolicy(val);
     setClaimType("");
+    if (errors.selectedPolicy)
+      setErrors((e) => ({ ...e, selectedPolicy: undefined }));
   };
   const { createClaim, isPending: isCreating } = useCreateClaimMutation();
   const { uploadClaimDocuments, isPending: isUploading } =
     useUploadClaimDocumentsMutation();
-  const { data: claimsData, isLoading, error } = useClaimsQuery({ userId: meData?.data?.id });
+
+  // Map UI sort selection to backend sort params
+  const listParams = (() => {
+    const base: any = {
+      userId: meData?.data?.id,
+      page: currentPage,
+      limit: ITEMS_PER_PAGE,
+    };
+    switch (sortBy) {
+      case "newest":
+        return { ...base, sortBy: "id", sortOrder: "desc" };
+      case "amount-high":
+        return { ...base, sortBy: "amount", sortOrder: "desc" };
+      case "amount-low":
+        return { ...base, sortBy: "amount", sortOrder: "asc" };
+      case "status":
+        return { ...base, sortBy: "status", sortOrder: "asc" };
+      case "all":
+      default:
+        return base; // server defaults to id asc
+    }
+  })();
+
+  const {
+    data: claimsData,
+    isLoading,
+    error,
+    refetch: refetchClaims,
+  } = useClaimsQuery(listParams);
 
   const claims = useMemo(
     () =>
@@ -90,43 +169,15 @@ export default function Claims() {
     [claimsData]
   );
 
-  const sortedClaims = useMemo(() => {
-    const sorted = [...claims].sort((a, b) => {
-      switch (sortBy) {
-        case "newest":
-          return (
-            new Date(b.submittedDate).getTime() -
-            new Date(a.submittedDate).getTime()
-          );
-        case "oldest":
-          return (
-            new Date(a.submittedDate).getTime() -
-            new Date(b.submittedDate).getTime()
-          );
-        case "amount-high":
-          return (
-            parseFloat(b.amount.replace(/[$,]/g, "")) -
-            parseFloat(a.amount.replace(/[$,]/g, ""))
-          );
-        case "amount-low":
-          return (
-            parseFloat(a.amount.replace(/[$,]/g, "")) -
-            parseFloat(b.amount.replace(/[$,]/g, ""))
-          );
-        case "status":
-          return a.status.localeCompare(b.status);
-        default:
-          return 0;
-      }
-    });
-    return sorted;
-  }, [claims, sortBy]);
+  // Use server-provided order
+  const sortedClaims = claims;
 
-  const totalPages = Math.ceil(sortedClaims.length / ITEMS_PER_PAGE);
-  const paginatedClaims = sortedClaims.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  const totalPages = Math.ceil((claimsData?.count || 0) / ITEMS_PER_PAGE);
+  const paginatedClaims = sortedClaims; // server provides paginated data
+  // Safety: strictly render max ITEMS_PER_PAGE in case API returns extra
+  const displayedClaims = useMemo(() => {
+    return paginatedClaims.slice(0, ITEMS_PER_PAGE);
+  }, [paginatedClaims]);
 
   if (error) {
     return (
@@ -183,14 +234,123 @@ export default function Claims() {
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const files = Array.from(e.dataTransfer.files);
-      setSelectedFiles((prev) => [...prev, ...files]);
+      setSelectedFiles((prev) => {
+        const existing = new Set(prev.map((f) => f.name.toLowerCase()));
+        const newlyAccepted: File[] = [];
+        const newlyNames = new Set<string>();
+        let hadDuplicate = false;
+        let hadTooLarge = false;
+        for (const f of files) {
+          const lname = f.name.toLowerCase();
+          if (existing.has(lname) || newlyNames.has(lname)) {
+            hadDuplicate = true;
+            continue;
+          }
+          if (f.size > MAX_FILE_SIZE_BYTES) {
+            hadTooLarge = true;
+            continue;
+          }
+          newlyNames.add(lname);
+          newlyAccepted.push(f);
+        }
+        const merged = [...prev, ...newlyAccepted];
+        if (merged.length > 3) {
+          setErrors((er) => ({
+            ...er,
+            files: "You can upload up to 3 files only",
+          }));
+        }
+        if (hadDuplicate) {
+          setErrors((er) => ({
+            ...er,
+            files: "Duplicate file are not allowed",
+          }));
+        }
+        if (hadTooLarge) {
+          setErrors((er) => ({
+            ...er,
+            files: "Each file must be 10MB or less",
+          }));
+        }
+        const next = merged.slice(0, 3);
+        if (!hadDuplicate && !hadTooLarge && next.length > 0) {
+          setErrors((e2) => ({ ...e2, files: undefined }));
+        }
+        return next;
+      });
     }
+  };
+
+  const validateForm = () => {
+    const result = NewClaimSchema.safeParse({
+      selectedPolicy,
+      claimType,
+      claimAmount,
+      description,
+      files: selectedFiles,
+    });
+    if (!result.success) {
+      const fieldErrors: Partial<
+        Record<keyof z.infer<typeof NewClaimSchema>, string>
+      > = {};
+      for (const issue of result.error.issues) {
+        const path = issue.path[0] as keyof z.infer<typeof NewClaimSchema>;
+        if (!fieldErrors[path]) fieldErrors[path] = issue.message;
+      }
+      setErrors(fieldErrors);
+      return false;
+    }
+    setErrors({});
+    return true;
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
-      setSelectedFiles((prev) => [...prev, ...files]);
+      setSelectedFiles((prev) => {
+        const existing = new Set(prev.map((f) => f.name.toLowerCase()));
+        const newlyAccepted: File[] = [];
+        const newlyNames = new Set<string>();
+        let hadDuplicate = false;
+        let hadTooLarge = false;
+        for (const f of files) {
+          const lname = f.name.toLowerCase();
+          if (existing.has(lname) || newlyNames.has(lname)) {
+            hadDuplicate = true;
+            continue;
+          }
+          if (f.size > MAX_FILE_SIZE_BYTES) {
+            hadTooLarge = true;
+            continue;
+          }
+          newlyNames.add(lname);
+          newlyAccepted.push(f);
+        }
+        const merged = [...prev, ...newlyAccepted];
+        if (merged.length > 3) {
+          setErrors((er) => ({
+            ...er,
+            files: "You can upload up to 3 files only",
+          }));
+        }
+        if (hadDuplicate) {
+          setErrors((er) => ({
+            ...er,
+            files: "Duplicate file are not allowed",
+          }));
+        }
+        if (hadTooLarge) {
+          setErrors((er) => ({
+            ...er,
+            files: "Each file must be 10MB or less",
+          }));
+        }
+        const next = merged.slice(0, 3);
+        if (!hadDuplicate && !hadTooLarge && next.length > 0) {
+          setErrors((e2) => ({ ...e2, files: undefined }));
+        }
+        return next;
+      });
     }
   };
 
@@ -254,8 +414,8 @@ export default function Claims() {
                       Your Claims
                     </h3>
                     <p className="text-slate-600 dark:text-slate-400">
-                      Showing {paginatedClaims.length} of {sortedClaims.length}{" "}
-                      claims
+                      Showing {displayedClaims.length} of{" "}
+                      {claimsData?.count || 0} claims
                     </p>
                   </div>
                   <Select value={sortBy} onValueChange={setSortBy}>
@@ -263,8 +423,8 @@ export default function Claims() {
                       <SelectValue placeholder="Sort by" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
                       <SelectItem value="newest">Newest First</SelectItem>
-                      <SelectItem value="oldest">Oldest First</SelectItem>
                       <SelectItem value="amount-high">
                         Amount: High to Low
                       </SelectItem>
@@ -279,8 +439,8 @@ export default function Claims() {
             </Card>
 
             {/* Claims List */}
-            <div className="content-spacing mb-8">
-              {paginatedClaims.map((claim) => (
+            <div className="grid lg:grid-cols-2 gap-6 mb-8">
+              {displayedClaims.map((claim) => (
                 <Card key={claim.id} className="glass-card rounded-2xl">
                   <CardHeader>
                     <div className="flex items-center justify-between">
@@ -311,95 +471,40 @@ export default function Claims() {
                   </CardHeader>
 
                   <CardContent className="space-y-6">
-                    <div className="grid md:grid-cols-2 gap-6">
-                      {/* Claim Details */}
-                      <div>
-                        <h4 className="font-semibold text-slate-800 dark:text-slate-100 mb-3">
-                          Claim Details
-                        </h4>
-                        <div className="space-y-2">
+                    {/* Claim Details */}
+                    <div>
+                      <h4 className="font-semibold text-slate-800 dark:text-slate-100 mb-3">
+                        Claim Details
+                      </h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-slate-600 dark:text-slate-400">
+                            Submitted:
+                          </span>
+                          <span className="text-slate-800 dark:text-slate-100">
+                            {new Date(claim.submittedDate).toLocaleDateString()}
+                          </span>
+                        </div>
+                        {claim.processedDate && (
                           <div className="flex justify-between">
                             <span className="text-slate-600 dark:text-slate-400">
-                              Submitted:
+                              Processed:
                             </span>
                             <span className="text-slate-800 dark:text-slate-100">
                               {new Date(
-                                claim.submittedDate
+                                claim.processedDate
                               ).toLocaleDateString()}
                             </span>
                           </div>
-                          {claim.processedDate && (
-                            <div className="flex justify-between">
-                              <span className="text-slate-600 dark:text-slate-400">
-                                Processed:
-                              </span>
-                              <span className="text-slate-800 dark:text-slate-100">
-                                {new Date(
-                                  claim.processedDate
-                                ).toLocaleDateString()}
-                              </span>
-                            </div>
-                          )}
-                          <div className="pt-2">
-                            <span className="text-slate-600 dark:text-slate-400">
-                              Description:
-                            </span>
-                            <p className="text-slate-800 dark:text-slate-100 mt-1">
-                              {claim.description}
-                            </p>
-                          </div>
+                        )}
+                        <div className="pt-2">
+                          <span className="text-slate-600 dark:text-slate-400">
+                            Description:
+                          </span>
+                          <p className="text-slate-800 dark:text-slate-100 mt-1">
+                            {claim.description}
+                          </p>
                         </div>
-                      </div>
-
-                      {/* Timeline */}
-                      <div>
-                        <h4 className="font-semibold text-slate-800 dark:text-slate-100 mb-3">
-                          Processing Timeline
-                        </h4>
-                        {/* <div className="space-y-3">
-                          {claim.timeline.map((step, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center space-x-3"
-                            >
-                              <div
-                                className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                                  step.status === "completed"
-                                    ? "bg-emerald-500"
-                                    : step.status === "current"
-                                    ? "bg-blue-500"
-                                    : "bg-slate-300 dark:bg-slate-600"
-                                }`}
-                              >
-                                {step.status === "completed" ? (
-                                  <CheckCircle className="w-3 h-3 text-white" />
-                                ) : step.status === "current" ? (
-                                  <Clock className="w-3 h-3 text-white" />
-                                ) : (
-                                  <div className="w-2 h-2 bg-white rounded-full" />
-                                )}
-                              </div>
-                              <div className="flex-1">
-                                <p
-                                  className={`text-sm font-medium ${
-                                    step.status === "completed"
-                                      ? "text-slate-800 dark:text-slate-100"
-                                      : step.status === "current"
-                                      ? "text-blue-600 dark:text-blue-400"
-                                      : "text-slate-500 dark:text-slate-500"
-                                  }`}
-                                >
-                                  {step.step}
-                                </p>
-                                {step.date && (
-                                  <p className="text-xs text-slate-500 dark:text-slate-500">
-                                    {new Date(step.date).toLocaleDateString()}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div> */}
                       </div>
                     </div>
 
@@ -435,17 +540,19 @@ export default function Claims() {
             </div>
 
             {/* Pagination */}
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-              showInfo={true}
-              totalItems={sortedClaims.length}
-              itemsPerPage={ITEMS_PER_PAGE}
-              className="mt-8"
-            />
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                showInfo={true}
+                totalItems={claimsData?.count || 0}
+                itemsPerPage={ITEMS_PER_PAGE}
+                className="mt-8"
+              />
+            )}
 
-            {paginatedClaims.length === 0 && !isLoading && (
+            {displayedClaims.length === 0 && !isLoading && (
               <div className="text-center py-12">
                 <FileText className="w-16 h-16 text-slate-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">
@@ -493,13 +600,25 @@ export default function Claims() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {errors.selectedPolicy && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.selectedPolicy}
+                    </p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                     Claim Type
                   </label>
-                  <Select value={claimType} onValueChange={setClaimType}>
+                  <Select
+                    value={claimType}
+                    onValueChange={(v) => {
+                      setClaimType(v);
+                      if (errors.claimType)
+                        setErrors((e) => ({ ...e, claimType: undefined }));
+                    }}
+                  >
                     <SelectTrigger className="form-input">
                       <SelectValue placeholder="Select claim type" />
                     </SelectTrigger>
@@ -511,6 +630,11 @@ export default function Claims() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {errors.claimType && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.claimType}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -523,8 +647,17 @@ export default function Claims() {
                   placeholder="Enter claim amount in ETH"
                   className="form-input"
                   value={claimAmount}
-                  onChange={(e) => setClaimAmount(e.target.value)}
+                  onChange={(e) => {
+                    setClaimAmount(e.target.value);
+                    if (errors.claimAmount)
+                      setErrors((er) => ({ ...er, claimAmount: undefined }));
+                  }}
                 />
+                {errors.claimAmount && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.claimAmount}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -535,8 +668,17 @@ export default function Claims() {
                   placeholder="Provide detailed description of the incident..."
                   className="form-input min-h-[100px]"
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={(e) => {
+                    setDescription(e.target.value);
+                    if (errors.description)
+                      setErrors((er) => ({ ...er, description: undefined }));
+                  }}
                 />
+                {errors.description && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.description}
+                  </p>
+                )}
               </div>
 
               {/* File Upload */}
@@ -566,11 +708,13 @@ export default function Claims() {
                         className="hidden"
                         onChange={handleFileSelect}
                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                        disabled={selectedFiles.length >= 3}
                       />
                     </label>
                   </p>
                   <p className="text-sm text-slate-500 dark:text-slate-500">
-                    Supported formats: PDF, JPG, PNG, DOC, DOCX (Max 10MB each)
+                    Supported formats: PDF, JPG, PNG, DOC, DOCX (Max 10MB each).
+                    Max 3 files.
                   </p>
                 </div>
 
@@ -606,6 +750,9 @@ export default function Claims() {
                     ))}
                   </div>
                 )}
+                {errors.files && (
+                  <p className="mt-2 text-sm text-red-500">{errors.files}</p>
+                )}
               </div>
 
               <div className="flex gap-4 pt-6 border-t border-slate-200 dark:border-slate-700">
@@ -615,6 +762,8 @@ export default function Claims() {
                 <Button
                   className="flex-1 gradient-accent text-white floating-button"
                   onClick={async () => {
+                    // Validate
+                    if (!validateForm()) return;
                     if (
                       !selectedPolicy ||
                       !claimType ||
@@ -647,6 +796,19 @@ export default function Claims() {
                           files: selectedFiles,
                         });
                       }
+
+                      // Refresh claims list and switch to My Claims tab
+                      await refetchClaims();
+                      setActiveTab("my-claims");
+
+                      // Reset form fields and show success dialog
+                      setSelectedPolicy("");
+                      setClaimType("");
+                      setClaimAmount("");
+                      setDescription("");
+                      setSelectedFiles([]);
+                      setDragActive(false);
+                      setShowSuccess(true);
                     } catch (error) {
                       console.error(error);
                     }
@@ -660,6 +822,24 @@ export default function Claims() {
             </CardContent>
           </Card>
         )}
+        {/* Success Dialog */}
+        <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-emerald-500" />
+                Claim submitted successfully
+              </DialogTitle>
+            </DialogHeader>
+            <p className="text-slate-600 dark:text-slate-400">
+              Your claim has been submitted. You can track its status under "My
+              Claims".
+            </p>
+            <div className="flex justify-end pt-4">
+              <Button onClick={() => setShowSuccess(false)}>Close</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

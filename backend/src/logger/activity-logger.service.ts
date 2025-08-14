@@ -10,7 +10,7 @@ export class ActivityLoggerService {
     await supabase.from('activity_logs').insert({
       action,
       user_id: userId,
-      ip: ip ?? null,
+      ip: ip,
       timestamp: new Date().toISOString(),
     });
   }
