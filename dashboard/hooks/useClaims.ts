@@ -13,6 +13,7 @@ import {
   type UpdateClaimDto,
   ClaimStatus,
   useClaimControllerGetStats,
+  useClaimControllerGetClaimDetails,
 } from "@/api";
 import { parseError } from "../utils/parseError";
 
@@ -43,6 +44,14 @@ export function useCreateClaimMutation() {
 
 export function useClaimStatsQuery() {
   const query = useClaimControllerGetStats();
+  return {
+    ...query,
+    error: parseError(query.error),
+  };
+}
+
+export function useClaimDetailsQuery() {
+  const query = useClaimControllerGetClaimDetails();
   return {
     ...query,
     error: parseError(query.error),

@@ -73,6 +73,15 @@ export class ClaimController {
     return this.claimService.getStats(req);
   }
 
+  @Get('details')
+  @UseGuards(AuthGuard)
+  @ApiCommonResponse(ClaimStatsDto, false, 'Get claim details')
+  getClaimDetails(
+    @Req() req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto<ClaimStatsDto>> {
+    return this.claimService.getClaimDetails(req);
+  }
+
   @Get(':id')
   @UseGuards(AuthGuard)
   @ApiCommonResponse(ClaimResponseDto, false, 'Get claim with signed URLs')

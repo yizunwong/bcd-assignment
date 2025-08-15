@@ -311,9 +311,7 @@ export default function PaymentConfirmation() {
       ],
       [
         "Due Date",
-        policyData
-          ? new Date(policyData.expiryDate).toLocaleDateString()
-          : "-",
+        policyData ? new Date(policyData.expiryDate).toLocaleDateString() : "-",
       ],
     ];
     drawBox(doc, RIGHT.x, RIGHT.y, RIGHT.w, RIGHT.h, policyDetails);
@@ -401,9 +399,7 @@ export default function PaymentConfirmation() {
       ],
       [
         "Due Date",
-        policyData
-          ? new Date(policyData.expiryDate).toLocaleDateString()
-          : "-",
+        policyData ? new Date(policyData.expiryDate).toLocaleDateString() : "-",
       ],
       ["Payment in Full", formatAmount(transactionData.amount)],
       ["Minimum Due", formatAmount(transactionData.amount)],
@@ -602,7 +598,6 @@ export default function PaymentConfirmation() {
                   </p>
                 )}
               </div>
-
             </CardContent>
           </Card>
 
@@ -682,7 +677,6 @@ export default function PaymentConfirmation() {
                   </div>
                 </div>
               </div>
-
             </CardContent>
           </Card>
         </div>

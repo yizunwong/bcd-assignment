@@ -42,7 +42,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
-import { useClaimStatsQuery } from "@/hooks/useClaims";
+import { useClaimDetailsQuery, useClaimStatsQuery } from "@/hooks/useClaims";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useCoverageStatsQuery } from "@/hooks/useCoverage";
@@ -57,7 +57,7 @@ export default function Reports() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
-  const { data: claimStat } = useClaimStatsQuery();
+  const { data: claimDetail } = useClaimDetailsQuery();
   const { data: coverageStat } = useCoverageStatsQuery();
   const { data: adminSummary } = useAdminDashboardSummaryQuery();
 
@@ -173,33 +173,13 @@ export default function Reports() {
       doc.setFontSize(10);
       doc.text("Coverly Insurance", 105, 24, { align: "center" });
 
-      // ---- DATE DETAILS BOX (left, under title) ----
+      // ---- DATE BOX (moved to left, under title) ----
       const LEFT = { x: 20, y: 28, w: 60, h: 25 };
-      const today = new Date().toLocaleDateString("en-GB");
-      const dateDetails = [
-        ["Date From", "REPLACE_START_DATE"],
-        ["Date To", "REPLACE_END_DATE"],
+      const today = new Date().toLocaleDateString(); // e.g., 14/8/2025 or 8/14/2025 depending on locale
+      const dateDetails: [string, string][] = [
+        ["Report Type", "Monthly Report"],
         ["Print Date", today],
       ];
-
-      const drawBox = (
-        doc: jsPDF,
-        x: number,
-        y: number,
-        w: number,
-        h: number,
-        rows: string[][]
-      ) => {
-        doc.rect(x, y, w, h);
-        let rowY = y + 6;
-        doc.setFontSize(9);
-        rows.forEach(([k, v]) => {
-          doc.text(k, x + 2, rowY);
-          doc.text(v, x + w / 2, rowY);
-          rowY += 7;
-        });
-      };
-
       drawBox(doc, LEFT.x, LEFT.y, LEFT.w, LEFT.h, dateDetails);
 
       // ---- FETCH DATA ----
@@ -234,7 +214,7 @@ export default function Reports() {
       // ---- TOP POLICIES TABLE ----
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
-      const topTableTitleY = LEFT.y + LEFT.h + 6;
+      const topTableTitleY = LEFT.y + LEFT.h + 12;
       doc.text("Top Performance Policy", 20, topTableTitleY);
 
       const topPoliciesTableResult = autoTable(doc, {
@@ -247,27 +227,55 @@ export default function Reports() {
         tableWidth: "auto",
       });
 
-      // ---- SUMMARY METRICS TABLE ----
+      // ---- SALES SUMMARY DETAILS (split into two tables, coverage first) ----
       const salesSummaryTitlePos = topTableTitleY + 40;
 
+      // COVERAGE DETAIL TABLE (on top)
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
-      doc.text("Sales Summary Details", 20, salesSummaryTitlePos);
+      doc.text("Coverage Summary Details", 20, salesSummaryTitlePos);
 
-      const metrics = [
-        ["Current Active Policies", (salesData.activePolicies ?? 0).toString()],
-        ["Current Active Users", (salesData.activeUsers ?? 0).toString()],
-        ["Total Pending Claims", (salesData.pendingClaims ?? 0).toString()],
+      const coverageDetails = [
         ["Active Coverage", (coverageData.activeCoverage ?? 0).toString()],
+        ["Coverage Total Claims", (coverageData.totalClaims ?? 0).toString()],
         [
           "Coverage Approval Rate",
           formatPercent(coverageData.approvalRate ?? 0),
         ],
-        ["Coverage Total Claims", (coverageData.totalClaims ?? 0).toString()],
         [
-          "Coverage Total Value",
-          formatCurrency(coverageData.totalCoverageValue ?? 0),
+          {
+            content: "Total Coverage Value",
+            styles: { fontStyle: "bold" as const },
+          },
+          {
+            content: formatCurrency(coverageData.totalCoverageValue ?? 0),
+            styles: { fontStyle: "bold" as const },
+          },
         ],
+      ];
+
+      autoTable(doc, {
+        startY: salesSummaryTitlePos + 2,
+        head: [["Coverage Detail", "Value"]],
+        body: coverageDetails,
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [52, 104, 160], textColor: 255 },
+        theme: "striped",
+        tableWidth: "auto",
+      });
+
+      // SALES DETAIL TABLE (below coverage table)
+      const salesDetailsY =
+        salesSummaryTitlePos + coverageDetails.length * 10 + 16;
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("Sales Summary Details", 20, salesDetailsY);
+
+      const salesDetails = [
+        ["Current Active Policies", (salesData.activePolicies ?? 0).toString()],
+        ["Current Active Users", (salesData.activeUsers ?? 0).toString()],
+        ["Total Pending Claims", (salesData.pendingClaims ?? 0).toString()],
         [
           { content: "Total Revenue", styles: { fontStyle: "bold" as const } },
           {
@@ -277,10 +285,10 @@ export default function Reports() {
         ],
       ];
 
-      const metricsTableResult = autoTable(doc, {
-        startY: salesSummaryTitlePos + 2,
+      autoTable(doc, {
+        startY: salesDetailsY + 2,
         head: [["Sales Detail", "Value"]],
-        body: metrics,
+        body: salesDetails,
         styles: { fontSize: 10 },
         headStyles: { fillColor: [52, 104, 160], textColor: 255 },
         theme: "striped",
@@ -288,8 +296,7 @@ export default function Reports() {
       });
 
       // ---- SIGNATURE AREA ----
-      const signPos = salesSummaryTitlePos + 100;
-
+      const signPos = salesDetailsY + salesDetails.length * 10 + 40;
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
       doc.text("Authorized Signature:", 20, signPos);
@@ -297,25 +304,6 @@ export default function Reports() {
 
       // ---- SAVE PDF ----
       doc.save(`${reportId}-report.pdf`);
-    } else if (reportId === "sales-summary" && format === "Excel") {
-      // For Excel, fallback to template download (or implement XLSX generation)
-      const extension = "xlsx";
-      const prefix =
-        reportId === "sales-summary"
-          ? "sales-summary-template"
-          : "claims-analysis-template";
-      const fileName = `${prefix}.${extension}`;
-
-      const response = await fetch(`/templates/${fileName}`);
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
     } else if (reportId === "claims-analysis" && format === "PDF") {
       // Generate CLAIM ANALYSIS PDF report
       const doc = new jsPDF();
@@ -333,8 +321,7 @@ export default function Reports() {
       const LEFT = { x: 20, y: 28, w: 60, h: 25 };
       const today = new Date().toLocaleDateString(); // e.g., 14/8/2025 or 8/14/2025 depending on locale
       const dateDetails: [string, string][] = [
-        ["Date From", "Replace with date range start"],
-        ["Date To", "Replace with date range end"],
+        ["Report Type", "Monthly Report"],
         ["Print Date", today],
       ];
       drawBox(doc, LEFT.x, LEFT.y, LEFT.w, LEFT.h, dateDetails);
@@ -342,12 +329,28 @@ export default function Reports() {
       // ---- CLAIMS TABLE ----
       const claimsTable = autoTable(doc, {
         startY: LEFT.y + LEFT.h + 10, // start after date box
-        head: [["Total claims", "Value"]],
+        head: [["Claims Summary", "Count", "Total Value"]],
         body: [
-          ["Total pending", claimStat?.data?.pending ?? ""],
-          ["Total rejected", claimStat?.data?.rejected ?? ""],
-          ["Total approved", claimStat?.data?.approved ?? ""],
-          ["Total claimed", claimStat?.data?.claimed ?? ""],
+          [
+            "Total pending",
+            ` ${(claimDetail?.data?.counts as { pending?: number })?.pending ?? 0}`,
+            `$ ${(claimDetail?.data?.totals as { pending?: number })?.pending ?? 0}`,
+          ],
+          [
+            "Total rejected",
+            ` ${(claimDetail?.data?.counts as { rejected?: number })?.rejected ?? 0}`,
+            `$ ${(claimDetail?.data?.totals as { rejected?: number })?.rejected ?? 0}`,
+          ],
+          [
+            "Total approved",
+            ` ${(claimDetail?.data?.counts as { approved?: number })?.approved ?? 0}`,
+            `$ ${(claimDetail?.data?.totals as { approved?: number })?.approved ?? 0}`,
+          ],
+          [
+            "Total claimed",
+            ` ${(claimDetail?.data?.counts as { claimed?: number })?.claimed ?? 0}`,
+            `$ ${(claimDetail?.data?.totals as { claimed?: number })?.claimed ?? 0}`,
+          ],
         ],
         styles: { fontSize: 10 },
         headStyles: { fillColor: [52, 104, 160], textColor: 255 },
@@ -363,25 +366,6 @@ export default function Reports() {
 
       // Save PDF
       doc.save(`${reportId}-report.pdf`);
-    } else if (reportId === "claims-analysis" && format === "Excel") {
-      // For Excel, fallback to template download (or implement XLSX generation)
-      const extension = "xlsx";
-      const prefix =
-        reportId === "claims-analysis"
-          ? "sales-summary-template"
-          : "claims-analysis-template";
-      const fileName = `${prefix}.${extension}`;
-
-      const response = await fetch(`/templates/${fileName}`);
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
     }
   };
 

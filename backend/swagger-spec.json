@@ -600,6 +600,43 @@
         ]
       }
     },
+    "/claim/details": {
+      "get": {
+        "operationId": "ClaimController_getClaimDetails",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get claim details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CommonResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/ClaimStatsDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "supabase-auth": []
+          }
+        ],
+        "tags": [
+          "Claim"
+        ]
+      }
+    },
     "/claim/{id}": {
       "get": {
         "operationId": "ClaimController_findOne",
