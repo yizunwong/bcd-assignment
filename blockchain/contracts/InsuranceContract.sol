@@ -161,7 +161,7 @@ contract InsuranceContract is AccessControl, ReentrancyGuard {
      * @param premium The premium amount in token smallest units
      * @param durationDays Duration of the coverage in days
      */
-    function createCoverageWithTokenPayment(
+    function createCoverageWithPayment(
         uint256 coverage,
         uint256 premium,
         uint256 durationDays,

@@ -7,13 +7,13 @@ export default buildModule("Deployment", (m) => {
   // Deploy Coverly ERC20 token
   const token = m.contract("CoverlyToken");
 
-  // Deploy ICO contract that will sell Coverly tokens
+  // Deploy ICO contract with token's address (pass the deployment future)
   const ico = m.contract("ICO", [token]);
 
-  // Transfer all tokens to the ICO contract for distribution
-  m.call(token, "transfer", { args: [ico, FULL_SUPPLY], after: [ico] });
+  // Transfer all tokens to the ICO contract after ICO is deployed
+  m.call(token, "transfer", [ico, FULL_SUPPLY], { after: [ico] });
 
-  // Deploy InsuranceContract which uses the Coverly token for payments
+  // Deploy InsuranceContract with token's address
   const insurance = m.contract("InsuranceContract", [token]);
 
   return { token, ico, insurance };
