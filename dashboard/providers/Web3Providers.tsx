@@ -19,7 +19,7 @@ const modal = createAppKit({
   adapters: [wagmiAdapter],
   projectId,
   networks: [mainnet, arbitrum, hardhat, sepolia],
-  defaultNetwork: sepolia,
+  defaultNetwork: hardhat,
   features: {
     analytics: true,
   },

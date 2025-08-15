@@ -22,7 +22,9 @@ export default function LoginForm() {
     password: "",
     rememberMe: false,
   });
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
+    {}
+  );
 
   const loginSchema = z.object({
     email: z.string().email("Invalid email address"),
@@ -42,14 +44,25 @@ export default function LoginForm() {
       return;
     }
     setErrors({});
+
     try {
-      await login({
+      const res = await login({
         email: formData.email,
         password: formData.password,
         rememberMe: formData.rememberMe,
       });
+
       printMessage("Logged in successfully", "success");
-      router.push("/");
+
+      // Redirect based on role
+      if (res?.data?.user?.role === "policyholder") {
+        router.push("/policyholder");
+      } else if (res?.data?.user?.role === "insurance_admin") {
+        router.push("/admin");
+      } else {
+        router.push("/system-admin"); // default for regular users
+      }
+
       router.refresh();
     } catch (err) {
       printMessage(parseError(err) || "Login failed", "error");
@@ -59,7 +72,10 @@ export default function LoginForm() {
   return (
     <div className="max-w-md w-full">
       <div className="mb-8">
-        <Link href="/" className="inline-flex items-center space-x-2 group mb-8 text-slate-400 hover:text-emerald-400 transition-colors">
+        <Link
+          href="/"
+          className="inline-flex items-center space-x-2 group mb-8 text-slate-400 hover:text-emerald-400 transition-colors"
+        >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Home</span>
         </Link>
@@ -68,34 +84,50 @@ export default function LoginForm() {
             <Shield className="w-8 h-8 text-white" />
           </div>
         </div>
-        <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">Welcome Back</h2>
-        <p className="text-slate-600 dark:text-slate-400">Sign in to your Coverly account</p>
+        <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">
+          Welcome Back
+        </h2>
+        <p className="text-slate-600 dark:text-slate-400">
+          Sign in to your Coverly account
+        </p>
       </div>
       <Card className="glass-card rounded-2xl">
         <CardHeader>
-          <CardTitle className="text-xl text-slate-800 dark:text-white text-center">Sign In</CardTitle>
+          <CardTitle className="text-xl text-slate-800 dark:text-white text-center">
+            Sign In
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Email Address</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Email Address
+              </label>
               <Input
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
                 placeholder="Enter your email"
                 className="form-input"
                 required
               />
-              {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email}</p>}
+              {errors.email && (
+                <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+              )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Password</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Password
+              </label>
               <div className="relative">
                 <Input
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
                   placeholder="Enter your password"
                   className="form-input pr-10"
                   required
@@ -105,23 +137,37 @@ export default function LoginForm() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                 </button>
               </div>
-              {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password}</p>}
+              {errors.password && (
+                <p className="text-sm text-red-500 mt-1">{errors.password}</p>
+              )}
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="remember"
                   checked={formData.rememberMe}
-                  onCheckedChange={(checked) => setFormData({ ...formData, rememberMe: checked as boolean })}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, rememberMe: checked as boolean })
+                  }
                 />
-                <label htmlFor="remember" className="text-sm text-slate-600 dark:text-slate-400">
+                <label
+                  htmlFor="remember"
+                  className="text-sm text-slate-600 dark:text-slate-400"
+                >
                   Remember me
                 </label>
               </div>
-              <Link href="/auth/forgot-password" className="text-sm text-emerald-400 hover:text-emerald-300">
+              <Link
+                href="/auth/forgot-password"
+                className="text-sm text-emerald-400 hover:text-emerald-300"
+              >
                 Forgot password?
               </Link>
             </div>
@@ -129,8 +175,11 @@ export default function LoginForm() {
           </form>
           <div className="mt-6 text-center">
             <p className="text-slate-600 dark:text-slate-400">
-              Don't have an account?{' '}
-              <Link href="/auth/register" className="text-emerald-400 hover:text-emerald-300 font-medium">
+              Don't have an account?{" "}
+              <Link
+                href="/auth/register"
+                className="text-emerald-400 hover:text-emerald-300 font-medium"
+              >
                 Sign up here
               </Link>
             </p>
@@ -138,7 +187,9 @@ export default function LoginForm() {
         </CardContent>
       </Card>
       <div className="text-center mt-6">
-        <p className="text-xs text-slate-500 dark:text-slate-500">Protected by blockchain security and end-to-end encryption</p>
+        <p className="text-xs text-slate-500 dark:text-slate-500">
+          Protected by blockchain security and end-to-end encryption
+        </p>
       </div>
     </div>
   );
