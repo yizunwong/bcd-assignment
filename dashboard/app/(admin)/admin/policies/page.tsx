@@ -184,17 +184,6 @@ export default function ManagePolicies() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "status-active";
-      case "deactivated":
-        return "status-pending";
-      default:
-        return "bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300";
-    }
-  };
-
   const filteredPolicies = useMemo(() => {
     if (!policies) return [];
 

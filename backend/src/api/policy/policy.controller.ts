@@ -56,7 +56,6 @@ export class PolicyController {
   }
 
   @Get()
-  @UseGuards(AuthGuard)
   @ApiCommonResponse(PolicyResponseDto, true, 'Get all policies')
   findAll(
     @Req() req: AuthenticatedRequest,
