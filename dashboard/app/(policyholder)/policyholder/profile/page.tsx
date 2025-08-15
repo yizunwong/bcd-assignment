@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,11 +41,23 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+const profileSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  phone: z.string().min(1, "Phone number is required"),
+  address: z.string().min(1, "Address is required"),
+  dateOfBirth: z.string().min(1, "Date of birth is required"),
+  occupation: z.string().min(1, "Occupation is required"),
+  bio: z.string().optional(),
+});
+
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [profileData, setProfileData] =
     useState<ProfileResponseDto>(initialProfileData);
+  const [errors, setErrors] =
+    useState<Partial<Record<keyof z.infer<typeof profileSchema>, string>>>({});
   const [notifications, setNotifications] = useState(initialNotifications);
   const { data: userResponse } = useMeQuery();
   const { data: activityLogs, isLoading: isActivityLoading } =
@@ -87,6 +100,22 @@ export default function Profile() {
   }, [userResponse]);
   const handleSave = async () => {
     if (!userResponse?.data?.id) return;
+    const result = profileSchema.safeParse(profileData);
+    if (!result.success) {
+      const fieldErrors = result.error.flatten().fieldErrors;
+      setErrors({
+        firstName: fieldErrors.firstName?.[0],
+        lastName: fieldErrors.lastName?.[0],
+        phone: fieldErrors.phone?.[0],
+        address: fieldErrors.address?.[0],
+        dateOfBirth: fieldErrors.dateOfBirth?.[0],
+        occupation: fieldErrors.occupation?.[0],
+        bio: fieldErrors.bio?.[0],
+      });
+      printMessage("Please correct the errors before saving", "error");
+      return;
+    }
+    setErrors({});
     try {
       await updateUser(userResponse.data.id, {
         role: profileData.role,
@@ -366,6 +395,11 @@ export default function Profile() {
                             disabled={!isEditing}
                             className="form-input"
                           />
+                          {errors.firstName && (
+                            <p className="text-sm text-red-500 mt-1">
+                              {errors.firstName}
+                            </p>
+                          )}
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -376,12 +410,17 @@ export default function Profile() {
                             onChange={(e) =>
                               setProfileData({
                                 ...profileData,
-                                lastName: e.target.value,
-                              })
-                            }
-                            disabled={!isEditing}
-                            className="form-input"
-                          />
+                              lastName: e.target.value,
+                            })
+                          }
+                          disabled={!isEditing}
+                          className="form-input"
+                        />
+                          {errors.lastName && (
+                            <p className="text-sm text-red-500 mt-1">
+                              {errors.lastName}
+                            </p>
+                          )}
                         </div>
                       </div>
 
@@ -417,6 +456,11 @@ export default function Profile() {
                             disabled={!isEditing}
                             className="form-input"
                           />
+                          {errors.phone && (
+                            <p className="text-sm text-red-500 mt-1">
+                              {errors.phone}
+                            </p>
+                          )}
                         </div>
                       </div>
 
@@ -435,6 +479,11 @@ export default function Profile() {
                           disabled={!isEditing}
                           className="form-input"
                         />
+                        {errors.address && (
+                          <p className="text-sm text-red-500 mt-1">
+                            {errors.address}
+                          </p>
+                        )}
                       </div>
 
                       <div className="grid md:grid-cols-2 gap-6">
@@ -454,6 +503,11 @@ export default function Profile() {
                             disabled={!isEditing}
                             className="form-input"
                           />
+                          {errors.dateOfBirth && (
+                            <p className="text-sm text-red-500 mt-1">
+                              {errors.dateOfBirth}
+                            </p>
+                          )}
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -470,6 +524,11 @@ export default function Profile() {
                             disabled={!isEditing}
                             className="form-input"
                           />
+                          {errors.occupation && (
+                            <p className="text-sm text-red-500 mt-1">
+                              {errors.occupation}
+                            </p>
+                          )}
                         </div>
                       </div>
 
@@ -488,6 +547,11 @@ export default function Profile() {
                           disabled={!isEditing}
                           className="form-input min-h-[100px]"
                         />
+                        {errors.bio && (
+                          <p className="text-sm text-red-500 mt-1">
+                            {errors.bio}
+                          </p>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
