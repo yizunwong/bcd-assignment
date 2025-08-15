@@ -61,6 +61,12 @@ export default function Reports() {
   const { data: coverageStat } = useCoverageStatsQuery();
   const { data: adminSummary } = useAdminDashboardSummaryQuery();
 
+  console.log("Claim Details:", claimDetail);
+  console.log(" coverageStat:", coverageStat);
+  console.log("adminSummary:", adminSummary);
+
+
+
   const filteredReports = useMemo(() => {
     let filtered = recentReports.filter((report) => {
       const matchesSearch =
@@ -311,7 +317,7 @@ export default function Reports() {
       // ---- HEADER ----
       doc.setFont("helvetica", "bold");
       doc.setFontSize(16);
-      doc.text("Sales Summary Report", 105, 18, { align: "center" });
+      doc.text("Claims Analysis Report", 105, 18, { align: "center" });
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
