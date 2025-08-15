@@ -379,7 +379,7 @@ export default function Reports() {
               <BarChart3 className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="page-header-title">Reports & Analytics</h1>
+              <h1 className="page-header-title">Reports</h1>
               <p className="page-header-subtitle">
                 Generate comprehensive reports and analyze business performance
               </p>
@@ -455,12 +455,9 @@ export default function Reports() {
         </div>
 
         <Tabs defaultValue="templates" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+          <TabsList className="grid w-full grid-cols-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
             <TabsTrigger value="templates" className="rounded-lg">
               Report Templates
-            </TabsTrigger>
-            <TabsTrigger value="custom" className="rounded-lg">
-              Custom Reports
             </TabsTrigger>
             <TabsTrigger value="recent" className="rounded-lg">
               Recent Reports
