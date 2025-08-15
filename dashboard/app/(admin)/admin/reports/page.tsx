@@ -279,7 +279,7 @@ export default function Reports() {
         [
           { content: "Total Revenue", styles: { fontStyle: "bold" as const } },
           {
-            content: formatCurrency(salesData.totalRevenue ?? 0),
+            content: `${salesData.totalRevenue ?? 0} ETH`,
             styles: { fontStyle: "bold" as const },
           },
         ],
