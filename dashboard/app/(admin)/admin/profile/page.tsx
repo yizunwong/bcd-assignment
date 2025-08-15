@@ -62,13 +62,13 @@ const roleLabels: Record<string, string> = {
 };
 
 const profileSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  phone: z.string().min(1, "Phone number is required"),
-  companyName: z.string().min(1, "Company name is required"),
-  companyAddress: z.string().min(1, "Company address is required"),
-  companyContactNo: z.string().min(1, "Company contact number is required"),
-  companyLicenseNo: z.string().min(1, "Company license number is required"),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  phone: z.string().optional(),
+  companyName: z.string().optional(),
+  companyAddress: z.string().optional(),
+  companyContactNo: z.string().optional(),
+  companyLicenseNo: z.string().optional(),
   bio: z.string().optional(),
 });
 

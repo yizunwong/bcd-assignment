@@ -42,12 +42,12 @@ import {
 } from "@/components/ui/dialog";
 
 const profileSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  phone: z.string().min(1, "Phone number is required"),
-  address: z.string().min(1, "Address is required"),
-  dateOfBirth: z.string().min(1, "Date of birth is required"),
-  occupation: z.string().min(1, "Occupation is required"),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  dateOfBirth: z.string().optional(),
+  occupation: z.string().optional(),
   bio: z.string().optional(),
 });
 
