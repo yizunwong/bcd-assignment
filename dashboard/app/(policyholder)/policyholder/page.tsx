@@ -11,6 +11,7 @@ import { Shield, Clock, TrendingUp, Coins, FileText } from "lucide-react";
 import Link from "next/link";
 import { formatValue } from "@/utils/formatHelper";
 import Ticker from "@/components/animata/text/ticker";
+import WaveReveal from "@/components/animata/text/wave-reveal";
 import { useMeQuery } from "@/hooks/useAuth";
 
 export default function PolicyholderDashboard() {
@@ -33,10 +34,13 @@ export default function PolicyholderDashboard() {
               <Shield className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="page-header-title">
-                Welcome back, {userResponse?.data?.firstName}{" "}
-                {userResponse?.data?.lastName}!
-              </h1>
+              <WaveReveal
+                text={`Welcome back, ${userResponse?.data?.firstName ?? ""} ${userResponse?.data?.lastName ?? ""}!`}
+                className="page-header-title"
+                letterClassName="text-slate-800 dark:text-slate-100"
+                direction="down"
+                mode="letter"
+              />
               <p className="page-header-subtitle">
                 Manage your policies and track your coverage
               </p>
