@@ -12,6 +12,7 @@ import {
   stringToBytes,
   getAddress,
   parseUnits,
+  BaseError,
 } from "viem";
 import { useToast } from "@/components/shared/ToastProvider";
 import InsuranceContractAbi from "@/abi/InsuranceContract.json";
@@ -268,6 +269,13 @@ export function useInsuranceContract() {
       });
       printMessage("Tokens purchased", "success");
     } catch (error) {
+      if (
+        error instanceof BaseError &&
+        error.shortMessage.includes("User rejected the request")
+      ) {
+        printMessage("Transaction cancelled", "info");
+        return;
+      }
       console.error("Error buying tokens:", error);
       printMessage("Failed to buy tokens", "error");
     }
