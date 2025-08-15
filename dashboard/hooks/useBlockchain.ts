@@ -142,14 +142,17 @@ export function useInsuranceContract() {
     });
     console.log("Token balance:", balance.toString());
 
-    // Approve first
-    await approveToken({
+    // Approve first and wait for the transaction to be mined to ensure the
+    // allowance is updated before creating the coverage.
+    const approveHash = await approveToken({
       address: TOKEN_CONTRACT_ADDRESS,
       abi: ERC20Abi,
       functionName: "approve",
       args: [INSURANCE_CONTRACT_ADDRESS, premiumUnits],
     });
+    await publicClient!.waitForTransactionReceipt({ hash: approveHash });
 
+    // Optional: check current allowance for debugging purposes
     const allowance = await publicClient.readContract({
       address: TOKEN_CONTRACT_ADDRESS,
       abi: ERC20Abi,
@@ -176,23 +179,52 @@ export function useInsuranceContract() {
 
     const receipt = await publicClient!.waitForTransactionReceipt({ hash });
 
-    const event = receipt.logs
-      .map((log) => {
-        try {
-          return decodeEventLog({
-            abi: INSURANCE_CONTRACT_ABI,
-            data: log.data,
-            topics: log.topics,
-          });
-        } catch {
-          return null;
+    // If the transaction reverted, provide a clearer error message.
+    if (receipt.status === "reverted") {
+      throw new Error("COVERAGE_CREATION_FAILED");
+    }
+
+    // Try to extract the coverage id from the emitted event. We filter logs by
+    // contract address and specify the event name to avoid decoding errors.
+    let coverageId: number | undefined;
+    for (const log of receipt.logs) {
+      if (log.address?.toLowerCase() !== INSURANCE_CONTRACT_ADDRESS.toLowerCase())
+        continue;
+      try {
+        const decoded = decodeEventLog({
+          abi: INSURANCE_CONTRACT_ABI,
+          data: log.data,
+          topics: log.topics,
+          eventName: "CoverageCreated",
+        });
+        coverageId = Number((decoded.args as any).coverageId);
+        break;
+      } catch {
+        /* ignore */
+      }
+    }
+
+    // Fallback: if the event was not found (e.g. some providers omit logs),
+    // fetch the user's coverage list and assume the most recent one is ours.
+    if (!coverageId) {
+      try {
+        const ids = (await publicClient.readContract({
+          address: INSURANCE_CONTRACT_ADDRESS,
+          abi: INSURANCE_CONTRACT_ABI,
+          functionName: "getUserCoverages",
+          args: [address],
+        })) as bigint[];
+        if (ids.length > 0) {
+          coverageId = Number(ids[ids.length - 1]);
         }
-      })
-      .find((e) => e && e.eventName === "CoverageCreated");
+      } catch {
+        /* ignore */
+      }
+    }
 
-    if (!event) throw new Error("COVERAGE_EVENT_NOT_FOUND");
+    if (!coverageId) throw new Error("COVERAGE_ID_NOT_FOUND");
 
-    return { coverageId: Number((event.args as any).coverageId), txHash: hash };
+    return { coverageId, txHash: hash };
   };
 
   // Pay premium for existing coverage
