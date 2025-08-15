@@ -45,6 +45,7 @@ interface TransformedCoverage {
   coverage: string;
   premium: string;
   status: string;
+  policyStatus: string;
   startDate: string;
   endDate: string;
   nextPayment: string;
@@ -66,6 +67,7 @@ const transformCoverageData = (coverageData: any[]): TransformedCoverage[] => {
     const coverageAmount = policy?.coverage || 0;
     const utilizationAmount =
       (coverage.utilization_rate / 100) * coverageAmount;
+    const policyStatus = policy?.status || "active";
 
     return {
       id: coverage.id.toString(),
@@ -75,7 +77,8 @@ const transformCoverageData = (coverageData: any[]): TransformedCoverage[] => {
       provider: policy?.provider || "Unknown Provider",
       coverage: `$${coverageAmount.toLocaleString()}`,
       premium: policy?.premium || "0 ETH/month",
-      status: coverage.status || "active",
+      status: policyStatus === "deactivated" ? "deactivated" : coverage.status || "active",
+      policyStatus,
       startDate: coverage.start_date,
       endDate: coverage.end_date,
       nextPayment: coverage.next_payment_date,
@@ -192,6 +195,8 @@ export default function MyCoverage() {
         return "bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300";
       case "suspended":
         return "status-error";
+      case "deactivated":
+        return "status-error";
       default:
         return "bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300";
     }
@@ -241,6 +246,8 @@ export default function MyCoverage() {
         return "Expired";
       case "suspended":
         return "Suspended";
+      case "deactivated":
+        return "Deactivated";
       default:
         return status;
     }
@@ -402,6 +409,7 @@ export default function MyCoverage() {
                     </SelectItem>
                     <SelectItem value="expired">Expired</SelectItem>
                     <SelectItem value="suspended">Suspended</SelectItem>
+                    <SelectItem value="deactivated">Deactivated</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -605,6 +613,7 @@ export default function MyCoverage() {
                     variant="outline"
                     className="flex-1 floating-button"
                     onClick={() => openDetails(coverage)}
+                    disabled={coverage.policyStatus === "deactivated"}
                   >
                     <FileText className="w-4 h-4 mr-2" />
                     View Details
@@ -613,6 +622,7 @@ export default function MyCoverage() {
                     variant="outline"
                     className="flex-1 floating-button"
                     onClick={() => handleDownloadAgreement(coverage)}
+                    disabled={coverage.policyStatus === "deactivated"}
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Download Agreement
@@ -628,6 +638,7 @@ export default function MyCoverage() {
             coverage={selectedCoverage}
             open={showDetails}
             onClose={closeDetails}
+            policyDeactivated={selectedCoverage.policyStatus === "deactivated"}
           />
         )}
 

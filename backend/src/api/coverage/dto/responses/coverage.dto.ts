@@ -24,6 +24,9 @@ export class CoveragePolicyDto {
 
   @ApiProperty()
   provider!: string;
+
+  @ApiProperty()
+  status!: string;
 }
 
 export class CoverageResponseDto {

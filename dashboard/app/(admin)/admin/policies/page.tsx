@@ -51,6 +51,7 @@ import {
   useUploadPolicyDocumentsMutation,
   usePolicyStatsQuery,
   useUpdatePolicyMutation,
+  useRemovePolicyMutation,
 } from "@/hooks/usePolicies";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useToast } from "@/components/shared/ToastProvider";
@@ -59,7 +60,9 @@ import {
   PolicyControllerFindAllCategory,
   CreatePolicyDtoCategory,
   PolicyControllerFindAllParams,
+  getPolicyControllerFindAllQueryKey,
 } from "@/api";
+import { useQueryClient } from "@tanstack/react-query";
 import Ticker from "@/components/animata/text/ticker";
 import { StatsCard } from "@/components/shared/StatsCard";
 
@@ -85,6 +88,8 @@ export default function ManagePolicies() {
   const { uploadPolicyDocuments } = useUploadPolicyDocumentsMutation();
   const { data: statsData } = usePolicyStatsQuery();
   const { updatePolicy, error: updateError } = useUpdatePolicyMutation();
+  const { removePolicy, error: removeError } = useRemovePolicyMutation();
+  const queryClient = useQueryClient();
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const [newPolicy, setNewPolicy] = useState<{
@@ -283,6 +288,23 @@ export default function ManagePolicies() {
           ? err
           : updateError || "Failed to update policy",
         "error"
+      );
+    }
+  };
+
+  const handleDeactivatePolicy = async (id: number) => {
+    try {
+      await removePolicy(String(id));
+      printMessage("Policy deactivated successfully", "success");
+      queryClient.invalidateQueries({
+        queryKey: getPolicyControllerFindAllQueryKey(params),
+      });
+    } catch (err) {
+      printMessage(
+        typeof err === "string"
+          ? err
+          : removeError || "Failed to deactivate policy",
+        "error",
       );
     }
   };
@@ -919,6 +941,7 @@ export default function ManagePolicies() {
                       <Button
                         variant="outline"
                         className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        onClick={() => handleDeactivatePolicy(policy.id)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

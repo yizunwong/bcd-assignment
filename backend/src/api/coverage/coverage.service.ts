@@ -97,6 +97,7 @@ export class CoverageService {
         category,
         coverage,
         premium,
+        status,
         admin_details:admin_details!policies_created_by_fkey1(
           company:companies(name)
         )
@@ -171,6 +172,7 @@ export class CoverageService {
         category,
         coverage,
         premium,
+        status,
         duration_days,
         admin_details:admin_details!policies_created_by_fkey1(
           company:companies(name)

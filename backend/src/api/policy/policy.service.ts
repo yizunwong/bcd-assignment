@@ -587,66 +587,44 @@ export class PolicyService {
       throw new UnauthorizedException('Invalid or expired token');
     }
 
-    // Step 1: Fetch policy documents
-    const { data: documents, error: docsError } = await req.supabase
-      .from('policy_documents')
-      .select('path')
-      .eq('policy_id', id);
-
-    if (docsError) {
-      throw new InternalServerErrorException(
-        'Failed to fetch policy documents: ' + docsError.message,
-      );
-    }
-
-    for (const doc of documents as { path: string }[]) {
-      try {
-        if (!doc.path.startsWith('ipfs://')) {
-          await this.fileService.removeFileFromStorage(req.supabase, doc.path);
-        }
-      } catch {
-        console.warn(`Failed to delete file "${doc.path}":`);
-      }
-    }
-
-    const { error: docDeleteError } = await req.supabase
-      .from('policy_documents')
-      .delete()
-      .eq('policy_id', id);
-
-    if (docDeleteError) {
-      throw new InternalServerErrorException(
-        'Failed to remove policy documents: ' + docDeleteError.message,
-      );
-    }
-
-    const { data: deleted, error: deleteError } = await req.supabase
+    const { data: existing, error: fetchError } = await req.supabase
       .from('policies')
-      .delete()
+      .select('id, name, status')
       .eq('id', id)
-      .select()
       .single();
 
-    if (deleteError) {
-      throw new InternalServerErrorException(
-        'Failed to delete policy: ' + deleteError.message,
-      );
-    }
-
-    if (!deleted) {
+    if (fetchError || !existing) {
       throw new NotFoundException(`Policy with ID ${id} not found`);
     }
 
+    if (existing.status === PolicyStatus.DEACTIVATED) {
+      return new CommonResponseDto({
+        statusCode: 200,
+        message: `Policy #${id} already deactivated`,
+        data: existing,
+      });
+    }
+
+    const { error: updateError } = await req.supabase
+      .from('policies')
+      .update({ status: PolicyStatus.DEACTIVATED })
+      .eq('id', id);
+
+    if (updateError) {
+      throw new InternalServerErrorException(
+        'Failed to deactivate policy: ' + updateError.message,
+      );
+    }
+
     await this.activityLogger.log(
-      `Deleted Policy: ${deleted.name}`,
+      `Deactivated Policy: ${existing.name}`,
       userData.user.id,
       req.ip,
     );
 
     return new CommonResponseDto({
       statusCode: 200,
-      message: `Policy #${id} deleted successfully`,
-      data: deleted,
+      message: `Policy #${id} deactivated successfully`,
     });
   }
   async removeFile(filePath: string, req: AuthenticatedRequest): Promise<void> {
