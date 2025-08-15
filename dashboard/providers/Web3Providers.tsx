@@ -2,7 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createAppKit } from '@reown/appkit/react';
-import { mainnet, arbitrum, hardhat } from '@reown/appkit/networks';
+import { mainnet, arbitrum, hardhat, sepolia } from '@reown/appkit/networks';
 import React, { useEffect, useState, type ReactNode } from 'react';
 import { cookieToInitialState, State, WagmiProvider, type Config } from 'wagmi';
 import { projectId, wagmiAdapter } from './WagmiAdapter';
@@ -18,8 +18,8 @@ if (!projectId) {
 const modal = createAppKit({
   adapters: [wagmiAdapter],
   projectId,
-  networks: [mainnet, arbitrum, hardhat],
-  defaultNetwork: hardhat,
+  networks: [mainnet, arbitrum, hardhat, sepolia],
+  defaultNetwork: sepolia,
   features: {
     analytics: true,
   },
