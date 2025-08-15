@@ -398,7 +398,7 @@ export default function Reports() {
                 <Badge className="status-badge status-active">Active</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {quickStats.totalPolicies}
+                {adminSummary?.data?.activePolicies ?? 0}
               </h3>
               <p className="text-slate-600 dark:text-slate-400">
                 Total Policies
@@ -415,7 +415,7 @@ export default function Reports() {
                 <Badge className="status-badge status-info">Claims</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {quickStats.totalClaims}
+                {coverageStat?.data?.totalClaims ?? 0}
               </h3>
               <p className="text-slate-600 dark:text-slate-400">Total Claims</p>
             </CardContent>
@@ -430,7 +430,7 @@ export default function Reports() {
                 <Badge className="status-badge status-active">Revenue</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {quickStats.totalRevenue}
+                {adminSummary?.data?.totalRevenue ? `${adminSummary.data.totalRevenue} ETH` : '0 ETH'}
               </h3>
               <p className="text-slate-600 dark:text-slate-400">
                 Total Revenue
@@ -447,7 +447,7 @@ export default function Reports() {
                 <Badge className="status-badge status-info">Users</Badge>
               </div>
               <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {quickStats.activeUsers}
+                {adminSummary?.data?.activeUsers ?? 0}
               </h3>
               <p className="text-slate-600 dark:text-slate-400">Active Users</p>
             </CardContent>
