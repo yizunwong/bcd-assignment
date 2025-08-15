@@ -33,12 +33,14 @@ interface CoverageDetailsDialogProps {
   coverage: CoveragePolicy;
   open: boolean;
   onClose: () => void;
+  policyDeactivated?: boolean;
 }
 
 export default function CoverageDetailsDialog({
   coverage,
   open,
   onClose,
+  policyDeactivated = false,
 }: CoverageDetailsDialogProps) {
   const {
     payPremiumForCoverage,
@@ -159,7 +161,7 @@ export default function CoverageDetailsDialog({
           <DialogFooter className="mt-4 gap-2">
             <Button
               onClick={handlePayPremium}
-              disabled={isPayingPremium || isWaitingPay}
+              disabled={policyDeactivated || isPayingPremium || isWaitingPay}
             >
               {isWaitingPay ? "Processing..." : "Pay Premium"}
             </Button>
