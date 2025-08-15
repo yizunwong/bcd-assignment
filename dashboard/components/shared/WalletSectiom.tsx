@@ -4,10 +4,15 @@ import { useAccount, useBalance } from "wagmi";
 import { formatUnits } from "viem";
 import styled from "styled-components";
 import { useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useInsuranceContract } from "@/hooks/useBlockchain";
 
 const WalletSection = () => {
   const { address: walletAddress } = useAccount();
   const { data: balanceData } = useBalance({ address: walletAddress });
+  const { buyCoverlyTokens, isBuyingToken } = useInsuranceContract();
+  const [tokenAmount, setTokenAmount] = useState(1);
   const eth = balanceData ? parseFloat(formatUnits(balanceData.value, 18)) : 0;
   const formattedEth = eth.toLocaleString(undefined, {
     minimumFractionDigits: 2,
@@ -95,6 +100,21 @@ const WalletSection = () => {
           </p>
         </div>
       </div>
+      <div className="buy-token">
+        <Input
+          type="number"
+          min={1}
+          value={tokenAmount}
+          onChange={(e) => setTokenAmount(Number(e.target.value))}
+          className="token-input"
+        />
+        <Button
+          onClick={() => buyCoverlyTokens(tokenAmount)}
+          disabled={isBuyingToken}
+        >
+          {isBuyingToken ? "Purchasing..." : "Buy COV"}
+        </Button>
+      </div>
     </StyledWrapper>
   );
 };
@@ -113,6 +133,16 @@ const StyledWrapper = styled.div`
     transition: 0.2s ease-in-out;
     position: relative;
     cursor: pointer;
+  }
+
+  .buy-token {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .token-input {
+    width: 80px;
   }
 
   .img {
