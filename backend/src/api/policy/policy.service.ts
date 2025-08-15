@@ -530,13 +530,12 @@ export class PolicyService {
       throw new NotFoundException(`Policy with ID ${id} not found`);
     }
 
-    // Step 2: Prepare update fields
-    const updateFields: Partial<typeof existing> = {};
+    const { claimTypes, ...policyData } = dto;
 
     // Step 3: Update policy
     const { data: updated, error: updateError } = await supabase
       .from('policies')
-      .update(updateFields)
+      .update(policyData)
       .eq('id', id)
       .select()
       .single();
@@ -547,7 +546,7 @@ export class PolicyService {
     }
 
     // Step 4: Update claim types (if provided)
-    if (dto.claimTypes && dto.claimTypes.length > 0) {
+    if (claimTypes && claimTypes.length > 0) {
       // Step 4a: Remove old mappings
       const { error: deleteError } = await supabase
         .from('policy_claim_type')
@@ -561,11 +560,7 @@ export class PolicyService {
       }
 
       // Step 4b: Reattach new claim types (reuse your existing logic)
-      await this.claimsService.attachClaimTypesToPolicy(
-        dto.claimTypes,
-        id,
-        req,
-      );
+      await this.claimsService.attachClaimTypesToPolicy(claimTypes, id, req);
     }
     await this.activityLogger.log(
       `Updated Policy: ${dto.name}`,
