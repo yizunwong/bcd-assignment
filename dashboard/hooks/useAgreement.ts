@@ -11,7 +11,7 @@ export function useAgreementUploadMutation() {
         data: { files: [agreementFile] },
       });
 
-      return res.data;
+      return (res as any)?.data || null;
     },
     error: parseError(mutation.error),
   };

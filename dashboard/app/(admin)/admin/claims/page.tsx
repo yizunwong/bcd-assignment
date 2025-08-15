@@ -38,6 +38,7 @@ import {
 import { useInsuranceContract } from "@/hooks/useBlockchain";
 import Ticker from "@/components/animata/text/ticker";
 import { StatsCard } from "@/components/shared/StatsCard";
+import { useToast } from '@/components/shared/ToastProvider';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -48,6 +49,7 @@ export default function ClaimsReview() {
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const { updateClaimStatus } = useUpdateClaimStatusMutation();
   const { approveClaimOnChain } = useInsuranceContract();
+  const { printMessage } = useToast();
 
   const hasFilters = filterStatus !== "all" || !!debouncedSearchTerm;
 

@@ -282,6 +282,9 @@ export default function ManagePolicies() {
         claimTypes: policy.features || [],
       });
       printMessage("Policy updated successfully", "success");
+      queryClient.invalidateQueries({
+        queryKey: getPolicyControllerFindAllQueryKey(params),
+      });
     } catch (err) {
       printMessage(
         typeof err === "string"
@@ -304,7 +307,7 @@ export default function ManagePolicies() {
         typeof err === "string"
           ? err
           : removeError || "Failed to deactivate policy",
-        "error",
+        "error"
       );
     }
   };
@@ -941,7 +944,7 @@ export default function ManagePolicies() {
                       <Button
                         variant="outline"
                         className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20"
-                        onClick={() => handleDeactivatePolicy(policy.id)}
+                        onClick={() => handleDeactivatePolicy(Number(policy.id))}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

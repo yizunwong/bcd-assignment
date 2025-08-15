@@ -488,7 +488,7 @@ export default function PlansPage() {
                   </div>
 
                   <p className="text-slate-600 dark:text-slate-400 mb-6">
-                    {plan.description}
+                    {plan.description.toString()}
                   </p>
 
                   <div className="space-y-3 mb-6">
