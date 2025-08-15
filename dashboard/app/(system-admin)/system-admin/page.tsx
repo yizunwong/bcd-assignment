@@ -286,9 +286,28 @@ export default function UserRoleManagement() {
   };
 
   const handleSaveUser = async () => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsEditDialogOpen(false);
+    if (!selectedUser) return;
+    try {
+      const [firstName, ...rest] = editUserData.name.trim().split(" ");
+      const payload: any = {
+        firstName,
+        lastName: rest.join(" "),
+        email: editUserData.email,
+        phone: editUserData.phone || undefined,
+        role:
+          editUserData.role === "admin" ? "insurance_admin" : editUserData.role,
+        status: editUserData.status as any,
+        dateOfBirth: editUserData.dateOfBirth || undefined,
+        occupation: editUserData.occupation || undefined,
+        address: editUserData.address || undefined,
+      };
+      await updateUser(selectedUser.id, payload);
+      printMessage("User updated successfully", "success");
+      setIsEditDialogOpen(false);
+      refetch();
+    } catch (err) {
+      printMessage("Failed to update user", "error");
+    }
   };
 
   const handleConfigureRole = (role: any) => {

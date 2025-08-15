@@ -847,8 +847,8 @@ export default function ManagePolicies() {
                           dragActive
                             ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
                             : fileError
-                            ? "border-red-500 bg-red-50/50 dark:bg-red-900/20"
-                            : "border-slate-300 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-700/30"
+                              ? "border-red-500 bg-red-50/50 dark:bg-red-900/20"
+                              : "border-slate-300 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-700/30"
                         }`}
                         onDragEnter={handleDrag}
                         onDragLeave={handleDrag}
