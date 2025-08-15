@@ -759,6 +759,50 @@ export class ClaimService {
     });
   }
 
+  async getClaimDetails(
+    req: AuthenticatedRequest,
+  ): Promise<CommonResponseDto<any>> {
+    const supabase = req.supabase;
+    const statuses = Object.values(ClaimStatus); // e.g. ['pending', 'claimed', 'approved', 'rejected']
+    const details: Record<string, any[]> = {};
+    const counts: Record<string, number> = {};
+    const totals: Record<string, number> = {};
+
+    for (const status of statuses) {
+      const { data, error } = await supabase
+        .from('claims')
+        .select('*') // Get all fields
+        .eq('status', status);
+
+      if (error) {
+        throw new InternalServerErrorException(
+          `Failed to retrieve ${status} claims`,
+        );
+      }
+
+      // Store details
+      details[status] = data || [];
+
+      // Count claims
+      counts[status] = details[status].length;
+
+      // Sum amounts
+      totals[status] = details[status].reduce(
+        (sum, claim) => sum + (claim.amount || 0),
+        0,
+      );
+    }
+
+    return new CommonResponseDto({
+      statusCode: 200,
+      message: 'Claim details retrieved successfully',
+      data: {
+        counts,
+        totals,
+      },
+    });
+  }
+
   async attachClaimTypesToPolicy(
     claimTypeNames: string[],
     policyId: number,
