@@ -3,9 +3,15 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract InsuranceContract is AccessControl, ReentrancyGuard {
+    using SafeERC20 for IERC20;
+
     bytes32 public constant INSURANCE_ADMIN_ROLE = keccak256("INSURANCE_ADMIN_ROLE");
+
+    IERC20 public paymentToken;
 
     enum CoverageStatus {
         Active,
@@ -139,19 +145,23 @@ contract InsuranceContract is AccessControl, ReentrancyGuard {
         _revokeRole(INSURANCE_ADMIN_ROLE, account);
     }
 
-    constructor() {
+    constructor(address tokenAddress) {
+        require(tokenAddress != address(0), "Invalid token address");
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(INSURANCE_ADMIN_ROLE, msg.sender);
+        paymentToken = IERC20(tokenAddress);
         nextCoverageId = 1;
         nextClaimId = 1;
         nextPaymentId = 1;
     }
+
     /**
-     * @dev Create a new insurance coverage with ETH payment
-     * @param coverage The coverage amount in wei
-     * @param premium The premium amount in wei
+     * @dev Create a new insurance coverage with token payment
+     * @param coverage The coverage amount in token smallest units
+     * @param premium The premium amount in token smallest units
      * @param durationDays Duration of the coverage in days
      */
-    function createCoverageWithPayment(
+    function createCoverageWithTokenPayment(
         uint256 coverage,
         uint256 premium,
         uint256 durationDays,
@@ -159,12 +169,14 @@ contract InsuranceContract is AccessControl, ReentrancyGuard {
         string memory name,
         string memory category,
         string memory provider
-    ) external payable nonReentrant returns (uint256) {
-        require(msg.value == premium, "Incorrect premium amount");
+    ) external nonReentrant returns (uint256) {
         require(coverage > 0, "Coverage must be greater than 0");
         require(premium > 0, "Premium must be greater than 0");
         require(durationDays > 0, "Duration must be greater than 0");
         require(bytes(agreementCid).length > 0, "Agreement CID not set");
+
+        // Transfer premium tokens from user to contract
+        paymentToken.safeTransferFrom(msg.sender, address(this), premium);
 
         uint256 coverageId = nextCoverageId;
         uint256 startDate = block.timestamp;
@@ -222,14 +234,15 @@ contract InsuranceContract is AccessControl, ReentrancyGuard {
         uint256 coverageId
     )
         external
-        payable
         nonReentrant
         coverageExists(coverageId)
         coverageActive(coverageId)
     {
         Coverage storage coverage = coverages[coverageId];
         require(coverage.policyholder == msg.sender, "Not policyholder");
-        require(msg.value == coverage.premium, "Incorrect premium amount");
+
+        // Transfer premium tokens from policyholder
+        paymentToken.safeTransferFrom(msg.sender, address(this), coverage.premium);
 
         uint256 gracePeriod = 7 days; // Can make this configurable per coverage type
 
@@ -240,7 +253,7 @@ contract InsuranceContract is AccessControl, ReentrancyGuard {
         );
 
         // Update coverage payment info
-        coverage.totalPaid = coverage.totalPaid + msg.value;
+        coverage.totalPaid = coverage.totalPaid + coverage.premium;
 
         // If paying early, just push nextPaymentDate forward from current cycle
         if (block.timestamp < coverage.nextPaymentDate) {
@@ -257,7 +270,7 @@ contract InsuranceContract is AccessControl, ReentrancyGuard {
             id: paymentId,
             coverageId: coverageId,
             payer: msg.sender,
-            amount: msg.value,
+            amount: coverage.premium,
             status: PaymentStatus.Completed,
             timestamp: block.timestamp
         });
@@ -265,7 +278,7 @@ contract InsuranceContract is AccessControl, ReentrancyGuard {
         coveragePayments[coverageId].push(paymentId);
         nextPaymentId++;
 
-        emit PremiumPaid(coverageId, msg.sender, msg.value, paymentId);
+        emit PremiumPaid(coverageId, msg.sender, coverage.premium, paymentId);
     }
 
     /**
@@ -335,9 +348,8 @@ contract InsuranceContract is AccessControl, ReentrancyGuard {
             ? (totalApprovedAmount * 100) / coverage.coverage
             : 0;
 
-        // Transfer claim amount to policyholder
-        (bool success, ) = coverage.policyholder.call{value: claim.amount}("");
-        require(success, "Transfer failed");
+        // Transfer claim amount to policyholder in tokens
+        paymentToken.safeTransfer(coverage.policyholder, claim.amount);
 
         emit ClaimApproved(claimId, claim.coverageId, claim.amount);
     }
@@ -410,25 +422,23 @@ contract InsuranceContract is AccessControl, ReentrancyGuard {
     }
 
     /**
-     * @dev Withdraw contract balance (admin only)
+     * @dev Withdraw contract token balance (admin only)
      */
-    function withdrawBalance() external onlyRole(DEFAULT_ADMIN_ROLE) {
-        uint256 balance = address(this).balance;
+    function withdrawTokenBalance() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        uint256 balance = paymentToken.balanceOf(address(this));
         require(balance > 0, "No balance to withdraw");
-
-        (bool success, ) = msg.sender.call{value: balance}("");
-        require(success, "Withdrawal failed");
+        paymentToken.safeTransfer(msg.sender, balance);
     }
 
     /**
-     * @dev Get contract balance
+     * @dev Get contract token balance
      */
-    function getContractBalance() external view returns (uint256) {
-        return address(this).balance;
+    function getContractTokenBalance() external view returns (uint256) {
+        return paymentToken.balanceOf(address(this));
     }
 
     /**
-     * @dev Emergency refund function (owner only)
+     * @dev Emergency refund function (admin only)
      * @param paymentId The ID of the payment to refund
      */
     function emergencyRefund(
@@ -442,13 +452,12 @@ contract InsuranceContract is AccessControl, ReentrancyGuard {
 
         payment.status = PaymentStatus.Refunded;
 
-        (bool success, ) = payment.payer.call{value: payment.amount}("");
-        require(success, "Refund failed");
+        paymentToken.safeTransfer(payment.payer, payment.amount);
 
         emit PaymentRefunded(paymentId, payment.payer, payment.amount);
     }
 
-    // Fallback function to receive ETH
+    // Fallback function to reject ETH
     receive() external payable {
         revert("Direct ETH transfers not allowed");
     }

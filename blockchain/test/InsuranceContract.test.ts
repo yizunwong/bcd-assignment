@@ -1,180 +1,96 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { InsuranceContract } from '../typechain-types';
+import type { CoverlyToken, InsuranceContract } from '../typechain-types';
 import type { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 
-describe('InsuranceContract', function () {
-  let insuranceContract: InsuranceContract;
+describe('InsuranceContract with CoverlyToken', function () {
+  let token: CoverlyToken;
+  let insurance: InsuranceContract;
   let owner: SignerWithAddress;
   let policyholder: SignerWithAddress;
-  let otherAccount: SignerWithAddress;
 
-  const coverage = ethers.parseEther('10'); // 10 ETH coverage
-  const premium = ethers.parseEther('0.1'); // 0.1 ETH premium
+  const coverage = ethers.parseUnits('100', 18);
+  const premium = ethers.parseUnits('10', 18);
 
   beforeEach(async function () {
-    [owner, policyholder, otherAccount] = await ethers.getSigners();
+    [owner, policyholder] = await ethers.getSigners();
 
-    const InsuranceContract =
-      await ethers.getContractFactory('InsuranceContract');
-    insuranceContract = await InsuranceContract.deploy();
+    const Token = await ethers.getContractFactory('CoverlyToken');
+    token = await Token.deploy();
+
+    const Insurance = await ethers.getContractFactory('InsuranceContract');
+    insurance = await Insurance.deploy(await token.getAddress());
+
+    // Fund policyholder and approve contract to spend tokens
+    await token.transfer(policyholder.address, premium * 2n);
+    await token
+      .connect(policyholder)
+      .approve(await insurance.getAddress(), premium * 2n);
   });
 
-  describe('Deployment', function () {
-    it('Should set the right owner', async function () {
-      expect(await insuranceContract.owner()).to.equal(owner.address);
-    });
+  it('creates coverage with token payment', async function () {
+    const tx = await insurance
+      .connect(policyholder)
+      .createCoverageWithTokenPayment(
+        coverage,
+        premium,
+        30,
+        'cid',
+        'name',
+        'category',
+        'provider'
+      );
+    await tx.wait();
+
+    const cov = await insurance.getCoverage(1);
+    expect(cov.policyholder).to.equal(policyholder.address);
+    expect(cov.premium).to.equal(premium);
   });
 
-  describe('Policy Creation', function () {
-    it('Should create a policy', async function () {
-      const tx = await insuranceContract
-        .connect(owner)
-        .createPolicy(policyholder.address, coverage, premium);
-
-      const receipt = await tx.wait();
-      expect(receipt?.status).to.equal(1);
-
-      const policy = await insuranceContract.getPolicy(0);
-      expect(policy.policyholder).to.equal(policyholder.address);
-      expect(policy.coverage).to.equal(coverage);
-      expect(policy.premium).to.equal(premium);
-      expect(policy.status).to.equal(0); // Active
-    });
-
-    it('Should fail if coverage is zero', async function () {
-      await expect(
-        insuranceContract
-          .connect(owner)
-          .createPolicy(policyholder.address, 0, premium)
-      ).to.be.revertedWith('Coverage must be greater than 0');
-    });
-
-    it('Should fail if premium is zero', async function () {
-      await expect(
-        insuranceContract
-          .connect(owner)
-          .createPolicy(policyholder.address, coverage, 0)
-      ).to.be.revertedWith('Premium must be greater than 0');
-    });
-  });
-
-  describe('Premium Payments', function () {
-    beforeEach(async function () {
-      await insuranceContract
-        .connect(owner)
-        .createPolicy(policyholder.address, coverage, premium);
-    });
-
-    it('Should allow policyholder to pay premium', async function () {
-      const tx = await insuranceContract
-        .connect(policyholder)
-        .payPremium(0, { value: premium });
-      const receipt = await tx.wait();
-      expect(receipt?.status).to.equal(1);
-    });
-
-    it('Should fail if not policyholder', async function () {
-      await expect(
-        insuranceContract
-          .connect(otherAccount)
-          .payPremium(0, { value: premium })
-      ).to.be.revertedWith('Not policyholder');
-    });
-  });
-
-  describe('Claim Filing', function () {
-    beforeEach(async function () {
-      await insuranceContract
-        .connect(owner)
-        .createPolicy(policyholder.address, coverage, premium);
-    });
-
-    it('Should allow policyholder to file claim', async function () {
-      const claimAmount = ethers.parseEther('1');
-
-      const tx = await insuranceContract
-        .connect(policyholder)
-        .fileClaim(0, claimAmount);
-      const receipt = await tx.wait();
-      expect(receipt?.status).to.equal(1);
-    });
-
-    it('Should fail if not policyholder', async function () {
-      const claimAmount = ethers.parseEther('1');
-
-      await expect(
-        insuranceContract.connect(otherAccount).fileClaim(0, claimAmount)
-      ).to.be.revertedWith('Not policyholder');
-    });
-
-    it('Should fail if claim amount exceeds coverage', async function () {
-      const claimAmount = ethers.parseEther('15'); // More than 10 ETH coverage
-
-      await expect(
-        insuranceContract.connect(policyholder).fileClaim(0, claimAmount)
-      ).to.be.revertedWith('Claim amount exceeds coverage');
-    });
-
-    it('Should fail if claim amount is zero', async function () {
-      await expect(
-        insuranceContract.connect(policyholder).fileClaim(0, 0)
-      ).to.be.revertedWith('Claim amount must be greater than 0');
-    });
-  });
-
-  describe('Claim Approval', function () {
-    beforeEach(async function () {
-      await insuranceContract
-        .connect(owner)
-        .createPolicy(policyholder.address, coverage, premium);
-
-      const claimAmount = ethers.parseEther('1');
-      await insuranceContract.connect(policyholder).fileClaim(0, claimAmount);
-    });
-
-    it('Should allow owner to approve claim', async function () {
-      const initialBalance = await ethers.provider.getBalance(
-        policyholder.address
+  it('allows paying premium with tokens', async function () {
+    await insurance
+      .connect(policyholder)
+      .createCoverageWithTokenPayment(
+        coverage,
+        premium,
+        30,
+        'cid',
+        'name',
+        'category',
+        'provider'
       );
 
-      const tx = await insuranceContract.connect(owner).approveClaim(0);
-      const receipt = await tx.wait();
-      expect(receipt?.status).to.equal(1);
+    const tx = await insurance.connect(policyholder).payPremium(1);
+    await tx.wait();
 
-      const finalBalance = await ethers.provider.getBalance(
-        policyholder.address
-      );
-      expect(finalBalance).to.be.gt(initialBalance);
-    });
-
-    it('Should fail if not owner', async function () {
-      await expect(
-        insuranceContract.connect(policyholder).approveClaim(0)
-      ).to.be.revertedWith('Ownable: caller is not the owner');
-    });
-
-    it('Should fail if claim already approved', async function () {
-      await insuranceContract.connect(owner).approveClaim(0);
-
-      await expect(
-        insuranceContract.connect(owner).approveClaim(0)
-      ).to.be.revertedWith('Already approved');
-    });
+    const payments = await insurance.getCoveragePayments(1);
+    expect(payments.length).to.equal(2); // initial + second payment
   });
 
-  describe('Policy Management', function () {
-    beforeEach(async function () {
-      await insuranceContract
-        .connect(owner)
-        .createPolicy(policyholder.address, coverage, premium);
-    });
+  it('pays out claims in tokens', async function () {
+    await insurance
+      .connect(policyholder)
+      .createCoverageWithTokenPayment(
+        coverage,
+        premium,
+        30,
+        'cid',
+        'name',
+        'category',
+        'provider'
+      );
 
-    it('Should return policy details', async function () {
-      const policy = await insuranceContract.getPolicy(0);
-      expect(policy.policyholder).to.equal(policyholder.address);
-      expect(policy.coverage).to.equal(coverage);
-      expect(policy.premium).to.equal(premium);
-    });
+    await insurance.connect(policyholder).payPremium(1);
+
+    const claimAmount = ethers.parseUnits('5', 18);
+    await insurance
+      .connect(policyholder)
+      .fileClaim(1, claimAmount, 'test');
+
+    const balanceBefore = await token.balanceOf(policyholder.address);
+    await insurance.connect(owner).approveClaim(1);
+    const balanceAfter = await token.balanceOf(policyholder.address);
+
+    expect(balanceAfter - balanceBefore).to.equal(claimAmount);
   });
 });
