@@ -80,7 +80,11 @@ export default function AdminDashboard() {
                 <CardTitle className="heading-secondary">
                   Recent Claims
                 </CardTitle>
-                <Button variant="outline" className="floating-button">
+                <Button
+                  variant="outline"
+                  className="floating-button"
+                  onClick={() => router.push("/admin/claims")}
+                >
                   View All
                 </Button>
               </CardHeader>
@@ -124,8 +128,8 @@ export default function AdminDashboard() {
                               claim.status === "approved"
                                 ? "status-active"
                                 : claim.status === "pending"
-                                  ? "status-pending"
-                                  : "status-info"
+                                ? "status-pending"
+                                : "status-info"
                             }`}
                           >
                             {claim.status === "approved" && (
