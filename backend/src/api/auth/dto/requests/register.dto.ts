@@ -126,6 +126,14 @@ export class RegisterDto {
   @IsString()
   bio?: string;
 
+  @ApiProperty({
+    example: '0x1234567890abcdef1234567890abcdef12345678',
+    description: 'Connected wallet address',
+  })
+  @IsNotEmpty()
+  @IsString()
+  walletAddress!: string;
+
   //Admin-only details
   @ValidateIf((o: RegisterDto) => o.role === UserRole.INSURANCE_ADMIN)
   @ApiProperty({ type: () => CompanyDetailsDto, required: false })

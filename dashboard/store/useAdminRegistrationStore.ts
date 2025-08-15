@@ -7,6 +7,7 @@ export interface UserRegistrationData {
   firstName: string;
   lastName: string;
   phone: string;
+  walletAddress: string;
 }
 
 interface UserRegistrationState {
@@ -23,6 +24,7 @@ export const useUserRegistrationStore = create<UserRegistrationState>((set) => (
     firstName: "",
     lastName: "",
     phone: "",
+    walletAddress: "",
   },
   setData: (data) => set((state) => ({ data: { ...state.data, ...data } })),
   reset: () =>
@@ -34,6 +36,7 @@ export const useUserRegistrationStore = create<UserRegistrationState>((set) => (
         firstName: "",
         lastName: "",
         phone: "",
+        walletAddress: "",
       },
     }),
 }));

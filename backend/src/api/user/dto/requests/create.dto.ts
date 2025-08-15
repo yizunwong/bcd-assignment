@@ -52,6 +52,14 @@ export class CreateUserDto {
   @IsString()
   bio?: string;
 
+  @ApiProperty({
+    example: '0x1234567890abcdef1234567890abcdef12345678',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  walletAddress?: string;
+
   //Only for insurance_admin
   @ValidateIf((o: CreateUserDto) => o.role === UserRole.INSURANCE_ADMIN)
   @ApiProperty({ type: () => CompanyDetailsDto, required: false })

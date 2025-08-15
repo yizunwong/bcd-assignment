@@ -25,6 +25,9 @@ export class UserResponseDto {
   @ApiProperty({ required: false, nullable: true })
   bio!: string | null;
 
+  @ApiProperty({ required: false, nullable: true })
+  walletAddress?: string | null;
+
   @ApiProperty({ example: 'active', enum: UserStatus })
   status!: UserStatus;
 

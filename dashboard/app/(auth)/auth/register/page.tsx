@@ -21,6 +21,8 @@ import { useToast } from '@/components/shared/ToastProvider';
 import { parseError } from '@/utils/parseError';
 import { useUserRegistrationStore } from '@/store/useAdminRegistrationStore';
 import { getCountries, getCountryCallingCode } from 'libphonenumber-js';
+import { useAccount } from 'wagmi';
+import { Connect } from '@/components/shared/Connect';
 import {
   StepIndicator,
   RoleSelection,
@@ -44,6 +46,8 @@ export default function RegisterPage() {
     (state) => state.setData
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const { address, isConnected } = useAccount();
 
   const countryOptions = getCountries().map((countryCode) => ({
     code: countryCode,
@@ -181,6 +185,11 @@ export default function RegisterPage() {
     }
     setErrors({});
 
+    if (!address) {
+      printMessage('Please connect your wallet', 'error');
+      return;
+    }
+
     if (selectedRole === 'admin') {
       setRegistrationData({
         email: formData.email,
@@ -189,6 +198,7 @@ export default function RegisterPage() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: fullPhoneNumber,
+        walletAddress: address,
       });
       router.push('/auth/register/provider');
     } else {
@@ -204,6 +214,7 @@ export default function RegisterPage() {
           dateOfBirth: formData.dateOfBirth,
           occupation: formData.occupation,
           address: formData.address,
+          walletAddress: address,
         });
         printMessage('Account created successfully', 'success');
         router.push('/auth/login');
@@ -343,6 +354,16 @@ export default function RegisterPage() {
                       setFormData={setFormData}
                       errors={errors}
                     />
+                  )}
+                  {currentStep === 3 && (
+                    <div className="mt-4 space-y-2">
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        {isConnected
+                          ? `Connected wallet: ${address}`
+                          : 'Please connect your wallet'}
+                      </p>
+                      {!isConnected && <Connect />}
+                    </div>
                   )}
                   <div className="flex justify-between mt-8">
                     {currentStep > 1 && (

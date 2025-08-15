@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatsCard } from "@/components/shared/StatsCard";
 import { Button } from "@/components/ui/button";
@@ -61,6 +61,7 @@ import {
   useCreateUserMutation,
   useUserStatsQuery,
   useUsersQuery,
+  useUpdateUserMutation,
 } from "@/hooks/useUsers";
 import {
   CompanyDetailsDtoYearsInBusiness,
@@ -69,6 +70,7 @@ import {
 } from "@/api";
 import { useToast } from "@/components/shared/ToastProvider";
 import { useDebounce } from '@/hooks/useDebounce';
+import { useInsuranceContract } from "@/hooks/useBlockchain";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -98,7 +100,7 @@ export default function UserRoleManagement() {
       }
     : {};
 
-  const { data: usersData, isLoading: isLoading } = useUsersQuery(
+  const { data: usersData, isLoading: isLoading, refetch } = useUsersQuery(
     filters as UserControllerFindAllParams
   );
 
@@ -110,6 +112,8 @@ export default function UserRoleManagement() {
         email: u.email,
         phone: u.phone ?? "",
         role: u.role === "insurance_admin" ? "admin" : u.role,
+        roleOriginal: u.role,
+        walletAddress: u.walletAddress ?? "",
         status: u.status,
         lastLogin: typeof u.lastLogin === "string" ? u.lastLogin : null,
         joinDate:
@@ -119,10 +123,32 @@ export default function UserRoleManagement() {
         location: u.location ?? "",
         loginAttempts: u.loginAttempts ?? 0,
         notes: u.notes ?? "",
-        activityLog: u.activityLog ?? [],
-      })),
+      activityLog: u.activityLog ?? [],
+    })),
     [usersData]
   );
+
+  const { grantAdminRole, revokeAdminRole, isInsuranceAdmin } =
+    useInsuranceContract();
+  const [onChainAdmins, setOnChainAdmins] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      const entries = await Promise.all(
+        users
+          .filter(
+            (u: any) =>
+              u.roleOriginal === "insurance_admin" && u.walletAddress
+          )
+          .map(async (u: any) => [
+            u.id,
+            await isInsuranceAdmin(u.walletAddress as `0x${string}`),
+          ])
+      );
+      setOnChainAdmins(Object.fromEntries(entries));
+    };
+    fetchRoles();
+  }, [users, isInsuranceAdmin]);
 
   const [newUserData, setNewUserData] = useState({
     email: "",
@@ -147,6 +173,7 @@ export default function UserRoleManagement() {
   });
 
   const { createUser, error: createError } = useCreateUserMutation();
+  const { updateUser } = useUpdateUserMutation();
   const { printMessage } = useToast();
 
   const [editUserData, setEditUserData] = useState({
@@ -298,6 +325,26 @@ export default function UserRoleManagement() {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 800));
    };
+
+  const handleToggleAdminRole = async (user: any) => {
+    if (!user.walletAddress) {
+      printMessage("User wallet not connected", "error");
+      return;
+    }
+    try {
+      if (onChainAdmins[user.id]) {
+        await revokeAdminRole(user.walletAddress as `0x${string}`);
+        printMessage("Removed on-chain admin role", "success");
+        setOnChainAdmins((prev) => ({ ...prev, [user.id]: false }));
+      } else {
+        await grantAdminRole(user.walletAddress as `0x${string}`);
+        printMessage("Granted on-chain admin role", "success");
+        setOnChainAdmins((prev) => ({ ...prev, [user.id]: true }));
+      }
+    } catch (err) {
+      printMessage("Failed to update admin role", "error");
+    }
+  };
 
   const handleCreateUser = async () => {
     try {
@@ -894,6 +941,9 @@ export default function UserRoleManagement() {
                             <p className="text-slate-600 dark:text-slate-400">
                               {user.email}
                             </p>
+                            <p className="text-slate-600 dark:text-slate-400 break-all">
+                              Wallet: {user.walletAddress || '—'}
+                            </p>
                             <div className="flex items-center space-x-4 text-sm text-slate-500 dark:text-slate-500 mt-1">
                               <span>ID: {user.id}</span>
                               <span>•</span>
@@ -950,6 +1000,19 @@ export default function UserRoleManagement() {
                               <Edit className="w-4 h-4 mr-1" />
                               Edit
                             </Button>
+                            {user.roleOriginal === 'insurance_admin' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="floating-button"
+                                onClick={() => handleToggleAdminRole(user)}
+                                disabled={!user.walletAddress}
+                              >
+                                {onChainAdmins[user.id]
+                                  ? "Remove On-chain"
+                                  : "Grant On-chain"}
+                              </Button>
+                            )}
                             <Button
                               size="sm"
                               variant="outline"
