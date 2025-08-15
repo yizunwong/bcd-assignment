@@ -20,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Ticker from '@/components/animata/text/ticker';
 
 export default function AdminDashboard() {
   const { data: recentClaimsData } = useClaimControllerFindAll({
@@ -51,23 +52,43 @@ export default function AdminDashboard() {
         {/* Stats Overview */}
         <div className="stats-grid">
           <StatsCard
-            title="Active Policies"
-            value={(summary?.activePolicies ?? 0).toString()}
+            title="Active Coverage"
+            value={
+              <Ticker
+                value={(summary?.activePolicies ?? 0).toString()}
+                className="text-slate-800 dark:text-slate-100"
+              />
+            }
             icon={Shield}
           />
           <StatsCard
             title="Pending Claims"
-            value={(summary?.pendingClaims ?? 0).toString()}
+            value={
+              <Ticker
+                value={(summary?.pendingClaims ?? 0).toString()}
+                className="text-slate-800 dark:text-slate-100"
+              />
+            }
             icon={AlertCircle}
           />
           <StatsCard
             title="Total Revenue"
-            value={(summary?.totalRevenue ?? 0).toString()}
+            value={
+              <Ticker
+                value={(summary?.totalRevenue ?? 0).toString()}
+                className="text-slate-800 dark:text-slate-100"
+              />
+            }
             icon={DollarSign}
           />
           <StatsCard
             title="Active Users"
-            value={(summary?.activeUsers ?? 0).toString()}
+            value={
+              <Ticker
+                value={(summary?.activeUsers ?? 0).toString()}
+                className="text-slate-800 dark:text-slate-100"
+              />
+            }
             icon={Users}
           />
         </div>
@@ -124,8 +145,8 @@ export default function AdminDashboard() {
                               claim.status === "approved"
                                 ? "status-active"
                                 : claim.status === "pending"
-                                  ? "status-pending"
-                                  : "status-info"
+                                ? "status-pending"
+                                : "status-info"
                             }`}
                           >
                             {claim.status === "approved" && (

@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/select";
 import ClaimReviewDialog from "@/app/(admin)/admin/claims/components/ClaimReviewDialog";
 import { Pagination } from "@/components/shared/Pagination";
-import { useToast } from "@/components/shared/ToastProvider";
 import {
   FileText,
   Search,
@@ -37,6 +36,8 @@ import {
   useUpdateClaimStatusMutation,
 } from "@/hooks/useClaims";
 import { useInsuranceContract } from "@/hooks/useBlockchain";
+import Ticker from "@/components/animata/text/ticker";
+import { StatsCard } from "@/components/shared/StatsCard";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -47,7 +48,6 @@ export default function ClaimsReview() {
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const { updateClaimStatus } = useUpdateClaimStatusMutation();
   const { approveClaimOnChain } = useInsuranceContract();
-  const { printMessage } = useToast();
 
   const hasFilters = filterStatus !== "all" || !!debouncedSearchTerm;
 
@@ -131,25 +131,12 @@ export default function ClaimsReview() {
   };
 
   const handleApprove = async (claimId: number) => {
-    try {
-      const claimHash = await approveClaimOnChain(Number(claimId));
-      if (!claimHash) {
-        printMessage("Failed to approve claim", "error");
-        return;
-      }
-
-      await updateClaimStatus(String(claimId), "approved", {
-        txHash: claimHash,
-      });
-      printMessage("Claim approved successfully", "success");
-    } catch (error) {
-      console.error("Error approving claim:", error);
-      printMessage("Failed to approve claim", "error");
-    }
+    updateClaimStatus(String(claimId), "approved", { txHash: "" });
+    await approveClaimOnChain(Number(claimId));
   };
 
   const handleReject = async (claimId: number) => {
-    updateClaimStatus(String(claimId), "rejected");
+    updateClaimStatus(String(claimId), "rejected", { txHash: "" });
   };
 
   return (
@@ -172,67 +159,49 @@ export default function ClaimsReview() {
 
         {/* Stats Cards */}
         <div className="stats-grid">
-          <Card className="glass-card rounded-2xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-white" />
-                </div>
-                <Badge className="status-badge status-pending">Pending</Badge>
-              </div>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {stats?.data?.pending ?? 0}
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400">
-                Pending Review
-              </p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            title="Pending Review"
+            value={
+              <Ticker
+                value={(stats?.data?.pending ?? 0).toString()}
+                className="text-slate-800 dark:text-slate-100"
+              />
+            }
+            icon={Clock}
+          />
 
-          <Card className="glass-card rounded-2xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
-                  <Eye className="w-6 h-6 text-white" />
-                </div>
-                <Badge className="status-badge status-info">Claimed</Badge>
-              </div>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {stats?.data?.claimed ?? 0}
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400">Claimed</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            title="Claimed Claims"
+            value={
+              <Ticker
+                value={(stats?.data?.claimed ?? 0).toString()}
+                className="text-slate-800 dark:text-slate-100"
+              />
+            }
+            icon={CheckCircle}
+          />
 
-          <Card className="glass-card rounded-2xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-white" />
-                </div>
-                <Badge className="status-badge status-active">Approved</Badge>
-              </div>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {stats?.data?.approved ?? 0}
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400">Approved</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            title="Approved Claims"
+            value={
+              <Ticker
+                value={(stats?.data?.approved ?? 0).toString()}
+                className="text-slate-800 dark:text-slate-100"
+              />
+            }
+            icon={Clock}
+          />
 
-          <Card className="glass-card rounded-2xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-red-500 to-pink-500 flex items-center justify-center">
-                  <X className="w-6 h-6 text-white" />
-                </div>
-                <Badge className="status-badge status-error">Rejected</Badge>
-              </div>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {stats?.data?.rejected ?? 0}
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400">Rejected</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            title="Rejected Claims"
+            value={
+              <Ticker
+                value={(stats?.data?.rejected ?? 0).toString()}
+                className="text-slate-800 dark:text-slate-100"
+              />
+            }
+            icon={X}
+          />
         </div>
 
         {/* Filters */}
