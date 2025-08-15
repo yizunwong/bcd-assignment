@@ -123,6 +123,7 @@ export interface RegisterDto {
   role: RegisterDtoRole;
   phone?: string;
   bio?: string;
+  /** Connected wallet address */
   walletAddress: string;
   company?: CompanyDetailsDto;
   dateOfBirth?: string;
@@ -205,14 +206,11 @@ export type UserResponseDtoPhone = { [key: string]: unknown } | null;
  */
 export type UserResponseDtoBio = { [key: string]: unknown } | null;
 
-<<<<<<< HEAD
 /**
  * @nullable
  */
 export type UserResponseDtoWalletAddress = { [key: string]: unknown } | null;
 
-=======
->>>>>>> 960601ccf13ab6ac95aa85d1131d1fcf94e79ffa
 export type UserResponseDtoStatus =
   (typeof UserResponseDtoStatus)[keyof typeof UserResponseDtoStatus];
 
@@ -547,6 +545,7 @@ export interface CoveragePolicyDto {
   premium: number;
   duration_days: number;
   provider: string;
+  status: string;
 }
 
 export interface CoverageResponseDto {
@@ -843,6 +842,13 @@ export type UserControllerUpdate200AllOf = {
 export type UserControllerUpdate200 = CommonResponseDto &
   UserControllerUpdate200AllOf;
 
+export type UserControllerUploadAvatar200AllOf = {
+  data?: CommonResponseDto;
+};
+
+export type UserControllerUploadAvatar200 = CommonResponseDto &
+  UserControllerUploadAvatar200AllOf;
+
 export type ClaimControllerFindAllParams = {
   /**
    * @minimum 1
@@ -862,6 +868,10 @@ export type ClaimControllerFindAllParams = {
   search?: string;
   sortBy?: ClaimControllerFindAllSortBy;
   sortOrder?: ClaimControllerFindAllSortOrder;
+  /**
+   * Filter by user ID
+   */
+  userId?: string;
 };
 
 export type ClaimControllerFindAllSortBy =
@@ -1168,7 +1178,6 @@ export type PaymentControllerFindAll200AllOf = {
 
 export type PaymentControllerFindAll200 = CommonResponseDto &
   PaymentControllerFindAll200AllOf;
-<<<<<<< HEAD
 
 export type PaymentControllerGetStats200AllOf = {
   data?: PaymentStatsDto;
@@ -1183,8 +1192,6 @@ export type PaymentControllerFindOne200AllOf = {
 
 export type PaymentControllerFindOne200 = CommonResponseDto &
   PaymentControllerFindOne200AllOf;
-=======
->>>>>>> 960601ccf13ab6ac95aa85d1131d1fcf94e79ffa
 
 export type ActivityLogControllerFindAllParams = {
   /**
@@ -2177,7 +2184,6 @@ export const useUserControllerUpdate = <TError = unknown, TContext = unknown>(
   return useMutation(mutationOptions, queryClient);
 };
 
-<<<<<<< HEAD
 export const userControllerUploadAvatar = (
   id: string,
   uploadDocDto: UploadDocDto,
@@ -2264,8 +2270,6 @@ export const useUserControllerUploadAvatar = <
   return useMutation(mutationOptions, queryClient);
 };
 
-=======
->>>>>>> 960601ccf13ab6ac95aa85d1131d1fcf94e79ffa
 export const claimControllerCreate = (
   createClaimDto: CreateClaimDto,
   signal?: AbortSignal,
@@ -2727,67 +2731,14 @@ export function useClaimControllerGetStats<
   return query;
 }
 
-<<<<<<< HEAD
-export const claimControllerFindOne = (id: string, signal?: AbortSignal) => {
-  return customFetcher<ClaimControllerFindOne200>({
-    url: `/claim/${id}`,
-=======
 export const claimControllerGetClaimDetails = (signal?: AbortSignal) => {
   return customFetcher<ClaimControllerGetClaimDetails200>({
     url: `/claim/details`,
->>>>>>> 960601ccf13ab6ac95aa85d1131d1fcf94e79ffa
     method: "GET",
     signal,
   });
 };
 
-<<<<<<< HEAD
-export const getClaimControllerFindOneQueryKey = (id?: string) => {
-  return [`/claim/${id}`] as const;
-};
-
-export const getClaimControllerFindOneQueryOptions = <
-  TData = Awaited<ReturnType<typeof claimControllerFindOne>>,
-  TError = unknown,
->(
-  id: string,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof claimControllerFindOne>>,
-        TError,
-        TData
-      >
-    >;
-  },
-) => {
-  const { query: queryOptions } = options ?? {};
-
-  const queryKey =
-    queryOptions?.queryKey ?? getClaimControllerFindOneQueryKey(id);
-
-  const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof claimControllerFindOne>>
-  > = ({ signal }) => claimControllerFindOne(id, signal);
-
-  return {
-    queryKey,
-    queryFn,
-    enabled: !!id,
-    ...queryOptions,
-  } as UseQueryOptions<
-    Awaited<ReturnType<typeof claimControllerFindOne>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type ClaimControllerFindOneQueryResult = NonNullable<
-  Awaited<ReturnType<typeof claimControllerFindOne>>
->;
-export type ClaimControllerFindOneQueryError = unknown;
-
-=======
 export const getClaimControllerGetClaimDetailsQueryKey = () => {
   return [`/claim/details`] as const;
 };
@@ -2975,7 +2926,6 @@ export type ClaimControllerFindOneQueryResult = NonNullable<
 >;
 export type ClaimControllerFindOneQueryError = unknown;
 
->>>>>>> 960601ccf13ab6ac95aa85d1131d1fcf94e79ffa
 export function useClaimControllerFindOne<
   TData = Awaited<ReturnType<typeof claimControllerFindOne>>,
   TError = unknown,
@@ -3227,19 +3177,13 @@ export const useClaimControllerRemove = <TError = unknown, TContext = unknown>(
 export const claimControllerUpdateClaimStatus = (
   id: string,
   status: ClaimStatus,
-<<<<<<< HEAD
   updateClaimStatusDto: UpdateClaimStatusDto,
-=======
->>>>>>> 960601ccf13ab6ac95aa85d1131d1fcf94e79ffa
 ) => {
   return customFetcher<ClaimControllerUpdateClaimStatus200>({
     url: `/claim/${id}/${status}`,
     method: "PATCH",
-<<<<<<< HEAD
     headers: { "Content-Type": "application/json" },
     data: updateClaimStatusDto,
-=======
->>>>>>> 960601ccf13ab6ac95aa85d1131d1fcf94e79ffa
   });
 };
 
@@ -3250,21 +3194,13 @@ export const getClaimControllerUpdateClaimStatusMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
     TError,
-<<<<<<< HEAD
     { id: string; status: ClaimStatus; data: UpdateClaimStatusDto },
-=======
-    { id: string; status: ClaimStatus },
->>>>>>> 960601ccf13ab6ac95aa85d1131d1fcf94e79ffa
     TContext
   >;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
   TError,
-<<<<<<< HEAD
   { id: string; status: ClaimStatus; data: UpdateClaimStatusDto },
-=======
-  { id: string; status: ClaimStatus },
->>>>>>> 960601ccf13ab6ac95aa85d1131d1fcf94e79ffa
   TContext
 > => {
   const mutationKey = ["claimControllerUpdateClaimStatus"];
@@ -3278,19 +3214,11 @@ export const getClaimControllerUpdateClaimStatusMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
-<<<<<<< HEAD
     { id: string; status: ClaimStatus; data: UpdateClaimStatusDto }
   > = (props) => {
     const { id, status, data } = props ?? {};
 
     return claimControllerUpdateClaimStatus(id, status, data);
-=======
-    { id: string; status: ClaimStatus }
-  > = (props) => {
-    const { id, status } = props ?? {};
-
-    return claimControllerUpdateClaimStatus(id, status);
->>>>>>> 960601ccf13ab6ac95aa85d1131d1fcf94e79ffa
   };
 
   return { mutationFn, ...mutationOptions };
@@ -3299,7 +3227,6 @@ export const getClaimControllerUpdateClaimStatusMutationOptions = <
 export type ClaimControllerUpdateClaimStatusMutationResult = NonNullable<
   Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>
 >;
-<<<<<<< HEAD
 export type ClaimControllerUpdateClaimStatusMutationBody = UpdateClaimStatusDto;
 export type ClaimControllerUpdateClaimStatusMutationError = unknown;
 
@@ -3402,110 +3329,6 @@ export const useClaimControllerRemoveFile = <
   return useMutation(mutationOptions, queryClient);
 };
 
-=======
-
-export type ClaimControllerUpdateClaimStatusMutationError = unknown;
-
-export const useClaimControllerUpdateClaimStatus = <
-  TError = unknown,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
-      TError,
-      { id: string; status: ClaimStatus },
-      TContext
-    >;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof claimControllerUpdateClaimStatus>>,
-  TError,
-  { id: string; status: ClaimStatus },
-  TContext
-> => {
-  const mutationOptions =
-    getClaimControllerUpdateClaimStatusMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};
-
-export const claimControllerRemoveFile = (id: string) => {
-  return customFetcher<ClaimControllerRemoveFile200>({
-    url: `/claim/${id}/file`,
-    method: "DELETE",
-  });
-};
-
-export const getClaimControllerRemoveFileMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof claimControllerRemoveFile>>,
-    TError,
-    { id: string },
-    TContext
-  >;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof claimControllerRemoveFile>>,
-  TError,
-  { id: string },
-  TContext
-> => {
-  const mutationKey = ["claimControllerRemoveFile"];
-  const { mutation: mutationOptions } = options
-    ? options.mutation &&
-      "mutationKey" in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey } };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof claimControllerRemoveFile>>,
-    { id: string }
-  > = (props) => {
-    const { id } = props ?? {};
-
-    return claimControllerRemoveFile(id);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type ClaimControllerRemoveFileMutationResult = NonNullable<
-  Awaited<ReturnType<typeof claimControllerRemoveFile>>
->;
-
-export type ClaimControllerRemoveFileMutationError = unknown;
-
-export const useClaimControllerRemoveFile = <
-  TError = unknown,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof claimControllerRemoveFile>>,
-      TError,
-      { id: string },
-      TContext
-    >;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof claimControllerRemoveFile>>,
-  TError,
-  { id: string },
-  TContext
-> => {
-  const mutationOptions = getClaimControllerRemoveFileMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};
-
->>>>>>> 960601ccf13ab6ac95aa85d1131d1fcf94e79ffa
 export const notificationsControllerGetNotifications = (
   params: NotificationsControllerGetNotificationsParams,
   signal?: AbortSignal,
@@ -6713,7 +6536,6 @@ export function usePaymentControllerFindAll<
   return query;
 }
 
-<<<<<<< HEAD
 export const paymentControllerGetStats = (signal?: AbortSignal) => {
   return customFetcher<PaymentControllerGetStats200>({
     url: `/payments/stats`,
@@ -7013,8 +6835,6 @@ export function usePaymentControllerFindOne<
   return query;
 }
 
-=======
->>>>>>> 960601ccf13ab6ac95aa85d1131d1fcf94e79ffa
 export const activityLogControllerFindAll = (
   params?: ActivityLogControllerFindAllParams,
   signal?: AbortSignal,
