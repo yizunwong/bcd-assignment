@@ -55,6 +55,7 @@ import {
   useRemovePolicyMutation,
 } from "@/hooks/usePolicies";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useExtractClaimMutation } from "@/hooks/usePdfClaimExtractor";
 import { useToast } from "@/components/shared/ToastProvider";
 import { useAuthStore } from "@/store/useAuthStore";
 import {
@@ -113,6 +114,7 @@ export default function ManagePolicies() {
   const { data: statsData } = usePolicyStatsQuery();
   const { updatePolicy, error: updateError } = useUpdatePolicyMutation();
   const { removePolicy, error: removeError } = useRemovePolicyMutation();
+  const { extractClaim } = useExtractClaimMutation();
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const [newPolicy, setNewPolicy] = useState<{
@@ -425,7 +427,7 @@ export default function ManagePolicies() {
     }
   };
 
-  const addFiles = (files: FileList) => {
+  const addFiles = async (files: FileList) => {
     setFileError(null); // Clear previous errors
 
     const currentFileNames = new Set(
@@ -478,6 +480,19 @@ export default function ManagePolicies() {
     if (errorMessage) {
       setFileError(errorMessage.trim());
     }
+
+    if (accepted.length > 0) {
+      try {
+        const res = await extractClaim({ file: [accepted[0]] });
+        const types =
+          (res as any)?.data?.claimTypes?.map((ct: any) => ct.type) || [];
+        if (types.length > 0) {
+          setNewPolicy((prev) => ({ ...prev, claimTypes: types }));
+        }
+      } catch {
+        printMessage("Failed to extract claim types", "error");
+      }
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -486,13 +501,13 @@ export default function ManagePolicies() {
     setDragActive(false);
 
     if (e.dataTransfer.files && e.dataTransfer.files.length) {
-      addFiles(e.dataTransfer.files);
+      void addFiles(e.dataTransfer.files);
     }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length) {
-      addFiles(e.target.files);
+      void addFiles(e.target.files);
     }
   };
 
