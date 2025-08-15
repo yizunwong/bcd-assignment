@@ -1,9 +1,9 @@
 import { format } from "date-fns";
 
-const currency = new Intl.NumberFormat("ms-MY", {
-  style: "currency",
-  currency: "MYR",
-  maximumFractionDigits:0
+const currency = new Intl.NumberFormat("en-US", {
+  style: "decimal",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 4,
 });
 const numberFormatter = new Intl.NumberFormat("ms-MY");
 
@@ -14,7 +14,7 @@ export function formatValue(
   if (value === undefined || value === null) return "-";
   if (typeof value === "number") {
     return opts?.currency
-      ? currency.format(value)
+      ? `${currency.format(value)} ETH`
       : numberFormatter.format(value);
   }
   return value;

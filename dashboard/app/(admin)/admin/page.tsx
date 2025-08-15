@@ -20,7 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import Ticker from '@/components/animata/text/ticker';
+import Ticker from "@/components/animata/text/ticker";
 
 export default function AdminDashboard() {
   const { data: recentClaimsData } = useClaimControllerFindAll({
@@ -123,16 +123,18 @@ export default function AdminDashboard() {
                         <div>
                           <div className="flex items-center space-x-2">
                             <h3 className="font-semibold text-slate-800 dark:text-slate-100">
-                              {claim.id}
+                              {claim.policy?.name || "Unknown Policy"} (
+                              {claim.submitted_by || "Unknown User"})
                             </h3>
                             <Badge
                               variant="secondary"
                               className="bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
                             >
-                              {claim.claim_type}
+                              {claim.type || claim.claim_type}
                             </Badge>
                           </div>
                           <p className="text-sm text-slate-600 dark:text-slate-400">
+                            Claim #{claim.id} •{" "}
                             {new Date(
                               claim.submitted_date
                             ).toLocaleDateString()}

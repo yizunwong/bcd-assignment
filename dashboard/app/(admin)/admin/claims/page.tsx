@@ -43,9 +43,10 @@ import {
 } from "@/hooks/useClaims";
 import { useInsuranceContract } from "@/hooks/useBlockchain";
 import { useQueryClient } from "@tanstack/react-query";
-import { useToast } from '@/components/shared/ToastProvider';
-import Ticker from '@/components/animata/text/ticker';
-import { StatsCard } from '@/components/shared/StatsCard';
+import { useToast } from "@/components/shared/ToastProvider";
+import Ticker from "@/components/animata/text/ticker";
+import { StatsCard } from "@/components/shared/StatsCard";
+import { useAccount } from "wagmi";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -61,11 +62,13 @@ export default function ClaimsReview() {
   const [processingAction, setProcessingAction] = useState<
     "approve" | "reject" | null
   >(null);
+  const [showWalletDialog, setShowWalletDialog] = useState(false);
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const { updateClaimStatus } = useUpdateClaimStatusMutation();
   const { approveClaimOnChain } = useInsuranceContract();
   const { printMessage } = useToast();
   const queryClient = useQueryClient();
+  const { address, isConnected } = useAccount();
 
   const hasFilters = filterStatus !== "all" || !!debouncedSearchTerm;
 
@@ -151,6 +154,16 @@ export default function ClaimsReview() {
   const handleApprove = async (claimId: number) => {
     if (isProcessing) return; // Prevent multiple clicks
 
+    // Check wallet connection first
+    if (!isConnected || !address) {
+      setShowWalletDialog(true);
+      printMessage(
+        "Please connect your wallet to approve claims on the blockchain",
+        "error"
+      );
+      return;
+    }
+
     setIsProcessing(true);
     setProcessingClaimId(claimId);
     setProcessingAction("approve");
@@ -160,19 +173,42 @@ export default function ClaimsReview() {
       let claimHash: string | undefined;
       let blockchainSuccess = false;
 
-      // Try blockchain approval first
+      // Show explicit message about MetaMask requirement
+      printMessage(
+        "Please confirm the transaction in MetaMask to approve the claim on blockchain",
+        "info"
+      );
+
+      // Try blockchain approval first - this should trigger MetaMask
       try {
+        printMessage(
+          "Initiating blockchain approval... Please check MetaMask",
+          "info"
+        );
         claimHash = await approveClaimOnChain(Number(claimId));
         if (claimHash) {
           blockchainSuccess = true;
           console.log("Blockchain approval successful:", claimHash);
+          printMessage("Blockchain transaction confirmed!", "success");
         }
-      } catch (blockchainError) {
-        console.warn(
-          "Blockchain approval failed, proceeding with database-only approval:",
-          blockchainError
-        );
-        // Continue with database approval even if blockchain fails
+      } catch (blockchainError: any) {
+        console.warn("Blockchain approval failed:", blockchainError);
+
+        // Check if user rejected the transaction
+        if (
+          blockchainError?.message?.includes("rejected") ||
+          blockchainError?.message?.includes("denied")
+        ) {
+          printMessage(
+            "Transaction rejected by user. Proceeding with database-only approval.",
+            "info"
+          );
+        } else {
+          printMessage(
+            "Blockchain transaction failed. Proceeding with database-only approval.",
+            "info"
+          );
+        }
       }
 
       // Update database status regardless of blockchain result
@@ -384,10 +420,11 @@ export default function ClaimsReview() {
                       </div>
                       <div>
                         <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-                          {claim.id}
+                          {claim.policy?.name || "Unknown Policy"} (
+                          {claim.submitted_by || "Unknown User"})
                         </h3>
                         <p className="text-slate-600 dark:text-slate-400">
-                          {claim.type}
+                          Claim #{claim.id} • {claim.type}
                         </p>
                       </div>
                     </div>
@@ -492,7 +529,16 @@ export default function ClaimsReview() {
                           size="sm"
                           onClick={() => handleApprove(claim.id)}
                           disabled={isProcessing}
-                          className="gradient-accent text-white floating-button disabled:opacity-50 disabled:cursor-not-allowed"
+                          className={`gradient-accent text-white floating-button disabled:opacity-50 disabled:cursor-not-allowed ${
+                            !isConnected
+                              ? "ring-2 ring-yellow-400 ring-offset-2"
+                              : ""
+                          }`}
+                          title={
+                            !isConnected
+                              ? "Connect wallet to approve on blockchain"
+                              : "Approve claim"
+                          }
                         >
                           {isProcessing &&
                           processingClaimId === claim.id &&
@@ -504,7 +550,7 @@ export default function ClaimsReview() {
                           ) : (
                             <>
                               <CheckCircle className="w-4 h-4 mr-1" />
-                              Approve
+                              {!isConnected ? "Connect & Approve" : "Approve"}
                             </>
                           )}
                         </Button>
@@ -562,7 +608,7 @@ export default function ClaimsReview() {
             <div className="text-center py-6">
               <p className="text-slate-600 dark:text-slate-400 mb-4">
                 {processingAction === "approve"
-                  ? "Please wait while we approve the claim. We'll try blockchain first, then fallback to database approval if needed..."
+                  ? "Please confirm the transaction in MetaMask to approve the claim on blockchain. If blockchain fails, we'll proceed with database approval."
                   : "Please wait while we reject the claim and update the status..."}
               </p>
               <div className="bg-slate-100 dark:bg-slate-800 rounded-lg p-4">
@@ -571,17 +617,77 @@ export default function ClaimsReview() {
                 </p>
                 {processingAction === "approve" && (
                   <p className="text-sm text-slate-500 dark:text-slate-400">
-                    • Attempting blockchain transaction
+                    • Waiting for MetaMask confirmation
                   </p>
                 )}
                 <p className="text-sm text-slate-500 dark:text-slate-400">
                   • Refreshing data
                 </p>
               </div>
+              {processingAction === "approve" && (
+                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <p className="text-sm text-blue-800 dark:text-blue-200 font-medium">
+                    🦊 Check MetaMask for transaction confirmation
+                  </p>
+                </div>
+              )}
               <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
                 <p className="text-sm text-yellow-800 dark:text-yellow-200 font-medium">
                   ⚠️ Please do not close this window or navigate away
                 </p>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Wallet Connection Dialog */}
+        <Dialog open={showWalletDialog} onOpenChange={setShowWalletDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 flex items-center justify-center">
+                  🦊
+                </div>
+                Wallet Connection Required
+              </DialogTitle>
+            </DialogHeader>
+            <div className="text-center py-6">
+              <p className="text-slate-600 dark:text-slate-400 mb-4">
+                To approve claims on the blockchain, you need to connect your
+                MetaMask wallet.
+              </p>
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-4">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  • Connect your wallet using the button in the top right corner
+                </p>
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  • Make sure you're on the correct network (Hardhat/Local)
+                </p>
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  • Ensure your wallet has admin permissions
+                </p>
+              </div>
+              <div className="flex space-x-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowWalletDialog(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowWalletDialog(false);
+                    // The wallet connection should be handled by the connect button in the navbar
+                    printMessage(
+                      "Please use the connect button in the top navigation",
+                      "info"
+                    );
+                  }}
+                  className="flex-1 gradient-accent text-white"
+                >
+                  Got It
+                </Button>
               </div>
             </div>
           </DialogContent>
