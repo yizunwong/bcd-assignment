@@ -50,14 +50,17 @@ export default function PaymentSummary() {
   const router = useRouter();
   const { printMessage } = useToast();
   const { address, isConnected } = useAccount();
-  const { data: balanceData } = useBalance({ address });
+  const { data: balanceData } = useBalance({
+    address,
+    token: process.env.NEXT_PUBLIC_TOKEN_CONTRACT_ADDRESS as `0x${string}`, // ✅ Fetch CoverlyToken balance
+  });
   const balance = balanceData ?? "0";
   const eth = balanceData ? parseFloat(formatUnits(balanceData.value, 18)) : 0;
   const [currentStep] = useState(2);
   const [tokenAmount, setTokenAmount] = useState("");
   const [showTokenDetails, setShowTokenDetails] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("ETH");
+  const [paymentMethod, setPaymentMethod] = useState("CVL");
   const [agreementFile, setAgreementFile] = useState<File | null>(null);
   const [agreementCid, setAgreementCid] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -92,7 +95,7 @@ export default function PaymentSummary() {
       category: policy.data.category,
       provider: policy.data.provider,
       coverage: `$${policy.data.coverage.toLocaleString()}`,
-      premium: `${policy.data.premium} ETH/month`,
+      premium: `${policy.data.premium} /month`,
       rating: policy.data.rating,
       features: policy.data.claim_types ?? [],
       description: String(policy.data.description ?? ""),
@@ -101,7 +104,7 @@ export default function PaymentSummary() {
       discount: 0,
       fees: 0,
       total: policy.data.premium,
-      coverageAmount: policy.data.coverage / 3500, // Convert USD to ETH (approximate)
+      coverageAmount: policy.data.coverage / 3500, // Convert USD to CVL (approximate)
     };
   }, [policy]);
 
@@ -310,7 +313,7 @@ export default function PaymentSummary() {
 
     const { coverageId, txHash } = await createCoverageWithPayment(
       policyData!.coverageAmount,
-      Number(tokenAmount),
+      Number(tokenAmount) * 0.0001,
       parseInt(policyData!.duration.split(" ")[0]),
       cid,
       policyData!.name,
@@ -327,7 +330,7 @@ export default function PaymentSummary() {
       txHash,
       description: `${policyData?.name} Purchased`,
       amount: Number(tokenAmount),
-      currency: "ETH",
+      currency: "CVL",
       status: "confirmed",
       type: "sent",
     });
@@ -337,7 +340,7 @@ export default function PaymentSummary() {
       txHash,
       description: `${policyData?.name} Purchased`,
       amount: Number(tokenAmount),
-      currency: "ETH",
+      currency: "CVL",
       status: "confirmed",
       type: "sent",
       createdAt: new Date().toISOString(),
@@ -377,7 +380,7 @@ export default function PaymentSummary() {
       console.error(err);
       const message =
         err?.message === "INSUFFICIENT_FUNDS"
-          ? "Not enough ETH for premium and gas."
+          ? "Not enough CVL for premium and gas."
           : err?.message === "NO_AGREEMENT_FILE"
           ? "Please upload the signed agreement."
           : "Payment failed. Please try again.";
@@ -584,7 +587,7 @@ export default function PaymentSummary() {
               </CardHeader>
               <CardContent className="space-y-8">
                 {/* Wallet Connection Status */}
-                {paymentMethod === "ETH" && (
+                {paymentMethod === "CVL" && (
                   <div
                     className={`p-4 rounded-xl border-2 ${
                       isConnected
@@ -617,12 +620,12 @@ export default function PaymentSummary() {
                     )}
                     {isConnected && (
                       <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-                        Balance: {eth} ETH
+                        Balance: {eth} CVL
                       </p>
                     )}
                     {!isConnected && (
                       <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-                        Please connect your wallet to proceed with ETH payment
+                        Please connect your wallet to proceed with CVL payment
                       </p>
                     )}
                   </div>
@@ -634,7 +637,7 @@ export default function PaymentSummary() {
                     Payment Method
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
-                    {["ETH", "STRIPE"].map((method) => (
+                    {["CVL", "STRIPE"].map((method) => (
                       <button
                         key={method}
                         onClick={() => setPaymentMethod(method)}
@@ -679,7 +682,7 @@ export default function PaymentSummary() {
                         Base Premium (12 months)
                       </span>
                       <span className="font-medium text-slate-800 dark:text-slate-100">
-                        {policyData.basePrice} ETH
+                        {policyData.basePrice} CVL
                       </span>
                     </div>
 
@@ -694,7 +697,7 @@ export default function PaymentSummary() {
                         </div>
                       </div>
                       <span className="font-medium">
-                        -{policyData.discount} ETH
+                        -{policyData.discount} CVL
                       </span>
                     </div>
 
@@ -711,7 +714,7 @@ export default function PaymentSummary() {
                         </div>
                       </div>
                       <span className="font-medium text-slate-800 dark:text-slate-100">
-                        {policyData.fees} ETH
+                        {policyData.fees} CVL
                       </span>
                     </div>
 
@@ -721,7 +724,7 @@ export default function PaymentSummary() {
                           Total Amount
                         </span>
                         <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                          {policyData.total} ETH
+                          {policyData.total} CVL
                         </span>
                       </div>
                       <p className="text-sm text-slate-500 dark:text-slate-400 text-right mt-1">
@@ -778,7 +781,7 @@ export default function PaymentSummary() {
                           </span>
                         </div>
                         <p className="text-sm text-blue-700 dark:text-blue-300">
-                          Available: 5.2847 ETH ≈ $18,420 USD
+                          Available: 5.2847 CVL ≈ $18,420 USD
                         </p>
                       </div>
                     )}
@@ -917,7 +920,7 @@ export default function PaymentSummary() {
                       isCreatingCoverage ||
                       isUploadingAgreement ||
                       isWaitingForTransaction ||
-                      (paymentMethod === "ETH" && !isConnected) ||
+                      (paymentMethod === "CVL" && !isConnected) ||
                       (paymentMethod !== "STRIPE" && !tokenAmount)
                     }
                     className="flex-1 gradient-accent text-white floating-button relative overflow-hidden"

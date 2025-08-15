@@ -1,6 +1,12 @@
 [
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "tokenAddress",
+        "type": "address"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "constructor"
   },
@@ -28,6 +34,17 @@
   {
     "inputs": [],
     "name": "ReentrancyGuardReentrantCall",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "SafeERC20FailedOperation",
     "type": "error"
   },
   {
@@ -391,7 +408,7 @@
         "type": "uint256"
       }
     ],
-    "stateMutability": "payable",
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -489,7 +506,7 @@
   },
   {
     "inputs": [],
-    "name": "getContractBalance",
+    "name": "getContractTokenBalance",
     "outputs": [
       {
         "internalType": "uint256",
@@ -750,7 +767,20 @@
     ],
     "name": "payPremium",
     "outputs": [],
-    "stateMutability": "payable",
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "paymentToken",
+    "outputs": [
+      {
+        "internalType": "contract IERC20",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -841,7 +871,7 @@
   },
   {
     "inputs": [],
-    "name": "withdrawBalance",
+    "name": "withdrawTokenBalance",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
