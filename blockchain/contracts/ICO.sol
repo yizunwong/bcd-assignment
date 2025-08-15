@@ -10,7 +10,7 @@ using SafeERC20 for IERC20;
 
 contract ICO is Pausable, Ownable {
     IERC20 public token;
-    uint256 public price = 1 ether; // 1 ETH per token
+    uint256 public price = 0.0001 ether; // 0.0001 ETH per token
     uint256 public totalTokensSold;
     uint256 public totalRaised;
     

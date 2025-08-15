@@ -5,15 +5,27 @@ import {
   useAccount,
   usePublicClient,
 } from "wagmi";
-import { parseEther, decodeEventLog, keccak256, stringToBytes } from "viem";
+import {
+  parseEther,
+  decodeEventLog,
+  keccak256,
+  stringToBytes,
+  getAddress,
+} from "viem";
 import { useToast } from "@/components/shared/ToastProvider";
 import InsuranceContractAbi from "@/abi/InsuranceContract.json";
+import ICOAbi from "@/abi/ICO.json";
 
 const INSURANCE_CONTRACT_ABI = InsuranceContractAbi;
+const ICO_CONTRACT_ABI = ICOAbi;
 
-// Contract address - you'll need to update this with your deployed contract address
-const INSURANCE_CONTRACT_ADDRESS = process.env
-  .NEXT_PUBLIC_INSURANCE_CONTRACT_ADDRESS as `0x${string}`;
+// Contract addresses from environment (validated & checksummed)
+const INSURANCE_CONTRACT_ADDRESS = getAddress(
+  process.env.NEXT_PUBLIC_INSURANCE_CONTRACT_ADDRESS as string
+) as `0x${string}`;
+const ICO_CONTRACT_ADDRESS = getAddress(
+  process.env.NEXT_PUBLIC_ICO_CONTRACT_ADDRESS as string
+) as `0x${string}`;
 const INSURANCE_ADMIN_ROLE_HASH = keccak256(
   stringToBytes("INSURANCE_ADMIN_ROLE")
 );
@@ -71,6 +83,13 @@ export function useInsuranceContract() {
     writeContractAsync: removeAdmin,
     isPending: isRemovingAdmin,
     error: removeAdminError,
+  } = useWriteContract();
+
+  // Buy Coverly tokens
+  const {
+    writeContractAsync: buyToken,
+    isPending: isBuyingToken,
+    error: buyTokenError,
   } = useWriteContract();
 
   // Get user coverages
@@ -165,6 +184,29 @@ export function useInsuranceContract() {
     } catch (error) {
       console.error("Error paying premium:", error);
       printMessage("Failed to pay premium", "error");
+    }
+  };
+
+  // Buy Coverly tokens from ICO contract
+  const buyCoverlyTokens = async (amount: number) => {
+    if (!address) {
+      printMessage("Please connect your wallet first", "error");
+      return;
+    }
+
+    try {
+      const costWei = BigInt(amount) * parseEther("0.0001");
+
+      await buyToken({
+        address: ICO_CONTRACT_ADDRESS,
+        abi: ICO_CONTRACT_ABI,
+        functionName: "buyToken",
+        value: costWei,
+      });
+      printMessage("Tokens purchased", "success");
+    } catch (error) {
+      console.error("Error buying tokens:", error);
+      printMessage("Failed to buy tokens", "error");
     }
   };
 
@@ -335,6 +377,7 @@ export function useInsuranceContract() {
     createCoverageWithPayment,
     payPremiumForCoverage,
     fileClaimForCoverage,
+    buyCoverlyTokens,
     approveClaimOnChain,
     grantAdminRole,
     revokeAdminRole,
@@ -353,6 +396,7 @@ export function useInsuranceContract() {
     isLoadingUserCoverages,
     isWaitingPay,
     isPaySuccess,
+    isBuyingToken,
 
     // Data
     userCoverages,
@@ -360,6 +404,9 @@ export function useInsuranceContract() {
     payPremiumData,
     fileClaimData,
     approveClaimData,
+
+    // ICO
+    buyTokenError,
 
     // Errors
     createCoverageError,

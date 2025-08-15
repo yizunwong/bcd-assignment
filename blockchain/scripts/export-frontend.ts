@@ -1,44 +1,78 @@
 // scripts/export-artifacts.ts
 import { promises as fs } from "fs";
 import path from "path";
+import { getAddress } from "ethers";
+
+interface ContractInfo {
+  name: string;
+  address: string;
+  dashboardKey: string;
+  backendKey: string;
+}
 
 async function main() {
-  // 1) Read Hardhat artifact
-  const artifactPath = path.join(
-    process.cwd(),
-    "artifacts",
-    "contracts",
-    "InsuranceContract.sol",
-    "InsuranceContract.json"
+  const defaultAddresses = [
+    "0x5FbDB2315678afecb367f032d93F642f64180aa3", // CoverlyToken
+    "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512", // ICO
+    "0x9fE46736679D2d9a65f0992F2272dd7dC6eF1c4A", // InsuranceContract
+  ];
+
+  const tokenAddress = getAddress(process.argv[2] || defaultAddresses[0]);
+  const icoAddress = getAddress(process.argv[3] || defaultAddresses[1]);
+  const insuranceAddress = getAddress(
+    process.argv[4] || defaultAddresses[2]
   );
-  const artifactRaw = await fs.readFile(artifactPath, "utf-8");
-  const artifact = JSON.parse(artifactRaw);
 
-  // 2) CLI arg for address (fallback to default)
-  const cliAddress = process.argv[2];
-  const address = cliAddress || "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+  const contracts: ContractInfo[] = [
+    {
+      name: "CoverlyToken",
+      address: tokenAddress,
+      dashboardKey: "NEXT_PUBLIC_TOKEN_CONTRACT_ADDRESS",
+      backendKey: "TOKEN_CONTRACT_ADDRESS",
+    },
+    {
+      name: "ICO",
+      address: icoAddress,
+      dashboardKey: "NEXT_PUBLIC_ICO_CONTRACT_ADDRESS",
+      backendKey: "ICO_CONTRACT_ADDRESS",
+    },
+    {
+      name: "InsuranceContract",
+      address: insuranceAddress,
+      dashboardKey: "NEXT_PUBLIC_INSURANCE_CONTRACT_ADDRESS",
+      backendKey: "INSURANCE_CONTRACT_ADDRESS",
+    },
+  ];
 
-  // === Export to Dashboard ===
   const dashboardAbiDir = path.join(process.cwd(), "../dashboard/abi");
   await fs.mkdir(dashboardAbiDir, { recursive: true });
-  await fs.writeFile(
-    path.join(dashboardAbiDir, "InsuranceContract.json"),
-    JSON.stringify(artifact.abi, null, 2),
-    "utf-8"
-  );
 
   const dashboardEnv = path.join(process.cwd(), "../dashboard", ".env");
-  await updateEnvFile(
-    dashboardEnv,
-    address,
-    "NEXT_PUBLIC_INSURANCE_CONTRACT_ADDRESS"
-  );
-
   const backendEnv = path.join(process.cwd(), "../backend", ".env");
-  await updateEnvFile(backendEnv, address, "INSURANCE_CONTRACT_ADDRESS");
 
-  console.log("✅ ABI exported to dashboard and backend");
-  console.log("✅ Contract address updated in both .env files");
+  for (const contract of contracts) {
+    const artifactPath = path.join(
+      process.cwd(),
+      "artifacts",
+      "contracts",
+      `${contract.name}.sol`,
+      `${contract.name}.json`
+    );
+    const artifactRaw = await fs.readFile(artifactPath, "utf-8");
+    const artifact = JSON.parse(artifactRaw);
+
+    await fs.writeFile(
+      path.join(dashboardAbiDir, `${contract.name}.json`),
+      JSON.stringify(artifact.abi, null, 2),
+      "utf-8"
+    );
+
+    await updateEnvFile(dashboardEnv, contract.address, contract.dashboardKey);
+    await updateEnvFile(backendEnv, contract.address, contract.backendKey);
+  }
+
+  console.log("✅ ABIs exported to dashboard");
+  console.log("✅ Contract addresses updated in dashboard and backend .env files");
 }
 
 async function updateEnvFile(envPath: string, address: string, envKey: string) {
