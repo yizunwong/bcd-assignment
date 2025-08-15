@@ -316,11 +316,6 @@ export default function BrowsePolicies() {
                   key={policy.id}
                   className="glass-card rounded-2xl card-hover relative overflow-hidden"
                 >
-                  {policy.status === "deactivated" && (
-                    <Badge className="absolute top-4 left-4 status-badge status-error">
-                      Deactivated
-                    </Badge>
-                  )}
                   {policy.popular && (
                     <Badge className="absolute top-4 right-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white">
                       Popular
