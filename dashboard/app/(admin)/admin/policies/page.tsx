@@ -1156,7 +1156,7 @@ export default function ManagePolicies() {
                           Coverage
                         </p>
                         <p className="font-semibold text-slate-800 dark:text-slate-100">
-                          RM {policy.coverage}
+                          RM {policy.coverage?.toLocaleString()}
                         </p>
                       </div>
                       <div>
@@ -1235,7 +1235,9 @@ export default function ManagePolicies() {
                       <Button
                         variant="outline"
                         className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20"
-                        onClick={() => handleDeactivatePolicy(Number(policy.id))}
+                        onClick={() =>
+                          handleDeactivatePolicy(Number(policy.id))
+                        }
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
