@@ -74,12 +74,24 @@ NEXT_PUBLIC_INSURANCE_CONTRACT_ADDRESS=0x... # Use the address from deployment
 
 ### 3. Start Development Servers
 
+Run the below commands in sequential order:
+
+1. Start the Hardhat local node
+2. Deploy the smart contracts
+3. Generate Supabase types
+4. Run the backend API
+5. Run the dashboard
+
 ```bash
+# blockchain
 cd blockchain
 npx hardhat node
+npx run deploy
 
 # backend API
 cd ../backend
+npm supabase:types-window # Run this if you are using Windows operating system
+npm supabase:types-unix # Run this if you are using Unix-based operating system
 npm run dev
 
 # dashboard
@@ -145,17 +157,23 @@ The Next.js dashboard (`/dashboard`) provides the UI for different user roles:
   - Policy browsing and filtering
   - Document upload and management
   - Wallet integration for blockchain transactions
+  - User profile management
 
-- **Admin Features**:
+- **Insurance Admin Features**:
 
   - Review and approve claims with detailed inspection
   - Manage policies and users with administrative controls
   - View comprehensive analytics and reports
-  - Configure system settings and parameters
   - Monitor real-time platform activity
   - Track financial metrics and performance indicators
   - Manage insurance providers and coverage types
   - Access audit logs for security monitoring
+  - User profile management
+
+- **System Admin Features**:
+
+  - Manage system administrators and users
+  - Monitor real-time user activity
 
 - **System Integration**:
   - Custom React hooks in `dashboard/hooks` fetch data, submit transactions, and poll notifications
@@ -192,7 +210,6 @@ The notifications system provides real-time updates to users about important eve
   - ReentrancyGuard to prevent reentrancy attacks
   - AccessControl for role-based permissions
   - Input validation for all function parameters
-  - Safe math operations to prevent overflow/underflow
 
 - **API Security**:
 
@@ -205,25 +222,10 @@ The notifications system provides real-time updates to users about important eve
   - Supabase Row Level Security (RLS) for database protection
 
 - **Frontend Security**:
-  - Protected routes based on user roles
+  - Middleware for protected routes based on user roles
   - Secure API calls with authentication headers
   - Form validation and sanitization
   - Secure storage of sensitive information
-
-## ✅ Testing
-
-Run the available tests for each component:
-
-```bash
-# Backend unit tests
-cd backend && npm test
-
-# Blockchain contract tests
-cd ../blockchain && npm test
-
-# Dashboard tests (if available)
-cd ../dashboard && npm test
-```
 
 ## 🔍 Troubleshooting
 
@@ -249,14 +251,6 @@ cd ../dashboard && npm test
    - Check gas limit and gas price
    - Verify contract state and requirements
    - Check for any revert conditions
-
-### Debug Mode
-
-Enable debug logging by setting:
-
-```env
-NEXT_PUBLIC_DEBUG=true
-```
 
 ## 📄 License
 
