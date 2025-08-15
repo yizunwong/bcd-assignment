@@ -128,27 +128,9 @@ export default function UserRoleManagement() {
     [usersData]
   );
 
-  const { grantAdminRole, revokeAdminRole, isInsuranceAdmin } =
+  const { grantAdminRole, revokeAdminRole } =
     useInsuranceContract();
   const [onChainAdmins, setOnChainAdmins] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    const fetchRoles = async () => {
-      const entries = await Promise.all(
-        users
-          .filter(
-            (u: any) =>
-              u.roleOriginal === "insurance_admin" && u.walletAddress
-          )
-          .map(async (u: any) => [
-            u.id,
-            await isInsuranceAdmin(u.walletAddress as `0x${string}`),
-          ])
-      );
-      setOnChainAdmins(Object.fromEntries(entries));
-    };
-    fetchRoles();
-  }, [users, isInsuranceAdmin]);
 
   const [newUserData, setNewUserData] = useState({
     email: "",

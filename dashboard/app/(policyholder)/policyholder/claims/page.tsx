@@ -446,13 +446,6 @@ export default function Claims() {
                     Loading claims...
                   </h3>
                 </div>
-              ) : displayedClaims.length === 0 ? (
-                <div className="col-span-full text-center py-12">
-                  <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                  <p className="text-slate-600 dark:text-slate-400">
-                    No claims found.
-                  </p>
-                </div>
               ) : (
                 displayedClaims.map((claim) => (
                   <Card key={claim.id} className="glass-card rounded-2xl">
