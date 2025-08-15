@@ -57,7 +57,6 @@ import {
 import { useDebounce } from "@/hooks/useDebounce";
 import { useToast } from "@/components/shared/ToastProvider";
 import { useAuthStore } from "@/store/useAuthStore";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   PolicyControllerFindAllCategory,
   CreatePolicyDtoCategory,
@@ -114,7 +113,6 @@ export default function ManagePolicies() {
   const { data: statsData } = usePolicyStatsQuery();
   const { updatePolicy, error: updateError } = useUpdatePolicyMutation();
   const { removePolicy, error: removeError } = useRemovePolicyMutation();
-  const queryClient = useQueryClient();
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const [newPolicy, setNewPolicy] = useState<{
