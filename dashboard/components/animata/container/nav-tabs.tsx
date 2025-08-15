@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 
@@ -44,10 +44,16 @@ export default function NavTabs({ tabs, className }: { tabs: NavTab[]; className
 
 const Tab = ({ tab, selected, setSelected }: TabProps) => {
   const Icon = tab.icon;
+  const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (selected) {
+      e.preventDefault();
+    }
+    setSelected(tab.href);
+  };
   return (
     <Link
       href={tab.href}
-      onClick={() => setSelected(tab.href)}
+      onClick={handleClick}
       className={cn(
         "relative flex items-center justify-center gap-1 rounded-md p-2 text-sm transition-all min-w-20",
         selected
