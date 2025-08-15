@@ -134,7 +134,6 @@ export default function ClaimsReview() {
     try {
       const claimHash = await approveClaimOnChain(Number(claimId));
       if (!claimHash) {
-        printMessage("Failed to approve claim", "error");
         return;
       }
 

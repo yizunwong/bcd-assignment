@@ -38,7 +38,7 @@ export class UserService {
 
     let profileQuery = supabase
       .from('user_details')
-      .select('user_id, first_name, last_name, status, phone');
+      .select('user_id, first_name, last_name, status, phone, wallet_address');
 
     if (status) {
       profileQuery = profileQuery.eq('status', status);
@@ -55,7 +55,12 @@ export class UserService {
 
     type Profile = Pick<
       Database['public']['Tables']['user_details']['Row'],
-      'user_id' | 'first_name' | 'last_name' | 'status' | 'phone'
+      | 'user_id'
+      | 'first_name'
+      | 'last_name'
+      | 'status'
+      | 'phone'
+      | 'wallet_address'
     >;
 
     const typedProfiles: Profile[] = Array.isArray(profiles) ? profiles : [];
@@ -76,6 +81,7 @@ export class UserService {
         role:
           parseAppMetadata(auth?.app_metadata).role ?? UserRole.POLICYHOLDER,
         phone: profile.phone ?? null,
+        walletAddress: profile.wallet_address ?? null,
         status: (profile.status as UserStatus) ?? UserStatus.ACTIVE,
         lastLogin: auth?.last_sign_in_at,
         joinedAt: auth?.created_at,
@@ -116,6 +122,7 @@ export class UserService {
       last_name,
       status,
       phone,
+      wallet_address,
       bio,
       admin_details (
         company:companies (
@@ -166,6 +173,7 @@ export class UserService {
         parseAppMetadata(authUser.user.app_metadata).role ??
         UserRole.POLICYHOLDER,
       phone: profile.phone ?? null,
+      walletAddress: profile.wallet_address ?? null,
       bio: profile.bio ?? null,
       status: profile.status as UserStatus,
       lastLogin: authUser.user.last_sign_in_at,
@@ -253,6 +261,7 @@ export class UserService {
           parseAppMetadata(authUser.user.app_metadata).role ??
           UserRole.POLICYHOLDER,
         phone: profile.phone ?? null,
+        walletAddress: profile.wallet_address ?? null,
         bio: dto.bio ?? null,
         status: UserStatus.ACTIVE,
         lastLogin: authUser.user.last_sign_in_at,
@@ -302,6 +311,7 @@ export class UserService {
           first_name: firstName,
           last_name: lastName,
           phone: dto.phone,
+          wallet_address: dto.walletAddress ?? null,
         },
       ])
       .select()
@@ -423,30 +433,35 @@ export class UserService {
   ): Promise<CommonResponseDto<UserResponseDto>> {
     const supabase = this.supabaseService.createClientWithToken();
 
+    const authUpdate: any = {};
+    if (dto.email) authUpdate.email = dto.email;
+    if (dto.password) authUpdate.password = dto.password;
+    if (dto.role)
+      authUpdate.app_metadata = {
+        role: dto.role,
+      };
+
     const { error: authError } = await supabase.auth.admin.updateUserById(
       user_id,
-      {
-        email: dto.email,
-        password: dto.password,
-        app_metadata: {
-          role: dto.role,
-        },
-      },
+      authUpdate,
     );
 
     if (authError) {
       throw new SupabaseException('Failed to update auth user', authError);
     }
 
+    const profileUpdate: any = {
+      status: dto.status,
+      first_name: dto.firstName,
+      last_name: dto.lastName,
+      phone: dto.phone,
+      bio: dto.bio,
+    };
+    if (dto.walletAddress) profileUpdate.wallet_address = dto.walletAddress;
+
     const { error: profileError } = await supabase
       .from('user_details')
-      .update({
-        status: dto.status,
-        first_name: dto.firstName,
-        last_name: dto.lastName,
-        phone: dto.phone,
-        bio: dto.bio,
-      })
+      .update(profileUpdate)
       .eq('user_id', user_id);
 
     if (profileError) {

@@ -123,6 +123,7 @@ export interface RegisterDto {
   role: RegisterDtoRole;
   phone?: string;
   bio?: string;
+  walletAddress: string;
   company?: CompanyDetailsDto;
   dateOfBirth?: string;
   occupation?: string;
@@ -204,6 +205,11 @@ export type UserResponseDtoPhone = { [key: string]: unknown } | null;
  */
 export type UserResponseDtoBio = { [key: string]: unknown } | null;
 
+/**
+ * @nullable
+ */
+export type UserResponseDtoWalletAddress = { [key: string]: unknown } | null;
+
 export type UserResponseDtoStatus =
   (typeof UserResponseDtoStatus)[keyof typeof UserResponseDtoStatus];
 
@@ -228,6 +234,8 @@ export interface UserResponseDto {
   phone?: UserResponseDtoPhone;
   /** @nullable */
   bio?: UserResponseDtoBio;
+  /** @nullable */
+  walletAddress?: UserResponseDtoWalletAddress;
   status: UserResponseDtoStatus;
   lastLogin?: UserResponseDtoLastLogin;
   joinedAt?: UserResponseDtoJoinedAt;
@@ -259,6 +267,7 @@ export interface CreateUserDto {
   role: CreateUserDtoRole;
   phone?: string;
   bio?: string;
+  walletAddress?: string;
   company?: CompanyDetailsDto;
   dateOfBirth?: string;
   occupation?: string;
@@ -292,6 +301,7 @@ export interface UpdateUserDto {
   role?: UpdateUserDtoRole;
   phone?: string;
   bio?: string;
+  walletAddress?: string;
   company?: CompanyDetailsDto;
   dateOfBirth?: string;
   occupation?: string;
