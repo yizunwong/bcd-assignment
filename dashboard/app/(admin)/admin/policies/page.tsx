@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +57,7 @@ import {
 import { useDebounce } from "@/hooks/useDebounce";
 import { useToast } from "@/components/shared/ToastProvider";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   PolicyControllerFindAllCategory,
   CreatePolicyDtoCategory,
@@ -67,6 +69,22 @@ import Ticker from "@/components/animata/text/ticker";
 import { StatsCard } from "@/components/shared/StatsCard";
 
 const ITEMS_PER_PAGE = 10;
+
+// Zod validation schema for Create Policy form
+const CreatePolicySchema = z.object({
+  name: z.string().min(1, "Policy name is required"),
+  category: z.string().min(1, "Category is required"),
+  coverage: z.number().min(0.01, "Coverage amount must be greater than 0"),
+  premium: z.number().min(0.01, "Premium must be greater than 0"),
+  duration: z.number().int().min(1, "Duration must be at least 1 day"),
+  description: z.string().min(1, "Description is required"),
+  claimTypes: z
+    .array(z.string().min(1, "Claim type cannot be empty"))
+    .min(1, "At least one claim type is required"),
+  documents: z
+    .array(z.instanceof(File))
+    .min(1, "At least one policy document is required"),
+});
 
 export default function ManagePolicies() {
   const [activeTab, setActiveTab] = useState("all");
@@ -81,7 +99,14 @@ export default function ManagePolicies() {
   const [currentPage, setCurrentPage] = useState(1);
   const [uploadedTermsFiles, setUploadedTermsFiles] = useState<File[]>([]);
   const [dragActive, setDragActive] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSubmissionDialog, setShowSubmissionDialog] = useState(false);
   const { printMessage } = useToast();
+  const queryClient = useQueryClient();
 
   const userId = useAuthStore((state) => state.userId);
   const { createPolicy, error: createError } = useCreatePolicyMutation();
@@ -95,17 +120,17 @@ export default function ManagePolicies() {
   const [newPolicy, setNewPolicy] = useState<{
     name: string;
     category: "" | PolicyControllerFindAllCategory;
-    coverage: number;
-    premium: number;
-    duration: number;
+    coverage: string;
+    premium: string;
+    duration: string;
     description: string;
     claimTypes: string[];
   }>({
     name: "",
     category: "",
-    coverage: 0,
-    premium: 0,
-    duration: 0,
+    coverage: "",
+    premium: "",
+    duration: "",
     description: "",
     claimTypes: [""],
   });
@@ -224,16 +249,58 @@ export default function ManagePolicies() {
   };
 
   const handleCreatePolicy = async () => {
+    // Prevent multiple submissions
+    if (isSubmitting) return;
+
+    // Clear previous validation errors
+    setValidationErrors({});
+    setFileError(null);
+
+    // Prepare data for validation
+    const policyData = {
+      name: newPolicy.name,
+      category: newPolicy.category,
+      coverage: parseFloat(newPolicy.coverage) || 0,
+      premium: parseFloat(newPolicy.premium) || 0,
+      duration: parseInt(newPolicy.duration) || 0,
+      description: newPolicy.description,
+      claimTypes: newPolicy.claimTypes.filter((c) => c.trim() !== ""),
+      documents: uploadedTermsFiles,
+    };
+
+    // Validate using Zod
+    const validation = CreatePolicySchema.safeParse(policyData);
+    if (!validation.success) {
+      const errors: Record<string, string> = {};
+      validation.error.errors.forEach((error) => {
+        if (error.path[0]) {
+          const fieldName = error.path[0] as string;
+          if (fieldName === "documents") {
+            setFileError(error.message);
+          } else {
+            errors[fieldName] = error.message;
+          }
+        }
+      });
+      setValidationErrors(errors);
+      printMessage("Please fix the validation errors", "error");
+      return;
+    }
+
+    // Set submitting state
+    setIsSubmitting(true);
+    setShowSubmissionDialog(true);
+
     try {
       const res = await createPolicy({
-        name: newPolicy.name,
-        category: newPolicy.category as CreatePolicyDtoCategory,
-        coverage: newPolicy.coverage,
-        durationDays: newPolicy.duration,
-        premium: newPolicy.premium,
+        name: policyData.name,
+        category: policyData.category as CreatePolicyDtoCategory,
+        coverage: policyData.coverage,
+        durationDays: policyData.duration,
+        premium: policyData.premium,
         rating: 0,
-        description: newPolicy.description,
-        claimTypes: newPolicy.claimTypes.filter((c) => c),
+        description: policyData.description,
+        claimTypes: policyData.claimTypes,
       });
       const createdId = (res as any)?.data?.id;
       if (createdId && uploadedTermsFiles.length) {
@@ -242,9 +309,33 @@ export default function ManagePolicies() {
         });
       }
       printMessage(
-        (res as any)?.message || "Policy created successfully",
+        (res as any)?.message || "Policy created successfully!",
         "success"
       );
+
+      // Invalidate queries to refresh the data
+      await queryClient.invalidateQueries({ queryKey: ["/policy"] });
+
+      // Reset form
+      setIsCreateDialogOpen(false);
+      setShowSubmissionDialog(false);
+      setNewPolicy({
+        name: "",
+        category: "",
+        coverage: "",
+        premium: "",
+        duration: "",
+        description: "",
+        claimTypes: [""],
+      });
+      setUploadedTermsFiles([]);
+      setFileError(null);
+      setValidationErrors({});
+
+      // Trigger page refresh after a short delay to prevent duplicate submissions
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (err) {
       printMessage(
         typeof err === "string"
@@ -252,19 +343,10 @@ export default function ManagePolicies() {
           : createError || "Failed to create policy",
         "error"
       );
+    } finally {
+      setIsSubmitting(false);
+      setShowSubmissionDialog(false);
     }
-
-    setIsCreateDialogOpen(false);
-    setNewPolicy({
-      name: "",
-      category: "",
-      coverage: 0,
-      premium: 0,
-      duration: 0,
-      description: "",
-      claimTypes: [""],
-    });
-    setUploadedTermsFiles([]);
   };
 
   const handleUpdatePolicy = async (policy: Policy) => {
@@ -346,25 +428,58 @@ export default function ManagePolicies() {
   };
 
   const addFiles = (files: FileList) => {
-    const accepted = Array.from(files).filter((file) => {
+    setFileError(null); // Clear previous errors
+
+    const currentFileNames = new Set(
+      uploadedTermsFiles.map((f) => f.name.toLowerCase())
+    );
+    const accepted: File[] = [];
+    let hadDuplicate = false;
+    let hadLargeFile = false;
+    let hadNonPdf = false;
+
+    for (const file of Array.from(files)) {
       const isPdf =
         file.type === "application/pdf" || file.name.endsWith(".pdf");
       const isSizeOk = file.size <= 10 * 1024 * 1024; // 10MB
+      const fileName = file.name.toLowerCase();
+
       if (!isPdf) {
-        alert("Only PDF files are allowed.");
-        return false;
+        hadNonPdf = true;
+        continue;
       }
+
       if (!isSizeOk) {
-        alert("Each file must be 10MB or less.");
-        return false;
+        hadLargeFile = true;
+        continue;
       }
-      return true;
-    });
-    if (accepted.length + uploadedTermsFiles.length > 3) {
-      alert("You can only upload up to 3 documents.");
-      accepted.splice(3 - uploadedTermsFiles.length);
+
+      if (currentFileNames.has(fileName)) {
+        hadDuplicate = true;
+        continue;
+      }
+
+      accepted.push(file);
+      currentFileNames.add(fileName);
     }
-    setUploadedTermsFiles([...uploadedTermsFiles, ...accepted]);
+
+    const merged = [...uploadedTermsFiles, ...accepted];
+    if (merged.length > 3) {
+      setFileError("You can only upload up to 3 documents.");
+      setUploadedTermsFiles(merged.slice(0, 3));
+    } else {
+      setUploadedTermsFiles(merged);
+    }
+
+    // Show error messages
+    let errorMessage = "";
+    if (hadNonPdf) errorMessage += "Only PDF files are allowed. ";
+    if (hadLargeFile) errorMessage += "Files must be 10MB or less. ";
+    if (hadDuplicate) errorMessage += "Duplicate file names are not allowed. ";
+
+    if (errorMessage) {
+      setFileError(errorMessage.trim());
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -424,7 +539,26 @@ export default function ManagePolicies() {
           </div>
           <Dialog
             open={isCreateDialogOpen}
-            onOpenChange={setIsCreateDialogOpen}
+            onOpenChange={(open) => {
+              if (!isSubmitting) {
+                setIsCreateDialogOpen(open);
+                if (!open) {
+                  // Reset form when dialog is closed
+                  setNewPolicy({
+                    name: "",
+                    category: "",
+                    coverage: "",
+                    premium: "",
+                    duration: "",
+                    description: "",
+                    claimTypes: [""],
+                  });
+                  setUploadedTermsFiles([]);
+                  setFileError(null);
+                  setValidationErrors({});
+                }
+              }
+            }}
           >
             <DialogTrigger asChild>
               <Button className="gradient-accent text-white floating-button">
@@ -444,12 +578,25 @@ export default function ManagePolicies() {
                     </label>
                     <Input
                       value={newPolicy.name}
-                      onChange={(e) =>
-                        setNewPolicy({ ...newPolicy, name: e.target.value })
-                      }
+                      onChange={(e) => {
+                        setNewPolicy({ ...newPolicy, name: e.target.value });
+                        if (validationErrors.name) {
+                          setValidationErrors((prev) => ({
+                            ...prev,
+                            name: "",
+                          }));
+                        }
+                      }}
                       placeholder="Enter policy name"
-                      className="form-input"
+                      className={`form-input ${
+                        validationErrors.name ? "border-red-500" : ""
+                      }`}
                     />
+                    {validationErrors.name && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {validationErrors.name}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -457,14 +604,24 @@ export default function ManagePolicies() {
                     </label>
                     <Select
                       value={newPolicy.category}
-                      onValueChange={(value) =>
+                      onValueChange={(value) => {
                         setNewPolicy({
                           ...newPolicy,
                           category: value as PolicyControllerFindAllCategory,
-                        })
-                      }
+                        });
+                        if (validationErrors.category) {
+                          setValidationErrors((prev) => ({
+                            ...prev,
+                            category: "",
+                          }));
+                        }
+                      }}
                     >
-                      <SelectTrigger className="form-input">
+                      <SelectTrigger
+                        className={`form-input ${
+                          validationErrors.category ? "border-red-500" : ""
+                        }`}
+                      >
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
@@ -473,6 +630,11 @@ export default function ManagePolicies() {
                         <SelectItem value="crop">Crop Insurance</SelectItem>
                       </SelectContent>
                     </Select>
+                    {validationErrors.category && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {validationErrors.category}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -485,14 +647,34 @@ export default function ManagePolicies() {
                       value={newPolicy.coverage}
                       type="number"
                       step={0.01}
-                      onChange={(e) =>
+                      min={0}
+                      onChange={(e) => {
                         setNewPolicy({
                           ...newPolicy,
-                          coverage: Number(e.target.value),
-                        })
-                      }
-                      className="form-input"
+                          coverage: e.target.value,
+                        });
+                        if (validationErrors.coverage) {
+                          setValidationErrors((prev) => ({
+                            ...prev,
+                            coverage: "",
+                          }));
+                        }
+                      }}
+                      onFocus={(e) => {
+                        if (e.target.value === "0") {
+                          e.target.select();
+                        }
+                      }}
+                      placeholder="Enter coverage amount"
+                      className={`form-input ${
+                        validationErrors.coverage ? "border-red-500" : ""
+                      }`}
                     />
+                    {validationErrors.coverage && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {validationErrors.coverage}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -502,14 +684,34 @@ export default function ManagePolicies() {
                       value={newPolicy.premium}
                       type="number"
                       step={0.01}
-                      onChange={(e) =>
+                      min={0}
+                      onChange={(e) => {
                         setNewPolicy({
                           ...newPolicy,
-                          premium: parseFloat(e.target.value),
-                        })
-                      }
-                      className="form-input"
+                          premium: e.target.value,
+                        });
+                        if (validationErrors.premium) {
+                          setValidationErrors((prev) => ({
+                            ...prev,
+                            premium: "",
+                          }));
+                        }
+                      }}
+                      onFocus={(e) => {
+                        if (e.target.value === "0") {
+                          e.target.select();
+                        }
+                      }}
+                      placeholder="Enter premium amount"
+                      className={`form-input ${
+                        validationErrors.premium ? "border-red-500" : ""
+                      }`}
                     />
+                    {validationErrors.premium && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {validationErrors.premium}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -517,14 +719,35 @@ export default function ManagePolicies() {
                     </label>
                     <Input
                       value={newPolicy.duration}
-                      onChange={(e) =>
+                      type="number"
+                      min={1}
+                      onChange={(e) => {
                         setNewPolicy({
                           ...newPolicy,
-                          duration: Number(e.target.value),
-                        })
-                      }
-                      className="form-input"
+                          duration: e.target.value,
+                        });
+                        if (validationErrors.duration) {
+                          setValidationErrors((prev) => ({
+                            ...prev,
+                            duration: "",
+                          }));
+                        }
+                      }}
+                      onFocus={(e) => {
+                        if (e.target.value === "0") {
+                          e.target.select();
+                        }
+                      }}
+                      placeholder="Enter duration in days"
+                      className={`form-input ${
+                        validationErrors.duration ? "border-red-500" : ""
+                      }`}
                     />
+                    {validationErrors.duration && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {validationErrors.duration}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -534,15 +757,28 @@ export default function ManagePolicies() {
                   </label>
                   <Textarea
                     value={newPolicy.description}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setNewPolicy({
                         ...newPolicy,
                         description: e.target.value,
-                      })
-                    }
+                      });
+                      if (validationErrors.description) {
+                        setValidationErrors((prev) => ({
+                          ...prev,
+                          description: "",
+                        }));
+                      }
+                    }}
                     placeholder="Describe the policy coverage and benefits"
-                    className="form-input min-h-[100px]"
+                    className={`form-input min-h-[100px] ${
+                      validationErrors.description ? "border-red-500" : ""
+                    }`}
                   />
+                  {validationErrors.description && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {validationErrors.description}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -554,11 +790,22 @@ export default function ManagePolicies() {
                       <div key={index} className="flex items-center space-x-2">
                         <Input
                           value={claimType}
-                          onChange={(e) =>
-                            updateClaimType(index, e.target.value)
-                          }
+                          onChange={(e) => {
+                            updateClaimType(index, e.target.value);
+                            if (validationErrors.claimTypes) {
+                              setValidationErrors((prev) => ({
+                                ...prev,
+                                claimTypes: "",
+                              }));
+                            }
+                          }}
                           placeholder="Enter claim type (e.g., Medical Expense, Emergency Care)"
-                          className="form-input"
+                          className={`form-input ${
+                            validationErrors.claimTypes &&
+                            claimType.trim() === ""
+                              ? "border-red-500"
+                              : ""
+                          }`}
                         />
                         {newPolicy.claimTypes.length > 1 && (
                           <Button
@@ -582,6 +829,11 @@ export default function ManagePolicies() {
                       <Plus className="w-4 h-4 mr-2" />
                       Add Claim Type
                     </Button>
+                    {validationErrors.claimTypes && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {validationErrors.claimTypes}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -596,6 +848,8 @@ export default function ManagePolicies() {
                         className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
                           dragActive
                             ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
+                            : fileError
+                            ? "border-red-500 bg-red-50/50 dark:bg-red-900/20"
                             : "border-slate-300 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-700/30"
                         }`}
                         onDragEnter={handleDrag}
@@ -620,6 +874,11 @@ export default function ManagePolicies() {
                         <p className="text-sm text-slate-500 dark:text-slate-500">
                           PDF format only • Max 10MB • up to 3 files
                         </p>
+                        {fileError && (
+                          <p className="text-red-500 text-sm mt-2">
+                            {fileError}
+                          </p>
+                        )}
                       </div>
                     ) : (
                       <div className="space-y-2">
@@ -662,7 +921,11 @@ export default function ManagePolicies() {
                         ))}
                         {uploadedTermsFiles.length < 3 && (
                           <div
-                            className="border-2 border-dashed rounded-xl p-4 text-center cursor-pointer bg-slate-50/50 dark:bg-slate-700/30"
+                            className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors ${
+                              fileError
+                                ? "border-red-300 bg-red-50/50 dark:bg-red-900/20"
+                                : "bg-slate-50/50 dark:bg-slate-700/30 border-slate-300 dark:border-slate-600"
+                            }`}
                             onDragEnter={handleDrag}
                             onDragLeave={handleDrag}
                             onDragOver={handleDrag}
@@ -682,23 +945,53 @@ export default function ManagePolicies() {
                         )}
                       </div>
                     )}
+                    {fileError && (
+                      <p className="text-red-500 text-sm mt-2">{fileError}</p>
+                    )}
                   </div>
                 </div>
 
                 <div className="flex gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                   <Button
                     variant="outline"
-                    onClick={() => setIsCreateDialogOpen(false)}
+                    onClick={() => {
+                      setIsCreateDialogOpen(false);
+                      // Reset form when canceling
+                      setNewPolicy({
+                        name: "",
+                        category: "",
+                        coverage: "",
+                        premium: "",
+                        duration: "",
+                        description: "",
+                        claimTypes: [""],
+                      });
+                      setUploadedTermsFiles([]);
+                      setFileError(null);
+                      setValidationErrors({});
+                      setIsSubmitting(false);
+                    }}
+                    disabled={isSubmitting}
                     className="flex-1"
                   >
                     Cancel
                   </Button>
                   <Button
                     onClick={handleCreatePolicy}
-                    className="flex-1 gradient-accent text-white floating-button"
+                    disabled={isSubmitting}
+                    className="flex-1 gradient-accent text-white floating-button disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Save className="w-4 h-4 mr-2" />
-                    Create Policy
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Submitting Policy...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        Create Policy
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
@@ -994,6 +1287,35 @@ export default function ManagePolicies() {
             onSave={handleUpdatePolicy}
           />
         )}
+
+        {/* Submission Dialog */}
+        <Dialog open={showSubmissionDialog} onOpenChange={() => {}}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-3">
+                <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                Submitting Policy
+              </DialogTitle>
+            </DialogHeader>
+            <div className="text-center py-6">
+              <p className="text-slate-600 dark:text-slate-400 mb-4">
+                Please wait while we create your policy and upload the
+                documents...
+              </p>
+              <div className="bg-slate-100 dark:bg-slate-800 rounded-lg p-4">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  • Creating policy record
+                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  • Uploading documents
+                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  • Finalizing submission
+                </p>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
