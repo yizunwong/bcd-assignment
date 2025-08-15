@@ -3434,6 +3434,9 @@
           },
           "provider": {
             "type": "string"
+          },
+          "status": {
+            "type": "string"
           }
         },
         "required": [
@@ -3443,7 +3446,8 @@
           "coverage",
           "premium",
           "duration_days",
-          "provider"
+          "provider",
+          "status"
         ]
       },
       "CoverageResponseDto": {
