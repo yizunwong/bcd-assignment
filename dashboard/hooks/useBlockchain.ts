@@ -5,7 +5,7 @@ import {
   useAccount,
   usePublicClient,
 } from "wagmi";
-import { parseEther, decodeEventLog } from "viem";
+import { parseEther, decodeEventLog, keccak256, stringToBytes } from "viem";
 import { useToast } from "@/components/shared/ToastProvider";
 import InsuranceContractAbi from "@/abi/InsuranceContract.json";
 
@@ -14,6 +14,9 @@ const INSURANCE_CONTRACT_ABI = InsuranceContractAbi;
 // Contract address - you'll need to update this with your deployed contract address
 const INSURANCE_CONTRACT_ADDRESS = process.env
   .NEXT_PUBLIC_INSURANCE_CONTRACT_ADDRESS as `0x${string}`;
+const INSURANCE_ADMIN_ROLE_HASH = keccak256(
+  stringToBytes("INSURANCE_ADMIN_ROLE")
+);
 
 export function useInsuranceContract() {
   const { address } = useAccount();
@@ -55,6 +58,19 @@ export function useInsuranceContract() {
     writeContractAsync: fileClaim,
     isPending: isFilingClaim,
     error: fileClaimError,
+  } = useWriteContract();
+
+  // Admin role management
+  const {
+    writeContractAsync: addAdmin,
+    isPending: isAddingAdmin,
+    error: addAdminError,
+  } = useWriteContract();
+
+  const {
+    writeContractAsync: removeAdmin,
+    isPending: isRemovingAdmin,
+    error: removeAdminError,
   } = useWriteContract();
 
   // Get user coverages
@@ -235,6 +251,69 @@ export function useInsuranceContract() {
     }
   };
 
+  // Admin role helpers
+  const grantAdminRole = async (
+    account: `0x${string}`,
+  ): Promise<`0x${string}` | undefined> => {
+    if (!address) {
+      printMessage("Please connect your wallet first", "error");
+      return;
+    }
+    try {
+      const hash = await addAdmin({
+        address: INSURANCE_CONTRACT_ADDRESS,
+        abi: INSURANCE_CONTRACT_ABI,
+        functionName: "addAdmin",
+        args: [account],
+      });
+
+      await publicClient!.waitForTransactionReceipt({ hash });
+      return hash;
+    } catch (error) {
+      console.error("Error granting admin role:", error);
+      printMessage("Failed to grant admin role", "error");
+      throw error;
+    }
+  };
+
+  const revokeAdminRole = async (
+    account: `0x${string}`,
+  ): Promise<`0x${string}` | undefined> => {
+    if (!address) {
+      printMessage("Please connect your wallet first", "error");
+      return;
+    }
+    try {
+      const hash = await removeAdmin({
+        address: INSURANCE_CONTRACT_ADDRESS,
+        abi: INSURANCE_CONTRACT_ABI,
+        functionName: "removeAdmin",
+        args: [account],
+      });
+
+      await publicClient!.waitForTransactionReceipt({ hash });
+      return hash;
+    } catch (error) {
+      console.error("Error removing admin role:", error);
+      printMessage("Failed to remove admin role", "error");
+      throw error;
+    }
+  };
+
+  const isInsuranceAdmin = async (account: `0x${string}`) => {
+    try {
+      return (await publicClient!.readContract({
+        address: INSURANCE_CONTRACT_ADDRESS,
+        abi: INSURANCE_CONTRACT_ABI,
+        functionName: "hasRole",
+        args: [INSURANCE_ADMIN_ROLE_HASH, account],
+      })) as boolean;
+    } catch (error) {
+      console.error("Error checking admin role:", error);
+      return false;
+    }
+  };
+
   // Get coverage details
   const getCoverageDetails = async (coverageId: number) => {
     try {
@@ -257,6 +336,9 @@ export function useInsuranceContract() {
     payPremiumForCoverage,
     fileClaimForCoverage,
     approveClaimOnChain,
+    grantAdminRole,
+    revokeAdminRole,
+    isInsuranceAdmin,
     getCoverageDetails,
 
     // State
@@ -264,6 +346,8 @@ export function useInsuranceContract() {
     isPayingPremium,
     isFilingClaim,
     isApprovingClaim,
+    isAddingAdmin,
+    isRemovingAdmin,
     isWaitingForTransaction,
     isTransactionSuccess,
     isLoadingUserCoverages,
@@ -282,6 +366,8 @@ export function useInsuranceContract() {
     payPremiumError,
     fileClaimError,
     approveClaimError,
+    addAdminError,
+    removeAdminError,
     userCoveragesError,
 
     // Utilities

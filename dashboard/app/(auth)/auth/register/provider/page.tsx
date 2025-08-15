@@ -275,6 +275,7 @@ export default function ProviderRegistrationPage() {
           lastName: userInfo.lastName,
           role: RegisterDtoRole.insurance_admin,
           phone: userInfo.phone,
+          walletAddress: userInfo.walletAddress,
           company: {
             name: formData.companyName,
             address: formData.businessAddress,

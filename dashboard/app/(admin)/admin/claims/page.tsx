@@ -130,10 +130,23 @@ export default function ClaimsReview() {
     }
   };
 
-  const handleApprove = async (claimId: number) => {
-    updateClaimStatus(String(claimId), "approved", { txHash: "" });
-    await approveClaimOnChain(Number(claimId));
-  };
+const handleApprove = async (claimId: number) => {
+  try {
+    const claimHash = await approveClaimOnChain(Number(claimId));
+    if (!claimHash) {
+      return;
+    }
+
+    await updateClaimStatus(String(claimId), "approved", {
+      txHash: claimHash,
+    });
+
+    printMessage("Claim approved successfully", "success");
+  } catch (error) {
+    console.error("Error approving claim:", error);
+    printMessage("Failed to approve claim", "error");
+  }
+};
 
   const handleReject = async (claimId: number) => {
     updateClaimStatus(String(claimId), "rejected", { txHash: "" });

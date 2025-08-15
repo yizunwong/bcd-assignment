@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -579,6 +579,7 @@ export type Database = {
           phone: string | null;
           status: Database['public']['Enums']['user_status'];
           user_id: string;
+          wallet_address: string | null;
         };
         Insert: {
           avatar_url?: string | null;
@@ -588,6 +589,7 @@ export type Database = {
           phone?: string | null;
           status?: Database['public']['Enums']['user_status'];
           user_id: string;
+          wallet_address?: string | null;
         };
         Update: {
           avatar_url?: string | null;
@@ -597,6 +599,7 @@ export type Database = {
           phone?: string | null;
           status?: Database['public']['Enums']['user_status'];
           user_id?: string;
+          wallet_address?: string | null;
         };
         Relationships: [];
       };

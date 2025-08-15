@@ -1,39 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-/// @dev SafeMath library from OpenZeppelin Contracts v4.9.0
-library SafeMath {
-    function add(uint256 a, uint256 b) internal pure returns (uint256) {
-        uint256 c = a + b;
-        require(c >= a, "SafeMath: addition overflow");
-        return c;
-    }
-
-    function sub(uint256 a, uint256 b) internal pure returns (uint256) {
-        require(b <= a, "SafeMath: subtraction overflow");
-        return a - b;
-    }
-
-    function mul(uint256 a, uint256 b) internal pure returns (uint256) {
-        if (a == 0) {
-            return 0;
-        }
-        uint256 c = a * b;
-        require(c / a == b, "SafeMath: multiplication overflow");
-        return c;
-    }
-
-    function div(uint256 a, uint256 b) internal pure returns (uint256) {
-        require(b > 0, "SafeMath: division by zero");
-        return a / b;
-    }
-}
-
-contract InsuranceContract is Ownable, ReentrancyGuard {
-    using SafeMath for uint256;
+contract InsuranceContract is AccessControl, ReentrancyGuard {
+    bytes32 public constant INSURANCE_ADMIN_ROLE = keccak256("INSURANCE_ADMIN_ROLE");
 
     enum CoverageStatus {
         Active,
@@ -154,7 +126,21 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
         _;
     }
 
-    constructor() Ownable(msg.sender) {
+    // Role management
+    function addAdmin(
+        address account
+    ) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _grantRole(INSURANCE_ADMIN_ROLE, account);
+    }
+
+    function removeAdmin(
+        address account
+    ) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _revokeRole(INSURANCE_ADMIN_ROLE, account);
+    }
+
+    constructor() {
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         nextCoverageId = 1;
         nextClaimId = 1;
         nextPaymentId = 1;
@@ -182,8 +168,8 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
 
         uint256 coverageId = nextCoverageId;
         uint256 startDate = block.timestamp;
-        uint256 endDate = startDate.add(durationDays.mul(1 days));
-        uint256 nextPaymentDate = startDate.add(30 days); // Monthly payments
+        uint256 endDate = startDate + (durationDays * 1 days);
+        uint256 nextPaymentDate = startDate + 30 days; // Monthly payments
 
         coverages[coverageId] = Coverage({
             id: coverageId,
@@ -219,8 +205,8 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
         coveragePayments[coverageId].push(paymentId);
 
         // Update counters
-        nextCoverageId = nextCoverageId.add(1);
-        nextPaymentId = nextPaymentId.add(1);
+        nextCoverageId = nextCoverageId + 1;
+        nextPaymentId = nextPaymentId + 1;
 
         emit CoverageCreated(coverageId, msg.sender, coverage, premium);
         emit PremiumPaid(coverageId, msg.sender, premium, paymentId);
@@ -254,15 +240,15 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
         );
 
         // Update coverage payment info
-        coverage.totalPaid = coverage.totalPaid.add(msg.value);
+        coverage.totalPaid = coverage.totalPaid + msg.value;
 
         // If paying early, just push nextPaymentDate forward from current cycle
         if (block.timestamp < coverage.nextPaymentDate) {
-            coverage.nextPaymentDate = coverage.nextPaymentDate.add(30 days);
+            coverage.nextPaymentDate = coverage.nextPaymentDate + 30 days;
         }
         // If paying late but still within grace period, set new cycle from now
         else {
-            coverage.nextPaymentDate = block.timestamp.add(30 days);
+            coverage.nextPaymentDate = block.timestamp + 30 days;
         }
 
         // Record payment
@@ -277,7 +263,7 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
         });
 
         coveragePayments[coverageId].push(paymentId);
-        nextPaymentId = nextPaymentId.add(1);
+        nextPaymentId++;
 
         emit PremiumPaid(coverageId, msg.sender, msg.value, paymentId);
     }
@@ -313,7 +299,7 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
         });
 
         coverage.claimIds.push(claimId);
-        nextClaimId = nextClaimId.add(1);
+        nextClaimId++;
 
         emit ClaimFiled(claimId, coverageId, amount);
         return claimId;
@@ -323,7 +309,9 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
      * @dev Approve a claim and transfer funds to policyholder
      * @param claimId The ID of the claim
      */
-    function approveClaim(uint256 claimId) external onlyOwner nonReentrant {
+    function approveClaim(
+        uint256 claimId
+    ) external onlyRole(INSURANCE_ADMIN_ROLE) nonReentrant {
         Claim storage claim = claims[claimId];
         require(!claim.approved, "Already approved");
         require(claim.id == claimId, "Claim does not exist");
@@ -334,14 +322,22 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
             "Coverage not active"
         );
 
+        uint256 totalApprovedAmount = (coverage.utilizationRate *
+            coverage.coverage) / 100;
+        require(
+            totalApprovedAmount + claim.amount <= coverage.coverage,
+            "Exceeds coverage cap"
+        );
+
         claim.approved = true;
+        totalApprovedAmount += claim.amount;
+        coverage.utilizationRate = (coverage.coverage > 0)
+            ? (totalApprovedAmount * 100) / coverage.coverage
+            : 0;
 
         // Transfer claim amount to policyholder
         (bool success, ) = coverage.policyholder.call{value: claim.amount}("");
         require(success, "Transfer failed");
-
-        // Update coverage utilization rate
-        coverage.utilizationRate = coverage.utilizationRate.add(claim.amount);
 
         emit ClaimApproved(claimId, claim.coverageId, claim.amount);
     }
@@ -363,7 +359,7 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
     function updateCoverageStatus(
         uint256 coverageId,
         CoverageStatus newStatus
-    ) external onlyOwner coverageExists(coverageId) {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) coverageExists(coverageId) {
         coverages[coverageId].status = newStatus;
         emit CoverageStatusChanged(coverageId, newStatus);
     }
@@ -414,13 +410,13 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Withdraw contract balance (owner only)
+     * @dev Withdraw contract balance (admin only)
      */
-    function withdrawBalance() external onlyOwner {
+    function withdrawBalance() external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 balance = address(this).balance;
         require(balance > 0, "No balance to withdraw");
 
-        (bool success, ) = owner().call{value: balance}("");
+        (bool success, ) = msg.sender.call{value: balance}("");
         require(success, "Withdrawal failed");
     }
 
@@ -437,7 +433,7 @@ contract InsuranceContract is Ownable, ReentrancyGuard {
      */
     function emergencyRefund(
         uint256 paymentId
-    ) external onlyOwner nonReentrant {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrant {
         Payment storage payment = payments[paymentId];
         require(
             payment.status == PaymentStatus.Completed,
