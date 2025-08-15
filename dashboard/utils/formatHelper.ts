@@ -14,7 +14,7 @@ export function formatValue(
   if (value === undefined || value === null) return "-";
   if (typeof value === "number") {
     return opts?.currency
-      ? `${currency.format(value)} ETH`
+      ? `RM ${currency.format(value)} `
       : numberFormatter.format(value);
   }
   return value;

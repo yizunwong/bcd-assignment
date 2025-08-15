@@ -462,7 +462,7 @@ export default function ClaimsReview() {
                           Amount
                         </p>
                         <p className="font-medium text-slate-800 dark:text-slate-100">
-                          {claim.amount}
+                          {claim.amount} ETH
                         </p>
                       </div>
                     </div>

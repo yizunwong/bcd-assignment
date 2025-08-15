@@ -2,11 +2,21 @@ import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 import path from 'path';
 import { Database } from './types/supabase.types';
-import { PolicyCategory, PolicyStatus } from 'src/enums';
 
 dotenv.config({
-  path: path.resolve(__dirname, '../.env'),
+  path: path.resolve(__dirname, '../../.env'),
 });
+
+export enum PolicyCategory {
+  HEALTH = 'health',
+  TRAVEL = 'travel',
+  CROP = 'crop',
+}
+
+export enum PolicyStatus {
+  ACTIVE = 'active',
+  DEACTIVATED = 'deactivated',
+}
 
 // ENV: set in .env file
 const supabase = createClient<Database>(
@@ -73,7 +83,7 @@ async function seed() {
       continue;
     }
 
-    const userId = data.user.id;
+    const userId = '3b13abef-6e32-454a-830d-73730d1aa609';
 
     if (user.role === 'insurance_admin') {
       adminId = userId;
@@ -289,6 +299,65 @@ async function seed() {
       console.error('❌ Failed to seed policies:', policyError.message);
     } else {
       console.log('✅ Seeded policies');
+    }
+
+    // 🌱 Now seed claim types
+    console.log('\n🌱 Seeding claim types...');
+    const claimTypes = [
+      { id: 1, name: 'Medical Treatment' }, // Health / Travel
+      { id: 2, name: 'Trip Cancellation' }, // Travel
+      { id: 3, name: 'Property Loss/Damage' }, // Travel / Crop
+      { id: 4, name: 'Evacuation/Transportation' }, // Travel / Health
+      { id: 5, name: 'Crop Damage' }, // Crop
+      { id: 6, name: 'Death & Repatriation' }, // Health / Travel
+    ];
+
+    const { error: claimTypeError } = await supabase
+      .from('claim_types')
+      .upsert(claimTypes, { onConflict: 'id' });
+
+    if (claimTypeError) {
+      console.error('❌ Failed to seed claim types:', claimTypeError.message);
+    } else {
+      console.log('✅ Seeded claim types');
+    }
+
+    // 🌱 Now link policies to claim types in claims table
+    console.log('\n🌱 Linking policies with claim types...');
+    const policies_claim_types = [
+      // Health policies (1, 2, 7, 8)
+      { policy_id: 1, claim_type_id: 1 },
+      { policy_id: 1, claim_type_id: 4 },
+      { policy_id: 2, claim_type_id: 1 },
+      { policy_id: 7, claim_type_id: 1 },
+      { policy_id: 8, claim_type_id: 1 },
+      { policy_id: 8, claim_type_id: 6 },
+
+      // Travel policies (3, 6, 9)
+      { policy_id: 3, claim_type_id: 2 },
+      { policy_id: 3, claim_type_id: 4 },
+      { policy_id: 6, claim_type_id: 2 },
+      { policy_id: 6, claim_type_id: 3 },
+      { policy_id: 9, claim_type_id: 2 },
+
+      // Crop policies (4, 5, 10)
+      { policy_id: 4, claim_type_id: 5 },
+      { policy_id: 5, claim_type_id: 5 },
+      { policy_id: 10, claim_type_id: 5 },
+      { policy_id: 10, claim_type_id: 3 },
+    ].map((c) => ({ ...c, created_at: new Date().toISOString() }));
+
+    const { error: claimsError } = await supabase
+      .from('policy_claim_type')
+      .upsert(policies_claim_types);
+
+    if (claimsError) {
+      console.error(
+        '❌ Failed to link policies with claim types:',
+        claimsError.message,
+      );
+    } else {
+      console.log('✅ Linked policies with claim types');
     }
   }
 

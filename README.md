@@ -58,7 +58,7 @@ INSURANCE_CONTRACT_ADDRESS=0x... # Use the address from deployment
 
 # Server Configuration
 PORT=3000
-CORS_ORIGIN=http://localhost:5001
+CORS_ORIGIN=http://localhost:5000
 ```
 
 #### Dashboard
