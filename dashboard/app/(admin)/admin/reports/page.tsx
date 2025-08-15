@@ -527,33 +527,37 @@ export default function Reports() {
                           Available Formats:
                         </p>
                         <div className="flex flex-wrap gap-1">
-                          {template.format.map((format, index) => (
-                            <Badge
-                              key={index}
-                              variant="secondary"
-                              className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
-                            >
-                              {format}
-                            </Badge>
-                          ))}
+                          {template.format
+                            .filter((format) => format.toLowerCase() === "pdf")
+                            .map((format, index) => (
+                              <Badge
+                                key={index}
+                                variant="secondary"
+                                className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
+                              >
+                                {format}
+                              </Badge>
+                            ))}
                         </div>
                       </div>
 
                       <div className="flex gap-2 pt-4 border-t border-slate-100 dark:border-slate-700">
-                        {template.format.map((format, index) => (
-                          <Button
-                            key={index}
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              handleGenerateReport(template.id, format)
-                            }
-                            className="flex-1 floating-button"
-                          >
-                            <Download className="w-4 h-4 mr-2" />
-                            {format}
-                          </Button>
-                        ))}
+                        {template.format
+                          .filter((format) => format.toLowerCase() === "pdf")
+                          .map((format, index) => (
+                            <Button
+                              key={index}
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                handleGenerateReport(template.id, format)
+                              }
+                              className="flex-1 floating-button"
+                            >
+                              <Download className="w-4 h-4 mr-2" />
+                              {format}
+                            </Button>
+                          ))}
                       </div>
                     </CardContent>
                   </Card>
