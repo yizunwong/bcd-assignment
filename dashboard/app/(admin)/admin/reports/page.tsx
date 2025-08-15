@@ -47,6 +47,8 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useCoverageStatsQuery } from "@/hooks/useCoverage";
 import { useAdminDashboardSummaryQuery } from "@/hooks/useDashboard";
+import Ticker from '@/components/animata/text/ticker';
+import { StatsCard } from '@/components/shared/StatsCard';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -395,69 +397,50 @@ export default function Reports() {
 
         {/* Quick Stats */}
         <div className="stats-grid">
-          <Card className="glass-card rounded-2xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center">
-                  <Shield className="w-6 h-6 text-white" />
-                </div>
-                <Badge className="status-badge status-active">Active</Badge>
-              </div>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {adminSummary?.data?.activePolicies ?? 0}
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400">
-                Total Policies
-              </p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            title="Active"
+            value={
+              <Ticker
+                value={(adminSummary?.data?.activePolicies ?? 0).toString()}
+                className="text-slate-800 dark:text-slate-100"
+              />
+            }
+            icon={Shield}
+          />
 
-          <Card className="glass-card rounded-2xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
-                  <FileText className="w-6 h-6 text-white" />
-                </div>
-                <Badge className="status-badge status-info">Claims</Badge>
-              </div>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {coverageStat?.data?.totalClaims ?? 0}
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400">Total Claims</p>
-            </CardContent>
-          </Card>
+<StatsCard
+            title="Claims"
+            value={
+              <Ticker
+                value={(adminSummary?.data?.totalClaims ?? 0).toString()}
+                className="text-slate-800 dark:text-slate-100"
+              />
+            }
+            icon={FileText}
+          />
 
-          <Card className="glass-card rounded-2xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center">
-                  <DollarSign className="w-6 h-6 text-white" />
-                </div>
-                <Badge className="status-badge status-active">Revenue</Badge>
-              </div>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {adminSummary?.data?.totalRevenue ? `${adminSummary.data.totalRevenue} ETH` : '0 ETH'}
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400">
-                Total Revenue
-              </p>
-            </CardContent>
-          </Card>
+<StatsCard
+            title="Revenue"
+            value={
+              <Ticker
+                value={(adminSummary?.data?.totalRevenue ?? 0).toString()}
+                className="text-slate-800 dark:text-slate-100"
+              />
+            }
+            icon={Shield}
+          />
 
-          <Card className="glass-card rounded-2xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center">
-                  <Users className="w-6 h-6 text-white" />
-                </div>
-                <Badge className="status-badge status-info">Users</Badge>
-              </div>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {adminSummary?.data?.activeUsers ?? 0}
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400">Active Users</p>
-            </CardContent>
-          </Card>
+<StatsCard
+            title="Users"
+            value={
+              <Ticker
+                value={(adminSummary?.data?.activeUsers ?? 0).toString()}
+                className="text-slate-800 dark:text-slate-100"
+              />
+            }
+            icon={Users}
+          />
+          
         </div>
 
         <Tabs defaultValue="templates" className="space-y-6">
