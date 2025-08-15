@@ -41,6 +41,7 @@ import {
   Download,
   Clock,
   DollarSign,
+  Wand2,
 } from "lucide-react";
 import PolicyDetailsDialog, {
   Policy,
@@ -105,6 +106,7 @@ export default function ManagePolicies() {
   >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSubmissionDialog, setShowSubmissionDialog] = useState(false);
+  const [isDetecting, setIsDetecting] = useState(false);
   const { printMessage } = useToast();
   const queryClient = useQueryClient();
 
@@ -515,6 +517,29 @@ export default function ManagePolicies() {
     setUploadedTermsFiles((files) => files.filter((_, i) => i !== index));
   };
 
+  const handleDetectClaimTypes = async () => {
+    if (!uploadedTermsFiles.length) {
+      printMessage("Please upload a policy document first", "error");
+      return;
+    }
+    setIsDetecting(true);
+    try {
+      const res = await extractClaim({ file: [uploadedTermsFiles[0]] });
+      const types =
+        (res as any)?.data?.claimTypes?.map((ct: any) => ct.type) || [];
+      if (types.length > 0) {
+        setNewPolicy((prev) => ({ ...prev, claimTypes: types }));
+        printMessage("Claim types detected", "success");
+      } else {
+        printMessage("No claim types found", "error");
+      }
+    } catch {
+      printMessage("Failed to extract claim types", "error");
+    } finally {
+      setIsDetecting(false);
+    }
+  };
+
   // Error state (in case not caught by useEffect)
   if (error) {
     return (
@@ -841,6 +866,16 @@ export default function ManagePolicies() {
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Add Claim Type
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleDetectClaimTypes}
+                      disabled={isDetecting}
+                      className="w-full"
+                    >
+                      <Wand2 className="w-4 h-4 mr-2" />
+                      {isDetecting ? "Detecting..." : "AI Detect"}
                     </Button>
                     {validationErrors.claimTypes && (
                       <p className="text-red-500 text-sm mt-1">
