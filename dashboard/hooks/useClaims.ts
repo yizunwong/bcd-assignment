@@ -14,6 +14,7 @@ import {
   ClaimStatus,
   useClaimControllerGetStats,
   useClaimControllerGetClaimDetails,
+  UpdateClaimStatusDto,
 } from "@/api";
 import { parseError } from "../utils/parseError";
 

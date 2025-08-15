@@ -69,7 +69,7 @@ import {
   UserControllerFindAllParams,
 } from "@/api";
 import { useToast } from "@/components/shared/ToastProvider";
-import { useDebounce } from '@/hooks/useDebounce';
+import { useDebounce } from "@/hooks/useDebounce";
 import { useInsuranceContract } from "@/hooks/useBlockchain";
 
 const ITEMS_PER_PAGE = 10;
@@ -100,9 +100,11 @@ export default function UserRoleManagement() {
       }
     : {};
 
-  const { data: usersData, isLoading: isLoading, refetch } = useUsersQuery(
-    filters as UserControllerFindAllParams
-  );
+  const {
+    data: usersData,
+    isLoading: isLoading,
+    refetch,
+  } = useUsersQuery(filters as UserControllerFindAllParams);
 
   const users = useMemo(
     () =>
@@ -123,14 +125,15 @@ export default function UserRoleManagement() {
         location: u.location ?? "",
         loginAttempts: u.loginAttempts ?? 0,
         notes: u.notes ?? "",
-      activityLog: u.activityLog ?? [],
-    })),
+        activityLog: u.activityLog ?? [],
+      })),
     [usersData]
   );
 
-  const { grantAdminRole, revokeAdminRole } =
-    useInsuranceContract();
-  const [onChainAdmins, setOnChainAdmins] = useState<Record<string, boolean>>({});
+  const { grantAdminRole, revokeAdminRole } = useInsuranceContract();
+  const [onChainAdmins, setOnChainAdmins] = useState<Record<string, boolean>>(
+    {}
+  );
 
   const [newUserData, setNewUserData] = useState({
     email: "",
@@ -306,7 +309,7 @@ export default function UserRoleManagement() {
   const resetUserPassword = async (userId: string) => {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 800));
-   };
+  };
 
   const handleToggleAdminRole = async (user: any) => {
     if (!user.walletAddress) {
@@ -391,7 +394,7 @@ export default function UserRoleManagement() {
               <Users className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="page-header-title">User & Role Management</h1>
+              <h1 className="page-header-title">User Management</h1>
               <p className="page-header-subtitle">
                 Manage users, roles, and permissions across the platform
               </p>
@@ -649,7 +652,8 @@ export default function UserRoleManagement() {
                               ...newUserData,
                               company: {
                                 ...newUserData.company,
-                                years_in_business: value as CompanyDetailsDtoYearsInBusiness
+                                years_in_business:
+                                  value as CompanyDetailsDtoYearsInBusiness,
                               },
                             })
                           }
@@ -680,7 +684,8 @@ export default function UserRoleManagement() {
                             ...newUserData,
                             company: {
                               ...newUserData.company,
-                              employees_number: value as CompanyDetailsDtoEmployeesNumber,
+                              employees_number:
+                                value as CompanyDetailsDtoEmployeesNumber,
                             },
                           })
                         }
@@ -809,316 +814,221 @@ export default function UserRoleManagement() {
           />
         </div>
 
-        <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-            <TabsTrigger value="users" className="rounded-lg">
-              User Management
-            </TabsTrigger>
-            <TabsTrigger value="roles" className="rounded-lg">
-              Role Management
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="users">
-            {/* Filters */}
-            <Card className="glass-card rounded-2xl mb-6">
-              <CardContent className="p-6">
-                <div className="responsive-stack">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-                    <Input
-                      placeholder="Search users by name or email..."
-                      value={searchTerm}
-                      onChange={(e) =>
-                        handleFilterChange(() => setSearchTerm(e.target.value))
-                      }
-                      className="form-input pl-10"
-                    />
-                  </div>
-                  <Select
-                    value={filterRole}
-                    onValueChange={(value) =>
-                      handleFilterChange(() => setFilterRole(value))
+        <Card className="glass-card rounded-2xl mb-6">
+          {/* Filters */}
+          <Card className="glass-card rounded-2xl mb-6">
+            <CardContent className="p-6">
+              <div className="responsive-stack">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                  <Input
+                    placeholder="Search users by name or email..."
+                    value={searchTerm}
+                    onChange={(e) =>
+                      handleFilterChange(() => setSearchTerm(e.target.value))
                     }
-                  >
-                    <SelectTrigger className="w-full md:w-48 form-input">
-                      <Filter className="w-4 h-4 mr-2" />
-                      <SelectValue placeholder="Filter by role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Roles</SelectItem>
-                      <SelectItem value="policyholder">Policyholder</SelectItem>
-                      <SelectItem value="insurance_admin">
-                        Insurance Admin
-                      </SelectItem>
-                      <SelectItem value="system_admin">System Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select
-                    value={filterStatus}
-                    onValueChange={(value) =>
-                      handleFilterChange(() => setFilterStatus(value))
-                    }
-                  >
-                    <SelectTrigger className="w-full md:w-48 form-input">
-                      <SelectValue placeholder="Filter by status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="deactivated">Deactivated</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    className="form-input pl-10"
+                  />
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Loading State */}
-            {isLoading && (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
-                <span className="ml-2 text-slate-600 dark:text-slate-400">
-                  Loading users...
-                </span>
+                <Select
+                  value={filterRole}
+                  onValueChange={(value) =>
+                    handleFilterChange(() => setFilterRole(value))
+                  }
+                >
+                  <SelectTrigger className="w-full md:w-48 form-input">
+                    <Filter className="w-4 h-4 mr-2" />
+                    <SelectValue placeholder="Filter by role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Roles</SelectItem>
+                    <SelectItem value="policyholder">Policyholder</SelectItem>
+                    <SelectItem value="insurance_admin">
+                      Insurance Admin
+                    </SelectItem>
+                    <SelectItem value="system_admin">System Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={filterStatus}
+                  onValueChange={(value) =>
+                    handleFilterChange(() => setFilterStatus(value))
+                  }
+                >
+                  <SelectTrigger className="w-full md:w-48 form-input">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="deactivated">Deactivated</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            )}
+            </CardContent>
+          </Card>
 
-            {/* Users List */}
-            {!pageTransition && (
-              <div className="content-spacing mb-8">
-                {paginatedUsers.map((user) => (
-                  <Card
-                    key={user.id}
-                    className="glass-card rounded-2xl card-hover"
-                  >
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-slate-500 to-slate-600 flex items-center justify-center">
-                            <User className="w-6 h-6 text-white" />
-                          </div>
-                          <div>
-                            <div className="flex items-center space-x-2 mb-1">
-                              <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-                                {user.name}
-                              </h3>
-                              <Badge
-                                className={`status-badge ${getRoleColor(
-                                  user.role
-                                )}`}
-                              >
-                                {user.role.replace("-", " ")}
-                              </Badge>
-                              <Badge
-                                className={`status-badge ${getStatusColor(
-                                  user.status
-                                )}`}
-                              >
-                                {getStatusIcon(user.status)}
-                                <span className="ml-1 capitalize">
-                                  {user.status.replace("-", " ")}
-                                </span>
-                              </Badge>
-                            </div>
-                            <p className="text-slate-600 dark:text-slate-400">
-                              {user.email}
-                            </p>
-                            <p className="text-slate-600 dark:text-slate-400 break-all">
-                              Wallet: {user.walletAddress || '—'}
-                            </p>
-                            <div className="flex items-center space-x-4 text-sm text-slate-500 dark:text-slate-500 mt-1">
-                              <span>ID: {user.id}</span>
-                              <span>•</span>
-                              <span>
-                                Joined:{" "}
-                                {new Date(user.joinDate).toLocaleDateString()}
-                              </span>
-                              <span>•</span>
-                              <span>
-                                Last login: {formatLastLogin(user.lastLogin)}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+              <span className="ml-2 text-slate-600 dark:text-slate-400">
+                Loading users...
+              </span>
+            </div>
+          )}
 
-                        <div className="flex items-center space-x-4">
-                          <div className="text-right">
-                            <div className="grid grid-cols-2 gap-4 text-sm">
-                              <div>
-                                <p className="text-slate-500 dark:text-slate-500">
-                                  Policies
-                                </p>
-                                <p className="font-semibold text-slate-800 dark:text-slate-100">
-                                  {user.policies}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-slate-500 dark:text-slate-500">
-                                  Claims
-                                </p>
-                                <p className="font-semibold text-slate-800 dark:text-slate-100">
-                                  {user.claims}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex space-x-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="floating-button"
-                              onClick={() => handleViewUser(user)}
-                            >
-                              <Eye className="w-4 h-4 mr-1" />
-                              View
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="floating-button"
-                              onClick={() => handleEditUser(user)}
-                            >
-                              <Edit className="w-4 h-4 mr-1" />
-                              Edit
-                            </Button>
-                            {user.roleOriginal === 'insurance_admin' && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="floating-button"
-                                onClick={() => handleToggleAdminRole(user)}
-                                disabled={!user.walletAddress}
-                              >
-                                {onChainAdmins[user.id]
-                                  ? "Remove On-chain"
-                                  : "Grant On-chain"}
-                              </Button>
-                            )}
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20"
-                            >
-                              <MoreHorizontal className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-
-            {/* Pagination */}
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-              showInfo={true}
-              totalItems={sortedUsers.length}
-              itemsPerPage={ITEMS_PER_PAGE}
-              className="mb-8"
-            />
-
-            {sortedUsers.length === 0 && !isLoading && (
-              <div className="text-center py-12">
-                <Shield className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">
-                  No users found
-                </h3>
-                <p className="text-slate-500 dark:text-slate-500">
-                  Try adjusting your search criteria or create a new user
-                </p>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="roles">
-            <div className="grid md:grid-cols-3 gap-6">
-              {roles.map((role) => {
-                const RoleIcon = role.icon;
-                return (
-                  <Card
-                    key={role.id}
-                    className="glass-card rounded-2xl card-hover"
-                  >
-                    <CardHeader className="pb-4">
-                      <div className="flex items-center space-x-3 mb-4">
-                        <div
-                          className={`w-12 h-12 rounded-xl bg-gradient-to-r ${role.color} flex items-center justify-center`}
-                        >
-                          <RoleIcon className="w-6 h-6 text-white" />
+          {/* Users List */}
+          {!pageTransition && (
+            <div className="content-spacing mb-8">
+              {paginatedUsers.map((user) => (
+                <Card
+                  key={user.id}
+                  className="glass-card rounded-2xl card-hover"
+                >
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-slate-500 to-slate-600 flex items-center justify-center">
+                          <User className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                          <CardTitle className="text-lg text-slate-800 dark:text-slate-100">
-                            {role.name}
-                          </CardTitle>
-                          <p className="text-sm text-slate-600 dark:text-slate-400">
-                            {role.userCount} users
+                          <div className="flex items-center space-x-2 mb-1">
+                            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                              {user.name}
+                            </h3>
+                            <Badge
+                              className={`status-badge ${getRoleColor(
+                                user.role
+                              )}`}
+                            >
+                              {user.role.replace("-", " ")}
+                            </Badge>
+                            <Badge
+                              className={`status-badge ${getStatusColor(
+                                user.status
+                              )}`}
+                            >
+                              {getStatusIcon(user.status)}
+                              <span className="ml-1 capitalize">
+                                {user.status.replace("-", " ")}
+                              </span>
+                            </Badge>
+                          </div>
+                          <p className="text-slate-600 dark:text-slate-400">
+                            {user.email}
                           </p>
-                        </div>
-                      </div>
-                    </CardHeader>
-
-                    <CardContent className="space-y-4">
-                      <p className="text-slate-700 dark:text-slate-300">
-                        {role.description}
-                      </p>
-
-                      <div>
-                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                          Key Permissions:
-                        </p>
-                        <div className="space-y-1">
-                          {(role.permissions?.slice(0, 4) || []).map(
-                            (permission, index) => (
-                              <div
-                                key={index}
-                                className="flex items-center space-x-2 text-sm"
-                              >
-                                <CheckCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                                <span className="text-slate-600 dark:text-slate-400">
-                                  {permission.name}
-                                </span>
-                              </div>
-                            )
-                          )}
-                          {(role.permissions?.length || 0) > 4 && (
-                            <p className="text-xs text-slate-500 dark:text-slate-500 ml-5">
-                              +{(role.permissions?.length || 0) - 4} more
-                              permissions
-                            </p>
-                          )}
+                          <p className="text-slate-600 dark:text-slate-400 break-all">
+                            Wallet: {user.walletAddress || "—"}
+                          </p>
+                          <div className="flex items-center space-x-4 text-sm text-slate-500 dark:text-slate-500 mt-1">
+                            <span>ID: {user.id}</span>
+                            <span>•</span>
+                            <span>
+                              Joined:{" "}
+                              {new Date(user.joinDate).toLocaleDateString()}
+                            </span>
+                            <span>•</span>
+                            <span>
+                              Last login: {formatLastLogin(user.lastLogin)}
+                            </span>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="flex gap-2 pt-4 border-t border-slate-100 dark:border-slate-700">
-                        <Button
-                          variant="outline"
-                          className="flex-1 floating-button"
-                          onClick={() => handleConfigureRole(role)}
-                        >
-                          <Settings className="w-4 h-4 mr-2" />
-                          Configure
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="flex-1 floating-button"
-                          onClick={() => handleViewRoleUsers(role.id)}
-                        >
-                          <Users className="w-4 h-4 mr-2" />
-                          View Users
-                        </Button>
+                      <div className="flex items-center space-x-4">
+                        <div className="text-right">
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <p className="text-slate-500 dark:text-slate-500">
+                                Policies
+                              </p>
+                              <p className="font-semibold text-slate-800 dark:text-slate-100">
+                                {user.policies}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-slate-500 dark:text-slate-500">
+                                Claims
+                              </p>
+                              <p className="font-semibold text-slate-800 dark:text-slate-100">
+                                {user.claims}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="floating-button"
+                            onClick={() => handleViewUser(user)}
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            View
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="floating-button"
+                            onClick={() => handleEditUser(user)}
+                          >
+                            <Edit className="w-4 h-4 mr-1" />
+                            Edit
+                          </Button>
+                          {user.roleOriginal === "insurance_admin" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="floating-button"
+                              onClick={() => handleToggleAdminRole(user)}
+                              disabled={!user.walletAddress}
+                            >
+                              {onChainAdmins[user.id]
+                                ? "Remove On-chain"
+                                : "Grant On-chain"}
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20"
+                          >
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-          </TabsContent>
-        </Tabs>
+          )}
+
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            showInfo={true}
+            totalItems={sortedUsers.length}
+            itemsPerPage={ITEMS_PER_PAGE}
+            className="mb-8"
+          />
+
+          {sortedUsers.length === 0 && !isLoading && (
+            <div className="text-center py-12">
+              <Shield className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">
+                No users found
+              </h3>
+              <p className="text-slate-500 dark:text-slate-500">
+                Try adjusting your search criteria or create a new user
+              </p>
+            </div>
+          )}
+        </Card>
 
         {/* View User Dialog */}
         <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
@@ -1700,8 +1610,6 @@ export default function UserRoleManagement() {
                     )}
                   </div>
                 </div>
-
-                
 
                 {/* Role Settings */}
                 <div>
