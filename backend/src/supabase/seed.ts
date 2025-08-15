@@ -58,6 +58,7 @@ const users: SeedUser[] = [
 
 async function seed() {
   console.log('🌱 Seeding roles and permissions...');
+  let adminId: string | null = null;
   for (const user of users) {
     const { data, error } = await supabase.auth.admin.createUser({
       email: user.email,
@@ -72,6 +73,10 @@ async function seed() {
     }
 
     const userId = data.user.id;
+
+    if (user.role === 'insurance_admin') {
+      adminId = userId;
+    }
 
     await supabase.from('user_details').insert({
       user_id: userId,
@@ -138,6 +143,152 @@ async function seed() {
     ]);
 
     console.log(`✅ Created user and profile: ${user.email}`);
+  }
+
+  if (adminId) {
+    console.log('\n🌱 Seeding policies...');
+    const policies = [
+      {
+        id: 1,
+        name: 'Basic Health Plan',
+        category: 'health',
+        coverage: 10000,
+        description: 'Affordable health coverage',
+        duration_days: 365,
+        premium: 0.0001,
+        rating: 4.2,
+        status: 'active',
+        popular: true,
+        created_by: adminId,
+      },
+      {
+        id: 2,
+        name: 'Premium Health Plan',
+        category: 'health',
+        coverage: 50000,
+        description: 'Comprehensive health coverage',
+        duration_days: 365,
+        premium: 0.0002,
+        rating: 4.8,
+        status: 'active',
+        popular: true,
+        created_by: adminId,
+      },
+      {
+        id: 3,
+        name: 'Traveler Shield',
+        category: 'travel',
+        coverage: 20000,
+        description: 'Travel insurance for trips',
+        duration_days: 30,
+        premium: 0.0003,
+        rating: 4.5,
+        status: 'active',
+        popular: false,
+        created_by: adminId,
+      },
+      {
+        id: 4,
+        name: 'Crop Guard Basic',
+        category: 'crop',
+        coverage: 15000,
+        description: 'Entry level crop protection',
+        duration_days: 180,
+        premium: 0.0004,
+        rating: 4.1,
+        status: 'active',
+        popular: false,
+        created_by: adminId,
+      },
+      {
+        id: 5,
+        name: 'Crop Guard Plus',
+        category: 'crop',
+        coverage: 30000,
+        description: 'Advanced crop protection',
+        duration_days: 180,
+        premium: 0.0005,
+        rating: 4.3,
+        status: 'active',
+        popular: true,
+        created_by: adminId,
+      },
+      {
+        id: 6,
+        name: 'Travel Elite',
+        category: 'travel',
+        coverage: 50000,
+        description: 'Premium travel coverage',
+        duration_days: 60,
+        premium: 0.0006,
+        rating: 4.7,
+        status: 'active',
+        popular: true,
+        created_by: adminId,
+      },
+      {
+        id: 7,
+        name: 'Family Health Secure',
+        category: 'health',
+        coverage: 75000,
+        description: 'Health coverage for family',
+        duration_days: 365,
+        premium: 0.0007,
+        rating: 4.4,
+        status: 'active',
+        popular: false,
+        created_by: adminId,
+      },
+      {
+        id: 8,
+        name: 'Senior Health Care',
+        category: 'health',
+        coverage: 40000,
+        description: 'Health plan for seniors',
+        duration_days: 365,
+        premium: 0.0008,
+        rating: 4.0,
+        status: 'active',
+        popular: false,
+        created_by: adminId,
+      },
+      {
+        id: 9,
+        name: 'Backpacker Travel',
+        category: 'travel',
+        coverage: 10000,
+        description: 'Budget travel coverage',
+        duration_days: 45,
+        premium: 0.0009,
+        rating: 3.8,
+        status: 'active',
+        popular: false,
+        created_by: adminId,
+      },
+      {
+        id: 10,
+        name: 'Crop Guard Max',
+        category: 'crop',
+        coverage: 60000,
+        description: 'Maximum crop protection',
+        duration_days: 200,
+        premium: 0.001,
+        rating: 4.6,
+        status: 'active',
+        popular: true,
+        created_by: adminId,
+      },
+    ];
+
+    const { error: policyError } = await supabase
+      .from('policies')
+      .upsert(policies, { onConflict: 'id' });
+
+    if (policyError) {
+      console.error('❌ Failed to seed policies:', policyError.message);
+    } else {
+      console.log('✅ Seeded policies');
+    }
   }
 
   console.log('\n🎉 Seeding complete.');
