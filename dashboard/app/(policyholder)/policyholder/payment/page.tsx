@@ -313,7 +313,7 @@ export default function PaymentSummary() {
 
     const { coverageId, txHash } = await createCoverageWithPayment(
       policyData!.coverageAmount,
-      Number(tokenAmount) * 0.0001,
+      Number(tokenAmount) ,
       parseInt(policyData!.duration.split(" ")[0]),
       cid,
       policyData!.name,

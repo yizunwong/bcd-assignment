@@ -11,13 +11,18 @@ import {
   keccak256,
   stringToBytes,
   getAddress,
+  parseUnits,
 } from "viem";
 import { useToast } from "@/components/shared/ToastProvider";
 import InsuranceContractAbi from "@/abi/InsuranceContract.json";
 import ICOAbi from "@/abi/ICO.json";
+import ERC20Abi from "@/abi/CoverlyToken.json";
 
 const INSURANCE_CONTRACT_ABI = InsuranceContractAbi;
 const ICO_CONTRACT_ABI = ICOAbi;
+const TOKEN_CONTRACT_ADDRESS = getAddress(
+  process.env.NEXT_PUBLIC_TOKEN_CONTRACT_ADDRESS as string
+) as `0x${string}`;
 
 // Contract addresses from environment (validated & checksummed)
 const INSURANCE_CONTRACT_ADDRESS = getAddress(
@@ -108,38 +113,65 @@ export function useInsuranceContract() {
     },
   });
 
+  const {
+    writeContractAsync: approveToken,
+    isPending: isApprovingToken,
+    error: approveTokenError,
+  } = useWriteContract();
+
   // Create coverage with ETH payment
   const createCoverageWithPayment = async (
-    coverage: number, // in ETH
-    premium: number, // in ETH
+    coverageTokens: number,
+    premiumTokens: number,
     durationDays: number,
     agreementCid: string,
     name: string,
     category: string,
     provider: string
-  ): Promise<{ coverageId: number; txHash: `0x${string}` }> => {
-    if (!address) {
-      printMessage("Please connect your wallet first", "error");
-      throw new Error("WALLET_NOT_CONNECTED");
-    }
+  ) => {
+    if (!address) throw new Error("WALLET_NOT_CONNECTED");
 
-    const coverageWei = parseEther(coverage.toString());
-    const premiumWei = parseEther(premium.toString());
+    const coverageUnits = parseUnits(coverageTokens.toString(), 18);
+    const premiumUnits = parseUnits(premiumTokens.toString(), 18);
+
+    const balance = await publicClient.readContract({
+      address: TOKEN_CONTRACT_ADDRESS,
+      abi: ERC20Abi,
+      functionName: "balanceOf",
+      args: [address],
+    });
+    console.log("Token balance:", balance.toString());
+
+    // Approve first
+    await approveToken({
+      address: TOKEN_CONTRACT_ADDRESS,
+      abi: ERC20Abi,
+      functionName: "approve",
+      args: [INSURANCE_CONTRACT_ADDRESS, premiumUnits],
+    });
+
+    const allowance = await publicClient.readContract({
+      address: TOKEN_CONTRACT_ADDRESS,
+      abi: ERC20Abi,
+      functionName: "allowance",
+      args: [address, INSURANCE_CONTRACT_ADDRESS],
+    });
+    console.log("Current allowance:", allowance.toString());
 
     const hash = await createCoverage({
       address: INSURANCE_CONTRACT_ADDRESS,
       abi: INSURANCE_CONTRACT_ABI,
-      functionName: "createCoverageWithPayment",
+      functionName: "createCoverageWithTokenPayment",
       args: [
-        coverageWei,
-        premiumWei,
+        coverageUnits,
+        premiumUnits,
         BigInt(durationDays),
         agreementCid,
         name,
         category,
         provider,
       ],
-      value: premiumWei,
+      // No ETH value here
     });
 
     const receipt = await publicClient!.waitForTransactionReceipt({ hash });
@@ -160,8 +192,7 @@ export function useInsuranceContract() {
 
     if (!event) throw new Error("COVERAGE_EVENT_NOT_FOUND");
 
-    const coverageId = Number((event as any).args.coverageId);
-    return { coverageId, txHash: hash };
+    return { coverageId: Number((event.args as any).coverageId), txHash: hash };
   };
 
   // Pay premium for existing coverage
@@ -267,7 +298,7 @@ export function useInsuranceContract() {
   } = useWriteContract();
 
   const approveClaimOnChain = async (
-    claimId: number,
+    claimId: number
   ): Promise<`0x${string}` | undefined> => {
     if (!address) {
       printMessage("Please connect your wallet first", "error");
@@ -295,7 +326,7 @@ export function useInsuranceContract() {
 
   // Admin role helpers
   const grantAdminRole = async (
-    account: `0x${string}`,
+    account: `0x${string}`
   ): Promise<`0x${string}` | undefined> => {
     if (!address) {
       printMessage("Please connect your wallet first", "error");
@@ -319,7 +350,7 @@ export function useInsuranceContract() {
   };
 
   const revokeAdminRole = async (
-    account: `0x${string}`,
+    account: `0x${string}`
   ): Promise<`0x${string}` | undefined> => {
     if (!address) {
       printMessage("Please connect your wallet first", "error");
