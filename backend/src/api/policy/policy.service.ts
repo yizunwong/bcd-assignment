@@ -138,11 +138,7 @@ export class PolicyService {
     req: AuthenticatedRequest,
     query: FindPoliciesQueryDto,
   ): Promise<CommonResponseDto<PolicyResponseDto[]>> {
-    const { data: userData, error: userError } =
-      await req.supabase.auth.getUser();
-    if (userError || !userData?.user) {
-      throw new UnauthorizedException('Invalid or expired token');
-    }
+    const supabase = this.supabaseService.createClientWithToken();
 
     const sortableFields = ['id', 'name', 'rating', 'premium', 'popular'];
     if (query.sortBy && !sortableFields.includes(query.sortBy)) {
@@ -151,7 +147,7 @@ export class PolicyService {
 
     const offset = ((query.page || 1) - 1) * (query.limit || 5);
 
-    let dbQuery = req.supabase
+    let dbQuery = supabase
       .from('policies')
       .select(
         `*,
@@ -205,9 +201,8 @@ export class PolicyService {
       }
     }
 
-    const { data: coverageCounts } =
-      await req.supabase.rpc('count_policy_sales');
-    const { data: revenueCounts } = await req.supabase.rpc(
+    const { data: coverageCounts } = await supabase.rpc('count_policy_sales');
+    const { data: revenueCounts } = await supabase.rpc(
       'calculate_policy_revenue',
     );
 

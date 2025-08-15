@@ -38,6 +38,8 @@ import {
   Upload,
   FileText,
   Download,
+  Clock,
+  DollarSign,
 } from "lucide-react";
 import PolicyDetailsDialog, {
   Policy,
@@ -58,6 +60,8 @@ import {
   CreatePolicyDtoCategory,
   PolicyControllerFindAllParams,
 } from "@/api";
+import Ticker from "@/components/animata/text/ticker";
+import { StatsCard } from "@/components/shared/StatsCard";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -177,17 +181,6 @@ export default function ManagePolicies() {
         return "from-green-500 to-emerald-500";
       default:
         return "from-slate-500 to-slate-600";
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "status-active";
-      case "deactivated":
-        return "status-pending";
-      default:
-        return "bg-slate-100 text-slate-800 dark:bg-slate-700/50 dark:text-slate-300";
     }
   };
 
@@ -689,74 +682,39 @@ export default function ManagePolicies() {
         </div>
 
         {/* Stats Cards */}
-        <div className="stats-grid">
-          <Card className="glass-card rounded-2xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center">
-                  <Shield className="w-6 h-6 text-white" />
-                </div>
-                <Badge className="status-badge status-active">Active</Badge>
-              </div>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {statsData?.data?.activePolicies ?? 0}
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400">
-                Active Policies
-              </p>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          <StatsCard
+            title="Active Policies"
+            value={
+              <Ticker
+                value={(statsData?.data?.activePolicies ?? 0).toString()}
+                className="text-slate-800 dark:text-slate-100"
+              />
+            }
+            icon={Clock}
+          />
 
-          <Card className="glass-card rounded-2xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
-                  <Edit className="w-6 h-6 text-white" />
-                </div>
-                <Badge className="status-badge status-pending">
-                  Deactivated
-                </Badge>
-              </div>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {statsData?.data?.deactivatedPolicies ?? 0}
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400">
-                Deactivated Policies
-              </p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            title="Deactivated Policies"
+            value={
+              <Ticker
+                value={(statsData?.data?.deactivatedPolicies ?? 0).toString()}
+                className="text-slate-800 dark:text-slate-100"
+              />
+            }
+            icon={Edit}
+          />
 
-          <Card className="glass-card rounded-2xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center">
-                  <Plus className="w-6 h-6 text-white" />
-                </div>
-                <Badge className="status-badge status-info">Total</Badge>
-              </div>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {statsData?.data?.totalSales ?? 0}
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400">Total Sales</p>
-            </CardContent>
-          </Card>
-
-          <Card className="glass-card rounded-2xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center">
-                  <Shield className="w-6 h-6 text-white" />
-                </div>
-                <Badge className="status-badge status-active">Revenue</Badge>
-              </div>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">
-                {statsData?.data?.totalRevenue ?? 0}
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400">
-                Total ETH Revenue
-              </p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            title="Total Sales"
+            value={
+              <Ticker
+                value={(statsData?.data?.totalSales ?? 0).toString()}
+                className="text-slate-800 dark:text-slate-100"
+              />
+            }
+            icon={Plus}
+          />
         </div>
 
         {/* Tabs and Filters */}

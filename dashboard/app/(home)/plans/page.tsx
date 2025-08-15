@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { usePoliciesQuery } from "@/hooks/usePolicies";
 import {
   Shield,
   Heart,
@@ -43,241 +44,53 @@ export default function PlansPage() {
   const [selectedPlans, setSelectedPlans] = useState<string[]>([]);
 
   const categories = [
-    { id: "all", name: "All Categories", icon: Shield },
-    { id: "health", name: "Health Insurance", icon: Heart },
-    { id: "travel", name: "Travel Insurance", icon: Plane },
-    { id: "crop", name: "Agricultural Insurance", icon: Sprout },
-  ];
-
-  const plans = [
     {
-      id: "health-basic",
-      name: "Health Basic",
-      category: "health",
+      id: "all",
+      name: "All Categories",
+      icon: Shield,
+      gradient: "from-slate-500 to-slate-700",
+    },
+    {
+      id: "health",
+      name: "Health Insurance",
       icon: Heart,
       gradient: "from-red-500 to-pink-500",
-      coverage: "$50,000",
-      premium: "0.5 ETH/month",
-      popular: false,
-      description:
-        "Essential health coverage for individuals with basic medical needs",
-      features: [
-        "Emergency care",
-        "Primary care visits",
-        "Prescription coverage",
-        "Preventive care",
-        "Telemedicine access",
-      ],
-      limitations: [
-        "No dental or vision coverage",
-        "Limited specialist visits",
-        "No international coverage",
-        "Pre-existing conditions waiting period",
-      ],
-      bestFor: "Young, healthy individuals seeking essential coverage",
-      rating: 4.2,
-      reviews: 245,
     },
     {
-      id: "health-premium",
-      name: "Health Premium",
-      category: "health",
-      icon: Heart,
-      gradient: "from-red-500 to-pink-500",
-      coverage: "$100,000",
-      premium: "0.8 ETH/month",
-      popular: true,
-      description:
-        "Comprehensive health coverage with enhanced benefits and global network",
-      features: [
-        "All Basic features",
-        "Specialist consultations",
-        "Mental health coverage",
-        "Dental and vision care",
-        "Global emergency coverage",
-        "Wellness programs",
-        "Alternative medicine",
-      ],
-      limitations: [
-        "Some cosmetic procedures excluded",
-        "Limited coverage for certain experimental treatments",
-      ],
-      bestFor: "Families and individuals wanting comprehensive coverage",
-      rating: 4.8,
-      reviews: 789,
-    },
-    {
-      id: "health-elite",
-      name: "Health Elite",
-      category: "health",
-      icon: Heart,
-      gradient: "from-red-500 to-pink-500",
-      coverage: "$250,000",
-      premium: "1.5 ETH/month",
-      popular: false,
-      description:
-        "Premium healthcare with global coverage and exclusive benefits",
-      features: [
-        "All Premium features",
-        "Unlimited global coverage",
-        "Executive health checkups",
-        "Private hospital rooms",
-        "Medical evacuation",
-        "Concierge medical service",
-        "Family coverage options",
-        "Chronic condition management",
-      ],
-      limitations: ["High deductible for certain elective procedures"],
-      bestFor:
-        "High-net-worth individuals and executives requiring premium care",
-      rating: 4.9,
-      reviews: 312,
-    },
-    {
-      id: "travel-basic",
-      name: "Travel Basic",
-      category: "travel",
+      id: "travel",
+      name: "Travel Insurance",
       icon: Plane,
       gradient: "from-blue-500 to-cyan-500",
-      coverage: "$25,000",
-      premium: "0.1 ETH/trip",
-      popular: false,
-      description:
-        "Essential travel protection for domestic and international trips",
-      features: [
-        "Emergency medical coverage",
-        "Trip cancellation",
-        "Lost luggage protection",
-        "Travel delay compensation",
-        "24/7 assistance hotline",
-      ],
-      limitations: [
-        "Limited adventure sports coverage",
-        "Maximum trip duration of 30 days",
-        "Limited electronics coverage",
-        "No rental car coverage",
-      ],
-      bestFor: "Occasional travelers seeking basic protection",
-      rating: 4.3,
-      reviews: 178,
     },
     {
-      id: "travel-premium",
-      name: "Travel Premium",
-      category: "travel",
-      icon: Plane,
-      gradient: "from-blue-500 to-cyan-500",
-      coverage: "$50,000",
-      premium: "0.2 ETH/trip",
-      popular: true,
-      description:
-        "Comprehensive travel insurance with enhanced benefits for frequent travelers",
-      features: [
-        "All Basic features",
-        "Higher coverage limits",
-        "Adventure sports coverage",
-        "Rental car protection",
-        "Business equipment coverage",
-        "Pet emergency coverage",
-        "Cruise protection",
-      ],
-      limitations: [
-        "Maximum trip duration of 60 days",
-        "Some extreme sports excluded",
-      ],
-      bestFor: "Frequent travelers and families on vacation",
-      rating: 4.7,
-      reviews: 423,
-    },
-    {
-      id: "travel-nomad",
-      name: "Digital Nomad",
-      category: "travel",
-      icon: Plane,
-      gradient: "from-blue-500 to-cyan-500",
-      coverage: "$75,000",
-      premium: "0.3 ETH/month",
-      popular: false,
-      description:
-        "Long-term travel insurance designed for digital nomads and remote workers",
-      features: [
-        "All Premium features",
-        "Long-term global coverage",
-        "Work equipment protection",
-        "Co-working space liability",
-        "Multiple country coverage",
-        "Visa assistance services",
-        "Remote health consultations",
-        "Evacuation services",
-      ],
-      limitations: [
-        "Requires proof of remote work status",
-        "Some countries excluded due to regulations",
-      ],
-      bestFor: "Digital nomads and long-term international travelers",
-      rating: 4.9,
-      reviews: 156,
-    },
-    {
-      id: "crop-basic",
-      name: "Crop Basic",
-      category: "crop",
+      id: "crop",
+      name: "Agricultural Insurance",
       icon: Sprout,
-      gradient: "from-green-500 to-emerald-500",
-      coverage: "$100,000",
-      premium: "1.0 ETH/season",
-      popular: false,
-      description:
-        "Essential crop protection against major weather events and natural disasters",
-      features: [
-        "Weather damage coverage",
-        "Drought protection",
-        "Flood insurance",
-        "Fire damage",
-        "Basic pest coverage",
-        "Satellite monitoring",
-      ],
-      limitations: [
-        "Limited market price protection",
-        "Basic crops only",
-        "Coverage caps on certain events",
-        "Limited equipment coverage",
-      ],
-      bestFor: "Small farms with standard crop varieties",
-      rating: 4.4,
-      reviews: 89,
-    },
-    {
-      id: "crop-premium",
-      name: "Crop Premium",
-      category: "crop",
-      icon: Sprout,
-      gradient: "from-green-500 to-emerald-500",
-      coverage: "$200,000",
-      premium: "2.5 ETH/season",
-      popular: true,
-      description:
-        "Comprehensive agricultural insurance with advanced monitoring and protection",
-      features: [
-        "All Basic features",
-        "IoT sensor integration",
-        "Market price protection",
-        "Equipment breakdown",
-        "Livestock coverage",
-        "Yield guarantee",
-        "Organic certification",
-        "Automated weather alerts",
-      ],
-      limitations: [
-        "Some exotic crops may have limited coverage",
-        "Requires IoT sensor installation",
-      ],
-      bestFor: "Medium to large farms with diverse crops",
-      rating: 4.8,
-      reviews: 134,
+      gradient: "from-green-500 to-lime-500",
     },
   ];
 
+  const { data } = usePoliciesQuery();
+  const plans =
+    data?.data?.map((policy) => {
+      const category = categories.find((c) => c.id === policy.category);
+      return {
+        id: policy.id.toString(),
+        name: policy.name,
+        category: policy.category,
+        icon: category?.icon || Shield,
+        gradient: category?.gradient || "from-slate-500 to-slate-700",
+        coverage: `$${policy.coverage.toLocaleString()}`,
+        premium: `${policy.premium} ETH/month`,
+        popular: policy.popular,
+        description: policy.description || "",
+        features: policy.claim_types || [],
+        limitations: [],
+        bestFor: policy.provider || "",
+        rating: policy.rating,
+        reviews: policy.reviews?.length ?? 0,
+      };
+    }) ?? [];
   const specialOffers = [
     {
       title: "New Customer Discount",
