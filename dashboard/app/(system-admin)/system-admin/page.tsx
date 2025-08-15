@@ -128,9 +128,30 @@ export default function UserRoleManagement() {
     [usersData]
   );
 
-  const { grantAdminRole, revokeAdminRole } =
+  const { grantAdminRole, revokeAdminRole, isInsuranceAdmin } =
     useInsuranceContract();
   const [onChainAdmins, setOnChainAdmins] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const fetchOnChainAdmins = async () => {
+      const statuses: Record<string, boolean> = {};
+      await Promise.all(
+        users.map(async (u: any) => {
+          if (u.walletAddress) {
+            const isAdmin = await isInsuranceAdmin(
+              u.walletAddress as `0x${string}`
+            );
+            statuses[u.id] = isAdmin;
+          }
+        })
+      );
+      setOnChainAdmins(statuses);
+    };
+
+    if (users.length) {
+      fetchOnChainAdmins();
+    }
+  }, [users, isInsuranceAdmin]);
 
   const [newUserData, setNewUserData] = useState({
     email: "",
@@ -283,9 +304,28 @@ export default function UserRoleManagement() {
   };
 
   const handleSaveUser = async () => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsEditDialogOpen(false);
+    if (!selectedUser) return;
+    try {
+      const [firstName, ...rest] = editUserData.name.trim().split(" ");
+      const payload: any = {
+        firstName,
+        lastName: rest.join(" "),
+        email: editUserData.email,
+        phone: editUserData.phone || undefined,
+        role:
+          editUserData.role === "admin" ? "insurance_admin" : editUserData.role,
+        status: editUserData.status as any,
+        dateOfBirth: editUserData.dateOfBirth || undefined,
+        occupation: editUserData.occupation || undefined,
+        address: editUserData.address || undefined,
+      };
+      await updateUser(selectedUser.id, payload);
+      printMessage("User updated successfully", "success");
+      setIsEditDialogOpen(false);
+      refetch();
+    } catch (err) {
+      printMessage("Failed to update user", "error");
+    }
   };
 
   const handleConfigureRole = (role: any) => {
@@ -314,7 +354,10 @@ export default function UserRoleManagement() {
       return;
     }
     try {
-      if (onChainAdmins[user.id]) {
+      const isAdmin = await isInsuranceAdmin(
+        user.walletAddress as `0x${string}`
+      );
+      if (isAdmin) {
         await revokeAdminRole(user.walletAddress as `0x${string}`);
         printMessage("Removed on-chain admin role", "success");
         setOnChainAdmins((prev) => ({ ...prev, [user.id]: false }));
