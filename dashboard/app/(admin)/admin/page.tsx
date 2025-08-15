@@ -122,10 +122,15 @@ export default function AdminDashboard() {
                         </div>
                         <div>
                           <div className="flex items-center space-x-2">
-                            <h3 className="font-semibold text-slate-800 dark:text-slate-100">
-                              {claim.policy?.name || "Unknown Policy"} (
-                              {claim.submitted_by || "Unknown User"})
-                            </h3>
+                          <h3 className="font-semibold text-slate-800 dark:text-slate-100">
+                            {claim.policy?.name || "Unknown Policy"}
+                            {" "}
+                            <span className="text-sm font-normal text-slate-600 dark:text-slate-300">
+                              (Claimed by: <span className="font-medium text-indigo-600 dark:text-indigo-400">
+                                {claim.submitted_by || "Unknown User"}
+                              </span>)
+                            </span>
+                          </h3>
                             <Badge
                               variant="secondary"
                               className="bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"

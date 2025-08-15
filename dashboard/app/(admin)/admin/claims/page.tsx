@@ -419,10 +419,15 @@ export default function ClaimsReview() {
                         <FileText className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-                          {claim.policy?.name || "Unknown Policy"} (
-                          {claim.submitted_by || "Unknown User"})
-                        </h3>
+                      <h3 className="font-semibold text-slate-800 dark:text-slate-100">
+                        {claim.policy?.name || "Unknown Policy"}
+                        {" "}
+                        <span className="text-sm font-normal text-slate-600 dark:text-slate-300">
+                          (Claimed by: <span className="font-medium text-indigo-600 dark:text-indigo-400">
+                            {claim.submitted_by || "Unknown User"}
+                          </span>)
+                        </span>
+                      </h3>
                         <p className="text-slate-600 dark:text-slate-400">
                           Claim #{claim.id} • {claim.type}
                         </p>
