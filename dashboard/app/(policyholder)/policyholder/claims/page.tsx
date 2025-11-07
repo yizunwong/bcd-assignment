@@ -152,7 +152,7 @@ export default function Claims() {
 
   const claims = useMemo(
     () =>
-      (claimsData?.data ?? []).map((claim) => ({
+      (claimsData?.data?.items ?? []).map((claim) => ({
         id: claim.id.toString(),
         policyName: claim.policy?.name ?? "",
         type: claim.type,

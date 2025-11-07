@@ -28,8 +28,9 @@ export function NotificationsDropdown() {
   const markAsRead = useMarkNotificationAsRead();
   const markAllAsRead = useMarkAllNotificationsAsRead();
 
-  const notifications = notificationsData?.data || [];
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const notifications = notificationsData?.data?.data || [];
+  console.log('notifications', notifications);
+  const unreadCount = notifications?.filter((n) => !n.read).length;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -45,12 +46,13 @@ export function NotificationsDropdown() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const getNotificationIcon = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'success':
+  const getNotificationIcon = (notificationType: string) => {
+    console.log('notificationType', notificationType);
+    switch (notificationType.toLowerCase()) {
+      case "success":
         return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'error':
-      case 'warning':
+      case "error":
+      case "warning":
         return <AlertCircle className="w-4 h-4 text-red-500" />;
       default:
         return <Info className="w-4 h-4 text-blue-500" />;
@@ -134,7 +136,7 @@ export function NotificationsDropdown() {
               </div>
             ) : (
               <div className="space-y-1">
-                {notifications.map((notification) => (
+                {notifications?.map((notification) => (
                   <div
                     key={notification.id}
                     className={cn(
@@ -150,7 +152,7 @@ export function NotificationsDropdown() {
                   >
                     <div className="flex items-start space-x-3">
                       <div className="flex-shrink-0 mt-0.5">
-                        {getNotificationIcon(notification.notification_type)}
+                        {getNotificationIcon(notification.notificationType)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
@@ -203,7 +205,7 @@ export function NotificationsDropdown() {
                         </div>
                         <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
                           {formatDistanceToNow(
-                            new Date(notification.created_at),
+                            new Date(notification.createdAt),
                             { addSuffix: true }
                           )}
                         </p>

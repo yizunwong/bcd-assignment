@@ -24,8 +24,12 @@ export default async function GlobalNavbar() {
   if (token) {
     try {
       const decoded = jwtDecode<DecodedToken>(token);
-      const rawRole = decoded.app_metadata?.role;
-      userId = decoded.sub;
+      const rawRole =
+        decoded[
+          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+          ];
+      console.log("decoded", decoded);
+      userId = decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
       switch (rawRole) {
         case "policyholder":
           role = "policyholder";

@@ -25,7 +25,10 @@ export const customFetcher = async <T = any>({
   const isFormData =
     typeof FormData !== "undefined" && data instanceof FormData;
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}${query}`, {
+  // ✅ Ensure URL always starts with /api/
+  const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api${url.startsWith("/") ? url : `/${url}`}${query}`;
+
+  const res = await fetch(apiUrl, {
     method,
     headers: isFormData
       ? undefined // ✅ Let browser set Content-Type with boundary

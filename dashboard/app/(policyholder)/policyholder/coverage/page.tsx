@@ -62,16 +62,18 @@ interface TransformedCoverage {
 }
 
 const transformCoverageData = (coverageData: any[]): TransformedCoverage[] => {
-  return coverageData.map((coverage) => {
+  return coverageData?.items?.map((coverage) => {
     const policy = coverage.policies;
     const coverageAmount = policy?.coverage || 0;
     const utilizationAmount =
       (coverage.utilization_rate / 100) * coverageAmount;
     const policyStatus = policy?.status || "active";
 
+    console.log("coverage", coverage);
+
     return {
       id: coverage.id.toString(),
-      policyId: coverage.policy_id.toString(),
+      policyId: coverage.policyId.toString(),
       name: policy?.name || "Unknown Policy",
       type: policy?.category || "General",
       provider: policy?.provider || "Unknown Provider",
@@ -79,13 +81,13 @@ const transformCoverageData = (coverageData: any[]): TransformedCoverage[] => {
       premium: policy?.premium || "0 ETH/month",
       status: policyStatus === "deactivated" ? "deactivated" : coverage.status || "active",
       policyStatus,
-      startDate: coverage.start_date,
-      endDate: coverage.end_date,
-      nextPayment: coverage.next_payment_date,
-      agreementCid: coverage.agreement_cid,
-      utilizationRate: coverage.utilization_rate,
+      startDate: coverage.startDate,
+      endDate: coverage.endDate,
+      nextPayment: coverage.nextPaymentDate,
+      agreementCid: coverage.agreementCid,
+      utilizationRate: coverage.utilizationRate,
       claimsUsed: `$${utilizationAmount.toLocaleString()}`,
-      benefits: policy?.claim_types || [],
+      benefits: policy?.claimTypes || [],
       recentClaims: [], // This would need to be fetched separately if needed
     };
   });
