@@ -26,3 +26,9 @@ export function formatDate(value?: Date | string) {
   if (isNaN(date.getTime())) return "";
   return format(date, "PPP");
 }
+
+export function parsePgTimestamp(ts?: string) {
+  if (!ts) return new Date(); 
+  return new Date(ts.replace(/\.\d+/, ""));
+}
+

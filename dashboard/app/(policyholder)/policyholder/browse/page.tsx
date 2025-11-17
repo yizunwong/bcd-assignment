@@ -80,7 +80,7 @@ export default function BrowsePolicies() {
   const { data: coverageData } = useCoverageListQuery({ limit: 100 });
 
   const purchasedPolicyIds = useMemo(() => {
-    return (coverageData?.data?.items || []).map((c: any) => Number(c.policy_id));
+    return (coverageData?.data || []).map((c: any) => Number(c.policy_id));
   }, [coverageData]);
 
   const hasFilters = selectedCategory !== "all" || !!debouncedSearchTerm;
@@ -117,7 +117,7 @@ export default function BrowsePolicies() {
   }, [error, printMessage]);
 
   const policies = useMemo<Policy[]>(() => {
-    return (policiesData?.data?.items || []).map((policy) => ({
+    return (policiesData?.data || []).map((policy) => ({
       id: policy.id,
       name: policy.name,
       category: policy.category as PolicyControllerFindAllCategory,

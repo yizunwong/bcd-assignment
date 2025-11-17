@@ -1,5 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+export class CoverageClaimDto {
+  @ApiProperty({ description: 'Primary key' })
+  id!: number;
+
+  @ApiProperty({ description: 'Associated policy ID' })
+  policyId!: number;
+
+  @ApiProperty({ description: 'Claim type name' })
+  name!: string;
+
+  @ApiProperty({ description: 'Created timestamp', type: String })
+  createdAt!: string; // or Date if you convert it
+}
+
 export class CoveragePolicyDto {
   @ApiProperty()
   id!: number;
@@ -27,6 +41,11 @@ export class CoveragePolicyDto {
 
   @ApiProperty()
   status!: string;
+  @ApiProperty({
+    type: [CoverageClaimDto],
+    description: 'List of claims for this coverage',
+  })
+  claims?: CoverageClaimDto[];
 }
 
 export class CoverageResponseDto {
@@ -34,29 +53,33 @@ export class CoverageResponseDto {
   id!: number;
 
   @ApiProperty()
-  policy_id!: number;
+  policyId!: number;
 
   @ApiProperty()
-  user_id!: string;
+  userId!: string;
 
   @ApiProperty()
   status!: string;
 
   @ApiProperty()
-  agreement_cid!: string;
+  agreementCid!: string;
 
   @ApiProperty()
-  utilization_rate!: number;
+  utilizationRate!: number;
 
   @ApiProperty()
-  start_date!: string;
+  startDate!: string;
 
   @ApiProperty()
-  end_date!: string;
+  endDate!: string;
 
   @ApiProperty()
-  next_payment_date!: string;
+  nextPaymentDate!: string;
 
   @ApiProperty({ type: () => CoveragePolicyDto })
   policies?: CoveragePolicyDto;
+
+  constructor(partial: Partial<CoverageResponseDto>) {
+    Object.assign(this, partial);
+  }
 }

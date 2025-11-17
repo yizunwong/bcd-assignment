@@ -196,7 +196,7 @@ export default function PolicyholderDashboard() {
                       Loading...
                     </p>
                   ) : (
-                    (activityLogs?.data?.data ?? []).map((activity) => (
+                    (activityLogs?.data ?? []).map((activity) => (
                       <div
                         key={activity.id}
                         className="flex items-start space-x-3"

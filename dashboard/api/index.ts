@@ -534,6 +534,17 @@ export interface UpdatePolicyDto {
   claimTypes?: string[];
 }
 
+export interface CoverageClaimDto {
+  /** Primary key */
+  id: number;
+  /** Associated policy ID */
+  policyId: number;
+  /** Claim type name */
+  name: string;
+  /** Created timestamp */
+  createdAt: string;
+}
+
 export type CoveragePolicyDtoDescription = { [key: string]: unknown };
 
 export interface CoveragePolicyDto {
@@ -546,18 +557,20 @@ export interface CoveragePolicyDto {
   duration_days: number;
   provider: string;
   status: string;
+  /** List of claims for this coverage */
+  claims: CoverageClaimDto[];
 }
 
 export interface CoverageResponseDto {
   id: number;
-  policy_id: number;
-  user_id: string;
+  policyId: number;
+  userId: string;
   status: string;
-  agreement_cid: string;
-  utilization_rate: number;
-  start_date: string;
-  end_date: string;
-  next_payment_date: string;
+  agreementCid: string;
+  utilizationRate: number;
+  startDate: string;
+  endDate: string;
+  nextPaymentDate: string;
   policies: CoveragePolicyDto;
 }
 

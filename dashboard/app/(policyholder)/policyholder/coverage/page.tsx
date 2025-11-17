@@ -30,7 +30,11 @@ import {
   useCoverageStatsQuery,
 } from "@/hooks/useCoverage";
 import { useToast } from "@/components/shared/ToastProvider";
-import type { CoverageControllerFindAllParams } from "@/api";
+import type {
+  CoverageClaimDto,
+  CoverageControllerFindAllParams,
+  CoverageResponseDto,
+} from "@/api";
 import CoverageDetailsDialog from "./components/CoverageDetailsDialog";
 
 const ITEMS_PER_PAGE = 5;
@@ -43,7 +47,7 @@ interface TransformedCoverage {
   type: string;
   provider: string;
   coverage: string;
-  premium: string;
+  premium: number;
   status: string;
   policyStatus: string;
   startDate: string;
@@ -52,7 +56,7 @@ interface TransformedCoverage {
   agreementCid: string;
   utilizationRate: number;
   claimsUsed: string;
-  benefits: string[];
+  benefits: CoverageClaimDto[];
   recentClaims: Array<{
     date: string;
     amount: string;
@@ -61,25 +65,28 @@ interface TransformedCoverage {
   }>;
 }
 
-const transformCoverageData = (coverageData: any[]): TransformedCoverage[] => {
-  return coverageData?.items?.map((coverage) => {
+const transformCoverageData = (
+  coverageData: CoverageResponseDto[]
+): TransformedCoverage[] => {
+  return coverageData?.map((coverage) => {
     const policy = coverage.policies;
     const coverageAmount = policy?.coverage || 0;
     const utilizationAmount =
-      (coverage.utilization_rate / 100) * coverageAmount;
+      (coverage.utilizationRate / 100) * coverageAmount;
     const policyStatus = policy?.status || "active";
-
-    console.log("coverage", coverage);
 
     return {
       id: coverage.id.toString(),
-      policyId: coverage.policyId.toString(),
+      policyId: coverage?.policyId?.toString(),
       name: policy?.name || "Unknown Policy",
       type: policy?.category || "General",
       provider: policy?.provider || "Unknown Provider",
       coverage: `$${coverageAmount.toLocaleString()}`,
-      premium: policy?.premium || "0 ETH/month",
-      status: policyStatus === "deactivated" ? "deactivated" : coverage.status || "active",
+      premium: policy?.premium || 0,
+      status:
+        policyStatus === "deactivated"
+          ? "deactivated"
+          : coverage.status || "active",
       policyStatus,
       startDate: coverage.startDate,
       endDate: coverage.endDate,
@@ -87,8 +94,8 @@ const transformCoverageData = (coverageData: any[]): TransformedCoverage[] => {
       agreementCid: coverage.agreementCid,
       utilizationRate: coverage.utilizationRate,
       claimsUsed: `$${utilizationAmount.toLocaleString()}`,
-      benefits: policy?.claimTypes || [],
-      recentClaims: [], // This would need to be fetched separately if needed
+      benefits: policy?.claims || [],
+      recentClaims: [], 
     };
   });
 };
@@ -526,11 +533,10 @@ export default function MyCoverage() {
                     <Calendar className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                     <div>
                       <p className="text-xs text-slate-500 dark:text-slate-500">
-                        coverage Period
+                        Coverage Period
                       </p>
                       <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                        {new Date(coverage.startDate).toLocaleDateString()} -{" "}
-                        {new Date(coverage.endDate).toLocaleDateString()}
+                        {coverage.startDate} - {coverage.endDate}
                       </p>
                     </div>
                   </div>
@@ -541,7 +547,7 @@ export default function MyCoverage() {
                         Next Payment
                       </p>
                       <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                        {new Date(coverage.nextPayment).toLocaleDateString()}
+                        {coverage.nextPayment}
                       </p>
                     </div>
                   </div>
@@ -555,13 +561,13 @@ export default function MyCoverage() {
                   <div className="flex flex-wrap gap-1">
                     {coverage.benefits
                       .slice(0, 4)
-                      .map((benefit: string, index: number) => (
+                      .map((benefits: CoverageClaimDto, index: number) => (
                         <Badge
                           key={index}
                           variant="secondary"
                           className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
                         >
-                          {benefit}
+                          {benefits.name} {/* <-- use name property */}
                         </Badge>
                       ))}
                     {coverage.benefits.length > 4 && (

@@ -63,12 +63,6 @@ export default function Reports() {
   const { data: coverageStat } = useCoverageStatsQuery();
   const { data: adminSummary } = useAdminDashboardSummaryQuery();
 
-  console.log("Claim Details:", claimDetail);
-  console.log(" coverageStat:", coverageStat);
-  console.log("adminSummary:", adminSummary);
-
-
-
   const filteredReports = useMemo(() => {
     let filtered = recentReports.filter((report) => {
       const matchesSearch =

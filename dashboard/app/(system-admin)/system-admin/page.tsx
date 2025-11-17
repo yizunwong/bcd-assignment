@@ -902,7 +902,7 @@ export default function UserRoleManagement() {
             <div className="content-spacing mb-8">
               {paginatedUsers.map((user) => (
                 <Card
-                  key={user.id}
+                  key={user.id ?? user.email ?? user.walletAddress ?? user.name}
                   className="glass-card rounded-2xl card-hover"
                 >
                   <CardContent className="p-6">
@@ -1278,7 +1278,11 @@ export default function UserRoleManagement() {
                     {(selectedUser.activityLog?.slice(0, 5) || []).map(
                       (activity: any, index: number) => (
                         <div
-                          key={index}
+                          key={
+                            activity.id ??
+                            activity.timestamp ??
+                            `${activity.action}-${index}`
+                          }
                           className="flex items-center justify-between p-3 bg-slate-50/50 dark:bg-slate-700/30 rounded-lg"
                         >
                           <div>
@@ -1614,7 +1618,7 @@ export default function UserRoleManagement() {
                     {selectedRole.permissions.map(
                       (permission: any, index: number) => (
                         <div
-                          key={index}
+                          key={permission.id ?? permission.name ?? index}
                           className="flex items-center justify-between p-3 bg-slate-50/50 dark:bg-slate-700/30 rounded-lg"
                         >
                           <div className="flex items-center space-x-3">

@@ -3445,6 +3445,33 @@
           }
         }
       },
+      "CoverageClaimDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "Primary key"
+          },
+          "policyId": {
+            "type": "number",
+            "description": "Associated policy ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Claim type name"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Created timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "policyId",
+          "name",
+          "createdAt"
+        ]
+      },
       "CoveragePolicyDto": {
         "type": "object",
         "properties": {
@@ -3474,6 +3501,13 @@
           },
           "status": {
             "type": "string"
+          },
+          "claims": {
+            "description": "List of claims for this coverage",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CoverageClaimDto"
+            }
           }
         },
         "required": [
@@ -3484,7 +3518,8 @@
           "premium",
           "duration_days",
           "provider",
-          "status"
+          "status",
+          "claims"
         ]
       },
       "CoverageResponseDto": {
@@ -3493,28 +3528,28 @@
           "id": {
             "type": "number"
           },
-          "policy_id": {
+          "policyId": {
             "type": "number"
           },
-          "user_id": {
+          "userId": {
             "type": "string"
           },
           "status": {
             "type": "string"
           },
-          "agreement_cid": {
+          "agreementCid": {
             "type": "string"
           },
-          "utilization_rate": {
+          "utilizationRate": {
             "type": "number"
           },
-          "start_date": {
+          "startDate": {
             "type": "string"
           },
-          "end_date": {
+          "endDate": {
             "type": "string"
           },
-          "next_payment_date": {
+          "nextPaymentDate": {
             "type": "string"
           },
           "policies": {
@@ -3523,14 +3558,14 @@
         },
         "required": [
           "id",
-          "policy_id",
-          "user_id",
+          "policyId",
+          "userId",
           "status",
-          "agreement_cid",
-          "utilization_rate",
-          "start_date",
-          "end_date",
-          "next_payment_date",
+          "agreementCid",
+          "utilizationRate",
+          "startDate",
+          "endDate",
+          "nextPaymentDate",
           "policies"
         ]
       },

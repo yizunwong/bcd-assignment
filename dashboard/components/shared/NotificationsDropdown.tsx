@@ -17,6 +17,7 @@ import {
   useMarkAllNotificationsAsRead,
 } from '@/hooks/useNotifications';
 import { formatDistanceToNow } from 'date-fns';
+import { parsePgTimestamp } from '@/utils/formatHelper';
 
 export function NotificationsDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,8 +29,7 @@ export function NotificationsDropdown() {
   const markAsRead = useMarkNotificationAsRead();
   const markAllAsRead = useMarkAllNotificationsAsRead();
 
-  const notifications = notificationsData?.data?.data || [];
-  console.log('notifications', notifications);
+  const notifications = notificationsData?.data || [];
   const unreadCount = notifications?.filter((n) => !n.read).length;
 
   useEffect(() => {
@@ -47,8 +47,7 @@ export function NotificationsDropdown() {
   }, []);
 
   const getNotificationIcon = (notificationType: string) => {
-    console.log('notificationType', notificationType);
-    switch (notificationType.toLowerCase()) {
+    switch (notificationType?.toLowerCase()) {
       case "success":
         return <CheckCircle className="w-4 h-4 text-green-500" />;
       case "error":
@@ -119,7 +118,7 @@ export function NotificationsDropdown() {
                 onClick={handleMarkAllAsRead}
                 disabled={markAllAsRead.isPending}
               >
-                {markAllAsRead.isPending ? 'Marking...' : 'Mark all read'}
+                {markAllAsRead.isPending ? "Marking..." : "Mark all read"}
               </Button>
             )}
           </div>
@@ -140,8 +139,8 @@ export function NotificationsDropdown() {
                   <div
                     key={notification.id}
                     className={cn(
-                      'px-4 py-3 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer',
-                      !notification.read && 'bg-blue-50/50 dark:bg-blue-900/20'
+                      "px-4 py-3 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer",
+                      !notification.read && "bg-blue-50/50 dark:bg-blue-900/20"
                     )}
                     onClick={() =>
                       handleNotificationClick(
@@ -152,16 +151,16 @@ export function NotificationsDropdown() {
                   >
                     <div className="flex items-start space-x-3">
                       <div className="flex-shrink-0 mt-0.5">
-                        {getNotificationIcon(notification.notificationType)}
+                        {getNotificationIcon(notification.notification_type)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <p
                             className={cn(
-                              'text-sm font-medium flex-1 min-w-0',
+                              "text-sm font-medium flex-1 min-w-0",
                               notification.read
-                                ? 'text-slate-600 dark:text-slate-400'
-                                : 'text-slate-900 dark:text-slate-100'
+                                ? "text-slate-600 dark:text-slate-400"
+                                : "text-slate-900 dark:text-slate-100"
                             )}
                           >
                             {notification.title}
@@ -173,10 +172,10 @@ export function NotificationsDropdown() {
                         <div className="mt-1">
                           <p
                             className={cn(
-                              'text-xs text-slate-500 dark:text-slate-400 leading-relaxed whitespace-normal break-words',
+                              "text-xs text-slate-500 dark:text-slate-400 leading-relaxed whitespace-normal break-words",
                               !expandedNotifications.has(notification.id) &&
                                 isLongMessage(notification.message) &&
-                                'line-clamp-2'
+                                "line-clamp-2"
                             )}
                           >
                             {notification.message}
@@ -205,7 +204,7 @@ export function NotificationsDropdown() {
                         </div>
                         <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
                           {formatDistanceToNow(
-                            new Date(notification.createdAt),
+                            parsePgTimestamp(notification.created_at),
                             { addSuffix: true }
                           )}
                         </p>

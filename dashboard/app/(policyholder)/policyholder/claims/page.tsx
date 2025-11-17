@@ -152,7 +152,7 @@ export default function Claims() {
 
   const claims = useMemo(
     () =>
-      (claimsData?.data?.items ?? []).map((claim) => ({
+      (claimsData?.data ?? []).map((claim) => ({
         id: claim.id.toString(),
         policyName: claim.policy?.name ?? "",
         type: claim.type,
@@ -358,8 +358,6 @@ export default function Claims() {
   const removeFile = (index: number) => {
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
-
-  console.log(selectedPolicy);
 
   return (
     <div className="section-spacing">

@@ -83,7 +83,6 @@ export default function PaymentSummary() {
   const searchParams = useSearchParams();
   const policyId = searchParams.get("policy") ?? "";
   const { data: policy } = usePolicyQuery(Number(policyId));
-  console.log("policy", policy);
 
   const policyData = useMemo(() => {
     if (!policy?.data) return null;
@@ -92,12 +91,12 @@ export default function PaymentSummary() {
       name: policy.data.name,
       category: policy.data.category,
       provider: policy.data.provider,
-      coverage: `$${policy.data.coverageAmount}`,
+      coverage: `$${policy.data.coverage}`,
       premium: `${policy.data.premium} ETH/month`,
       rating: policy.data.rating,
-      features: policy.data.claimTypes ?? [],
+      features: policy.data.claim_types ?? [],
       description: String(policy.data.description ?? ""),
-      duration: `${policy.data.durationDays} days`,
+      duration: `${policy.data.duration_days} days`,
       basePrice: policy.data.premium,
       discount: 0,
       fees: 0,

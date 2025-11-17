@@ -28,13 +28,11 @@ export default async function GlobalNavbar() {
         decoded[
           "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
           ];
-      console.log("decoded", decoded);
       userId = decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
       switch (rawRole) {
         case "policyholder":
           role = "policyholder";
           break;
-        case "admin":
         case "insurance_admin":
           role = "admin";
           break;

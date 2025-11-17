@@ -14,6 +14,7 @@ import { useEffect, useRef, useState } from "react";
 import { useInsuranceContract } from "@/hooks/useBlockchain";
 import { usePaymentMutation } from "@/hooks/usePayment";
 import LeaveReviewDialog from "./LeaveReviewDialog";
+import { CoverageClaimDto } from '@/api';
 
 interface CoveragePolicy {
   id: string;
@@ -21,12 +22,12 @@ interface CoveragePolicy {
   name: string;
   provider: string;
   coverage: string;
-  premium: string;
+  premium: number;
   status: string;
   startDate: string;
   endDate: string;
   nextPayment: string;
-  benefits: string[];
+  benefits: CoverageClaimDto[];
 }
 
 interface CoverageDetailsDialogProps {
@@ -138,21 +139,23 @@ export default function CoverageDetailsDialog({
               value={new Date(coverage.nextPayment).toLocaleDateString()}
             />
 
-            {coverage.benefits.length > 0 && (
+            {coverage.benefits && coverage.benefits.length > 0 && (
               <div>
                 <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                   Benefits
                 </p>
                 <div className="flex flex-wrap gap-1">
-                  {coverage.benefits.map((benefit, idx) => (
-                    <Badge
-                      key={idx}
-                      variant="secondary"
-                      className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
-                    >
-                      {benefit}
-                    </Badge>
-                  ))}
+                  {coverage.benefits.map(
+                    (benefit: CoverageClaimDto, idx: number) => (
+                      <Badge
+                        key={idx}
+                        variant="secondary"
+                        className="text-xs bg-slate-200 dark:bg-slate-600/50 text-slate-700 dark:text-slate-300"
+                      >
+                        {benefit.name} {/* <-- use the name property */}
+                      </Badge>
+                    )
+                  )}
                 </div>
               </div>
             )}

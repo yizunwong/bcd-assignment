@@ -75,7 +75,17 @@ export class CoverageService {
     return new CommonResponseDto({
       statusCode: 201,
       message: 'Coverage created successfully',
-      data: coverage,
+      data: new CoverageResponseDto({
+        id: coverage.id,
+        policyId: coverage.policy_id,
+        userId: coverage.user_id,
+        status: coverage.status,
+        utilizationRate: coverage.utilization_rate,
+        startDate: coverage.start_date,
+        endDate: coverage.end_date,
+        nextPaymentDate: coverage.next_payment_date,
+        agreementCid: coverage.agreement_cid,
+      }),
     });
   }
 
@@ -177,6 +187,7 @@ export class CoverageService {
         admin_details:admin_details!policies_created_by_fkey1(
           company:companies(name)
         )
+        
       )
     `,
       )
@@ -188,17 +199,42 @@ export class CoverageService {
       throw new NotFoundException(`Coverage with ID ${id} not found`);
     }
 
+    const { data: claimsData, error: claimsError } = await req.supabase
+      .from('claims')
+      .select(
+        `
+    id,
+    policy_id,
+    created_at,
+    claim_types!claims_claim_type_id_fkey(name)
+  `,
+      )
+      .eq('policy_id', coverage.policies.id);
+
+    if (claimsError) {
+      console.error(claimsError);
+      throw new InternalServerErrorException('Failed to fetch claims data');
+    }
     return new CommonResponseDto({
       statusCode: 200,
       message: 'Coverage retrieved successfully',
       data: {
-        ...coverage,
+        id: coverage.id,
+        policyId: coverage.policies.id,
+        userId: coverage.user_id,
+        status: coverage.status,
+        utilizationRate: coverage.utilization_rate,
+        agreementCid: coverage.agreement_cid,
+        startDate: coverage.start_date,
+        endDate: coverage.end_date,
+        nextPaymentDate: coverage.next_payment_date,
         policies: coverage.policies
           ? {
               ...coverage.policies,
               provider: coverage.policies.admin_details?.company?.name || '',
             }
           : coverage.policies,
+        claims: claimsData || [],
       },
     });
   }

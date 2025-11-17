@@ -42,7 +42,7 @@ export class CoverageController {
 
   @Post('agreement')
   @UseGuards(AuthGuard)
-  @UseInterceptors(FileInterceptor('files'))
+  @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
   async uploadAgreement(
     @UploadedFile() file: Express.Multer.File,
