@@ -106,6 +106,7 @@ export function useInsuranceContract() {
 
     const coverageWei = parseEther(coverage.toString());
     const premiumWei = parseEther(premium.toString());
+    
 
     const hash = await createCoverage({
       address: INSURANCE_CONTRACT_ADDRESS,

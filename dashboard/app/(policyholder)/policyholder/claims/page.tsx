@@ -109,7 +109,7 @@ export default function Claims() {
   const selectedPolicyData = policies.find(
     (p) => p.id.toString() === selectedPolicy
   );
-  const claimTypes = selectedPolicyData?.claim_types || [];
+  const claimTypes = selectedPolicyData?.claimTypes || [];
 
   const handlePolicyChange = (val: string) => {
     setSelectedPolicy(val);
@@ -164,7 +164,7 @@ export default function Claims() {
         submittedDate: claim.submitted_date,
         processedDate: undefined,
         description: claim.description,
-        documents: claim.claim_documents?.map((doc) => doc.name) ?? [],
+        documents: claim.claimDocuments?.map((doc) => doc.name) ?? [],
         timeline: [],
       })),
     [claimsData]
@@ -795,7 +795,7 @@ export default function Claims() {
 
                       await createClaim({
                         id: claimId,
-                        coverage_id: Number(selectedPolicy),
+                        coverageId: Number(selectedPolicy),
                         type: claimType,
                         priority,
                         amount,

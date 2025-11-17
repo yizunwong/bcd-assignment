@@ -173,16 +173,16 @@ export default function ManagePolicies() {
     name: policy.name,
     category: policy.category as PolicyControllerFindAllCategory,
     provider: policy.provider,
-    coverage: policy.coverage,
+    coverage: policy.coverageAmount,
     premium: policy.premium,
     status: policy.status,
     sales: policy.sales,
     revenue: policy.revenue,
-    created: policy.created_at,
+    created: policy.createdAt,
     lastUpdated: undefined,
     description:
       typeof policy.description === "string" ? policy.description : "",
-    features: policy.claim_types || [],
+    features: policy.claimTypes || [],
     terms: "",
   }));
 

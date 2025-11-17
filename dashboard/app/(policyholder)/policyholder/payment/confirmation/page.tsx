@@ -240,10 +240,10 @@ export default function PaymentConfirmation() {
         name: coverage.data.policies?.name || "Unknown Policy",
         category: coverage.data.policies?.category || "general",
         provider: coverage.data.policies?.provider || "Unknown Provider",
-        duration: `${coverage.data.policies?.duration_days} days`,
-        coverage: `$${coverage.data.policies?.coverage.toLocaleString()}`,
-        effectiveDate: coverage.data.start_date,
-        expiryDate: coverage.data.end_date,
+        duration: `${coverage.data.policies?.durationDays} days`,
+        coverage: `RM${coverage.data.policies?.coverageAmount}`,
+        effectiveDate: coverage.data.startDate,
+        expiryDate: coverage.data.endDate,
       }
     : null;
 
@@ -477,8 +477,8 @@ export default function PaymentConfirmation() {
                       step.status === "current"
                         ? "text-emerald-600 dark:text-emerald-400"
                         : step.status === "completed"
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-slate-500 dark:text-slate-400"
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : "text-slate-500 dark:text-slate-400"
                     }`}
                   >
                     {step.name}

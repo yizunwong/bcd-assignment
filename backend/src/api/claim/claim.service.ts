@@ -42,7 +42,7 @@ export class ClaimService {
       .upsert(
         {
           id: createClaimDto.id,
-          coverage_id: createClaimDto.coverage_id,
+          coverage_id: createClaimDto.coverageId,
           submitted_by: user_id,
           type: createClaimDto.type,
           priority: createClaimDto.priority,
@@ -405,7 +405,7 @@ export class ClaimService {
     const { data, error } = await req.supabase
       .from('claims')
       .update({
-        coverage_id: updateClaimDto.coverage_id,
+        coverage_id: updateClaimDto.coverageId,
         user_id: user_id,
         type: updateClaimDto.type,
         priority: updateClaimDto.priority,

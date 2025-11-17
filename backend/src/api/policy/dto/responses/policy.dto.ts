@@ -40,10 +40,10 @@ export class PolicyResponseDto {
   provider!: string;
 
   @ApiProperty()
-  coverage!: number;
+  coverageAmount!: number;
 
   @ApiProperty()
-  duration_days!: number;
+  durationDays!: number;
 
   @ApiProperty()
   premium!: number;
@@ -58,7 +58,7 @@ export class PolicyResponseDto {
   description?: string | null;
 
   @ApiProperty()
-  claim_types!: string[];
+  claimTypes!: string[];
 
   @ApiProperty()
   sales!: number;
@@ -70,10 +70,10 @@ export class PolicyResponseDto {
   status!: string;
 
   @ApiProperty()
-  created_at!: string;
+  createdAt!: string;
 
   @ApiProperty({ type: [PolicyDocumentResponseDto] })
-  policy_documents?: PolicyDocumentResponseDto[];
+  policyDocuments?: PolicyDocumentResponseDto[];
 
   @ApiProperty({ type: [ReviewRespondDto] })
   reviews?: ReviewRespondDto[];

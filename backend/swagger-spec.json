@@ -2875,7 +2875,7 @@
             "example": 1,
             "description": "ID of the claim"
           },
-          "coverage_id": {
+          "coverageId": {
             "type": "number",
             "example": 1,
             "description": "ID of the policy associated with the claim"
@@ -2908,7 +2908,7 @@
         },
         "required": [
           "id",
-          "coverage_id",
+          "coverageId",
           "type",
           "priority",
           "amount"
@@ -3074,7 +3074,7 @@
             "example": 1,
             "description": "ID of the claim to update"
           },
-          "coverage_id": {
+          "coverageId": {
             "type": "number",
             "example": 1,
             "description": "ID of the policy associated with the claim"
@@ -3264,10 +3264,10 @@
           "provider": {
             "type": "string"
           },
-          "coverage": {
+          "coverageAmount": {
             "type": "number"
           },
-          "duration_days": {
+          "durationDays": {
             "type": "number"
           },
           "premium": {
@@ -3282,7 +3282,7 @@
           "description": {
             "type": "object"
           },
-          "claim_types": {
+          "claimTypes": {
             "type": "array",
             "items": {
               "type": "string"
@@ -3297,10 +3297,10 @@
           "status": {
             "type": "string"
           },
-          "created_at": {
+          "createdAt": {
             "type": "string"
           },
-          "policy_documents": {
+          "policyDocuments": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/PolicyDocumentResponseDto"
@@ -3318,17 +3318,17 @@
           "name",
           "category",
           "provider",
-          "coverage",
-          "duration_days",
+          "coverageAmount",
+          "durationDays",
           "premium",
           "rating",
           "popular",
-          "claim_types",
+          "claimTypes",
           "sales",
           "revenue",
           "status",
-          "created_at",
-          "policy_documents",
+          "createdAt",
+          "policyDocuments",
           "reviews"
         ]
       },
@@ -3487,13 +3487,13 @@
           "category": {
             "type": "string"
           },
-          "coverage": {
+          "coverageAmount": {
             "type": "number"
           },
           "premium": {
             "type": "number"
           },
-          "duration_days": {
+          "durationDays": {
             "type": "number"
           },
           "provider": {
@@ -3514,9 +3514,9 @@
           "id",
           "name",
           "category",
-          "coverage",
+          "coverageAmount",
           "premium",
-          "duration_days",
+          "durationDays",
           "provider",
           "status",
           "claims"
@@ -3577,7 +3577,7 @@
             "example": 1,
             "description": "ID of the coverage"
           },
-          "policy_id": {
+          "policyId": {
             "type": "number",
             "example": 1,
             "description": "ID of the policy this coverage is linked to"
@@ -3587,32 +3587,32 @@
             "example": "active",
             "description": "Status of the coverage"
           },
-          "utilization_rate": {
+          "utilizationRate": {
             "type": "number",
             "example": 0,
             "description": "Utilization rate of the coverage"
           },
-          "start_date": {
+          "startDate": {
             "type": "string",
             "example": "2025-07-01",
             "description": "Start date of the coverage (YYYY-MM-DD)"
           },
-          "end_date": {
+          "endDate": {
             "type": "string",
             "example": "2026-07-01",
             "description": "End date of the coverage (YYYY-MM-DD)"
           },
-          "next_payment_date": {
+          "nextPaymentDate": {
             "type": "string",
             "example": "2025-08-01",
             "description": "Next payment date for the coverage (YYYY-MM-DD)"
           },
-          "agreement_cid": {
+          "agreementCid": {
             "type": "string",
             "example": "QmHash",
             "description": "CID of the signed agreement stored on IPFS"
           },
-          "policy_name": {
+          "policyName": {
             "type": "string",
             "example": "Policy Name",
             "description": "Name of the policy (optional - will be fetched from database)"
@@ -3620,13 +3620,13 @@
         },
         "required": [
           "id",
-          "policy_id",
+          "policyId",
           "status",
-          "utilization_rate",
-          "start_date",
-          "end_date",
-          "next_payment_date",
-          "agreement_cid"
+          "utilizationRate",
+          "startDate",
+          "endDate",
+          "nextPaymentDate",
+          "agreementCid"
         ]
       },
       "UpdateCoverageDto": {
@@ -3637,7 +3637,7 @@
             "example": 1,
             "description": "ID of the coverage"
           },
-          "policy_id": {
+          "policyId": {
             "type": "number",
             "example": 1,
             "description": "ID of the policy this coverage is linked to"
@@ -3647,32 +3647,32 @@
             "example": "active",
             "description": "Status of the coverage"
           },
-          "utilization_rate": {
+          "utilizationRate": {
             "type": "number",
             "example": 0,
             "description": "Utilization rate of the coverage"
           },
-          "start_date": {
+          "startDate": {
             "type": "string",
             "example": "2025-07-01",
             "description": "Start date of the coverage (YYYY-MM-DD)"
           },
-          "end_date": {
+          "endDate": {
             "type": "string",
             "example": "2026-07-01",
             "description": "End date of the coverage (YYYY-MM-DD)"
           },
-          "next_payment_date": {
+          "nextPaymentDate": {
             "type": "string",
             "example": "2025-08-01",
             "description": "Next payment date for the coverage (YYYY-MM-DD)"
           },
-          "agreement_cid": {
+          "agreementCid": {
             "type": "string",
             "example": "QmHash",
             "description": "CID of the signed agreement stored on IPFS"
           },
-          "policy_name": {
+          "policyName": {
             "type": "string",
             "example": "Policy Name",
             "description": "Name of the policy (optional - will be fetched from database)"

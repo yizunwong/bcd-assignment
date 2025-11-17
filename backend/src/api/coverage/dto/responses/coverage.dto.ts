@@ -28,13 +28,13 @@ export class CoveragePolicyDto {
   category!: string;
 
   @ApiProperty()
-  coverage!: number;
+  coverageAmount!: number;
 
   @ApiProperty()
   premium!: number;
 
   @ApiProperty()
-  duration_days!: number;
+  durationDays!: number;
 
   @ApiProperty()
   provider!: string;

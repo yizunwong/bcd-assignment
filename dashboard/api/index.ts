@@ -332,7 +332,7 @@ export interface CreateClaimDto {
   /** ID of the claim */
   id: number;
   /** ID of the policy associated with the claim */
-  coverage_id: number;
+  coverageId: number;
   /** Type of the claim */
   type: string;
   /** Priority of the claim */
@@ -404,7 +404,7 @@ export interface UpdateClaimDto {
   /** ID of the claim to update */
   id: number;
   /** ID of the policy associated with the claim */
-  coverage_id?: number;
+  coverageId?: number;
   /** Type of the claim */
   type?: string;
   /** Priority of the claim */
@@ -479,18 +479,18 @@ export interface PolicyResponseDto {
   name: string;
   category: string;
   provider: string;
-  coverage: number;
-  duration_days: number;
+  coverageAmount: number;
+  durationDays: number;
   premium: number;
   rating: number;
   popular: boolean;
   description?: PolicyResponseDtoDescription;
-  claim_types: string[];
+  claimTypes: string[];
   sales: number;
   revenue: number;
   status: string;
-  created_at: string;
-  policy_documents: PolicyDocumentResponseDto[];
+  createdAt: string;
+  policyDocuments: PolicyDocumentResponseDto[];
   reviews: ReviewRespondDto[];
 }
 
@@ -552,9 +552,9 @@ export interface CoveragePolicyDto {
   name: string;
   description?: CoveragePolicyDtoDescription;
   category: string;
-  coverage: number;
+  coverageAmount: number;
   premium: number;
-  duration_days: number;
+  durationDays: number;
   provider: string;
   status: string;
   /** List of claims for this coverage */
@@ -578,42 +578,42 @@ export interface CreateCoverageDto {
   /** ID of the coverage */
   id: number;
   /** ID of the policy this coverage is linked to */
-  policy_id: number;
+  policyId: number;
   /** Status of the coverage */
   status: string;
   /** Utilization rate of the coverage */
-  utilization_rate: number;
+  utilizationRate: number;
   /** Start date of the coverage (YYYY-MM-DD) */
-  start_date: string;
+  startDate: string;
   /** End date of the coverage (YYYY-MM-DD) */
-  end_date: string;
+  endDate: string;
   /** Next payment date for the coverage (YYYY-MM-DD) */
-  next_payment_date: string;
+  nextPaymentDate: string;
   /** CID of the signed agreement stored on IPFS */
-  agreement_cid: string;
+  agreementCid: string;
   /** Name of the policy (optional - will be fetched from database) */
-  policy_name?: string;
+  policyName?: string;
 }
 
 export interface UpdateCoverageDto {
   /** ID of the coverage */
   id?: number;
   /** ID of the policy this coverage is linked to */
-  policy_id?: number;
+  policyId?: number;
   /** Status of the coverage */
   status?: string;
   /** Utilization rate of the coverage */
-  utilization_rate?: number;
+  utilizationRate?: number;
   /** Start date of the coverage (YYYY-MM-DD) */
-  start_date?: string;
+  startDate?: string;
   /** End date of the coverage (YYYY-MM-DD) */
-  end_date?: string;
+  endDate?: string;
   /** Next payment date for the coverage (YYYY-MM-DD) */
-  next_payment_date?: string;
+  nextPaymentDate?: string;
   /** CID of the signed agreement stored on IPFS */
-  agreement_cid?: string;
+  agreementCid?: string;
   /** Name of the policy (optional - will be fetched from database) */
-  policy_name?: string;
+  policyName?: string;
 }
 
 export interface CoverageStatsDto {

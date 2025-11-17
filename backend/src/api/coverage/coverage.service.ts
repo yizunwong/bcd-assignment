@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -22,7 +23,14 @@ export class CoverageService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
-  async uploadAgreement(file: Express.Multer.File, req: AuthenticatedRequest) {
+  async uploadAgreement(
+    files: Express.Multer.File[],
+    req: AuthenticatedRequest,
+  ) {
+    const [file] = files ?? [];
+    if (!file) {
+      throw new BadRequestException('The file field is required.');
+    }
     const cid = await this.pinataService.uploadPolicyDocument(file, {
       userId: req.user.id,
     });
@@ -40,14 +48,14 @@ export class CoverageService {
       .upsert(
         {
           id: dto.id,
-          policy_id: dto.policy_id,
+          policy_id: dto.policyId,
           user_id: req.user.id,
           status: dto.status,
-          utilization_rate: dto.utilization_rate,
-          start_date: dto.start_date,
-          end_date: dto.end_date,
-          next_payment_date: dto.next_payment_date,
-          agreement_cid: dto.agreement_cid,
+          utilization_rate: dto.utilizationRate,
+          start_date: dto.startDate,
+          end_date: dto.endDate,
+          next_payment_date: dto.nextPaymentDate,
+          agreement_cid: dto.agreementCid,
         },
         { onConflict: 'id' },
       )
@@ -64,7 +72,7 @@ export class CoverageService {
       await this.notificationsService.createSystemNotification(
         req.user.id,
         'Coverage Created Successfully',
-        `Your coverage for policy "${dto.policy_name}" has been created successfully. You can now file claims under this coverage.`,
+        `Your coverage for policy "${dto.policyName}" has been created successfully. You can now file claims under this coverage.`,
         'success',
       );
     } catch (notificationError) {
@@ -231,6 +239,8 @@ export class CoverageService {
         policies: coverage.policies
           ? {
               ...coverage.policies,
+              coverageAmount: coverage.policies.coverage,
+              durationDays: coverage.policies.duration_days,
               provider: coverage.policies.admin_details?.company?.name || '',
             }
           : coverage.policies,

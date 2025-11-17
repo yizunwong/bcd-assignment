@@ -30,7 +30,7 @@ export class CreateCoverageDto {
   })
   @IsInt({ message: 'policy_id must be an integer' })
   @IsNotEmpty({ message: 'policy_id is required' })
-  policy_id!: number;
+  policyId!: number;
 
   @ApiProperty({
     example: 'active',
@@ -46,7 +46,7 @@ export class CreateCoverageDto {
   })
   @IsNumber({}, { message: 'utilization_rate must be a number' })
   @IsNotEmpty({ message: 'utilization_rate is required' })
-  utilization_rate!: number;
+  utilizationRate!: number;
 
   @ApiProperty({
     example: '2025-07-01',
@@ -54,7 +54,7 @@ export class CreateCoverageDto {
   })
   @IsDateString({}, { message: 'start_date must be a valid date string' })
   @IsNotEmpty({ message: 'start_date is required' })
-  start_date!: string;
+  startDate!: string;
 
   @ApiProperty({
     example: '2026-07-01',
@@ -62,7 +62,7 @@ export class CreateCoverageDto {
   })
   @IsDateString({}, { message: 'end_date must be a valid date string' })
   @IsNotEmpty({ message: 'end_date is required' })
-  end_date!: string;
+  endDate!: string;
 
   @ApiProperty({
     example: '2025-08-01',
@@ -73,7 +73,7 @@ export class CreateCoverageDto {
     { message: 'next_payment_date must be a valid date string' },
   )
   @IsNotEmpty({ message: 'next_payment_date is required' })
-  next_payment_date!: string;
+  nextPaymentDate!: string;
 
   @ApiProperty({
     example: 'QmHash',
@@ -81,7 +81,7 @@ export class CreateCoverageDto {
   })
   @IsString({ message: 'agreement_cid must be a string' })
   @IsNotEmpty({ message: 'agreement_cid is required' })
-  agreement_cid!: string;
+  agreementCid!: string;
 
   @ApiProperty({
     example: 'Policy Name',
@@ -90,5 +90,5 @@ export class CreateCoverageDto {
     required: false,
   })
   @IsString({ message: 'policy_name must be a string' })
-  policy_name!: string;
+  policyName!: string;
 }

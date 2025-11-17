@@ -91,22 +91,22 @@ export default function PaymentSummary() {
       name: policy.data.name,
       category: policy.data.category,
       provider: policy.data.provider,
-      coverage: `$${policy.data.coverage}`,
+      coverage: `RM${policy.data.coverageAmount}`,
       premium: `${policy.data.premium} ETH/month`,
       rating: policy.data.rating,
-      features: policy.data.claim_types ?? [],
+      features: policy.data.claimTypes ?? [],
       description: String(policy.data.description ?? ""),
-      duration: `${policy.data.duration_days} days`,
+      duration: `${policy.data.durationDays} days`,
       basePrice: policy.data.premium,
       discount: 0,
       fees: 0,
       total: policy.data.premium,
-      coverageAmount: policy.data.coverage / 3500, // Convert USD to ETH (approximate)
+      coverageAmount: policy.data.coverageAmount / 3500, // Convert USD to ETH (approximate)
     };
   }, [policy]);
 
   const agreementTemplateUrls = useMemo(() => {
-    return (policy?.data?.policy_documents ?? []).map((doc) => ({
+    return (policy?.data?.policyDocuments ?? []).map((doc) => ({
       name: doc.name ?? "Download Agreement",
       url: doc.signedUrl,
     }));
@@ -256,14 +256,14 @@ export default function PaymentSummary() {
 
     return {
       id: 0,
-      policy_name: policyData!.name,
-      policy_id: policyData!.id,
+      policyName: policyData!.name,
+      policyId: policyData!.id,
       status: "active",
-      utilization_rate: 0,
-      start_date: startDate.toISOString().split("T")[0],
-      end_date: endDate.toISOString().split("T")[0],
-      next_payment_date: nextPaymentDate.toISOString().split("T")[0],
-      agreement_cid: cid,
+      utilizationRate: 0,
+      startDate: startDate.toISOString().split("T")[0],
+      endDate: endDate.toISOString().split("T")[0],
+      nextPaymentDate: nextPaymentDate.toISOString().split("T")[0],
+      agreementCid: cid,
     };
   };
 
@@ -317,6 +317,8 @@ export default function PaymentSummary() {
       policyData!.category,
       policyData!.provider
     );
+
+    console.log("createCoverageWithPayment", coverageId, txHash);
 
     coverageData.id = coverageId;
 

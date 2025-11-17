@@ -9,7 +9,7 @@ import {
   Req,
   UseGuards,
   Query,
-  UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { CoverageService } from './coverage.service';
@@ -21,7 +21,7 @@ import { ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { AuthenticatedRequest } from 'src/supabase/types/express';
 import { ApiCommonResponse, CommonResponseDto } from 'src/common/common.dto';
 import { CoverageResponseDto } from './dto/responses/coverage.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { UploadDocDto } from '../file/requests/document-upload.dto';
 import { CoverageStatsDto } from './dto/responses/coverage-stats.dto';
 
@@ -42,14 +42,14 @@ export class CoverageController {
 
   @Post('agreement')
   @UseGuards(AuthGuard)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FilesInterceptor('files'))
   @ApiConsumes('multipart/form-data')
   async uploadAgreement(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() files: Array<Express.Multer.File>,
     @Body() dto: UploadDocDto,
     @Req() req: AuthenticatedRequest,
   ): Promise<CommonResponseDto<string>> {
-    return this.coverageService.uploadAgreement(file, req);
+    return this.coverageService.uploadAgreement(files, req);
   }
 
   @Get()
