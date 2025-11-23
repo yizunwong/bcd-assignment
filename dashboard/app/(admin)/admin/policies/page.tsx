@@ -41,6 +41,7 @@ import {
   Download,
   Clock,
   DollarSign,
+  Wand2,
 } from "lucide-react";
 import PolicyDetailsDialog, {
   Policy,
@@ -55,6 +56,7 @@ import {
   useRemovePolicyMutation,
 } from "@/hooks/usePolicies";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useExtractClaimMutation } from "@/hooks/usePdfClaimExtractor";
 import { useToast } from "@/components/shared/ToastProvider";
 import { useAuthStore } from "@/store/useAuthStore";
 import {
@@ -104,6 +106,7 @@ export default function ManagePolicies() {
   >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSubmissionDialog, setShowSubmissionDialog] = useState(false);
+  const [isDetecting, setIsDetecting] = useState(false);
   const { printMessage } = useToast();
   const queryClient = useQueryClient();
 
@@ -113,6 +116,7 @@ export default function ManagePolicies() {
   const { data: statsData } = usePolicyStatsQuery();
   const { updatePolicy, error: updateError } = useUpdatePolicyMutation();
   const { removePolicy, error: removeError } = useRemovePolicyMutation();
+  const { extractClaim } = useExtractClaimMutation();
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const [newPolicy, setNewPolicy] = useState<{
@@ -425,7 +429,7 @@ export default function ManagePolicies() {
     }
   };
 
-  const addFiles = (files: FileList) => {
+  const addFiles = async (files: FileList) => {
     setFileError(null); // Clear previous errors
 
     const currentFileNames = new Set(
@@ -478,6 +482,19 @@ export default function ManagePolicies() {
     if (errorMessage) {
       setFileError(errorMessage.trim());
     }
+
+    if (accepted.length > 0) {
+      try {
+        const res = await extractClaim({ file: [accepted[0]] });
+        const types =
+          (res as any)?.data?.claimTypes?.map((ct: any) => ct.type) || [];
+        if (types.length > 0) {
+          setNewPolicy((prev) => ({ ...prev, claimTypes: types }));
+        }
+      } catch {
+        printMessage("Failed to extract claim types", "error");
+      }
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -486,18 +503,41 @@ export default function ManagePolicies() {
     setDragActive(false);
 
     if (e.dataTransfer.files && e.dataTransfer.files.length) {
-      addFiles(e.dataTransfer.files);
+      void addFiles(e.dataTransfer.files);
     }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length) {
-      addFiles(e.target.files);
+      void addFiles(e.target.files);
     }
   };
 
   const removeUploadedFile = (index: number) => {
     setUploadedTermsFiles((files) => files.filter((_, i) => i !== index));
+  };
+
+  const handleDetectClaimTypes = async () => {
+    if (!uploadedTermsFiles.length) {
+      printMessage("Please upload a policy document first", "error");
+      return;
+    }
+    setIsDetecting(true);
+    try {
+      const res = await extractClaim({ file: [uploadedTermsFiles[0]] });
+      const types =
+        (res as any)?.data?.claimTypes?.map((ct: any) => ct.type) || [];
+      if (types.length > 0) {
+        setNewPolicy((prev) => ({ ...prev, claimTypes: types }));
+        printMessage("Claim types detected", "success");
+      } else {
+        printMessage("No claim types found", "error");
+      }
+    } catch {
+      printMessage("Failed to extract claim types", "error");
+    } finally {
+      setIsDetecting(false);
+    }
   };
 
   // Error state (in case not caught by useEffect)
@@ -826,6 +866,16 @@ export default function ManagePolicies() {
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Add Claim Type
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleDetectClaimTypes}
+                      disabled={isDetecting}
+                      className="w-full"
+                    >
+                      <Wand2 className="w-4 h-4 mr-2" />
+                      {isDetecting ? "Detecting..." : "AI Detect"}
                     </Button>
                     {validationErrors.claimTypes && (
                       <p className="text-red-500 text-sm mt-1">
